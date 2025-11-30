@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "$0")" && pwd)"
+skills_target="$HOME/.claude/skills"
+
+mkdir -p "$skills_target"
+
+for skill_md in "$repo_dir"/*/SKILL.md; do
+  skill_dir="$(dirname "$skill_md")"
+  skill_name="$(basename "$skill_dir")"
+
+  ln -sfn "$skill_dir" "$skills_target/$skill_name"
+  echo "Linked: $skill_name"
+
+  if [ -f "$skill_dir/scripts/package.json" ]; then
+    npm install --prefix "$skill_dir/scripts" --silent
+    echo "  Installed npm dependencies"
+  fi
+done
