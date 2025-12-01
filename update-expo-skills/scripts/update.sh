@@ -117,10 +117,7 @@ fi
 head_after=$(git rev-parse HEAD)
 
 # Run install script only if there were changes
-if [[ "$head_before" == "$head_after" ]] && [[ "$switched_branch" == false ]]; then
-  echo ""
-  echo "Already up to date."
-else
+if [[ "$head_before" != "$head_after" ]] || [[ "$switched_branch" == true ]]; then
   echo ""
   echo "Installing skills..."
   ./install
