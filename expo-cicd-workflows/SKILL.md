@@ -1,6 +1,6 @@
 ---
 name: Expo CI/CD Workflows
-description: Helps write EAS CI/CD workflow YAML files for Expo projects. Use this skill when creating or editing workflow files in .eas/workflows/, or when the user asks about EAS CI/CD, build pipelines, deployment automation, or Expo workflow configuration.
+description: Helps understand and write EAS workflow YAML files for Expo projects. Use this skill when the user asks about CI/CD or workflows in an Expo or EAS context, mentions .eas/workflows/, or wants help with EAS build pipelines or deployment automation.
 allowed-tools: "Read,Write,Bash(node:*)"
 version: 1.0.0
 license: MIT License
