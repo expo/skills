@@ -1,4 +1,4 @@
-# Expo Router Skills
+# Expo Skills
 
 Official [Claude Code](https://claude.com/claude-code) skills from the Expo team for building and deploying robust Expo apps.
 
