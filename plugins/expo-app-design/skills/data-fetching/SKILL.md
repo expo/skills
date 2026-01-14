@@ -19,6 +19,10 @@ Use this router when:
 - Authentication/token management
 - Configuring API URLs and environment variables
 
+## Preferences
+
+- Avoid axios, prefer expo/fetch
+
 ## Common Issues & Solutions
 
 ### 1. Basic Fetch Usage
@@ -324,13 +328,13 @@ if (!BASE_URL) {
 }
 
 export const apiClient = {
-  get: async <T>(path: string): Promise<T> => {
+  get: async <T,>(path: string): Promise<T> => {
     const response = await fetch(`${BASE_URL}${path}`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return response.json();
   },
 
-  post: async <T>(path: string, body: unknown): Promise<T> => {
+  post: async <T,>(path: string, body: unknown): Promise<T> => {
     const response = await fetch(`${BASE_URL}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -464,7 +468,7 @@ await SecureStore.setItemAsync("token", token);
 ## Example Invocations
 
 User: "How do I make API calls in React Native?"
--> Use fetch or axios, wrap with error handling
+-> Use fetch, wrap with error handling
 
 User: "Should I use React Query or SWR?"
 -> React Query for complex apps, SWR for simpler needs
@@ -479,7 +483,7 @@ User: "API calls are slow"
 -> Check caching strategy, use React Query staleTime
 
 User: "How do I configure different API URLs for dev and prod?"
--> Use EXPO_PUBLIC_ env vars with .env.development and .env.production files
+-> Use EXPO*PUBLIC* env vars with .env.development and .env.production files
 
 User: "Where should I put my API key?"
--> Client-safe keys: EXPO_PUBLIC_ in .env. Secret keys: non-prefixed env vars in API routes only
+-> Client-safe keys: EXPO*PUBLIC* in .env. Secret keys: non-prefixed env vars in API routes only

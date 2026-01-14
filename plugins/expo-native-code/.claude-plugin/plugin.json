@@ -1,9 +1,0 @@
-{
-  "name": "expo-native-code",
-  "version": "1.0.0",
-  "description": "Build native iOS and Android extensions with Expo",
-  "author": {
-    "name": "Evan Bacon",
-    "email": "bacon@expo.io"
-  }
-}
