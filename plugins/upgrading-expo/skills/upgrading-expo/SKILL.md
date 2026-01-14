@@ -3,87 +3,26 @@ name: upgrading-expo
 description: Guidelines for upgrading Expo SDK versions and fixing dependency issues
 ---
 
-## Quick Upgrade
+## Step-by-Step Upgrade Process
 
-Upgrade to the latest Expo SDK:
+1. Upgrade Expo and dependencies
 
 ```bash
 npx expo install expo@latest
-```
-
-Then fix all dependencies to be compatible with the new SDK:
-
-```bash
 npx expo install --fix
 ```
 
-## Step-by-Step Upgrade Process
+2. Run diagnostics: `npx expo-doctor`
 
-1. **Check current SDK version**
-
-   ```bash
-   npx expo --version
-   ```
-
-2. **Review release notes** for the target SDK version at https://expo.dev/changelog
-
-3. **Upgrade Expo and dependencies**
-
-   ```bash
-   npx expo install expo@^54
-   npx expo install --fix
-   ```
-
-4. **Run diagnostics**
-
-   ```bash
-   npx expo-doctor
-   ```
-
-5. **Clear caches and reinstall**
-   ```bash
-   npx expo start --clear
-   rm -rf node_modules .expo
-   ```
-6. Reinstall dependencies
-
-## Housekeeping
-
-- If using Expo SDK 54 or later, ensure react-native-worklets is installed — this is required for react-native-reanimated to work.
-- Delete sdkVersion from `app.json` to let Expo manage it automatically
-- Remove implicit packages from `package.json`: `@babel/core`, `babel-preset-expo`, `expo-constants`.
-- If the babel.config.js only contains 'babel-preset-expo', delete the file entirely
-- If the metro.config.js only contains expo defaults, delete the file entirely
-
-## Diagnostics
-
-Run expo-doctor to identify issues:
+3. Clear caches and reinstall
 
 ```bash
-npx expo-doctor
+npx expo export -p ios --clear
+rm -rf node_modules .expo
+watchman watch-del-all
 ```
 
-This checks for:
-
-- Incompatible dependency versions
-- Deprecated packages
-- Configuration issues
-- Native module conflicts
-
-## Common Upgrade Issues
-
-### Deprecated Packages
-
-| Old Package          | Replacement                                          |
-| -------------------- | ---------------------------------------------------- |
-| `expo-av`            | `expo-audio` and `expo-video`                        |
-| `expo-permissions`   | Individual package permission APIs                   |
-| `@expo/vector-icons` | `expo-symbols` (for SF Symbols)                      |
-| `AsyncStorage`       | `expo-sqlite/localStorage/install`                   |
-| `expo-app-loading`   | `expo-splash-screen`                                 |
-| expo-linear-gradient | experimental_backgroundImage + CSS gradients in View |
-
-### Breaking Changes Checklist
+## Breaking Changes Checklist
 
 - Check for removed APIs in release notes
 - Update import paths for moved modules
@@ -99,54 +38,33 @@ If upgrading requires native changes:
 npx expo prebuild --clean
 ```
 
-This regenerates the `ios` and `android` directories.
+This regenerates the `ios` and `android` directories. Ensure the project is not a bare workflow app before running this command.
 
-## EAS Build After Upgrade
+## Clear caches for bare workflow
 
-Update your EAS build:
+- Clear the cocoapods cache for iOS: `cd ios && pod install --repo-update`
+- Clear derived data for Xcode: `npx expo run:ios --no-build-cache`
+- Clear the Gradle cache for Android: `cd android && ./gradlew clean`
 
-```bash
-eas build --platform ios
-eas build --platform android
-```
+## Housekeeping
 
-## Troubleshooting
+- Review release notes for the target SDK version at https://expo.dev/changelog
+- If using Expo SDK 54 or later, ensure react-native-worklets is installed — this is required for react-native-reanimated to work.
+- Delete sdkVersion from `app.json` to let Expo manage it automatically
+- Remove implicit packages from `package.json`: `@babel/core`, `babel-preset-expo`, `expo-constants`.
+- If the babel.config.js only contains 'babel-preset-expo', delete the file
+- If the metro.config.js only contains expo defaults, delete the file
 
-### Metro Cache Issues
+## Deprecated Packages
 
-```bash
-npx expo start --clear
-```
-
-### Node Modules Issues
-
-```bash
-rm -rf node_modules
-npm install
-npx expo install --fix
-```
-
-### Pods Issues (iOS)
-
-```bash
-cd ios && pod install --repo-update && cd ..
-```
-
-### Gradle Issues (Android)
-
-```bash
-cd android && ./gradlew clean && cd ..
-```
-
-## Checking Compatibility
-
-Before upgrading, check if your dependencies support the new SDK:
-
-```bash
-npx expo install --check
-```
-
-This shows which packages need updates without making changes.
+| Old Package          | Replacement                                          |
+| -------------------- | ---------------------------------------------------- |
+| `expo-av`            | `expo-audio` and `expo-video`                        |
+| `expo-permissions`   | Individual package permission APIs                   |
+| `@expo/vector-icons` | `expo-symbols` (for SF Symbols)                      |
+| `AsyncStorage`       | `expo-sqlite/localStorage/install`                   |
+| `expo-app-loading`   | `expo-splash-screen`                                 |
+| expo-linear-gradient | experimental_backgroundImage + CSS gradients in View |
 
 ## Removing patches
 
@@ -154,17 +72,17 @@ Check if there are any outdated patches in the `patches/` directory. Remove them
 
 ## Postcss
 
-- autoprefixer isn't needed in SDK 53 and later.
-- use postcss.config.mjs in SDK 53 and later.
+- `autoprefixer` isn't needed in SDK +53.
+- Use `postcss.config.mjs` in SDK +53.
 
 ## Metro
 
 Remove redundant metro config options:
 
-- resolver.unstable_enablePackageExports is enabled by default in SDK 53 and later.
-- `experimentalImportSupport` is enabled by default in SDK 54.
-- `EXPO_USE_FAST_RESOLVER=1` is removed in SDK 54 and later.
+- resolver.unstable_enablePackageExports is enabled by default in SDK +53.
+- `experimentalImportSupport` is enabled by default in SDK +54.
+- `EXPO_USE_FAST_RESOLVER=1` is removed in SDK +54.
 
 ## New Architecture
 
-The new architecture is enabled by default, the app.json field `"newArchEnabled": true` is no longer needed as it's the default. Expo Go only supports the new architecture as of SDK 53.
+The new architecture is enabled by default, the app.json field `"newArchEnabled": true` is no longer needed as it's the default. Expo Go only supports the new architecture as of SDK +53.
