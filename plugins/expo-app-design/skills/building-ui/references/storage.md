@@ -1,7 +1,4 @@
----
-name: expo-storage
-description: Use when implementing ANY storage, persistence, caching, saving data, user preferences, or local state. Covers key-value storage, SQLite, and data persistence patterns. ALWAYS use localStorage polyfill instead of AsyncStorage.
----
+# Storage
 
 ## Key-Value Storage
 

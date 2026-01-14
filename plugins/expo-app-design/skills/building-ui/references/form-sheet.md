@@ -60,6 +60,8 @@ export default function Layout() {
 
 ### Form Sheet Screen Content
 
+> Requires Expo SDK 55 or later.
+
 Use `flex: 1` to allow the content to fill available space, enabling footer positioning:
 
 ```tsx

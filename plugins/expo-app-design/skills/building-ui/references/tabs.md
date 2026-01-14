@@ -1,8 +1,3 @@
----
-name: native-tabs
-description: Native tab bar implementation with NativeTabs, migration from JS tabs, iOS 26 features, and customization
----
-
 # Native Tabs
 
 Always prefer NativeTabs from 'expo-router/unstable-native-tabs' for the best iOS experience.

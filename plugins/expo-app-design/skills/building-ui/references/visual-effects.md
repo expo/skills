@@ -1,8 +1,3 @@
----
-name: visual-effects
-description: Blur effects with expo-blur and liquid glass effects with expo-glass-effect
----
-
 # Visual Effects
 
 ## Backdrop Blur

@@ -1,8 +1,3 @@
----
-name: webgpu-three
-description: Use when implementing 3D graphics, games, GPU-powered visualizations, or any WebGPU/Three.js features in Expo/React Native.
----
-
 # WebGPU & Three.js for Expo
 
 **Use this skill for ANY 3D graphics, games, GPU compute, or Three.js features in React Native.**

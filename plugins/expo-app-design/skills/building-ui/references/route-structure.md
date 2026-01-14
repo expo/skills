@@ -1,8 +1,3 @@
----
-name: expo-router-route-structure
-description: Expo Router route structure, file conventions, query parameters, dynamic routes, and folder organization
----
-
 # Route Structure
 
 ## File Conventions

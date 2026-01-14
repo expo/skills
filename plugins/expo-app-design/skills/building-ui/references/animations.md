@@ -1,8 +1,3 @@
----
-name: reanimated-animations
-description: React Native Reanimated animations including entering, exiting, layout, scroll-driven, and gesture animations
----
-
 # Animations
 
 Use Reanimated v4. Avoid React Native's built-in Animated API.
@@ -92,20 +87,20 @@ function Page() {
 
 ```tsx
 // Duration in milliseconds
-FadeIn.duration(300)
+FadeIn.duration(300);
 
 // Delay before starting
-FadeIn.delay(100)
+FadeIn.delay(100);
 
 // Spring physics
-FadeIn.springify()
-FadeIn.springify().damping(15).stiffness(100)
+FadeIn.springify();
+FadeIn.springify().damping(15).stiffness(100);
 
 // Easing curves
-FadeIn.easing(Easing.bezier(0.25, 0.1, 0.25, 1))
+FadeIn.easing(Easing.bezier(0.25, 0.1, 0.25, 1));
 
 // Chaining
-FadeInDown.duration(400).delay(200).springify()
+FadeInDown.duration(400).delay(200).springify();
 ```
 
 ## Shared Value Animations
@@ -113,7 +108,11 @@ FadeInDown.duration(400).delay(200).springify()
 For imperative control over animations:
 
 ```tsx
-import { useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import {
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 const offset = useSharedValue(0);
 
@@ -196,15 +195,17 @@ function KeyboardAwareView() {
 Animate list items with delays:
 
 ```tsx
-{items.map((item, index) => (
-  <Animated.View
-    key={item.id}
-    entering={FadeInUp.delay(index * 50)}
-    exiting={FadeOutUp}
-  >
-    <ListItem item={item} />
-  </Animated.View>
-))}
+{
+  items.map((item, index) => (
+    <Animated.View
+      key={item.id}
+      entering={FadeInUp.delay(index * 50)}
+      exiting={FadeOutUp}
+    >
+      <ListItem item={item} />
+    </Animated.View>
+  ));
+}
 ```
 
 ## Best Practices

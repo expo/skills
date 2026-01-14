@@ -1,8 +1,3 @@
----
-name: search
-description: Search bar integration with Stack headers, useSearch hook, and filtering patterns
----
-
 # Search
 
 ## Header Search Bar

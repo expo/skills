@@ -1,8 +1,3 @@
----
-name: native-controls
-description: Native iOS controls including Switch, Slider, SegmentedControl, DateTimePicker, and Stepper
----
-
 # Native Controls
 
 Native iOS controls provide built-in haptics, accessibility, and platform-appropriate styling.

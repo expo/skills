@@ -1,8 +1,3 @@
----
-name: css-gradients
-description: CSS gradients in React Native using experimental_backgroundImage style property
----
-
 # CSS Gradients
 
 > **New Architecture Only**: CSS gradients require React Native's New Architecture (Fabric). They are not available in the old architecture or Expo Go.

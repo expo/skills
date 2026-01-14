@@ -1,8 +1,3 @@
----
-name: sf-symbols
-description: SF Symbols icons with expo-symbols, common icon names, and usage patterns
----
-
 # Icons (SF Symbols)
 
 Use SF Symbols for native feel. Never use FontAwesome or Ionicons.

@@ -1,7 +1,4 @@
----
-name: expo-router-media
-description: Media handling for Expo Router including camera, audio, video, and file saving
----
+# Media
 
 ## Camera
 
