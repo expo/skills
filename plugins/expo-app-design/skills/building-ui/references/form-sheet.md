@@ -13,19 +13,7 @@ Form sheets are modal presentations that appear as a card sliding up from the bo
 
 **Requirements:**
 
-- `react-native-screens` with feature flags enabled
 - Expo Router Stack navigator
-
-## Setup
-
-Enable synchronous screen updates for proper footer behavior (SDK +55):
-
-```tsx
-// App entry point or _layout.tsx
-import { featureFlags } from "react-native-screens";
-
-featureFlags.experiment.synchronousScreenUpdatesEnabled = true;
-```
 
 ## Basic Usage
 
@@ -121,9 +109,6 @@ const styles = StyleSheet.create({
 ```tsx
 // _layout.tsx
 import { Stack } from "expo-router";
-import { featureFlags } from "react-native-screens";
-
-featureFlags.experiment.synchronousScreenUpdatesEnabled = true;
 
 export default function Layout() {
   return (
@@ -228,15 +213,6 @@ const styles = StyleSheet.create({
 ```
 
 ## Troubleshooting
-
-### Footer not visible or cut off
-
-Ensure you have enabled synchronous screen updates:
-
-```tsx
-import { featureFlags } from "react-native-screens";
-featureFlags.experiment.synchronousScreenUpdatesEnabled = true;
-```
 
 ### Content not filling sheet
 
