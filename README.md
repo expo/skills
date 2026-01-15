@@ -4,6 +4,8 @@ Official AI agent skills from the Expo team for building, deploying, and debuggi
 
 ## Installation
 
+We primarily use [Claude Code](https://claude.com/claude-code) at Expo, skills are fine-tuned for Opus models. But you can use these skills with any AI agent.
+
 ## Claude Code
 
 Add the marketplace:
@@ -21,8 +23,6 @@ Install a plugin:
 ```
 
 ## Any agent
-
-We primarily use [Claude Code](https://claude.com/claude-code) at Expo, skills are fine-tuned for Opus models. But you can use the skills with any AI agent:
 
 ```
 bunx add-skill expo/skills
