@@ -25,7 +25,7 @@ Install a plugin:
 ## Any agent
 
 ```
-bunx add-skill expo/skills
+bunx skills add expo/skills
 ```
 
 > This will extract the skills individually so you'll need to manually upgrade them.
