@@ -1,5 +1,5 @@
 ---
-name: data-fetching
+name: native-data-fetching
 description: Use when implementing or debugging ANY network request, API call, or data fetching. Covers fetch API, axios, React Query, SWR, error handling, caching strategies, offline support.
 version: 1.0.0
 license: MIT
