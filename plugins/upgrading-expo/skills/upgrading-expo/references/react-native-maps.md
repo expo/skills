@@ -2,13 +2,13 @@
 
 Expo SDK 55 uses `react-native-maps` version 1.26.20+
 
-An Expo plug-in for `react-native-maps` was introduced in version 1.22 and it requires Expo SDK 53+
+`react-native-maps@1.22.0` now has an Expo Config Plugin (SDK 53+)
 
-## Migrate configuration to use react-native-maps Expo plug-in
+## Migrate configuration to use react-native-maps Expo plugin
 
 ### Without Google Maps
 
-Add plug-in to `app.json`
+Add the plugin to `app.json`
 
 ```json
 {
@@ -20,9 +20,7 @@ Add plug-in to `app.json`
 
 ### With Google Maps
 
-If you're using Google as the map provider, also provide an API key for the respective platform.
-
-Move legacy configuration in the platform-specific keys and move it to plug-in configuration.
+If Google is used as the map provider, provide the appropriate platform-specific API key, and migrate any legacy configuration into the plugin configuration.
 
 Before (Expo SDK 54 and below):
 
@@ -65,12 +63,6 @@ Before (Expo SDK 54 and below):
 
 ### Migration Steps
 
-1. Remove legacy configuration
-2. Add `react-native-maps` Expo plug-in configuration
-
-## Cleanup Checklist
-
-When upgrading to SDK 55:
-
-- [ ] Use `rect-native-maps` Expo plug-in
-- [ ] Add Google Maps API keys for each platform in use
+1. Add `react-native-maps` Expo plugin to `app.json`
+2. Remove the legacy Google Maps configuration from `app.json`
+3. Add platform-specific Google Maps API keys via plugin configuration props
