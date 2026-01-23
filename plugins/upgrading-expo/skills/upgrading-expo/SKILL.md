@@ -10,6 +10,7 @@ license: MIT
 - ./references/new-architecture.md -- SDK +53: New Architecture migration guide
 - ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
 - ./references/react-compiler.md -- SDK +54: React Compiler setup and migration guide
+- ./references/react-native-maps.md -- SDK +54: react-native-maps Expo plug-in configuration
 
 ## Step-by-Step Upgrade Process
 
@@ -63,6 +64,7 @@ This regenerates the `ios` and `android` directories. Ensure the project is not 
 - Remove implicit packages from `package.json`: `@babel/core`, `babel-preset-expo`, `expo-constants`.
 - If the babel.config.js only contains 'babel-preset-expo', delete the file
 - If the metro.config.js only contains expo defaults, delete the file
+- Configure Expo plug-in for `react-native-maps` if the package is used by the app
 
 ## Deprecated Packages
 
