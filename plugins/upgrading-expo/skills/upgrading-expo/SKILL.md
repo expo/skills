@@ -11,6 +11,16 @@ license: MIT
 - ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
 - ./references/react-compiler.md -- SDK +54: React Compiler setup and migration guide
 
+## Beta/Preview Releases
+
+Beta versions use `.preview` suffix (e.g., `55.0.0-preview.2`), published under `@next` tag.
+
+Check if latest is beta: https://exp.host/--/api/v2/versions (look for `-preview` in `expoVersion`)
+
+```bash
+npx expo install expo@next --fix  # install beta
+```
+
 ## Step-by-Step Upgrade Process
 
 1. Upgrade Expo and dependencies
@@ -74,6 +84,18 @@ This regenerates the `ios` and `android` directories. Ensure the project is not 
 | `AsyncStorage`       | `expo-sqlite/localStorage/install`                   |
 | `expo-app-loading`   | `expo-splash-screen`                                 |
 | expo-linear-gradient | experimental_backgroundImage + CSS gradients in View |
+
+## expo.install.exclude
+
+Check if package.json has excluded packages:
+
+```json
+{
+  "expo": { "install": { "exclude": ["package-a"] } }
+}
+```
+
+Exclusions are often workarounds that may no longer be needed after upgrading. Review each one.
 
 ## Removing patches
 
