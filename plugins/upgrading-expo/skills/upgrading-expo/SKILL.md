@@ -10,6 +10,7 @@ license: MIT
 - ./references/new-architecture.md -- SDK +53: New Architecture migration guide
 - ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
 - ./references/react-compiler.md -- SDK +54: React Compiler setup and migration guide
+- ./references/native-tabs.md -- SDK +55: Native tabs changes (Icon/Label/Badge now accessed via NativeTabs.Trigger.\*)
 
 ## Step-by-Step Upgrade Process
 
