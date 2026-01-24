@@ -10,6 +10,8 @@ license: MIT
 - ./references/new-architecture.md -- SDK +53: New Architecture migration guide
 - ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
 - ./references/react-compiler.md -- SDK +54: React Compiler setup and migration guide
+- ./references/expo-av-to-audio.md -- Migrate audio playback and recording from expo-av to expo-audio
+- ./references/expo-av-to-video.md -- Migrate video playback from expo-av to expo-video
 
 ## Step-by-Step Upgrade Process
 
@@ -74,6 +76,8 @@ This regenerates the `ios` and `android` directories. Ensure the project is not 
 | `AsyncStorage`       | `expo-sqlite/localStorage/install`                   |
 | `expo-app-loading`   | `expo-splash-screen`                                 |
 | expo-linear-gradient | experimental_backgroundImage + CSS gradients in View |
+
+When migrating deprecated packages, update all code usage before removing the old package. For expo-av, consult the migration references to convert Audio.Sound to useAudioPlayer, Audio.Recording to useAudioRecorder, and Video components to VideoView with useVideoPlayer.
 
 ## Removing patches
 
