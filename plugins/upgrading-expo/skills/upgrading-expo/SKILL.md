@@ -106,7 +106,7 @@ Check if there are any outdated patches in the `patches/` directory. Remove them
 
 ## Postcss
 
-- `autoprefixer` isn't needed in SDK +53.
+- `autoprefixer` isn't needed in SDK +53. Remove it from dependencies and check `postcss.config.js` or `postcss.config.mjs` to remove it from the plugins list.
 - Use `postcss.config.mjs` in SDK +53.
 
 ## Metro
