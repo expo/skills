@@ -13,11 +13,11 @@ This skill covers deploying Expo applications across all platforms using EAS (Ex
 
 Consult these resources as needed:
 
-- ./references/workflows.md -- CI/CD workflows for automated deployments and PR previews
-- ./references/testflight.md -- Submitting iOS builds to TestFlight for beta testing
-- ./references/app-store-metadata.md -- Managing App Store metadata and ASO optimization
-- ./references/play-store.md -- Submitting Android builds to Google Play Store
-- ./references/ios-app-store.md -- iOS App Store submission and review process
+- [references/workflows.md](references/workflows.md) - CI/CD workflows for automated deployments and PR previews
+- [references/testflight.md](references/testflight.md) - Submitting iOS builds to TestFlight for beta testing
+- [references/app-store-metadata.md](references/app-store-metadata.md) - Managing App Store metadata and ASO optimization
+- [references/play-store.md](references/play-store.md) - Submitting Android builds to Google Play Store
+- [references/ios-app-store.md](references/ios-app-store.md) - iOS App Store submission and review process
 
 ## Quick Start
 

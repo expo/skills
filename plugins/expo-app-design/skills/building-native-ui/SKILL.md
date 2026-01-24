@@ -11,17 +11,17 @@ license: MIT
 
 Consult these resources as needed:
 
-- ./references/route-structure.md -- Route file conventions, dynamic routes, query parameters, groups, and folder organization
-- ./references/tabs.md -- Native tab bar with NativeTabs, migration from JS tabs, iOS 26 features
-- ./references/icons.md -- SF Symbols with expo-symbols, common icon names, animations, and weights
-- ./references/controls.md -- Native iOS controls: Switch, Slider, SegmentedControl, DateTimePicker, Picker
-- ./references/visual-effects.md -- Blur effects with expo-blur and liquid glass with expo-glass-effect
-- ./references/animations.md -- Reanimated animations: entering, exiting, layout, scroll-driven, and gestures
-- ./references/search.md -- Search bar integration with headers, useSearch hook, and filtering patterns
-- ./references/gradients.md -- CSS gradients using experimental_backgroundImage (New Architecture only)
-- ./references/media.md -- Media handling for Expo Router including camera, audio, video, and file saving
-- ./references/storage.md -- Data storage patterns including SQLite, AsyncStorage, and SecureStore
-- ./references/webgpu-three.md -- 3D graphics, games, and GPU-powered visualizations with WebGPU and Three.js
+- [references/route-structure.md](references/route-structure.md) - Route file conventions, dynamic routes, query parameters, groups, and folder organization
+- [references/tabs.md](references/tabs.md) - Native tab bar with NativeTabs, migration from JS tabs, iOS 26 features
+- [references/icons.md](references/icons.md) - SF Symbols with expo-symbols, common icon names, animations, and weights
+- [references/controls.md](references/controls.md) - Native iOS controls: Switch, Slider, SegmentedControl, DateTimePicker, Picker
+- [references/visual-effects.md](references/visual-effects.md) - Blur effects with expo-blur and liquid glass with expo-glass-effect
+- [references/animations.md](references/animations.md) - Reanimated animations: entering, exiting, layout, scroll-driven, and gestures
+- [references/search.md](references/search.md) - Search bar integration with headers, useSearch hook, and filtering patterns
+- [references/gradients.md](references/gradients.md) - CSS gradients using experimental_backgroundImage (New Architecture only)
+- [references/media.md](references/media.md) - Media handling for Expo Router including camera, audio, video, and file saving
+- [references/storage.md](references/storage.md) - Data storage patterns including SQLite, AsyncStorage, and SecureStore
+- [references/webgpu-three.md](references/webgpu-three.md) - 3D graphics, games, and GPU-powered visualizations with WebGPU and Three.js
 
 ## Running the App
 

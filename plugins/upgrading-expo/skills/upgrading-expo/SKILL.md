@@ -7,12 +7,12 @@ license: MIT
 
 ## References
 
-- ./references/new-architecture.md -- SDK +53: New Architecture migration guide
-- ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
-- ./references/react-compiler.md -- SDK +54: React Compiler setup and migration guide
-- ./references/native-tabs.md -- SDK +55: Native tabs changes (Icon/Label/Badge now accessed via NativeTabs.Trigger.\*)
-- ./references/expo-av-to-audio.md -- Migrate audio playback and recording from expo-av to expo-audio
-- ./references/expo-av-to-video.md -- Migrate video playback from expo-av to expo-video
+- [references/new-architecture.md](references/new-architecture.md) - SDK +53: New Architecture migration guide
+- [references/react-19.md](references/react-19.md) - SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
+- [references/react-compiler.md](references/react-compiler.md) - SDK +54: React Compiler setup and migration guide
+- [references/native-tabs.md](references/native-tabs.md) - SDK +55: Native tabs changes (Icon/Label/Badge now accessed via NativeTabs.Trigger.\*)
+- [references/expo-av-to-audio.md](references/expo-av-to-audio.md) -- Migrate audio playback and recording from expo-av to expo-audio
+- [references/expo-av-to-video.md](references/expo-av-to-video.md) -- Migrate video playback from expo-av to expo-video
 
 ## Beta/Preview Releases
 
