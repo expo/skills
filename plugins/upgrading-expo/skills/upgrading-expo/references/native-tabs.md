@@ -32,7 +32,7 @@ import { NativeTabs } from "expo-router/unstable-native-tabs";
 
 ### BottomAccessory
 
-New component for Apple Music-style mini players on iOS +26:
+New component for Apple Music-style mini players on iOS +26 that float above the tab bar:
 
 ```tsx
 <NativeTabs>
@@ -44,6 +44,8 @@ New component for Apple Music-style mini players on iOS +26:
   </NativeTabs.Trigger>
 </NativeTabs>
 ```
+
+On Android and web, this component will render as a no-op. Position a view absolutely above the tab bar instead.
 
 ### Icon `md` Prop
 
