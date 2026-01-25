@@ -22,7 +22,7 @@ Consult these resources as needed:
 - ./references/media.md -- Media handling for Expo Router including camera, audio, video, and file saving
 - ./references/storage.md -- Data storage patterns including SQLite, AsyncStorage, and SecureStore
 - ./references/webgpu-three.md -- 3D graphics, games, and GPU-powered visualizations with WebGPU and Three.js
-- ./references/toolbars-and-headers.md -- Customizing stack headers and toolbar with buttons, menus, and search bars in expo-router app
+- ./references/toolbars-and-headers.md -- Customizing stack headers and toolbar with buttons, menus, and search bars in expo-router app. Available only on iOS.
 
 ## Running the App
 
