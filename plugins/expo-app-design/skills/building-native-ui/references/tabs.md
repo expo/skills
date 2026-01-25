@@ -366,3 +366,37 @@ Configure in app.json:
 2. **Headers missing**: Nest a Stack inside each tab group
 3. **Trigger name mismatch**: Ensure `name` matches exact route name including parentheses
 4. **Badge not visible**: Badge must be a child of Trigger, not a prop
+5. **Header button flash**: When using `unstable_headerLeftItems`/`unstable_headerRightItems`, buttons may flash on mount. Fix by using `type: 'custom'` with `hidesSharedBackground: true` and a custom styled wrapper:
+
+```tsx
+function HeaderButton({ children, onPress }) {
+  return (
+    <Pressable onPress={onPress} style={styles.headerButton}>
+      {children}
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  headerButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 19,
+    padding: 10,
+    minWidth: 38,
+    minHeight: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+
+// In Stack.Screen options:
+unstable_headerLeftItems: () => [{
+  type: 'custom',
+  element: (
+    <HeaderButton onPress={() => router.push('/settings')}>
+      <SymbolView name="gear" size={20} tintColor="#fff" />
+    </HeaderButton>
+  ),
+  hidesSharedBackground: true,
+}]
+```
