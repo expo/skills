@@ -116,8 +116,8 @@ Reference these in your SKILL.md:
 ## References
 
 Consult these resources as needed:
-- ./references/setup.md -- Setup and configuration guide
-- ./references/examples.md -- Usage examples
+- [references/setup.md](references/workflows.md) - Setup and configuration guide
+- [references/examples.md](references/workflows.md) - Usage examples
 ```
 
 ## Marketplace Configuration

@@ -64,7 +64,7 @@ Expo Go supports a huge range of features out of the box:
 
 ## Routes
 
-See `./references/route-structure.md` for detailed route conventions.
+See [references/route-structure.md](references/route-structure.md) for detailed route conventions.
 
 - Routes belong in the `app` directory.
 - Never co-locate components, types, or utilities in the app directory. This is an anti-pattern.
