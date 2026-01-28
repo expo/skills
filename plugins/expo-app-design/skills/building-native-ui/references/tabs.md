@@ -371,8 +371,8 @@ Configure in app.json:
 3. **Trigger name mismatch**: Ensure `name` matches exact route name including parentheses
 4. **Badge not visible**: Badge must be a child of Trigger, not a prop
 5. **Tab bar transparent on iOS 18 and earlier**: If the screen uses a `ScrollView` or `FlatList`, make sure it is the first child of the screen component. If it needs to be wrapped in another `View`, ensure the wrapper uses `collapsable={false}`. If the screen does not use a `ScrollView` or `FlatList`, set `disableTransparentOnScrollEdge` to `true` in the `NativeTabs.Trigger` options.
-6. **Scroll to top not working**: Ensure `disableScrollToTop` is not set on the active tab's Trigger and make sure that `ScrollView` is the first child of the screen component.
-7. **Header buttons flicker when navigating between tabs**: Make sure the app is wrapped in a `ThemeProvider` from `@react-navigation/native`.
+6. **Scroll to top not working**: Ensure `disableScrollToTop` is not set on the active tab's Trigger and `ScrollView` is the first child of the screen component.
+7. **Header buttons flicker when navigating between tabs**: Make sure the app is wrapped in a `ThemeProvider`
 
 ```tsx
 import {
