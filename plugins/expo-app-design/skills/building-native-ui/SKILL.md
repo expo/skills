@@ -23,6 +23,7 @@ Consult these resources as needed:
 - ./references/storage.md -- Data storage patterns including SQLite, AsyncStorage, and SecureStore
 - ./references/webgpu-three.md -- 3D graphics, games, and GPU-powered visualizations with WebGPU and Three.js
 - ./references/toolbars-and-headers.md -- Customizing stack headers and toolbar with buttons, menus, and search bars in expo-router app. Available only on iOS.
+- ./references/common-router-problems.md -- Solutions to problems related to headers and tabs.
 
 ## Running the App
 
@@ -97,6 +98,7 @@ See `./references/route-structure.md` for detailed route conventions.
 - Use expo-haptics conditionally on iOS to make more delightful experiences
 - Use views with built-in haptics like `<Switch />` from React Native and `@react-native-community/datetimepicker`
 - When a route belongs to a Stack, its first child should almost always be a ScrollView with `contentInsetAdjustmentBehavior="automatic"` set
+- When adding a `ScrollView` to the page it should almost always be the first component inside the route component
 - Prefer `headerSearchBarOptions` in Stack.Screen options to add a search bar
 - Use the `<Text selectable />` prop on text containing data that could be copied
 - Consider formatting large numbers like 1.4M or 38k
