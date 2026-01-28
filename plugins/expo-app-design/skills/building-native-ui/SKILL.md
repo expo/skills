@@ -23,7 +23,6 @@ Consult these resources as needed:
 - ./references/storage.md -- Data storage patterns including SQLite, AsyncStorage, and SecureStore
 - ./references/webgpu-three.md -- 3D graphics, games, and GPU-powered visualizations with WebGPU and Three.js
 - ./references/toolbars-and-headers.md -- Customizing stack headers and toolbar with buttons, menus, and search bars in expo-router app. Available only on iOS.
-- ./references/common-router-problems.md -- Solutions to problems related to headers and tabs.
 
 ## Running the App
 
