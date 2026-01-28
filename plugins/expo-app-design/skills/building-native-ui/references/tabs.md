@@ -144,6 +144,19 @@ const adaptiveBlue = Platform.select({
 <NativeTabs tintColor={adaptiveBlue}>
 ```
 
+## Conditional Tabs
+
+Hide tabs conditionally:
+
+```tsx
+<NativeTabs.Trigger name="admin" hidden={!isAdmin}>
+  <Label>Admin</Label>
+  <Icon sf="shield.fill" />
+</NativeTabs.Trigger>
+```
+
+**Don't hide the tabs when they are visible. Do it only during the initial render.**
+
 ## Behavior Options
 
 ```tsx
