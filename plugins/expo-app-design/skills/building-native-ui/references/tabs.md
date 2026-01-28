@@ -168,9 +168,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 </NativeTabs.Trigger>;
 ```
 
-**Prefer SF Symbols over vector icons for native feel on Apple platforms**
+**Prefer SF Symbols over vector icons for native feel on Apple platforms.**
 
-If you are using SDK 55 and later **use the md prop to specify Material Symbols used on Android**
+If you are using SDK 55 and later **use the md prop to specify Material Symbols used on Android**.
 
 ## Structure with Stacks
 
