@@ -16,7 +16,7 @@ import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
-import { SymbolView } from "expo-symbols";
+import { Image } from "expo-image";
 import { PlatformColor } from "react-native";
 import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
