@@ -1,32 +1,31 @@
 # Icons (SF Symbols)
 
-Use SF Symbols for native feel. Never use FontAwesome or Ionicons.
+Use SF Symbols via `expo-image` for native feel. Never use FontAwesome, Ionicons, or `@expo/vector-icons`.
 
-## Basic Usage
+SF Symbols are supported on Apple platforms (iOS, macOS, tvOS, visionOS) via the `sf:` source prefix in `expo-image` (SDK 55+).
 
 ```tsx
-import { SymbolView } from "expo-symbols";
-import { PlatformColor } from "react-native";
+import { Image } from "expo-image";
+import { Color } from "expo-router";
 
-<SymbolView
-  tintColor={PlatformColor("label")}
-  resizeMode="scaleAspectFit"
-  name="square.and.arrow.down"
-  style={{ width: 16, height: 16 }}
-/>;
+<Image
+  source="sf:square.and.arrow.down"
+  style={{ fontSize: 16, color: Color.ios.label }}
+/>
 ```
+
+The `source` format is `sf:<symbol-name>` where the symbol name matches Apple's SF Symbol names.
 
 ## Props
 
 ```tsx
-<SymbolView
-  name="star.fill"                    // SF Symbol name (required)
-  tintColor={PlatformColor("label")}  // Icon color
-  size={24}                           // Shorthand for width/height
-  resizeMode="scaleAspectFit"         // How to scale
-  weight="regular"                    // thin | ultraLight | light | regular | medium | semibold | bold | heavy | black
-  scale="medium"                      // small | medium | large
-  style={{ width: 16, height: 16 }}   // Standard style props
+<Image
+  source="sf:star.fill"      // SF Symbol name with sf: prefix (required)
+  style={{
+    fontSize: 24,            // Size via font size
+    color: Color.ios.label,  // Icon color via Color from expo-router
+    fontWeight: "regular",   // thin | ultralight | light | regular | medium | semibold | bold | heavy | black
+  }}
 />
 ```
 
@@ -103,32 +102,16 @@ import { PlatformColor } from "react-native";
 - `bell` - notification
 - `bell.fill` - notification filled
 
-### Misc
-- `ellipsis` - more options
-- `ellipsis.circle` - more in circle
-- `line.3.horizontal` - menu/hamburger
-- `slider.horizontal.3` - filters
-- `arrow.clockwise` - refresh
-- `location` - location
-- `location.fill` - location filled
-- `map` - map
-- `mappin` - pin
-- `clock` - time
-- `calendar` - calendar
-- `link` - link
-- `nosign` - block/prohibited
 
-## Animated Symbols
+## Animated Symbols (sfEffect)
+
+Use the `sfEffect` prop for symbol animations:
 
 ```tsx
-<SymbolView
-  name="checkmark.circle"
-  animationSpec={{
-    effect: {
-      type: "bounce",
-      direction: "up",
-    },
-  }}
+<Image
+  source="sf:checkmark.circle"
+  sfEffect="bounce"
+  style={{ fontSize: 24 }}
 />
 ```
 
@@ -140,61 +123,28 @@ import { PlatformColor } from "react-native";
 - `scale` - Scale animation
 
 ```tsx
-// Bounce with direction
-animationSpec={{
-  effect: { type: "bounce", direction: "up" }  // up | down
-}}
+// Bounce
+<Image source="sf:checkmark.circle" sfEffect="bounce" style={{ fontSize: 24 }} />
 
 // Pulse
-animationSpec={{
-  effect: { type: "pulse" }
-}}
+<Image source="sf:heart.fill" sfEffect="pulse" style={{ fontSize: 24 }} />
 
 // Variable color (multicolor symbols)
-animationSpec={{
-  effect: {
-    type: "variableColor",
-    cumulative: true,
-    reversing: true
-  }
-}}
+<Image source="sf:wifi" sfEffect="variableColor" style={{ fontSize: 24 }} />
+
+// Scale
+<Image source="sf:star.fill" sfEffect="scale" style={{ fontSize: 24 }} />
 ```
 
-## Symbol Weights
+## Transitions
+
+Use the `transition` prop for enter/exit transitions:
 
 ```tsx
-// Lighter weights
-<SymbolView name="star" weight="ultraLight" />
-<SymbolView name="star" weight="thin" />
-<SymbolView name="star" weight="light" />
-
-// Default
-<SymbolView name="star" weight="regular" />
-
-// Heavier weights
-<SymbolView name="star" weight="medium" />
-<SymbolView name="star" weight="semibold" />
-<SymbolView name="star" weight="bold" />
-<SymbolView name="star" weight="heavy" />
-<SymbolView name="star" weight="black" />
-```
-
-## Symbol Scales
-
-```tsx
-<SymbolView name="star" scale="small" />
-<SymbolView name="star" scale="medium" />  // default
-<SymbolView name="star" scale="large" />
-```
-
-## Multicolor Symbols
-
-Some symbols support multiple colors:
-
-```tsx
-<SymbolView
-  name="cloud.sun.rain.fill"
-  type="multicolor"
+<Image
+  source={`sf:${isFilled ? "star.fill" : "star"}`}
+  transition={{ effect: "symbol-bounce" }}
+  style={{ fontSize: 24, color: Color.ios.systemYellow }}
 />
 ```
 
@@ -204,10 +154,24 @@ Some symbols support multiple colors:
 2. Search at https://developer.apple.com/sf-symbols/
 3. Symbol names use dot notation: `square.and.arrow.up`
 
+## Migrating from expo-symbols
+
+Replace `SymbolView` from `expo-symbols` with `Image` from `expo-image`:
+
+```tsx
+// Before (expo-symbols)
+import { SymbolView } from "expo-symbols";
+<SymbolView name="star.fill" tintColor={PlatformColor("label")} size={24} weight="bold" />
+
+// After (expo-image, SDK 55+)
+import { Image } from "expo-image";
+<Image source="sf:star.fill" style={{ fontSize: 24, color: Color.ios.label, fontWeight: "bold" }} />
+```
+
 ## Best Practices
 
 - Always use SF Symbols over vector icon libraries
 - Match symbol weight to nearby text weight
 - Use `.fill` variants for selected/active states
-- Use PlatformColor for tint to support dark mode
+- Use `Color` from `expo-router` (e.g. `Color.ios.label`) for dark mode support
 - Keep icons at consistent sizes (16, 20, 24, 32)

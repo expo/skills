@@ -83,7 +83,8 @@ This regenerates the `ios` and `android` directories. Ensure the project is not 
 | -------------------- | ---------------------------------------------------- |
 | `expo-av`            | `expo-audio` and `expo-video`                        |
 | `expo-permissions`   | Individual package permission APIs                   |
-| `@expo/vector-icons` | `expo-symbols` (for SF Symbols)                      |
+| `@expo/vector-icons` | `expo-image` with `source="sf:name"` (for SF Symbols) |
+| `expo-symbols`       | `expo-image` with `source="sf:name"` (SDK 55+)        |
 | `AsyncStorage`       | `expo-sqlite/localStorage/install`                   |
 | `expo-app-loading`   | `expo-splash-screen`                                 |
 | expo-linear-gradient | experimental_backgroundImage + CSS gradients in View |
