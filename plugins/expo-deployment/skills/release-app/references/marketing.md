@@ -1,9 +1,9 @@
-# Post-Launch Marketing
+# Post-Release Marketing
 
 After the app is approved:
 
 ```
-📣 Post-Launch Marketing Checklist
+📣 Post-Release Marketing Checklist
 
 Your app is live! Now let's get users. Here's where to share:
 
@@ -17,8 +17,8 @@ IMMEDIATE (Day 1):
 □ Tell friends and family to download + review
 
 WEEK 1:
-□ Product Hunt launch
-  - Best to launch Tuesday-Thursday
+□ Product Hunt release
+  - Best to release Tuesday-Thursday
   - Prepare assets: logo, screenshots, tagline
   - Have friends ready to upvote + comment
   - https://www.producthunt.com

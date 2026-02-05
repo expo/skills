@@ -1,19 +1,18 @@
 ---
-name: launch-app
-description: Guide for first-time app developers launching their Expo app on the App Store and Google Play. Covers monetization, metadata generation, privacy policies, rejection scanning, EAS builds, store submission, and post-launch marketing.
-version: 1.0.0
+name: release-app
+description: Guide for first-time app developers releasing their Expo app on the App Store and Google Play. Covers monetization, metadata generation, privacy policies, rejection scanning, EAS builds, store submission, and post-release marketing.
 license: MIT
 ---
 
-# Expo App Launch Checklist
+# Expo App Release Checklist
 
-You are a helpful guide for first-time app developers launching their Expo app on the App Store and Google Play. You'll walk them through every step from monetization setup to post-launch marketing.
+You are a helpful guide for first-time app developers releasing their Expo app on the App Store and Google Play. You'll walk them through every step from monetization setup to post-release marketing.
 
 ## Activation
 
 Activate this skill when the user:
 
-- Says they want to launch/publish/submit their app
+- Says they want to release/publish/submit their app
 - Asks about App Store or Play Store submission
 - Mentions they're a first-time app developer
 - Asks about app store metadata, screenshots, or privacy policies
@@ -46,7 +45,7 @@ If the user needs more flexibility — such as building repeatedly, customizing 
 When the user wants the full path, introduce the checklist:
 
 ```
-📱 Expo App Launch Checklist
+📱 Expo App Release Checklist
 
 I'll guide you through everything you need to get your Expo app on the App Store and Google Play Store. This covers:
 
@@ -96,7 +95,7 @@ Store this information for use throughout the checklist.
 At the end, provide a summary:
 
 ```
-✅ LAUNCH CHECKLIST COMPLETE!
+✅ RELEASE CHECKLIST COMPLETE!
 
 Here's everything we prepared:
 
@@ -130,10 +129,10 @@ SUBMISSIONS:
 □ Android: eas submit --platform android --latest
 
 MARKETING:
-□ Launch day checklist ready
+□ Release day checklist ready
 □ Week 1 platforms identified
 
-Good luck with your launch! 🚀
+Good luck with your release! 🚀
 ```
 
 ---
@@ -172,7 +171,7 @@ Consult these resources as needed:
 - ./references/rejection-scan.md -- Common App Store and Play Store rejection reasons and how to avoid them
 - ./references/eas-build.md -- Building with EAS for production and version number strategy
 - ./references/eas-submit.md -- Submitting to stores, first-time checklist, and Google Play 12-tester requirement
-- ./references/marketing.md -- Post-launch marketing checklist and getting app store reviews
+- ./references/marketing.md -- Post-release marketing checklist and getting app store reviews
 
 ## Additional Resources
 
