@@ -14,7 +14,6 @@ A native rebuild is required after installation (`npx expo run:ios`).
 ## Instructions
 
 - Expo UI's API mirrors SwiftUI's API. Use SwiftUI knowledge to decide which components or modifiers to use.
-- To verify which components are available, find the type definitions for `@expo/ui/swift-ui` in the project. To verify which modifiers are available, find the type definitions for `@expo/ui/swift-ui/modifiers`. Do this before assuming a SwiftUI view or modifier exists in Expo UI.
 - Components are imported from `@expo/ui/swift-ui`, modifiers from `@expo/ui/swift-ui/modifiers`.
 - When about to use a component, fetch its docs to confirm the API - https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/{component-name}/index.md
 - When unsure about a modifier's API, refer to the docs - https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/modifiers/index.md
