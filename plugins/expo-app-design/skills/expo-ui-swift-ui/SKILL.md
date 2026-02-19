@@ -18,9 +18,7 @@ A native rebuild is required after installation (`npx expo run:ios`).
 - When about to use a component, fetch its docs to confirm the API - https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/{component-name}/index.md
 - When unsure about a modifier's API, refer to the docs - https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/modifiers/index.md
 - Every SwiftUI tree must be wrapped in `Host`.
-
-- `RNHostView` is specifically for embedding RN components inside a SwiftUI tree.
-  Example:
+- `RNHostView` is specifically for embedding RN components inside a SwiftUI tree. Example:
 
 ```jsx
 import { Host, VStack, RNHostView } from "@expo-ui/swift-ui";
