@@ -1,6 +1,6 @@
 ---
 name: native-data-fetching
-description: Use when implementing or debugging ANY network request, API call, or data fetching. Covers fetch API, axios, React Query, SWR, error handling, caching strategies, offline support.
+description: Use when implementing or debugging ANY network request, API call, or data fetching. Covers fetch API, React Query, SWR, error handling, caching, offline support, and Expo Router data loaders (useLoaderData).
 version: 1.0.0
 license: MIT
 ---
@@ -9,12 +9,22 @@ license: MIT
 
 **You MUST use this skill for ANY networking work including API requests, data fetching, caching, or network debugging.**
 
+## References
+
+Consult these resources as needed:
+
+```
+references/
+  expo-router-loaders.md   Route-level data loading with Expo Router loaders (web, SDK 55+)
+```
+
 ## When to Use
 
-Use this router when:
+Use this skill when:
 
 - Implementing API requests
 - Setting up data fetching (React Query, SWR)
+- Using Expo Router data loaders (`useLoaderData`, web SDK 55+)
 - Debugging network failures
 - Implementing caching strategies
 - Handling offline scenarios
@@ -408,6 +418,9 @@ useEffect(() => {
 
 ```
 User asks about networking
+  |-- Route-level data loading (web, SDK 55+)?
+  |   \-- Expo Router loaders — see references/expo-router-loaders.md
+  |
   |-- Basic fetch?
   |   \-- Use fetch API with error handling
   |
@@ -489,3 +502,6 @@ User: "How do I configure different API URLs for dev and prod?"
 
 User: "Where should I put my API key?"
 -> Client-safe keys: EXPO*PUBLIC* in .env. Secret keys: non-prefixed env vars in API routes only
+
+User: "How do I load data for a page in Expo Router?"
+-> See references/expo-router-loaders.md for route-level loaders (web, SDK 55+). For native, use React Query or fetch.

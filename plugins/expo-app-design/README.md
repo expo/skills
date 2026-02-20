@@ -8,7 +8,7 @@ Build robust, productivity apps with Expo. Domain-specific knowledge for buildin
 - Covers Expo Router navigation patterns (stacks, tabs, modals, sheets)
 - Explains native iOS controls, SF Symbols, animations, and visual effects
 - Guides API route creation with EAS Hosting
-- Covers data fetching patterns with React Query and offline support
+- Covers data fetching patterns with React Query, offline support, and Expo Router loaders
 - Helps set up Tailwind CSS v4 with NativeWind v5
 - Explains DOM components for running web code in native apps
 
@@ -24,7 +24,7 @@ Build robust, productivity apps with Expo. Domain-specific knowledge for buildin
 
 - **building-ui** - UI components, navigation, styling, and native controls
 - **api-routes** - Server-side API routes with EAS Hosting
-- **data-fetching** - Network requests, caching, and offline support
+- **data-fetching** - Network requests, caching, offline support, and Expo Router loaders
 - **dev-client** - Development builds and TestFlight distribution
 - **tailwind-setup** - Tailwind CSS v4 configuration
 - **use-dom** - Web code integration via DOM components
