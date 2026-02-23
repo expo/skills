@@ -11,7 +11,7 @@ You write one function and the framework manages when and how it executes.
 
 ## Configuration
 
-**Requirements:** Expo SDK 55+, web output mode (`npx expo serve` or `npx expo export --platform web`)
+**Requirements:** Expo SDK 55+, web output mode (`npx expo serve` or `npx expo export --platform web`) set in `app.json` or `app.config.js`.
 
 **Server rendering:**
 
@@ -48,8 +48,6 @@ You write one function and the framework manages when and how it executes.
 }
 ```
 
-`unstable_useServerDataLoaders` is always required. `unstable_useServerRendering` is only required for server output mode, static (SSG) builds do not need it. The `unstable_` prefix indicates alpha status.
-
 | | `"server"` | `"static"` |
 |---|-----------|------------|
 | `unstable_useServerDataLoaders` | Required | Required |
@@ -70,8 +68,10 @@ Loaders use two packages:
 For loaders without params, a plain async function works:
 
 ```tsx
-// app/index.tsx
+// app/posts/index.tsx
+import { Suspense } from "react";
 import { useLoaderData } from "expo-router";
+import { ActivityIndicator, View, Text } from "react-native";
 
 export async function loader() {
   const response = await fetch("https://api.example.com/posts");
@@ -79,7 +79,7 @@ export async function loader() {
   return { posts };
 }
 
-export default function Home() {
+function PostList() {
   const { posts } = useLoaderData<typeof loader>();
 
   return (
@@ -90,18 +90,28 @@ export default function Home() {
     </View>
   );
 }
+
+export default function Posts() {
+  return (
+    <Suspense fallback={<ActivityIndicator size="large" />}>
+      <PostList />
+    </Suspense>
+  );
+}
 ```
 
 `useLoaderData` is typed via `typeof loader` — the generic parameter infers the return type.
 
 ## Dynamic Routes
 
-For loaders with params, use the `LoaderFunction<T>` type from `expo-server`. The first argument is the request (an immutable `Request`-like object, or `undefined` in static mode). The second is `params` (`Record<string, string | string[]>`), so access individual params with a cast like `params.id as string`:
+For loaders with params, use the `LoaderFunction<T>` type from `expo-server`. The first argument is the request (an immutable `Request`-like object, or `undefined` in static mode). The second is `params` (`Record<string, string | string[]>`), which contains **path parameters only**. Access individual params with a cast like `params.id as string`. For query parameters, use `new URL(request.url).searchParams`:
 
 ```tsx
 // app/posts/[id].tsx
+import { Suspense } from "react";
 import { useLoaderData } from "expo-router";
 import { StatusError, type LoaderFunction } from "expo-server";
+import { ActivityIndicator, View, Text } from "react-native";
 
 type Post = {
   id: number;
@@ -124,7 +134,7 @@ export const loader: LoaderFunction<{ post: Post }> = async (
   return { post };
 };
 
-export default function PostDetail() {
+function PostContent() {
   const { post } = useLoaderData<typeof loader>();
 
   return (
@@ -132,6 +142,14 @@ export default function PostDetail() {
       <Text>{post.title}</Text>
       <Text>{post.body}</Text>
     </View>
+  );
+}
+
+export default function PostDetail() {
+  return (
+    <Suspense fallback={<ActivityIndicator size="large" />}>
+      <PostContent />
+    </Suspense>
   );
 }
 ```
@@ -149,6 +167,23 @@ export const loader: LoaderFunction<{ doc: Doc }> = async (request, params) => {
   const path = slug.join("/");
   const doc = await fetchDoc(path);
   return { doc };
+};
+```
+
+Query parameters are available via the `request` object (server output mode only):
+
+```tsx
+// app/search.tsx
+import { type LoaderFunction } from "expo-server";
+
+export const loader: LoaderFunction<{ results: any[]; query: string }> = async (request) => {
+  // Assuming request.url is `/search?q=expo&page=2`
+  const url = new URL(request!.url);
+  const query = url.searchParams.get("q") ?? "";
+  const page = Number(url.searchParams.get("page") ?? "1");
+
+  const results = await fetchSearchResults(query, page);
+  return { results, query };
 };
 ```
 
@@ -281,7 +316,7 @@ When a loader throws (including `StatusError`), the nearest `ErrorBoundary` catc
 | | Server (`"server"`) | Static (`"static"`) |
 |---|---|---|
 | **When loader runs** | Every request (live) | At build time (`npx expo export`) |
-| **Data freshness** | Always fresh | Stale until next build |
+| **Data freshness** | Fresh on initial server request | Stale until next build |
 | **`request` object** | Full access | Not available |
 | **Hosting** | Node.js server (EAS Hosting) | Any static host |
 | **Use case** | Personalized/dynamic content | Marketing pages, blogs, docs |
