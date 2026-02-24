@@ -86,6 +86,32 @@ const styles = StyleSheet.create({
 });
 ```
 
+### Formsheet with interactive content below
+
+Use `sheetLargestUndimmedDetentIndex` (zero-indexed) to keep content behind the form sheet interactive — e.g. letting users pan a map beneath it. Setting it to `1` allows interaction at the first two detents but dims on the third.
+
+```tsx
+// app/_layout.tsx
+import { Stack } from 'expo-router';
+
+export default function Layout() {
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen
+        name="info-sheet"
+        options={{
+          presentation: "formSheet",
+          sheetAllowedDetents: [0.2, 0.5, 1.0],
+          sheetLargestUndimmedDetentIndex: 1,
+          /* other options */
+        }}
+      />
+    </Stack>
+  )
+}
+```
+
 ## Key Options
 
 | Option                | Type       | Description                                                 |
