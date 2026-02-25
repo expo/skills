@@ -3,6 +3,8 @@ name: Expo UI SwiftUI
 description: `@expo/ui/swift-ui` package lets you use SwiftUI Views and modifiers in your app.
 ---
 
+> The instructions in this skill apply to SDK 55 only. For other SDK versions, refer to the Expo UI SwiftUI docs for that version for the most accurate information.
+
 ## Installation
 
 ```bash
@@ -15,8 +17,8 @@ A native rebuild is required after installation (`npx expo run:ios`).
 
 - Expo UI's API mirrors SwiftUI's API. Use SwiftUI knowledge to decide which components or modifiers to use.
 - Components are imported from `@expo/ui/swift-ui`, modifiers from `@expo/ui/swift-ui/modifiers`.
-- When about to use a component, fetch its docs to confirm the API - https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/{component-name}/index.md
-- When unsure about a modifier's API, refer to the docs - https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/modifiers/index.md
+- When about to use a component, fetch its docs to confirm the API - https://docs.expo.dev/versions/v55.0.0/sdk/ui/swift-ui/{component-name}/index.md
+- When unsure about a modifier's API, refer to the docs - https://docs.expo.dev/versions/v55.0.0/sdk/ui/swift-ui/modifiers/index.md
 - Every SwiftUI tree must be wrapped in `Host`.
 - `RNHostView` is specifically for embedding RN components inside a SwiftUI tree. Example:
 
