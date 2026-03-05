@@ -41,6 +41,15 @@ Install a plugin:
 
 If the skills are working, the agent will use the relevant skill content to answer your questions.
 
+## AdaL
+
+[AdaL](https://sylph.ai) is a self-evolving AI coding agent that's compatible with Claude Code skills.
+
+```bash
+/plugin marketplace add expo/skills
+/plugin install expo-app-design
+```
+
 ## Any agent
 
 ```
