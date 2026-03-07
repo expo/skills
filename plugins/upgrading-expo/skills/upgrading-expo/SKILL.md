@@ -53,6 +53,8 @@ watchman watch-del-all
 
 ## Prebuild for Native Changes
 
+**First check if `ios/` and `android/` directories exist in the project.** If neither directory exists, the project uses Continuous Native Generation (CNG) and native projects are regenerated at build time — skip this section and "Clear caches for bare workflow" entirely.
+
 If upgrading requires native changes:
 
 ```bash
@@ -62,6 +64,8 @@ npx expo prebuild --clean
 This regenerates the `ios` and `android` directories. Ensure the project is not a bare workflow app before running this command.
 
 ## Clear caches for bare workflow
+
+These steps only apply when `ios/` and/or `android/` directories exist in the project:
 
 - Clear the cocoapods cache for iOS: `cd ios && pod install --repo-update`
 - Clear derived data for Xcode: `npx expo run:ios --no-build-cache`
