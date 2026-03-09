@@ -1,9 +1,28 @@
 ---
 name: expo-api-routes
-description: Guidelines for creating API routes in Expo Router with EAS Hosting
-version: 1.0.0
+description: >
+  Define server-side API endpoints, handle HTTP methods, configure route handlers, and deploy
+  serverless functions in Expo Router with EAS Hosting. Use when building backend routes for
+  React Native apps, proxying third-party APIs with secret keys, creating webhook endpoints,
+  or deploying server functions to EAS Hosting.
+version: 1.0.1
 license: MIT
 ---
+
+## References
+
+Consult these resources as needed:
+
+- ./references/eas-hosting-runtime.md -- Cloudflare Workers runtime constraints, Web API alternatives, and database options
+- ./references/common-patterns.md -- Authentication middleware, API proxying, and reusable patterns
+
+## Workflow
+
+1. Create a route file in `app/` with the `+api.ts` suffix (e.g., `app/api/hello+api.ts`)
+2. Export named functions for each HTTP method (`GET`, `POST`, `PUT`, `DELETE`)
+3. Access secrets via `process.env` — never expose keys in client code
+4. Test locally with `npx expo serve` and verify with `curl`
+5. Deploy with `eas deploy` and confirm the endpoint returns the expected response
 
 ## When to Use API Routes
 
@@ -240,62 +259,22 @@ eas env:create --name OPENAI_API_KEY --value sk-xxx --environment production
 
 Configure in `eas.json` or Expo dashboard.
 
-## EAS Hosting Runtime (Cloudflare Workers)
+### Verify Deployment
 
-API routes run on Cloudflare Workers. Key limitations:
+After deploying, confirm routes are live:
 
-### Missing/Limited APIs
+```bash
+# Check a GET endpoint
+curl -s -o /dev/null -w "%{http_code}" https://your-app.expo.app/api/hello
+# Expected: 200
 
-- **No Node.js filesystem** — `fs` module unavailable
-- **No native Node modules** — Use Web APIs or polyfills
-- **Limited execution time** — 30 second timeout for CPU-intensive tasks
-- **No persistent connections** — WebSockets require Durable Objects
-- **fetch is available** — Use standard fetch for HTTP requests
-
-### Use Web APIs Instead
-
-```ts
-// Use Web Crypto instead of Node crypto
-const hash = await crypto.subtle.digest(
-  "SHA-256",
-  new TextEncoder().encode("data")
-);
-
-// Use fetch instead of node-fetch
-const response = await fetch("https://api.example.com");
-
-// Use Response/Request (already available)
-return new Response(JSON.stringify(data), {
-  headers: { "Content-Type": "application/json" },
-});
+# Check a POST endpoint
+curl -s -X POST https://your-app.expo.app/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test"}' | jq .
 ```
 
-### Database Options
-
-Since filesystem is unavailable, use cloud databases:
-
-- **Cloudflare D1** — SQLite at the edge
-- **Turso** — Distributed SQLite
-- **PlanetScale** — Serverless MySQL
-- **Supabase** — Postgres with REST API
-- **Neon** — Serverless Postgres
-
-Example with Turso:
-
-```ts
-// app/api/users+api.ts
-import { createClient } from "@libsql/client/web";
-
-const db = createClient({
-  url: process.env.TURSO_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
-
-export async function GET() {
-  const result = await db.execute("SELECT * FROM users");
-  return Response.json(result.rows);
-}
-```
+If the response is not what you expect, check `eas deploy` logs and verify environment variables are set with `eas env:list`.
 
 ## Calling API Routes from Client
 
@@ -310,51 +289,6 @@ const response = await fetch("/api/users", {
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ name: "John" }),
 });
-```
-
-## Common Patterns
-
-### Authentication Middleware
-
-```ts
-// utils/auth.ts
-export async function requireAuth(request: Request) {
-  const token = request.headers.get("Authorization")?.replace("Bearer ", "");
-
-  if (!token) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  // Verify token...
-  return { userId: "123" };
-}
-
-// app/api/protected+api.ts
-import { requireAuth } from "../../utils/auth";
-
-export async function GET(request: Request) {
-  const { userId } = await requireAuth(request);
-  return Response.json({ userId });
-}
-```
-
-### Proxy External API
-
-```ts
-// app/api/weather+api.ts
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const city = url.searchParams.get("city");
-
-  const response = await fetch(
-    `https://api.weather.com/v1/current?city=${city}&key=${process.env.WEATHER_API_KEY}`
-  );
-
-  return Response.json(await response.json());
-}
 ```
 
 ## Rules
