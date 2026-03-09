@@ -1,9 +1,0 @@
-{
-  "name": "expo-deployment",
-  "version": "1.0.0",
-  "description": "Deploying Expo apps to iOS App Store, Android Play Store, web hosting, and CI/CD workflows",
-  "author": {
-    "name": "James Ide",
-    "email": "ide@expo.dev"
-  }
-}

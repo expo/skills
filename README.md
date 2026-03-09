@@ -14,12 +14,10 @@ Add the marketplace:
 /plugin marketplace add expo/skills
 ```
 
-Install a plugin:
+Install the plugin:
 
 ```
-/plugin install expo-app-design
-/plugin install upgrading-expo
-/plugin install expo-deployment
+/plugin install expo
 ```
 
 ## Cursor

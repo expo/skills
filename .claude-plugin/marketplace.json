@@ -9,19 +9,24 @@
   },
   "plugins": [
     {
+      "name": "expo",
+      "source": "./plugins/expo",
+      "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo apps."
+    },
+    {
       "name": "expo-app-design",
-      "source": "./plugins/expo-app-design",
-      "description": "Build robust, productivity apps with Expo."
+      "source": "./plugins/expo",
+      "description": "[Deprecated] Use 'expo' instead. Build robust, productivity apps with Expo."
     },
     {
       "name": "upgrading-expo",
-      "source": "./plugins/upgrading-expo",
-      "description": "Guidelines for upgrading Expo SDK versions and fixing dependency issues."
+      "source": "./plugins/expo",
+      "description": "[Deprecated] Use 'expo' instead. Guidelines for upgrading Expo SDK versions."
     },
     {
       "name": "expo-deployment",
-      "source": "./plugins/expo-deployment",
-      "description": "Deploying Expo apps to iOS App Store, Android Play Store, web hosting, and CI/CD workflows."
+      "source": "./plugins/expo",
+      "description": "[Deprecated] Use 'expo' instead. Deploying Expo apps to App Store, Play Store, and web."
     }
   ]
 }

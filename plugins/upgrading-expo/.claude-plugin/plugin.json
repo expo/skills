@@ -1,9 +1,0 @@
-{
-  "name": "upgrading-expo",
-  "version": "1.0.0",
-  "description": "Guidelines for upgrading Expo SDK versions and fixing dependency issues",
-  "author": {
-    "name": "Evan Bacon",
-    "email": "bacon@expo.io"
-  }
-}
