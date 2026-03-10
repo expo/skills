@@ -22,6 +22,11 @@
       "name": "expo-deployment",
       "source": "./plugins/expo-deployment",
       "description": "Deploying Expo apps to iOS App Store, Android Play Store, web hosting, and CI/CD workflows."
+    },
+    {
+      "name": "expo-brownfield",
+      "source": "./plugins/expo-brownfield",
+      "description": "Integrate Expo and React Native into existing native Android and iOS apps."
     }
   ]
 }
