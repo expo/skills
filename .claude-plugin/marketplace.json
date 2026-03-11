@@ -16,17 +16,17 @@
     {
       "name": "expo-app-design",
       "source": "./plugins/expo",
-      "description": "[Deprecated] Use 'expo' instead. Build robust, productivity apps with Expo."
+      "description": "[Deprecated] Use the \"expo\" plugin instead. Build robust, productivity apps with Expo."
     },
     {
       "name": "upgrading-expo",
       "source": "./plugins/expo",
-      "description": "[Deprecated] Use 'expo' instead. Guidelines for upgrading Expo SDK versions."
+      "description": "[Deprecated] Use the \"expo\" plugin instead. Guidelines for upgrading Expo SDK versions."
     },
     {
       "name": "expo-deployment",
       "source": "./plugins/expo",
-      "description": "[Deprecated] Use 'expo' instead. Deploying Expo apps to App Store, Play Store, and web."
+      "description": "[Deprecated] Use the \"expo\" plugin instead. Deploying Expo apps to App Store, Play Store, and web."
     }
   ]
 }
