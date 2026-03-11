@@ -1,6 +1,6 @@
 # react-native-maps
 
-Expo SDK 55 uses `react-native-maps` version 1.26.20+
+Expo SDK 55 uses `react-native-maps` version 1.27.2+
 
 `react-native-maps@1.22.0` now has an Expo Config Plugin (SDK 53+)
 
@@ -20,9 +20,9 @@ Add the plugin to `app.json`
 
 ### With Google Maps
 
-If Google is used as the map provider, provide the appropriate platform-specific API key, and migrate any legacy configuration into the plugin configuration.
+If Google Maps is used as the map provider, provide the appropriate platform-specific API key, and migrate any legacy configuration into the plugin configuration.
 
-Before (Expo SDK 54 and below):
+Before:
 
 ```json
 {
@@ -43,7 +43,7 @@ Before (Expo SDK 54 and below):
 }
 ```
 
-Before (Expo SDK 54 and below):
+After:
 
 ```json
 {
