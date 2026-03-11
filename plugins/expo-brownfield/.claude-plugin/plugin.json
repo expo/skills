@@ -1,0 +1,9 @@
+{
+  "name": "expo-brownfield",
+  "version": "1.0.0",
+  "description": "Integrate Expo and React Native into existing native Android and iOS apps",
+  "author": {
+    "name": "Gabriel Donadel",
+    "email": "gabriel@expo.io"
+  }
+}
