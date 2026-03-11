@@ -1,8 +1,8 @@
 {
   "name": "expo-plugins",
   "owner": {
-    "name": "Evan Bacon",
-    "email": "bacon@expo.io"
+    "name": "Expo Team",
+    "email": "support@expo.dev"
   },
   "metadata": {
     "description": "Expo's official plugins for Claude Code"
