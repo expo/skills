@@ -33,20 +33,71 @@ references/
 
 ### Create a Local Module (in existing app)
 
+**Always scaffold with `create-expo-module` first**, then modify the generated code. This ensures correct podspec, build.gradle, and module config — avoiding common build errors.
+
 ```bash
-npx create-expo-module@latest --local
+CI=1 npx create-expo-module@latest --local \
+  --name MyModule \
+  --description "My Expo module" \
+  --package expo.modules.mymodule
 ```
 
-Generated structure:
+`CI=1` skips interactive prompts and uses the provided flags.
+
+> **Important:** In `CI=1` (non-interactive) mode, the scaffold always creates the directory as `modules/my-module/` because the slug is derived from `customTargetPath` which is `undefined` for `--local` modules — the `--name` flag only sets the native class name, not the directory. After scaffolding, rename it to a kebab-case name matching your module (e.g., `KeyValueStore` → `modules/key-value-store/`), then run `cd ios && pod install` so CocoaPods picks up the correct path. Skipping the rename is fine functionally, but skipping `pod install` after any rename causes iOS build failures ("Build input file cannot be found").
+
+Available flags:
+
+| Flag | Description | Example |
+|------|-------------|---------|
+| `--name` | Native module name (PascalCase) | `--name KeyValueStore` |
+| `--description` | Module description | `--description "Native key-value storage"` |
+| `--package` | Android package name | `--package expo.modules.keyvaluestore` |
+| `--author-name` | Author name | `--author-name "dev"` |
+| `--author-email` | Author email | `--author-email "dev@example.com"` |
+| `--author-url` | Author profile URL | `--author-url "https://github.com/dev"` |
+| `--repo` | Repository URL | `--repo "https://github.com/dev/repo"` |
+
+The scaffold generates both a **native module** (functions, events, constants) and a **native view component** (WebView example with props and events). After scaffolding:
+
+1. **Decide what you need**: If you only need a native module (no UI), remove the view files. If you only need a native view, remove the module function boilerplate. If you need both, keep both and replace the implementations.
+2. **Remove unnecessary boilerplate**: The scaffold includes example code (`hello()` function, `PI` constant, `onChange` event, WebView-based view with `url` prop). Strip all of this and replace with your actual implementation.
+3. **Remove web files if not needed**: The scaffold generates `*.web.ts`/`*.web.tsx` files for web platform support. Remove these if the module is native-only. Also remove `"web"` from the `platforms` array in `expo-module.config.json`.
+
+#### What to remove for a module-only (no native view):
+
+- Delete `ios/MyModuleView.swift`, `android/.../MyModuleView.kt`
+- Delete `src/MyModuleView.tsx`, `src/MyModuleView.web.tsx`
+- Remove the `View(...)` block from the module definition in both Swift and Kotlin
+- Remove view-related types from `MyModule.types.ts` and view export from `index.ts`
+
+#### What to remove for a view-only (no module functions):
+
+- Remove `Function`, `AsyncFunction`, `Constant`, `Events` blocks from the module definition (keep `Name` and `View`)
+- Simplify the TypeScript module file to only export the view
+
+Generated structure (after renaming from `my-module` to your module's kebab-case name):
 
 ```
 modules/
-  my-module/
+  my-module/                     # Rename to kebab-case, e.g. key-value-store/
     android/
+      build.gradle
+      src/main/java/expo/modules/mymodule/
+        MyModule.kt              # Module definition (functions, events, view registration)
+        MyModuleView.kt          # Native view (ExpoView subclass)
     ios/
+      MyModule.podspec
+      MyModule.swift             # Module definition
+      MyModuleView.swift         # Native view (ExpoView subclass)
     src/
+      MyModule.ts                # Native module binding
+      MyModule.web.ts            # Web implementation
+      MyModule.types.ts          # Shared types
+      MyModuleView.tsx           # Native view component
+      MyModuleView.web.tsx       # Web view component
     expo-module.config.json
-    index.ts
+    index.ts                     # Re-exports module + view
 ```
 
 ### Create a Standalone Module (for publishing)
@@ -57,7 +108,7 @@ npx create-expo-module@latest my-module
 
 ---
 
-## Minimal Module
+## Module Structure Reference
 
 The Swift and Kotlin DSL share the same structure. Both platforms are shown here for reference — in other reference files, Swift is shown as the primary language unless the Kotlin pattern meaningfully differs.
 
