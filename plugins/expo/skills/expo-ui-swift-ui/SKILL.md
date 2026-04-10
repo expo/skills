@@ -1,6 +1,6 @@
 ---
 name: Expo UI SwiftUI
-description: `@expo/ui/swift-ui` package lets you use SwiftUI Views and modifiers in your app.
+description: "`@expo/ui/swift-ui` package lets you use SwiftUI Views and modifiers in your app."
 ---
 
 > The instructions in this skill apply to SDK 55 only. For other SDK versions, refer to the Expo UI SwiftUI docs for that version for the most accurate information.
