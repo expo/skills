@@ -7,7 +7,7 @@ license: MIT
 
 # EAS Observe CLI
 
-EAS Observe collects app performance telemetry from Expo apps and exposes it through three hidden EAS CLI commands. All commands are in preview and subject to breaking changes.
+EAS Observe collects app performance telemetry from Expo apps and exposes it through three hidden EAS CLI commands. All commands are in preview and subject to breaking changes. Pass the `--help` flag to one of the commands for the latest API.
 
 ## Commands Overview
 
