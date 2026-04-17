@@ -67,6 +67,8 @@ The JSON response has a `currentPage` array with one entry per update group (bot
 }
 ```
 
+Entries also carry `codeSigningKey` and `rolloutPercentage`, but only when those features are in use for the group (undefined values are omitted from the JSON output).
+
 When called with `--branch <name>`, the response also includes `name` (the branch name) and `id` (the branch ID) at the top level.
 
 ## `eas update:insights <groupId>`
