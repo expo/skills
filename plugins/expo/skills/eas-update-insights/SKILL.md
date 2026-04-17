@@ -40,17 +40,37 @@ All of these support `--json --non-interactive` for programmatic parsing.
 
 ## Discovering IDs
 
-Before querying insights for an update group, you need its `group` ID. Use `eas update:list`:
+Before querying insights for an update group, you need its `group` ID. Use `eas update:list`. The command needs either `--branch <name>` (updates on that branch) or `--all` (updates across all branches):
 
 ```bash
 # Interactive: pick a branch, see its recent groups
 eas update:list
 
-# Programmatic: grab the latest group id from the first branch
-eas update:list --json --non-interactive | jq -r '.[0].updates[0].group'
+# Programmatic: latest group id across all branches
+eas update:list --all --json --non-interactive | jq -r '.currentPage[0].group'
+
+# Programmatic: latest group id on a specific branch
+eas update:list --branch production --json --non-interactive | jq -r '.currentPage[0].group'
 ```
 
-The JSON response is an array of branches; each has `updates[]` with one entry per platform. The `group` field is shared across platforms in the same publish (iOS and Android of the same release share one group ID).
+The JSON response has a `currentPage` array with one entry per update group (both platforms of the same publish are collapsed into one entry):
+
+```json
+{
+  "currentPage": [
+    {
+      "branch": "production",
+      "message": "\"Fix checkout crash\" (1 week ago by someone)",
+      "runtimeVersion": "1.0.6",
+      "group": "03d5dfcf-736c-475a-8730-af039c3f4d06",
+      "platforms": "android, ios",
+      "isRollBackToEmbedded": false
+    }
+  ]
+}
+```
+
+When called with `--branch <name>`, the response also includes `name` (the branch name) and `id` (the branch ID) at the top level.
 
 ## `eas update:insights <groupId>`
 
@@ -202,15 +222,16 @@ Fields that matter:
 ### Verify the update I just published is healthy
 
 ```bash
-# 1. Grab the latest publish
-GROUP_ID=$(eas update:list --json --non-interactive | jq -r '.[0].updates[0].group')
+# 1. Grab the latest publish on production
+GROUP_ID=$(eas update:list --branch production --json --non-interactive \
+  | jq -r '.currentPage[0].group')
 
 # 2. Give it some adoption time (minutes to hours), then check crash rate
 eas update:insights "$GROUP_ID" --json --non-interactive \
   | jq '.platforms[] | {platform, installs: .totals.installs, crashRate: .totals.crashRatePercent}'
 ```
 
-Rule of thumb: if `crashRatePercent > 1%` on either platform with non-trivial installs, investigate.
+Compare the `crashRate` across platforms and against previous releases; sudden spikes or asymmetric behaviour (iOS spiking while Android is flat, or vice versa) is the signal to investigate.
 
 ### Compare adoption between two channels
 
