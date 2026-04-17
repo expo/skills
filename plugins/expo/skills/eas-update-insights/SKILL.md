@@ -40,16 +40,13 @@ All of these support `--json --non-interactive` for programmatic parsing.
 
 ## Discovering IDs
 
-Before querying insights for an update group, you need its `group` ID. Use `eas update:list`. The command needs either `--branch <name>` (updates on that branch) or `--all` (updates across all branches):
+Before querying insights for an update group, you need its `group` ID. Use `eas update:list` with either `--branch <name>` (updates on that branch) or `--all` (updates across all branches). Always pass `--json --non-interactive` when running non-interactively; without a branch/`--all` flag the command will otherwise prompt for a branch selection:
 
 ```bash
-# Interactive: pick a branch, see its recent groups
-eas update:list
-
-# Programmatic: latest group id across all branches
+# Latest group id across all branches
 eas update:list --all --json --non-interactive | jq -r '.currentPage[0].group'
 
-# Programmatic: latest group id on a specific branch
+# Latest group id on a specific branch
 eas update:list --branch production --json --non-interactive | jq -r '.currentPage[0].group'
 ```
 
@@ -272,7 +269,6 @@ Human-readable group details plus 30 days of launches/failures per platform — 
 
 ## Limitations
 
-- **Web updates**: `--platform` accepts only `ios` or `android`. If a group has a web update, it will appear in the default (all-platforms) output but can't be filtered via `--platform`.
 - **Unique users across platforms** may double-count users who run the same publish on both iOS and Android. The same caveat applies to `otaTotalUniqueUsers` in channel insights, which is a sum over `mostPopularUpdates`.
 - **Fresh publishes** may show zeros for a short period while the metrics pipeline catches up.
 - **Installs are downloads, not launches**: the `installs` / "Launches" field counts users who downloaded the manifest and launch asset. A confirmed run only registers on the user's *next* update check (typically up to 24h later, depending on the app's update policy). So metrics lag the real-world state slightly.
