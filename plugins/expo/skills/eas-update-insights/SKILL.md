@@ -1,6 +1,6 @@
 ---
 name: eas-update-insights
-description: Check the health of published EAS Updates: crash rates, install/launch counts, unique users, payload size, and channel adoption. Use when the user asks how an update is performing, whether a rollout is healthy, how many users are on the embedded build vs OTA, or wants to gate CI on update health.
+description: "Check the health of published EAS Updates: crash rates, install/launch counts, unique users, payload size, and the split between embedded and OTA users per channel. Use when the user asks how an update is performing, whether a rollout is healthy, how many users are on the embedded build vs OTA, or wants to gate CI on update health."
 version: 1.0.0
 license: MIT
 allowed-tools: "Bash(eas *)"
@@ -8,7 +8,7 @@ allowed-tools: "Bash(eas *)"
 
 # EAS Update Insights
 
-Query the health of published EAS Updates directly from the CLI: launches, failed launches, crash rates, unique users, payload size, channel adoption, and the most popular updates per runtime version. The data is the same data that powers the update and channel detail pages on expo.dev; these commands expose it in the terminal in human and JSON form.
+Query the health of published EAS Updates directly from the CLI: launches, failed launches, crash rates, unique users, payload size, the embedded-vs-OTA user split per channel, and the most popular updates per runtime version. The data is the same data that powers the update and channel detail pages on expo.dev; these commands expose it in the terminal in human and JSON form.
 
 ## When to use this skill
 
@@ -23,7 +23,7 @@ Example prompts:
 - "Which update is most popular on production right now?"
 - "How big is our update bundle?"
 
-Also fits: post-publish rollout monitoring, regression detection, and CI pipelines that gate on update health.
+Also fits: post-publish rollout monitoring and regression detection.
 
 Don't use when the user needs per-user crash detail or device-level reporting; this skill only exposes aggregate EAS metrics.
 
@@ -132,7 +132,7 @@ Without `--insights`, `update:view` behaves exactly as before — no JSON shape 
 
 ## `eas channel:insights --channel <name> --runtime-version <version>`
 
-Channel-level adoption view: how many users are on the embedded build vs over-the-air updates, and which updates are pulling the most traffic. Must be run from an Expo project directory.
+Shows, per channel, how many users are on the embedded build vs over-the-air updates and which updates are pulling the most traffic. Must be run from an Expo project directory.
 
 ### Basic use
 
