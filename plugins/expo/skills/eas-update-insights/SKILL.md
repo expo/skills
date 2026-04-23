@@ -1,6 +1,6 @@
 ---
 name: eas-update-insights
-description: How to check EAS Update health, crash rates, adoption metrics, and rollout status using the CLI. Covers eas update:insights and eas channel:insights with JSON output for programmatic use.
+description: Check the health of published EAS Updates: crash rates, install/launch counts, unique users, payload size, and channel adoption. Use when the user asks how an update is performing, whether a rollout is healthy, how many users are on the embedded build vs OTA, or wants to gate CI on update health.
 version: 1.0.0
 license: MIT
 allowed-tools: "Bash(eas *)"
@@ -8,18 +8,24 @@ allowed-tools: "Bash(eas *)"
 
 # EAS Update Insights
 
-Query the health of published EAS Updates directly from the CLI: launches, failed launches, crash rates, unique users, payload size, channel adoption, and the most popular updates per runtime version.
+Query the health of published EAS Updates directly from the CLI: launches, failed launches, crash rates, unique users, payload size, channel adoption, and the most popular updates per runtime version. The data is the same data that powers the update and channel detail pages on expo.dev; these commands expose it in the terminal in human and JSON form.
 
 ## When to use this skill
 
-- "How is the update I just published doing?"
-- "What's the crash rate of update group X?"
+Use this when the user wants to assess the health or adoption of a published EAS Update: crash rates, install counts, unique users, bundle size, or the split between embedded and OTA users on a channel.
+
+Example prompts:
+
+- "How is the latest update doing?"
+- "Is the latest update healthy?"
+- "Is the new release crashing more than the last one?"
 - "How many users are on the latest update vs the embedded build?"
 - "Which update is most popular on production right now?"
-- "Compare adoption between production and staging channels."
-- Post-publish rollout monitoring, regression detection, and CI pipelines that gate on update health.
+- "How big is our update bundle?"
 
-The data is the same data that powers the update and channel detail pages on expo.dev; these commands expose it in the terminal in human and JSON form.
+Also fits: post-publish rollout monitoring, regression detection, and CI pipelines that gate on update health.
+
+Don't use when the user needs per-user crash detail or device-level reporting; this skill only exposes aggregate EAS metrics.
 
 ## Prerequisites
 
@@ -93,49 +99,15 @@ eas update:insights 03d5dfcf-736c-475a-8730-af039c3f4d06
 
 ### JSON output shape
 
-```json
-{
-  "groupId": "03d5dfcf-736c-475a-8730-af039c3f4d06",
-  "timespan": {
-    "start": "2026-04-10T00:00:00.000Z",
-    "end": "2026-04-17T00:00:00.000Z",
-    "daysBack": 7
-  },
-  "platforms": [
-    {
-      "platform": "android",
-      "updateId": "019d72ca-...",
-      "totals": {
-        "uniqueUsers": 500,
-        "installs": 990,
-        "failedInstalls": 10,
-        "crashRatePercent": 1.0
-      },
-      "payload": {
-        "launchAssetCount": 4,
-        "averageUpdatePayloadBytes": 1115771
-      },
-      "daily": [
-        { "date": "2026-04-10T00:00:00.000Z", "installs": 182, "failedInstalls": 2 },
-        { "date": "2026-04-11T00:00:00.000Z", "installs": 195, "failedInstalls": 1 }
-      ]
-    },
-    {
-      "platform": "ios",
-      "updateId": "019d72ca-...",
-      "totals": { "uniqueUsers": 100, "installs": 1, "failedInstalls": 0, "crashRatePercent": 0 },
-      "payload": { "launchAssetCount": 4, "averageUpdatePayloadBytes": 1115771 },
-      "daily": [ { "date": "2026-04-10T00:00:00.000Z", "installs": 1, "failedInstalls": 0 } ]
-    }
-  ]
-}
-```
+Top level: `groupId`, `timespan` (`start`, `end`, `daysBack`), and `platforms[]` with one entry per platform the group was published to. Each platform entry has `updateId`, `totals` (`uniqueUsers`, `installs`, `failedInstalls`, `crashRatePercent`), `payload` (`launchAssetCount`, `averageUpdatePayloadBytes`), and a `daily[]` time series of `{ date, installs, failedInstalls }`.
+
+For the complete schema and field reference, see [references/update-insights-schema.md](./references/update-insights-schema.md).
 
 Fields that matter for health assessment:
 
-- `platforms[].totals.crashRatePercent` — computed as `failedInstalls / (installs + failedInstalls) * 100`. Zero when there are no installs.
-- `platforms[].totals.installs` / `uniqueUsers` — adoption signal.
-- `platforms[].daily` — time series, useful for spotting a sudden spike in failures.
+- `platforms[].totals.crashRatePercent`, computed as `failedInstalls / (installs + failedInstalls) * 100`. Zero when there are no installs.
+- `platforms[].totals.installs` and `uniqueUsers` give the adoption signal.
+- `platforms[].daily` is a time series, useful for spotting a sudden spike in failures.
 
 ### Errors
 
@@ -180,36 +152,15 @@ eas channel:insights --channel production --runtime-version 1.0.6
 
 ### JSON output shape
 
-```json
-{
-  "channel": "production",
-  "runtimeVersion": "1.0.6",
-  "timespan": { "start": "...", "end": "...", "daysBack": 7 },
-  "embeddedUpdateTotalUniqueUsers": 2401,
-  "otaTotalUniqueUsers": 8312,
-  "mostPopularUpdates": [
-    {
-      "rank": 1,
-      "groupId": "abc123",
-      "message": "Fix checkout crash",
-      "platform": "ios",
-      "totalUniqueUsers": 4210
-    }
-  ],
-  "cumulativeMetricsAtLastTimestamp": [
-    { "id": "...", "label": "Embedded update", "data": 12345 },
-    { "id": "...", "label": "Embedded update failed installs", "data": 0 }
-  ],
-  "uniqueUsersOverTime": { "labels": ["..."], "datasets": [ { "id": "...", "label": "...", "data": [100, 200] } ] },
-  "cumulativeMetricsOverTime": { "labels": ["..."], "datasets": [ { "id": "...", "label": "...", "data": [10, 20] } ] }
-}
-```
+Top level: `channel`, `runtimeVersion`, `timespan`, `embeddedUpdateTotalUniqueUsers`, `otaTotalUniqueUsers`, `mostPopularUpdates[]` (each with `rank`, `groupId`, `message`, `platform`, `totalUniqueUsers`), `cumulativeMetricsAtLastTimestamp[]`, plus chart-shaped `uniqueUsersOverTime` and `cumulativeMetricsOverTime` objects with `labels` and `datasets`.
+
+For the complete schema and field reference, see [references/channel-insights-schema.md](./references/channel-insights-schema.md).
 
 Fields that matter:
 
-- `embeddedUpdateTotalUniqueUsers` — users running the embedded (binary-bundled) build.
-- `mostPopularUpdates[]` — updates ranked by `totalUniqueUsers`. **Caveat**: this is the top-N the server returns; `otaTotalUniqueUsers` is a sum of that list and may undercount total OTA reach if more than top-N updates are active.
-- `uniqueUsersOverTime`, `cumulativeMetricsOverTime` — daily data series for charting.
+- `embeddedUpdateTotalUniqueUsers` is the count of users running the embedded (binary-bundled) build.
+- `mostPopularUpdates[]` is updates ranked by `totalUniqueUsers`. **Caveat**: this is the top-N the server returns; `otaTotalUniqueUsers` is a sum of that list and may undercount total OTA reach if more than top-N updates are active.
+- `uniqueUsersOverTime` and `cumulativeMetricsOverTime` are daily data series for charting.
 
 ### Errors
 
@@ -275,3 +226,4 @@ Human-readable group details plus 30 days of launches/failures per platform — 
 - **Fresh publishes** may show zeros for a short period while the metrics pipeline catches up.
 - **Installs are downloads, not launches**: the `installs` / "Launches" field counts users who downloaded the manifest and launch asset. A confirmed run only registers on the user's *next* update check (typically up to 24h later, depending on the app's update policy). So metrics lag the real-world state slightly.
 - **Crashes are self-reported**: `failedInstalls` / "Crashes" counts updates that errored during install/launch and were reported on the next update check. Crashes that don't trigger an update request (e.g. process kill before recovery) won't appear.
+
