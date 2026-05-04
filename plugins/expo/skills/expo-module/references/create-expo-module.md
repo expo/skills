@@ -40,7 +40,7 @@ npx create-expo-module@latest key-value-store --local --platform apple android -
 If you need deterministic non-interactive output, pass the slug or path explicitly and then pass the rest of the options:
 
 ```bash
-CI=1 npx create-expo-module@latest key-value-store \
+EXPO_NONINTERACTIVE=1 npx create-expo-module@latest key-value-store \
   --local \
   --name KeyValueStore \
   --package expo.modules.keyvaluestore \
@@ -63,28 +63,28 @@ npx create-expo-module@latest expo-key-value-store --platform apple android --fe
 
 These are the module creation options exposed by the CLI:
 
-| Option | Applies to | Notes |
-| --- | --- | --- |
-| `[path]` | local, standalone | Positional slug or target path. Use this explicitly for stable local scaffolding in non-interactive mode. |
-| `--local` | local | Create a local module inside the current Expo project. |
-| `--platform <platforms...>` | local, standalone | Valid values: `apple`, `android`, `web`. |
-| `--features <features...>` | local, standalone | Pick generated feature examples. Use `all` to include everything. |
-| `--full-example` | local, standalone | Equivalent to `--features all`. |
-| `--barrel` | local | Generate a local `index.ts` barrel. Ignored for standalone modules. |
-| `--source <source_dir>` | local, standalone | Use a local `expo-module-template` directory instead of downloading from npm. |
-| `--name <name>` | local, standalone | Native module name, for example `KeyValueStore`. |
-| `--description <description>` | standalone | Package description. |
-| `--package <package>` | local, standalone | Android package name, for example `expo.modules.keyvaluestore`. |
-| `--author-name <name>` | standalone | Package author name. |
-| `--author-email <email>` | standalone | Package author email. |
-| `--author-url <url>` | standalone | Package author profile URL. |
-| `--repo <url>` | standalone | Package repository URL. |
-| `--license <license>` | standalone | Package license identifier. |
-| `--module-version <version>` | standalone | Initial package version. |
-| `--package-manager <manager>` | standalone | One of `npm`, `pnpm`, `yarn`, `bun`. |
-| `--with-readme` | standalone | Keep `README.md` in the generated package. |
-| `--with-changelog` | standalone | Keep `CHANGELOG.md` in the generated package. |
-| `--no-example` | standalone | Skip creating the example app. |
+| Option                        | Applies to        | Notes                                                                                                     |
+| ----------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------- |
+| `[path]`                      | local, standalone | Positional slug or target path. Use this explicitly for stable local scaffolding in non-interactive mode. |
+| `--local`                     | local             | Create a local module inside the current Expo project.                                                    |
+| `--platform <platforms...>`   | local, standalone | Valid values: `apple`, `android`, `web`.                                                                  |
+| `--features <features...>`    | local, standalone | Pick generated feature examples. Use `all` to include everything.                                         |
+| `--full-example`              | local, standalone | Equivalent to `--features all`.                                                                           |
+| `--barrel`                    | local             | Generate a local `index.ts` barrel. Ignored for standalone modules.                                       |
+| `--source <source_dir>`       | local, standalone | Use a local `expo-module-template` directory instead of downloading from npm.                             |
+| `--name <name>`               | local, standalone | Native module name, for example `KeyValueStore`.                                                          |
+| `--description <description>` | standalone        | Package description.                                                                                      |
+| `--package <package>`         | local, standalone | Android package name, for example `expo.modules.keyvaluestore`.                                           |
+| `--author-name <name>`        | standalone        | Package author name.                                                                                      |
+| `--author-email <email>`      | standalone        | Package author email.                                                                                     |
+| `--author-url <url>`          | standalone        | Package author profile URL.                                                                               |
+| `--repo <url>`                | standalone        | Package repository URL.                                                                                   |
+| `--license <license>`         | standalone        | Package license identifier.                                                                               |
+| `--module-version <version>`  | standalone        | Initial package version.                                                                                  |
+| `--package-manager <manager>` | standalone        | One of `npm`, `pnpm`, `yarn`, `bun`.                                                                      |
+| `--with-readme`               | standalone        | Keep `README.md` in the generated package.                                                                |
+| `--with-changelog`            | standalone        | Keep `CHANGELOG.md` in the generated package.                                                             |
+| `--no-example`                | standalone        | Skip creating the example app.                                                                            |
 
 Notes:
 
@@ -203,3 +203,4 @@ If no features are detected or provided, the command creates a minimal scaffold 
 - `EXPO_DEBUG`: enable debug logs
 - `EXPO_NO_TELEMETRY`: disable telemetry
 - `EXPO_NONINTERACTIVE`: force non-interactive mode
+- `CI`: same as `EXPO_NONINTERACTIVE`, used in CI environments

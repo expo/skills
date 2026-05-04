@@ -18,7 +18,6 @@ Complete reference for building native modules and views using the Expo Modules 
 - Adding Android, Apple, or web support to an existing Expo module
 - Editing `expo-module.config.json`, config plugins, or lifecycle hooks
 
-
 ## References
 
 Consult these resources as needed:
@@ -51,15 +50,14 @@ See [references/create-expo-module.md](references/create-expo-module.md) before 
 1. Choose the scaffold type first:
    - **Local module** for one app
    - **Standalone module** for reuse, monorepos, or publishing
-2. Scaffold deliberately:
+2. Determine native `expo-module` features that you will need.
+   - Based on the user's instructions determine which feature scaffolding will be useful.
+   - Available features: `Constant`, `Function`, `AsyncFunction`, `Event`, `View`,`ViewEvent`, `SharedObject`
+3. Scaffold deliberately:
    - pass an explicit slug or path
    - choose `--platform` intentionally instead of relying on defaults
-   - add only the feature examples you actually want
-3. Replace generated example code with the real implementation.
-4. Remove unused generated files when needed:
-   - remove web bindings if the module is native-only
-   - remove view files if the module does not render UI
-   - remove module function examples if you only need a view
+   - use `--features` to choose code samples which you will modify in the next stepto match the real implementation.
+4. Replace generated example code with the real implementation.
 5. If you add a new platform later, prefer `add-platform-support` over manual file copying.
 
 ## Practical Scaffolding Rules
@@ -70,7 +68,6 @@ See [references/create-expo-module.md](references/create-expo-module.md) before 
 - In non-interactive local scaffolding, pass the positional slug or path explicitly. `--name` changes the native class name, not the folder name.
 - Local modules live in `expo.autolinking.nativeModulesDir` when configured, otherwise in `modules/`.
 - Standalone modules have their own package metadata, scripts, and usually an example app. Local modules use the host app's tooling instead.
-
 
 ## Core File Shapes
 
