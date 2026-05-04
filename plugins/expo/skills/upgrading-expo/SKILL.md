@@ -11,6 +11,7 @@ license: MIT
 - ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
 - ./references/react-compiler.md -- SDK +54: React Compiler setup and migration guide
 - ./references/native-tabs.md -- SDK +55: Native tabs changes (Icon/Label/Badge now accessed via NativeTabs.Trigger.\*)
+- ./references/react-navigation-to-expo-router.md -- SDK +56: Migrate `@react-navigation/*` imports to `expo-router` entry points (codemod + manual mapping)
 - ./references/expo-av-to-audio.md -- Migrate audio playback and recording from expo-av to expo-audio
 - ./references/expo-av-to-video.md -- Migrate video playback from expo-av to expo-video
 
