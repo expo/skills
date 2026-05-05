@@ -7,13 +7,24 @@ license: MIT
 
 ## References
 
-- ./references/new-architecture.md -- SDK +53: New Architecture migration guide
-- ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
-- ./references/react-compiler.md -- SDK +54: React Compiler setup and migration guide
-- ./references/native-tabs.md -- SDK +55: Native tabs changes (Icon/Label/Badge now accessed via NativeTabs.Trigger.\*)
-- ./references/react-navigation-to-expo-router.md -- SDK +56: Migrate `@react-navigation/*` imports to `expo-router` entry points (codemod + manual mapping)
+### SDK 56
+
+- ./references/react-navigation-to-expo-router.md -- Migrate `@react-navigation/*` imports to `expo-router` entry points (codemod + manual mapping)
+
+### SDK 55
+
+- ./references/native-tabs.md -- Native tabs changes (Icon/Label/Badge now accessed via NativeTabs.Trigger.\*)
 - ./references/expo-av-to-audio.md -- Migrate audio playback and recording from expo-av to expo-audio
 - ./references/expo-av-to-video.md -- Migrate video playback from expo-av to expo-video
+
+### SDK 54
+
+- ./references/react-19.md -- React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
+- ./references/react-compiler.md -- React Compiler setup and migration guide
+
+### SDK 53
+
+- ./references/new-architecture.md -- New Architecture migration guide
 
 ## Beta/Preview Releases
 
