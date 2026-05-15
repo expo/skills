@@ -1,24 +1,25 @@
 ---
 name: expo-observe-queries
-description: Use when you need to query EAS Observe data for an Expo app — app startup metrics like TTI, cold launch, warm launch, TTR, and bundle load time, individual performance events, custom event logs, or app version/build/update hierarchy. Covers the four EAS CLI commands: observe:metrics, observe:events, observe:logs, and observe:versions.
-version: 1.1.0
+description: Use when you need to query EAS Observe data for an Expo app — app startup metrics like TTI, cold launch, warm launch, TTR, and bundle load time, per-route navigation metrics (Nav Cold/Warm TTR and Nav TTI), individual performance events, custom event logs, or app version/build/update hierarchy. Covers the five EAS CLI commands: observe:metrics, observe:events, observe:routes, observe:logs, and observe:versions.
+version: 1.2.0
 license: MIT
 ---
 
 # EAS Observe CLI
 
-EAS Observe collects app performance telemetry and custom event logs from Expo apps and exposes them through four hidden EAS CLI commands. All commands are in preview and subject to breaking changes. Pass the `--help` flag to any command for the latest API.
+EAS Observe collects app performance telemetry and custom event logs from Expo apps and exposes them through five hidden EAS CLI commands. All commands are in preview and subject to breaking changes. Pass the `--help` flag to any command for the latest API.
 
 ## Commands Overview
 
 | Command | Purpose |
 |---------|---------|
-| `eas observe:metrics` | Per-version statistical aggregates for performance metrics (median, p90, etc.) |
+| `eas observe:metrics` | Per-version statistical aggregates for app-startup performance metrics (median, p90, etc.) |
 | `eas observe:events` | Individual performance events ordered by metric value or timestamp (paginated) |
+| `eas observe:routes` | Per-route statistical aggregates for navigation metrics (Cold TTR, Warm TTR, Nav TTI) |
 | `eas observe:logs` | Custom events emitted by the app — name summary, all events, or filtered by event name (paginated) |
 | `eas observe:versions` | App version hierarchy with build numbers, OTA update IDs, and event counts |
 
-All four commands share these common flags:
+All five commands share these common flags:
 
 - `--platform ios` or `--platform android` — filter by platform (default: both)
 - `--start <ISO date>` and `--end <ISO date>` — explicit time range
@@ -29,17 +30,29 @@ All four commands share these common flags:
 
 Default time range is the last 60 days when none of `--days`, `--start`, `--end` is given.
 
-## Supported Performance Metrics
+## Supported Metrics
+
+### App-startup metrics
 
 Used by `observe:metrics` and `observe:events`.
 
 | Alias | Full name | Display |
 |-------|-----------|---------|
-| `tti` | `expo.app_startup.tti` | TTI (time to interactive) |
-| `ttr` | `expo.app_startup.ttr` | TTR (time to render) |
+| `tti` | `expo.app_startup.tti` | Startup TTI (time to interactive) |
+| `ttr` | `expo.app_startup.ttr` | Startup TTR (time to render) |
 | `cold_launch` | `expo.app_startup.cold_launch_time` | Cold Launch |
 | `warm_launch` | `expo.app_startup.warm_launch_time` | Warm Launch |
 | `bundle_load` | `expo.app_startup.bundle_load_time` | Bundle Load |
+
+### Navigation metrics
+
+Used by `observe:routes`. Measured per route name.
+
+| Alias | Full name | Display |
+|-------|-----------|---------|
+| `cold_ttr` | `expo.navigation.cold_ttr` | Nav Cold TTR |
+| `warm_ttr` | `expo.navigation.warm_ttr` | Nav Warm TTR |
+| `nav_tti` | `expo.navigation.tti` | Nav TTI |
 
 ## `eas observe:metrics`
 
@@ -123,6 +136,64 @@ eas observe:events tti --after <cursor>
 - Columns: Value, App Version (with build number), Update (only when any event has one), Platform, Device, Country, Timestamp
 - When `hasNextPage` is true, prints `Next page: --after <endCursor>` hint below the table
 - JSON output also includes `sessionId`, `easClientId`, and a `customParams` object per event
+
+## `eas observe:routes`
+
+Shows per-route statistical aggregates for navigation metrics (Cold TTR, Warm TTR, Nav TTI), grouped by route name with separate sections per platform.
+
+```bash
+# All three navigation metrics, default stats, last 60 days, both platforms
+eas observe:routes
+
+# Single metric, last 7 days, iOS only
+eas observe:routes --metric nav_tti --days 7 --platform ios
+
+# Multiple metrics and stats
+eas observe:routes --metric cold_ttr --metric warm_ttr --stat median --stat p90 --stat count
+
+# Filter to a single build
+eas observe:routes --app-version 1.2.0 --build-number 42
+
+# Pagination — each platform has its own cursor; pass the relevant endCursor
+eas observe:routes --after <cursor>
+```
+
+**Routes-specific flags:**
+- `--metric <cold_ttr|warm_ttr|nav_tti>` — navigation metric(s) to display, can be repeated. Defaults to all three.
+- `--stat <median|p90|count>` — statistic(s) per metric. Aliases: `med` → `median`, `event_count` / `eventCount` → `count`.
+- `--limit <N>` — routes per page (default **50**, max **200**, different from events/logs which default to 10).
+- `--after <cursor>` — pagination cursor from the previous run.
+- `--app-version <version>` — filter by app version string.
+- `--build-number <number>` — filter by app build number (routes-only).
+- `--update-id <id>` — filter by EAS update ID.
+
+**Default stats:** `median` + `count` in the table; `median`, `p90`, `count` in JSON.
+
+**Table layout:**
+- Summary header with the chosen stats and time range, e.g. `Med, P90 values (navigation count) for the last 7 days`.
+- Separate iOS and Android sections.
+- First column is **Route**, followed by one column per metric/stat. With both display stats and `count`, cells are merged like `0.32s (1240)`.
+- Each platform has its own pagination hint: `Next page (iOS): --after <endCursor>`.
+
+**JSON output shape:**
+```json
+{
+  "routes": [
+    {
+      "routeName": "(tabs)/home",
+      "platform": "IOS",
+      "metrics": {
+        "expo.navigation.cold_ttr": { "median": 0.32, "p90": 0.85, "count": 1240 },
+        "expo.navigation.tti":       { "median": 0.55, "p90": 1.10, "count": 1240 }
+      }
+    }
+  ],
+  "pageInfoByPlatform": {
+    "IOS":     { "hasNextPage": true,  "endCursor": "..." },
+    "ANDROID": { "hasNextPage": false, "endCursor": null }
+  }
+}
+```
 
 ## `eas observe:logs`
 
@@ -224,6 +295,11 @@ eas observe:metrics --days 7 --stat median --stat p90
 **"Which events were slowest this week?"**
 ```bash
 eas observe:events tti --sort slowest --days 7 --limit 20
+```
+
+**"Which screens are slowest to navigate to?"**
+```bash
+eas observe:routes --metric nav_tti --stat median --stat p90 --days 7
 ```
 
 **"What custom events is my app emitting?"**
