@@ -13,6 +13,7 @@ If the native team must not need Node, Yarn, or React Native tooling, use [./bro
 
 ## Prerequisites
 
+- **Expo SDK 54 or later** — the `ExpoReactHostFactory`, `ExpoReactNativeFactory`, and `ApplicationLifecycleDispatcher` entry points used below require SDK 54+. Earlier SDKs do not support this setup.
 - **Node.js (LTS)** — runs JavaScript and the Expo CLI.
 - **Yarn** — manages JavaScript dependencies.
 - **CocoaPods** (iOS) — `sudo gem install cocoapods`.
@@ -21,10 +22,10 @@ If the native team must not need Node, Yarn, or React Native tooling, use [./bro
 
 ## 1) Create an Expo project
 
-Create the Expo project inside (or alongside) the existing native project:
+Create the Expo project inside (or alongside) the existing native project. **Pin to SDK 55 or later — earlier SDKs do not support brownfield integration:**
 
 ```sh
-npx create-expo-app@latest my-project
+npx create-expo-app@latest my-project --template default@sdk-55
 ```
 
 The new project ships a TypeScript example app. The JS entry point registers a root component under the name `"main"` — this name must match the `moduleName` referenced from the native side later.

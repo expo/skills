@@ -22,10 +22,11 @@ The JavaScript bundle is **embedded inside the artifact** in release builds, so 
 
 ## Prerequisites
 
+- **Expo SDK 55 or later** — brownfield support, `expo-brownfield`, and the required runtime classes are only available on SDK 55+. Earlier SDKs will not work.
 - **Node.js (LTS)** — runs JavaScript and the Expo CLI.
 - **Yarn** — manages JavaScript dependencies.
 
-These are only needed in the environment that _builds_ the artifact. The consuming native app does not need them.
+Node and Yarn are only needed in the environment that _builds_ the artifact. The consuming native app does not need them.
 
 ---
 
@@ -34,10 +35,10 @@ These are only needed in the environment that _builds_ the artifact. The consumi
 ### Create a new Expo project
 
 ```sh
-npx create-expo-app@latest my-project
+npx create-expo-app@latest my-project --template default@sdk-55
 ```
 
-The project can live in a separate repo or alongside the native app in a monorepo — it does not need to be inside the native project.
+**Pin to SDK 55 or later — earlier SDKs do not support brownfield.** The project can live in a separate repo or alongside the native app in a monorepo; it does not need to be inside the native project.
 
 ### Install expo-brownfield
 

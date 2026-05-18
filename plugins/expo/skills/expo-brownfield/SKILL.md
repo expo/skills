@@ -45,4 +45,10 @@ The integrated approach additionally requires **CocoaPods** on iOS (`sudo gem in
 
 ## Versioning note
 
-Use the latest stable Expo SDK template and pin the Expo SDK across both the RN project and any embedded dependencies.
+**Expo SDK 55 is the minimum supported version for brownfield integration.** Earlier SDKs lack `expo-brownfield`, the required `ExpoReactHostFactory` / `ExpoReactNativeFactory` entry points, and the current autolinking surface. When creating the Expo project, always pin the SDK explicitly:
+
+```sh
+npx create-expo-app@latest my-project --template default@sdk-55
+```
+
+Pin the same Expo SDK across both the RN project and any embedded dependencies.
