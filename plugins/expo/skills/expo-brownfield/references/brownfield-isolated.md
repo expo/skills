@@ -13,10 +13,10 @@ If a single team owns both layers, is comfortable with React Native tooling and 
 
 ## What you produce
 
-| Platform | Artifact                                            | Default location      |
-| -------- | --------------------------------------------------- | --------------------- |
-| Android  | `{group}:{libraryName}:{version}` AAR               | Local Maven (`~/.m2`) |
-| iOS      | `{TargetName}.xcframework` + `hermesvm.xcframework` | `./artifacts`         |
+| Platform | Artifact                                                                                        | Default location                                              |
+| -------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Android  | `{group}:{libraryName}:{version}` AAR                                                           | Local Maven (`~/.m2`) by default; remote Maven also supported |
+| iOS      | `{TargetName}.xcframework` + `hermesvm.xcframework` (or a single Swift Package via `--package`) | `./artifacts`                                                 |
 
 The JavaScript bundle is **embedded inside the artifact** in release builds, so the native app does not need Metro at runtime in production.
 
@@ -79,7 +79,24 @@ To override the auto-generated names, expand the plugin entry in `app.json`:
 
 **iOS options** — `targetName` (XCFramework target name), `bundleIdentifier` (framework bundle ID).
 
-**Android options** — `libraryName` (AAR name), `group` (Maven group ID), `package` (Android package), `version` (library version).
+**Android options** — `libraryName` (AAR name), `group` (Maven group ID), `package` (Android package), `version` (library version), `publishing` (Maven publication targets — see [Publishing the Android AAR](#publishing-the-android-aar)).
+
+### Speed up iOS builds with prebuilt Expo modules
+
+Enable `expo-build-properties`'s `ios.usePrecompiledModules` so `pod install` downloads each Expo module as a prebuilt `.xcframework` instead of compiling it from source. `build:ios` detects those xcframeworks under `ios/Pods/` and bundles them into the Swift Package output alongside the brownfield framework, React, Hermes, and `ReactNativeDependencies`.
+
+```json
+{
+  "expo": {
+    "plugins": [
+      ["expo-build-properties", { "ios": { "usePrecompiledModules": true } }],
+      "expo-brownfield"
+    ]
+  }
+}
+```
+
+When precompiled modules are detected, `build:ios` is pinned to a single flavor (`--debug` or `--release`) per package — Swift Package Manager has no per-configuration overload for `.binaryTarget(path:)`. Build once per flavor and distribute the two packages side by side.
 
 ---
 
@@ -93,6 +110,58 @@ npx expo-brownfield build:android
 
 Produces an AAR and publishes it to the local Maven repository at `~/.m2`. The Maven coordinates come from the plugin config — e.g. `com.example:mybrownfield:1.0.0`.
 
+#### Publishing the Android AAR
+
+The plugin's `publishing` option controls where the AAR is published. When unset, it defaults to local Maven. To push to other targets (e.g. a shared CI Maven, an internal Artifactory/Nexus, or a folder pulled into another build), declare the publications explicitly:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-brownfield",
+        {
+          "android": {
+            "libraryName": "mybrownfield",
+            "group": "com.example",
+            "version": "1.0.0",
+            "publishing": [
+              { "type": "localMaven" },
+              {
+                "type": "localDirectory",
+                "name": "build",
+                "path": "./out/maven"
+              },
+              {
+                "type": "remotePublic",
+                "name": "company",
+                "url": "https://maven.example.com/releases"
+              },
+              {
+                "type": "remotePrivate",
+                "name": "artifactory",
+                "url": { "variable": "ARTIFACTORY_URL" },
+                "username": { "variable": "ARTIFACTORY_USER" },
+                "password": { "variable": "ARTIFACTORY_TOKEN" }
+              }
+            ]
+          }
+        }
+      ]
+    ]
+  }
+}
+```
+
+Supported `type` values: `localMaven`, `localDirectory`, `remotePublic`, `remotePrivate`. For private repos, credentials and URL accept either inline strings or `{ "variable": "ENV_VAR_NAME" }` to read from the environment at publish time.
+
+By default, `build:android` runs every declared publication. To pick specific publications or repositories from the command line, use the CLI flags:
+
+```sh
+npx expo-brownfield build:android --task publishReleasePublicationToCompanyRepository
+npx expo-brownfield tasks:android   # list available publish tasks and repositories
+```
+
 ### iOS
 
 ```sh
@@ -103,6 +172,28 @@ Outputs to `./artifacts`:
 
 - `{TargetName}.xcframework` — the Expo project compiled as a native framework.
 - `hermesvm.xcframework` — the Hermes JavaScript engine. **Both must be embedded in the consuming app.**
+
+#### Ship as a Swift Package (recommended)
+
+Pass `--package [name]` to bundle the output as a self-contained Swift Package instead of separate `.xcframework` directories. The host iOS app then consumes it via **Add Package Dependencies → Add Local** in Xcode and links every bundled framework automatically — no manual drag-and-drop, no per-framework "Embed & Sign" toggles.
+
+```sh
+npx expo-brownfield build:ios --release --package MyAppPackage
+```
+
+The flag accepts an optional name. If omitted, the package is named `{TargetName}Artifacts`. The resulting directory is a complete Swift Package:
+
+```
+artifacts/MyAppPackage/
+├── Package.swift
+└── xcframeworks/
+    ├── MyAppPackage.xcframework
+    ├── hermesvm.xcframework
+    ├── React.xcframework
+    └── ReactNativeDependencies.xcframework
+```
+
+When `usePrecompiledModules` is enabled, the package directory is suffixed with the build flavor (e.g. `MyAppPackage-release/`) and includes every prebuilt Expo module xcframework. Run `build:ios --debug --package …` and `build:ios --release --package …` separately, and point your host app at the matching package for each build configuration.
 
 ### Generate native projects for debugging
 
@@ -148,6 +239,8 @@ dependencyResolutionManagement {
 
 > **Note:** `mavenLocal()` must be added under `dependencyResolutionManagement`, not the deprecated top-level `allprojects { repositories { ... } }` block.
 
+If the artifact is published to a remote Maven, declare that repository in the same `dependencyResolutionManagement` block instead — credentials follow Gradle's standard `maven { url = uri(...); credentials { username = ...; password = ... } }` form.
+
 #### Show a React Native screen
 
 Extend `BrownfieldActivity` and call `showReactNativeFragment()`:
@@ -185,14 +278,19 @@ startActivity(Intent(this, ExpoActivity::class.java))
 
 ### iOS
 
-#### Add the XCFrameworks to the Xcode project
+#### Add the artifacts to the Xcode project
 
-Drag **both** `{TargetName}.xcframework` and `hermesvm.xcframework` into the Xcode project navigator. In the import dialog:
+If you built a **Swift Package** (`build:ios --package …`):
 
-- Check **Copy items if needed**.
-- Add them to your app target.
+- In Xcode, **File → Add Package Dependencies… → Add Local…**, then select the generated package directory (e.g. `artifacts/MyAppPackage/`).
+- Add the package's product to your app target. Xcode links every bundled XCFramework through the aggregate library product — no manual "Embed & Sign" step.
+- If you produced both debug and release packages (because `usePrecompiledModules` is enabled), point the host app at the matching package per build configuration.
 
-Under the app target's **General** tab → **Frameworks, Libraries, and Embedded Content**, set both frameworks to **Embed & Sign**.
+If you built **standalone XCFrameworks** (default output):
+
+- Drag **both** `{TargetName}.xcframework` and `hermesvm.xcframework` into the Xcode project navigator.
+- In the import dialog, check **Copy items if needed** and add them to your app target.
+- Under the app target's **General** tab → **Frameworks, Libraries, and Embedded Content**, set both frameworks to **Embed & Sign**.
 
 #### Initialize React Native at app launch
 
