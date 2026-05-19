@@ -154,6 +154,9 @@ eas observe:routes --metric cold_ttr --metric warm_ttr --stat median --stat p90 
 # Filter to a single build
 eas observe:routes --app-version 1.2.0 --build-number 42
 
+# Narrow to specific routes (repeat the flag for multiple routes)
+eas observe:routes --route-name /new --route-name /settings
+
 # Pagination — each platform has its own cursor; pass the relevant endCursor
 eas observe:routes --after <cursor>
 ```
@@ -165,6 +168,7 @@ eas observe:routes --after <cursor>
 - `--after <cursor>` — pagination cursor from the previous run.
 - `--app-version <version>` — filter by app version string.
 - `--build-number <number>` — filter by app build number (routes-only).
+- `--route-name <name>` — filter by route name. Repeatable; only the listed routes are returned across both platforms. Duplicates are de-duplicated; omitting the flag returns all routes.
 - `--update-id <id>` — filter by EAS update ID.
 
 **Default stats:** `median` + `count` in the table; `median`, `p90`, `count` in JSON.
@@ -300,6 +304,11 @@ eas observe:events tti --sort slowest --days 7 --limit 20
 **"Which screens are slowest to navigate to?"**
 ```bash
 eas observe:routes --metric nav_tti --stat median --stat p90 --days 7
+```
+
+**"How does navigation perform on just the routes I care about?"**
+```bash
+eas observe:routes --route-name /home --route-name /checkout --days 7
 ```
 
 **"What custom events is my app emitting?"**
