@@ -163,13 +163,13 @@ hermesEnabled=true
 
 ### `AndroidManifest.xml`
 
-Add the `INTERNET` permission to your main `AndroidManifest.xml`:
+Add the `INTERNET` permission to your main manifest at `app/src/main/AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-In your **debug** `AndroidManifest.xml`, enable cleartext traffic so the app can talk to the local Metro bundler over HTTP:
+In the debug-variant manifest at `app/src/debug/AndroidManifest.xml`, enable cleartext traffic so the app can talk to the local Metro bundler over HTTP:
 
 ```xml
 <application
@@ -342,6 +342,64 @@ cd ios && pod install
 ```
 
 Open the generated `.xcworkspace` (not the `.xcodeproj`) from now on.
+
+### Xcode project changes
+
+Three Xcode-side adjustments are required before the app can build and run a React Native screen. Skip any one and either CocoaPods scripts fail under sandboxing, the JS bundle never lands in the IPA (release crashes looking for `main.jsbundle`), or the status bar fights React Native at runtime.
+
+#### 1. Disable user script sandboxing
+
+In Xcode, select your project → app target → **Build Settings**, search for `ENABLE_USER_SCRIPT_SANDBOXING`, and set it to **No**. CocoaPods' Hermes scripts need to switch between debug and release engine binaries at build time, which sandboxing blocks.
+
+#### 2. Add a Run Script phase to embed the JS bundle
+
+On the app target's **Build Phases** tab, add a new **Run Script** phase **before** `[CP] Embed Pods Frameworks`. This phase bundles JS for release builds and is skipped automatically in debug (Metro serves the bundle then).
+
+```sh
+if [[ -f "$PODS_ROOT/../.xcode.env" ]]; then
+  source "$PODS_ROOT/../.xcode.env"
+fi
+if [[ -f "$PODS_ROOT/../.xcode.env.local" ]]; then
+  source "$PODS_ROOT/../.xcode.env.local"
+fi
+
+export PROJECT_ROOT="$PROJECT_DIR"/..
+
+if [[ "$CONFIGURATION" = *Debug* ]]; then
+  export SKIP_BUNDLING=1
+fi
+if [[ -z "$ENTRY_FILE" ]]; then
+  export ENTRY_FILE="$("$NODE_BINARY" -e "require('expo/scripts/resolveAppEntry')" "$PROJECT_ROOT" ios absolute | tail -n 1)"
+fi
+if [[ -z "$CLI_PATH" ]]; then
+  export CLI_PATH="$("$NODE_BINARY" --print "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })")"
+fi
+if [[ -z "$BUNDLE_COMMAND" ]]; then
+  export BUNDLE_COMMAND="export:embed"
+fi
+
+if [[ -f "$PODS_ROOT/../.xcode.env.updates" ]]; then
+  source "$PODS_ROOT/../.xcode.env.updates"
+fi
+if [[ -f "$PODS_ROOT/../.xcode.env.local" ]]; then
+  source "$PODS_ROOT/../.xcode.env.local"
+fi
+
+`"$NODE_BINARY" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'"`
+```
+
+> **Monorepo:** override `PROJECT_ROOT` to point at the Expo project (e.g. `export PROJECT_ROOT="$PROJECT_DIR"/../../my-project`). Without this, bundling looks for `node_modules` in the wrong directory.
+
+This script writes `main.jsbundle` into the app's resources directory in release configurations. Without it, the `bundleURL()` fallback in `ReactNativeDelegate` resolves to `nil` and the React Native screen fails to load whenever Metro is not running.
+
+#### 3. Update `Info.plist`
+
+Set `UIViewControllerBasedStatusBarAppearance` to `NO` so React Native can manage the status bar:
+
+```xml
+<key>UIViewControllerBasedStatusBarAppearance</key>
+<false/>
+```
 
 ### `AppDelegate.swift`
 
