@@ -57,6 +57,7 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 
 ### App Design
 
+- **add-app-clip** — Add an iOS App Clip target to an Expo app (AASA, associated domains, TestFlight)
 - **building-native-ui** — Build beautiful apps with Expo Router, styling, components, navigation, and animations
 - **expo-api-routes** — Create API routes in Expo Router with EAS Hosting
 - **expo-dev-client** — Build and distribute Expo development clients locally or via TestFlight
