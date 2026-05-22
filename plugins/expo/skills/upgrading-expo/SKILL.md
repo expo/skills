@@ -76,6 +76,7 @@ These steps only apply when `ios/` and/or `android/` directories exist in the pr
 
 - Review release notes for the target SDK version at https://expo.dev/changelog
 - If using Expo SDK 54 or later, ensure react-native-worklets is installed — this is required for react-native-reanimated to work.
+- Check for a raised minimum iOS deployment target and update it in `ios/Podfile` (`platform :ios, 'X.X'`) and Xcode Build Settings (`IPHONEOS_DEPLOYMENT_TARGET`), or via `expo-build-properties` in app.json for CNG projects
 - Enable React Compiler in SDK 54+ by adding `"experiments": { "reactCompiler": true }` to app.json — it's stable and recommended
 - Delete sdkVersion from `app.json` to let Expo manage it automatically
 - Remove implicit packages from `package.json`: `@babel/core`, `babel-preset-expo`, `expo-constants`.
@@ -106,6 +107,7 @@ Check if package.json has excluded packages:
 ```
 
 Exclusions are often workarounds that may no longer be needed after upgrading. Review each one.
+
 ## Removing patches
 
 Check if there are any outdated patches in the `patches/` directory. Remove them if they are no longer needed.
