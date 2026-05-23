@@ -1,23 +1,25 @@
 ---
 name: expo-observe-queries
-description: Use when you need to query EAS Observe data for an Expo app — app startup metrics like TTI, cold launch, warm launch, TTR, and bundle load time, per-route navigation metrics (Nav Cold/Warm TTR and Nav TTI), individual performance events, custom event logs, or app version/build/update hierarchy. Covers the five EAS CLI commands: observe:metrics, observe:events, observe:routes, observe:logs, and observe:versions.
-version: 1.2.0
+description: Use when you need to query EAS Observe data for an Expo app — aggregated startup metrics (cold/warm launch, TTI, TTR, bundle load, update download), per-route navigation metrics (Nav Cold/Warm TTR and Nav TTI), individual performance metric samples, custom events emitted via `logEvent`, or app version/build/update hierarchy. Covers the five EAS CLI commands: observe:metrics-summary, observe:metrics, observe:routes, observe:events, and observe:versions.
+version: 1.3.0
 license: MIT
 ---
 
 # EAS Observe CLI
 
-EAS Observe collects app performance telemetry and custom event logs from Expo apps and exposes them through five hidden EAS CLI commands. All commands are in preview and subject to breaking changes. Pass the `--help` flag to any command for the latest API.
+EAS Observe collects app performance telemetry and custom events from Expo apps and exposes them through five hidden EAS CLI commands. All commands are in preview and subject to breaking changes. Pass the `--help` flag to any command for the latest API.
 
 ## Commands Overview
 
 | Command | Purpose |
 |---------|---------|
-| `eas observe:metrics` | Per-version statistical aggregates for app-startup performance metrics (median, p90, etc.) |
-| `eas observe:events` | Individual performance events ordered by metric value or timestamp (paginated) |
+| `eas observe:metrics-summary` | Per-version statistical aggregates for app-startup performance metrics (median, p90, etc.) |
+| `eas observe:metrics` | Individual performance metric samples ordered by value or timestamp (paginated) |
 | `eas observe:routes` | Per-route statistical aggregates for navigation metrics (Cold TTR, Warm TTR, Nav TTI) |
-| `eas observe:logs` | Custom events emitted by the app — name summary, all events, or filtered by event name (paginated) |
+| `eas observe:events` | Custom events emitted by the app via `logEvent` — name summary, all events, or filtered by event name (paginated) |
 | `eas observe:versions` | App version hierarchy with build numbers, OTA update IDs, and event counts |
+
+> **Recent rename** — what was previously `observe:metrics` (aggregated stats) is now `observe:metrics-summary`. What was `observe:events` (individual samples) is now `observe:metrics`. What was `observe:logs` (custom events) is now `observe:events`.
 
 All five commands share these common flags:
 
@@ -34,7 +36,7 @@ Default time range is the last 60 days when none of `--days`, `--start`, `--end`
 
 ### App-startup metrics
 
-Used by `observe:metrics` and `observe:events`.
+Used by `observe:metrics-summary` and `observe:metrics`.
 
 | Alias | Full name | Display |
 |-------|-----------|---------|
@@ -43,6 +45,7 @@ Used by `observe:metrics` and `observe:events`.
 | `cold_launch` | `expo.app_startup.cold_launch_time` | Cold Launch |
 | `warm_launch` | `expo.app_startup.warm_launch_time` | Warm Launch |
 | `bundle_load` | `expo.app_startup.bundle_load_time` | Bundle Load |
+| `update_download` | `expo.updates.download_time` | Update Download |
 
 ### Navigation metrics
 
@@ -54,25 +57,25 @@ Used by `observe:routes`. Measured per route name.
 | `warm_ttr` | `expo.navigation.warm_ttr` | Nav Warm TTR |
 | `nav_tti` | `expo.navigation.tti` | Nav TTI |
 
-## `eas observe:metrics`
+## `eas observe:metrics-summary`
 
 Shows per-version statistical aggregates for one or more metrics, with separate tables per platform.
 
 ```bash
-# All five default metrics, last 60 days, both platforms
-eas observe:metrics
+# All default metrics, last 60 days, both platforms
+eas observe:metrics-summary
 
 # Single metric
-eas observe:metrics --metric tti
+eas observe:metrics-summary --metric tti
 
 # Multiple metrics — each renders as its own table
-eas observe:metrics --metric tti --metric cold_launch
+eas observe:metrics-summary --metric tti --metric cold_launch
 
 # Choose which statistics to display
-eas observe:metrics --metric tti --stat median --stat p90 --stat eventCount
+eas observe:metrics-summary --metric tti --stat median --stat p90 --stat eventCount
 
 # Narrow time range and platform
-eas observe:metrics --metric tti --days 14 --platform ios
+eas observe:metrics-summary --metric tti --days 14 --platform ios
 ```
 
 **Stat flags:** `min`, `max`, `median` (alias `med`), `average` (alias `avg`), `p80`, `p90`, `p99`, `eventCount` (alias `count`).
@@ -106,36 +109,36 @@ eas observe:metrics --metric tti --days 14 --platform ios
 }
 ```
 
-## `eas observe:events`
+## `eas observe:metrics`
 
-Shows individual performance events, paginated. The metric is a positional argument, not a flag. If omitted and running interactively, prompts for selection; in non-interactive mode it throws an error.
+Shows individual performance metric samples, paginated. The metric is a positional argument, not a flag. If omitted and running interactively, prompts for selection; in non-interactive mode it throws an error.
 
 ```bash
 # Interactive: prompts for metric
-eas observe:events
+eas observe:metrics
 
 # Specify metric as positional arg
-eas observe:events tti
+eas observe:metrics tti
 
 # Filter by version or update, sort by slowest
-eas observe:events tti --app-version 1.2.0 --sort slowest --limit 20
+eas observe:metrics tti --app-version 1.2.0 --sort slowest --limit 20
 
 # Pagination — pass the endCursor from the previous run
-eas observe:events tti --after <cursor>
+eas observe:metrics tti --after <cursor>
 ```
 
-**Event-specific flags:**
+**Sample-specific flags:**
 - `--sort <oldest|newest|slowest|fastest>` — defaults to `oldest`
-- `--limit <N>` — events per page (default 10, max 100)
+- `--limit <N>` — samples per page (default 10, max 100)
 - `--after <cursor>` — pagination cursor from the previous run
 - `--app-version <version>` — filter by app version string
 - `--update-id <id>` — filter by EAS update ID
 
 **Table layout:**
-- Summary header shows the metric name, time range, and total event count across all versions (e.g. `TTI events for the last 60 days — 1,234 total events`)
-- Columns: Value, App Version (with build number), Update (only when any event has one), Platform, Device, Country, Timestamp
+- Summary header shows the metric name, time range, and total sample count across all versions (e.g. `TTI samples for the last 60 days — 1,234 total events`)
+- Columns: Value, App Version (with build number), Update (only when any sample has one), Platform, Device, Country, Timestamp
 - When `hasNextPage` is true, prints `Next page: --after <endCursor>` hint below the table
-- JSON output also includes `sessionId`, `easClientId`, and a `customParams` object per event
+- JSON output also includes `sessionId`, `easClientId`, and a `customParams` object per sample
 
 ## `eas observe:routes`
 
@@ -164,7 +167,7 @@ eas observe:routes --after <cursor>
 **Routes-specific flags:**
 - `--metric <cold_ttr|warm_ttr|nav_tti>` — navigation metric(s) to display, can be repeated. Defaults to all three.
 - `--stat <median|p90|count>` — statistic(s) per metric. Aliases: `med` → `median`, `event_count` / `eventCount` → `count`.
-- `--limit <N>` — routes per page (default **50**, max **200**, different from events/logs which default to 10).
+- `--limit <N>` — routes per page (default **50**, max **200**, different from `metrics`/`events` which default to 10).
 - `--after <cursor>` — pagination cursor from the previous run.
 - `--app-version <version>` — filter by app version string.
 - `--build-number <number>` — filter by app build number (routes-only).
@@ -199,36 +202,36 @@ eas observe:routes --after <cursor>
 }
 ```
 
-## `eas observe:logs`
+## `eas observe:events`
 
-Shows custom events (logs) emitted by the app via the `expo-observe` API. Behavior depends on what is passed:
+Shows custom events emitted by the app via the `logEvent` API in `expo-observe`. Behavior depends on what is passed:
 
 | Invocation | Result |
 |---|---|
-| `observe:logs` | Summary table of available event names with counts |
-| `observe:logs --all-events` | Full list of events across **all** event names |
-| `observe:logs <event-name>` | Full list of events filtered by that event name |
+| `observe:events` | Summary table of available event names with counts |
+| `observe:events --all-events` | Full list of events across **all** event names |
+| `observe:events <event-name>` | Full list of events filtered by that event name |
 
 ```bash
 # List the available custom event names and their counts (last 60 days)
-eas observe:logs
+eas observe:events
 
 # All events across all names, last 7 days, iOS only
-eas observe:logs --all-events --days 7 --platform ios
+eas observe:events --all-events --days 7 --platform ios
 
 # Only events with the given name
-eas observe:logs login_failed --limit 50
+eas observe:events login_failed --limit 50
 
 # Drill into a single session
-eas observe:logs --all-events --session-id <session-id>
+eas observe:events --all-events --session-id <session-id>
 
 # Pagination
-eas observe:logs login_failed --after <cursor>
+eas observe:events login_failed --after <cursor>
 ```
 
-**Logs-specific flags:**
+**Events-specific flags:**
 - `--all-events` — when no event name argument is given, list all events instead of the name summary. Cannot be combined with an event name argument.
-- `--session-id <id>` — filter to events from a single session (logs only)
+- `--session-id <id>` — filter to events from a single session (events-only)
 - `--app-version <version>` — filter by app version string
 - `--update-id <id>` — filter by EAS update ID
 - `--limit <N>` — events per page (default 10, max 100)
@@ -293,12 +296,17 @@ JSON output returns the full nested hierarchy with `buildNumbers[].easBuilds[]` 
 
 **"What are my app's startup times right now?"**
 ```bash
-eas observe:metrics --days 7 --stat median --stat p90
+eas observe:metrics-summary --days 7 --stat median --stat p90
 ```
 
-**"Which events were slowest this week?"**
+**"Which TTI samples were slowest this week?"**
 ```bash
-eas observe:events tti --sort slowest --days 7 --limit 20
+eas observe:metrics tti --sort slowest --days 7 --limit 20
+```
+
+**"How fast are over-the-air updates downloading in the field?"**
+```bash
+eas observe:metrics-summary --metric update_download --days 7
 ```
 
 **"Which screens are slowest to navigate to?"**
@@ -313,12 +321,12 @@ eas observe:routes --route-name /home --route-name /checkout --days 7
 
 **"What custom events is my app emitting?"**
 ```bash
-eas observe:logs --days 7
+eas observe:events --days 7
 ```
 
-**"Show me every error log from one user's session."**
+**"Show me every error event from one user's session."**
 ```bash
-eas observe:logs --all-events --session-id <session-id>
+eas observe:events --all-events --session-id <session-id>
 ```
 
 **"What versions of my app are in the field?"**
@@ -328,12 +336,12 @@ eas observe:versions
 
 **"Show me metrics for a specific project without needing to be in the repo"**
 ```bash
-eas observe:metrics --project-id <uuid> --metric tti
+eas observe:metrics-summary --project-id <uuid> --metric tti
 ```
 
 **"Get JSON for scripting"**
 ```bash
-eas observe:metrics --metric tti --json --non-interactive
+eas observe:metrics-summary --metric tti --json --non-interactive
 ```
 
 ## Notes
@@ -341,4 +349,4 @@ eas observe:metrics --metric tti --json --non-interactive
 - These commands are currently hidden (not shown in top-level `eas --help`). They are considered preview features and their output format may change.
 - Requires the user to be logged in (`eas login`).
 - When `--project-id` is provided, the command does not require running inside an EAS project directory; otherwise the project ID is read from the local `app.config` / `app.json`.
-- `observe:metrics` does not print update IDs in the table but still returns them in JSON for scripting or piping into other commands.
+- `observe:metrics-summary` does not print update IDs in the table but still returns them in JSON for scripting or piping into other commands.
