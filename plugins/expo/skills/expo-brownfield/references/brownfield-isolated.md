@@ -13,10 +13,10 @@ If a single team owns both layers, is comfortable with React Native tooling and 
 
 ## What you produce
 
-| Platform | Artifact                                                                                        | Default location                                              |
-| -------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Android  | `{group}:{libraryName}:{version}` AAR                                                           | Local Maven (`~/.m2`) by default; remote Maven also supported |
-| iOS      | `{TargetName}.xcframework` + `hermesvm.xcframework` (or a single Swift Package via `--package`) | `./artifacts`                                                 |
+| Platform | Artifact                                                                                                                                                                                            | Default location                                              |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Android  | `{group}:{libraryName}:{version}` AAR                                                                                                                                                               | Local Maven (`~/.m2`) by default; remote Maven also supported |
+| iOS      | Set of `.xcframework`s — see [the iOS section below](#ios) for how `ios.buildReactNativeFromSource` (default `false` on SDK 56+) controls whether you get 5 frameworks or 2 — or a single Swift Package via `--package` | `./artifacts`                                                 |
 
 The JavaScript bundle is **embedded inside the artifact** in release builds, so the native app does not need Metro at runtime in production.
 
@@ -168,10 +168,27 @@ npx expo-brownfield tasks:android   # list available publish tasks and repositor
 npx expo-brownfield build:ios
 ```
 
-Outputs to `./artifacts`:
+Outputs to `./artifacts`. The set depends on the `ios.buildReactNativeFromSource` flag (set via `expo-build-properties`):
 
-- `{TargetName}.xcframework` — the Expo project compiled as a native framework.
-- `hermesvm.xcframework` — the Hermes JavaScript engine. **Both must be embedded in the consuming app.**
+- **`buildReactNativeFromSource: false`** (default on SDK 56+) — React Native is consumed as a prebuilt binary, so `build:ios` emits five xcframeworks side-by-side: `{TargetName}.xcframework`, `React.xcframework`, `ReactNativeDependencies.xcframework`, `ExpoModulesJSI.xcframework`, and `hermesvm.xcframework`.
+- **`buildReactNativeFromSource: true`** (default on SDK 55, opt-in on SDK 56+) — React Native is compiled from source and statically linked into the brownfield framework, leaving two xcframeworks: `{TargetName}.xcframework` and `hermesvm.xcframework`.
+
+To force source builds on SDK 56+, add `expo-build-properties` to `app.json`:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      ["expo-build-properties", { "ios": { "buildReactNativeFromSource": true } }],
+      "expo-brownfield"
+    ]
+  }
+}
+```
+
+**Every xcframework in the produced set must be embedded in the consuming app** (Embed & Sign). The Swift Package output below (`--package`) wires this for you automatically.
+
+> **iOS deployment target:** the brownfield artifact inherits the Expo project's iOS deployment target (16.4 on SDK 56+). The consuming app's deployment target must be **≥** that value, otherwise Xcode will refuse to link the embedded frameworks. If the host app is on an older floor (e.g. iOS 14.0), bump its `IPHONEOS_DEPLOYMENT_TARGET` before adding the artifact.
 
 #### Ship as a Swift Package (recommended)
 
@@ -288,9 +305,9 @@ If you built a **Swift Package** (`build:ios --package …`):
 
 If you built **standalone XCFrameworks** (default output):
 
-- Drag **both** `{TargetName}.xcframework` and `hermesvm.xcframework` into the Xcode project navigator.
+- Drag **every** `.xcframework` produced under `./artifacts` into the Xcode project navigator.
 - In the import dialog, check **Copy items if needed** and add them to your app target.
-- Under the app target's **General** tab → **Frameworks, Libraries, and Embedded Content**, set both frameworks to **Embed & Sign**.
+- Under the app target's **General** tab → **Frameworks, Libraries, and Embedded Content**, set **every** framework to **Embed & Sign**. Forgetting one (commonly `hermesvm.xcframework`) is a leading cause of runtime "Library not loaded" crashes — see [./troubleshooting.md](./troubleshooting.md#ios-xcframework-signing-isolated-approach).
 
 #### Initialize React Native at app launch
 

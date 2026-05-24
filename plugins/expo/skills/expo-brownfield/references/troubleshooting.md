@@ -42,8 +42,9 @@ Cross-cutting issues that apply to both the isolated and integrated approaches. 
 
 **Symptom:** App launches but immediately crashes with "Library not loaded" or codesign errors during archive.
 
-- Both `{TargetName}.xcframework` **and** `hermesvm.xcframework` must be set to **Embed & Sign** in the app target's **Frameworks, Libraries, and Embedded Content** section. Missing `hermesvm.xcframework` is a common cause of runtime crashes.
+- **Every** xcframework produced by `build:ios` must be set to **Embed & Sign** in the app target's **Frameworks, Libraries, and Embedded Content** section. On SDK 56+ this is five frameworks: `{TargetName}.xcframework`, `React.xcframework`, `ReactNativeDependencies.xcframework`, `ExpoModulesJSI.xcframework`, and `hermesvm.xcframework`. On SDK 55 it's two: `{TargetName}.xcframework` and `hermesvm.xcframework`. Missing any of them is a common cause of runtime crashes.
 - The frameworks must be added to the _app target_, not a framework or extension target.
+- Prefer the Swift Package output (`build:ios --package`) — it links every bundled xcframework through one aggregate product, so you cannot forget one.
 
 ## iOS architecture / simulator mismatch
 
