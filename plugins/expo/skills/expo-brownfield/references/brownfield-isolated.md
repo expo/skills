@@ -188,7 +188,7 @@ To force source builds on SDK 56+, add `expo-build-properties` to `app.json`:
 
 **Every xcframework in the produced set must be embedded in the consuming app** (Embed & Sign). The Swift Package output below (`--package`) wires this for you automatically.
 
-> **iOS deployment target:** the brownfield artifact inherits the Expo project's iOS deployment target (16.4 on SDK 56+). The consuming app's deployment target must be **≥** that value, otherwise Xcode will refuse to link the embedded frameworks. If the host app is on an older floor (e.g. iOS 14.0), bump its `IPHONEOS_DEPLOYMENT_TARGET` before adding the artifact.
+> **iOS deployment target:** the brownfield artifact inherits the Expo project's iOS deployment target (16.4 on SDK 56+). The consuming app's deployment target must be set to 16.4 or higher; otherwise Xcode will refuse to link the embedded frameworks. If the host app is on an older floor (e.g. iOS 14.0), bump its `IPHONEOS_DEPLOYMENT_TARGET` before adding the artifact.
 
 #### Ship as a Swift Package (recommended)
 
