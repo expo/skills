@@ -1,7 +1,7 @@
 ---
 name: expo-observe-setup
 description: Use when adding EAS Observe and the `expo-observe` library to an existing Expo project to collect production app-startup performance metrics — covers prerequisites (private preview access, SDK 55+, EAS project), installation, wrapping the root layout (`AppMetricsRoot` on SDK 55, `ObserveRoot` on SDK 56+), and recording Time to Interactive (TTI) via `AppMetrics.markInteractive()` on SDK 55 or the `useObserve()` hook on SDK 56+. Includes examples for both Expo Router and non-router apps and for both SDK versions.
-version: 1.1.0
+version: 1.0.0
 license: MIT
 ---
 

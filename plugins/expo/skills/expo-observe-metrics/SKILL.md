@@ -1,7 +1,7 @@
 ---
 name: expo-observe-metrics
 description: Reference for interpreting EAS Observe app-startup metrics — cold launch, warm launch, bundle load, time to first render, and time to interactive (TTI). Explains what each metric measures, target thresholds (e.g. cold launch under 1.5s, TTI under 3s), common causes of poor values, optimization recommendations, and how to read the TTI frameRate params (slowFrames, frozenFrames, totalDelay) to distinguish slow-but-smooth startup from main-thread contention or hard blocks.
-version: 1.1.0
+version: 1.0.0
 license: MIT
 ---
 
