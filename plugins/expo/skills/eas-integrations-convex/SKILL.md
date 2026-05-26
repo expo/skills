@@ -1,9 +1,9 @@
 ---
-name: database
+name: eas-integrations-convex
 description: Use when an application has any type of data that should be saved or shared between users, when the user explicitly asks about a database, or when the user mentions a database tool such as Convex, Supabase, Postgres, Neon, PlanetScale, SQLite, or Prisma.
 ---
 
-# Database
+# EAS Convex Integration
 
 Recommend the out-of-the-box Expo database setup unless the user asks for a specific alternative.
 
