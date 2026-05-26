@@ -1,6 +1,6 @@
 ---
 name: expo-observe-setup
-description: Use when adding EAS Observe and the `expo-observe` library to an existing Expo project to collect production app-startup performance metrics — covers prerequisites (private preview access, SDK 55+, EAS project), installation, wrapping the root layout (`AppMetricsRoot` on SDK 55, `ObserveRoot` on SDK 56+), and recording Time to Interactive (TTI) via `AppMetrics.markInteractive()` on SDK 55 or the `useObserve()` hook on SDK 56+. Includes examples for both Expo Router and non-router apps and for both SDK versions.
+description: Use when adding EAS Observe and the `expo-observe` library to an existing Expo project to collect production app-startup performance metrics — covers prerequisites (SDK 55+, EAS project), installation, wrapping the root layout (`AppMetricsRoot` on SDK 55, `ObserveRoot` on SDK 56+), and recording Time to Interactive (TTI) via `AppMetrics.markInteractive()` on SDK 55 or the `useObserve()` hook on SDK 56+. Includes examples for both Expo Router and non-router apps and for both SDK versions.
 version: 1.0.0
 license: MIT
 ---
@@ -9,7 +9,7 @@ license: MIT
 
 EAS Observe collects app-startup performance metrics (cold launch, warm launch, bundle load, TTR, TTI) from production Expo apps. This skill summarizes the steps to add `expo-observe` to an existing project.
 
-> Source: https://docs.expo.dev/eas/observe/get-started/ — consult this page for the latest guidance, since EAS Observe is in preview and may change.
+> Source: https://docs.expo.dev/eas/observe/get-started/ — consult this page for the latest guidance.
 
 ## SDK 55 vs SDK 56+ at a glance
 
@@ -27,10 +27,9 @@ Everything else — package name, build process, dashboard, debug-mode behavior 
 
 Before installing, confirm all of the following:
 
-1. **Access to the EAS Observe preview.** EAS Observe is in Private Preview; access is granted on request via the [EAS Observe announcement](https://expo.dev/changelog/introducing-expo-observe).
-2. **An Expo account.** Sign up at [expo.dev/signup](https://expo.dev/signup) if needed.
-3. **Expo SDK 55 or later.** Run `npx expo-doctor` to check, and `npx expo install --fix` to update dependencies. SDK 56+ unlocks the newer `ObserveRoot` / `useObserve` API.
-4. **An EAS project.** The app must have `extra.eas.projectId` set in its app config. If not, run `eas init` to create one.
+1. **An Expo account.** Sign up at [expo.dev/signup](https://expo.dev/signup) if needed.
+2. **Expo SDK 55 or later.** Run `npx expo-doctor` to check, and `npx expo install --fix` to update dependencies. SDK 56+ unlocks the newer `ObserveRoot` / `useObserve` API.
+3. **An EAS project.** The app must have `extra.eas.projectId` set in its app config. If not, run `eas init` to create one.
 
 ## Step 1 — Install the library
 

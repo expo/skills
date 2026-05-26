@@ -1,13 +1,13 @@
 ---
 name: expo-observe-queries
-description: Use when you need to query EAS Observe data for an Expo app — aggregated startup metrics (cold/warm launch, TTI, TTR, bundle load, update download), per-route navigation metrics (Nav Cold/Warm TTR and Nav TTI), individual performance metric samples, custom events emitted via `logEvent`, or app version/build/update hierarchy. Covers the five EAS CLI commands: observe:metrics-summary, observe:metrics, observe:routes, observe:events, and observe:versions.
+description: Use when you need to query EAS Observe data for an Expo app — aggregated startup metrics (cold/warm launch, TTI, TTR, bundle load, update download), per-route navigation metrics (Nav Cold/Warm TTR and Nav TTI), individual performance metric samples, custom events emitted via `logEvent`, or app version/build/update hierarchy. Covers the five EAS CLI commands -- observe:metrics-summary, observe:metrics, observe:routes, observe:events, and observe:versions.
 version: 1.0.0
 license: MIT
 ---
 
 # EAS Observe CLI
 
-EAS Observe collects app performance telemetry and custom events from Expo apps and exposes them through five hidden EAS CLI commands. All commands are in preview and subject to breaking changes. Pass the `--help` flag to any command for the latest API.
+EAS Observe collects app performance telemetry and custom events from Expo apps and exposes them through five EAS CLI commands. Pass the `--help` flag to any command for the latest API.
 
 ## Commands Overview
 
@@ -18,8 +18,6 @@ EAS Observe collects app performance telemetry and custom events from Expo apps 
 | `eas observe:routes` | Per-route statistical aggregates for navigation metrics (Cold TTR, Warm TTR, Nav TTI) |
 | `eas observe:events` | Custom events emitted by the app via `logEvent` — name summary, all events, or filtered by event name (paginated) |
 | `eas observe:versions` | App version hierarchy with build numbers, OTA update IDs, and event counts |
-
-> **Recent rename** — what was previously `observe:metrics` (aggregated stats) is now `observe:metrics-summary`. What was `observe:events` (individual samples) is now `observe:metrics`. What was `observe:logs` (custom events) is now `observe:events`.
 
 All five commands share these common flags:
 
@@ -346,7 +344,6 @@ eas observe:metrics-summary --metric tti --json --non-interactive
 
 ## Notes
 
-- These commands are currently hidden (not shown in top-level `eas --help`). They are considered preview features and their output format may change.
 - Requires the user to be logged in (`eas login`).
-- When `--project-id` is provided, the command does not require running inside an EAS project directory; otherwise the project ID is read from the local `app.config` / `app.json`.
+- When `--project-id` is provided, the command does not require running inside an EAS project directory; otherwise the project ID is read from the local `app.config` / `app.json`. If using this option, ensure that you are logged in as a user that has access to the specified project.
 - `observe:metrics-summary` does not print update IDs in the table but still returns them in JSON for scripting or piping into other commands.

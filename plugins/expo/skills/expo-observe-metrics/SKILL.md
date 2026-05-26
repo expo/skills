@@ -7,7 +7,9 @@ license: MIT
 
 # EAS Observe metrics — interpretation cheatsheet
 
-Quick reference for reading EAS Observe dashboards and CLI output. For full prose definitions, optimization tips, and rationale, see the canonical metrics reference: https://docs.expo.dev/eas/observe/reference/metrics/.
+Quick reference for reading EAS Observe dashboards and CLI output.
+
+> Source: https://docs.expo.dev/eas/observe/reference/metrics/ — this is the canonical reference for metrics. Consult this page for the latest guidance, full prose definitions, optimization tips, and rationale.
 
 All durations are in seconds. Data is retained for at least 60 days. All sessions are tracked (no sampling).
 
