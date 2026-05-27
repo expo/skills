@@ -52,11 +52,11 @@ See [references/create-expo-module.md](references/create-expo-module.md) before 
    - **Standalone module** for reuse, monorepos, or publishing
 2. Determine native `expo-module` features that you will need.
    - Based on the user's instructions determine which feature scaffolding will be useful.
-   - Available features: `Constant`, `Function`, `AsyncFunction`, `Event`, `View`,`ViewEvent`, `SharedObject`
+   - Available features: `Constant`, `Function`, `AsyncFunction`, `Event`, `View`, `ViewEvent`, `SharedObject`
 3. Scaffold deliberately:
    - pass an explicit slug or path
    - choose `--platform` intentionally instead of relying on defaults
-   - use `--features` to choose code samples which you will modify in the next stepto match the real implementation.
+   - use `--features` to choose code samples which you will modify in the next step to match the real implementation.
 4. Replace generated example code with the real implementation.
 5. If you add a new platform later, prefer `add-platform-support` over manual file copying.
 
