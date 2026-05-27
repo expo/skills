@@ -185,10 +185,78 @@ Open the **Observe** tab in the EAS dashboard at `https://expo.dev/accounts/[acc
 
 To query metrics from the terminal with the EAS CLI, see the `expo-observe-queries` skill. For interpreting the metrics themselves, see `expo-observe-metrics`.
 
+## Optional — per-route navigation metrics (SDK 56+)
+
+By default `expo-observe` records app-wide startup metrics only. To additionally get **per-route / per-screen** navigation metrics (`cold_ttr`, `warm_ttr`, and a per-navigation `tti`, each tagged with the route/screen), enable one of the navigation integrations. These require **SDK 56 or later**; on earlier SDKs they are silent no-ops. Query the resulting data with `eas observe:routes` (see the `expo-observe-queries` skill).
+
+Pick the integration that matches the app's router:
+
+### Expo Router
+
+Docs: https://docs.expo.dev/eas/observe/integrations/expo-router/
+
+1. Enable the integration at module scope, **before any screen mounts** (it cannot be toggled at runtime — calling `configure()` after mount throws):
+
+   ```tsx
+   // app/_layout.tsx
+   import { Observe } from 'expo-observe';
+
+   Observe.configure({
+     integrations: { 'expo-router': true },
+   });
+   ```
+
+2. Call `useObserve()` inside each screen to get a `markInteractive` scoped to the current route, and call it from a `useEffect` once the screen is interactive:
+
+   ```tsx
+   import { useObserve } from 'expo-observe';
+   import { useEffect } from 'react';
+
+   export default function Home() {
+     const { markInteractive } = useObserve();
+     useEffect(() => {
+       markInteractive();
+     }, [markInteractive]);
+     return (/* screen content */);
+   }
+   ```
+
+Events are tagged with the route **pattern** (e.g. `/(tabs)/sessions/[sessionId]`) so the dashboard buckets distinct param values together; the resolved `url` and `routeParams` are also included. Requires `expo-router` installed at runtime, or the integration no-ops.
+
+### React Navigation
+
+Docs: https://docs.expo.dev/eas/observe/integrations/react-navigation/
+
+Requires `@react-navigation/native` 7.0.0 or later. Same `useObserve()` screen usage as above, plus **two** extra changes:
+
+1. Enable the integration at module scope, before mount:
+
+   ```tsx
+   // App.tsx
+   import { Observe } from 'expo-observe';
+
+   Observe.configure({
+     integrations: { 'react-navigation': true },
+   });
+   ```
+
+2. Replace the top-level `<NavigationContainer>` with `<ObserveNavigationContainer>` — a drop-in replacement that accepts the same props and forwards the same ref. If you pass a `linking` config it is used to resolve a human-readable screen path; otherwise the metric falls back to `route.name`.
+
+   ```tsx
+   import { ObserveNavigationContainer } from 'expo-observe/integrations/react-navigation';
+
+   export default function App() {
+     return <ObserveNavigationContainer>{/* navigators */}</ObserveNavigationContainer>;
+   }
+   ```
+
+In both integrations, `useObserve()` is safe to leave in place even when the integration is disabled or the router package is absent — it falls back to the global `markInteractive`.
+
 ## Quick checklist
 
-- [ ] Preview access granted, SDK ≥ 55, EAS project linked.
+- [ ] SDK ≥ 55, EAS project linked.
 - [ ] `expo-observe` installed via `npx expo install`.
 - [ ] Root component exported through `AppMetricsRoot.wrap(...)` (SDK 55) or `ObserveRoot.wrap(...)` (SDK 56+).
 - [ ] `markInteractive()` called from every entry screen once it is genuinely interactive — global `AppMetrics.markInteractive()` on SDK 55, or `useObserve()` hook on SDK 56+.
+- [ ] (Optional, SDK 56+) Per-route metrics enabled via `Observe.configure({ integrations: { ... } })`, plus `<ObserveNavigationContainer>` for React Navigation.
 - [ ] New build produced with `eas build` and metrics visible in the Observe dashboard.
