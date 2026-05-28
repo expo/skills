@@ -1,6 +1,6 @@
 ---
 name: expo-observe-queries
-description: Use when you need to query EAS Observe data for an Expo app — aggregated startup metrics (cold/warm launch, TTI, TTR, bundle load, update download), per-route navigation metrics (Nav Cold/Warm TTR and Nav TTI), individual performance metric samples, custom events emitted via `logEvent`, or app version/build/update hierarchy. Covers the five EAS CLI commands -- observe:metrics-summary, observe:metrics, observe:routes, observe:events, and observe:versions.
+description: Use when you need to query EAS Observe data for an Expo app including startup metrics, per-route navigation metrics, individual performance metric samples, user-defined events and versions.
 version: 1.0.0
 license: MIT
 ---

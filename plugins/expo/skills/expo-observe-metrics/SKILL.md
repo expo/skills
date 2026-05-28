@@ -1,6 +1,6 @@
 ---
 name: expo-observe-metrics
-description: Reference for interpreting EAS Observe metrics. Explains what each metric measures, target thresholds, common causes of poor values, optimization recommendations.
+description: Use when interpreting EAS Observe metrics or dashboards: what each metric measures, target thresholds, common causes of poor values, and optimization recommendations.
 version: 1.0.0
 license: MIT
 ---
@@ -11,7 +11,7 @@ Quick reference for reading EAS Observe dashboards and CLI output.
 
 > Source: https://docs.expo.dev/eas/observe/reference/metrics/ — this is the canonical reference for metrics. Consult this page for the latest guidance, full prose definitions, optimization tips, and rationale.
 
-All durations are in seconds. Data is retained for at least 60 days. All sessions are tracked (no sampling).
+All durations are in seconds. Data is retained for 90 days. All durations are in seconds. By default, every installation dispatches all of its events. Apps with high volumes can opt into per-installation sampling via configure({ sampleRate }). See [Sampling](https://docs.expo.dev/eas/observe/configuration/#sampling).
 
 ## Target thresholds
 
@@ -33,7 +33,7 @@ Every TTI event carries three frame-rate params. The pattern of high/low values 
 |---|---|---|
 | `expo.frameRate.slowFrames` | Count of frames ≥ 17ms | Main thread consistently busy during launch (heavy layout, sync bridge calls, too many components rendering) |
 | `expo.frameRate.frozenFrames` | Count of frames ≥ 700ms | Hard freezes. Even one during startup is a serious issue (sync I/O, large JSON parsing, blocking network) |
-| `expo.frameRate.totalDelay` | Seconds of accumulated frame overage | Best single "smoothness" number — compare to TTI |
+| `expo.frameRate.totalDelay` | Total accumulated time (seconds) frames exceeded their target duration | Best single "smoothness" number — compare to TTI |
 
 **Diagnostic patterns:**
 
@@ -45,7 +45,7 @@ Every TTI event carries three frame-rate params. The pattern of high/low values 
 
 - **Debug builds** (native debug OR JS bundle with `__DEV__` = true) do **not** dispatch metrics unless `configure({ dispatchInDebug: true })` is set.
 - The `environment` tag (defaults to `process.env.NODE_ENV`) is metadata only — it does not gate dispatch by itself.
-- Offline events are buffered on-device and flushed when the app backgrounds or `ExpoObserve.dispatchEvents()` is called.
+- Offline events are buffered on-device and flushed when the app backgrounds or `Observe.dispatchEvents()` is called.
 
 ## Cross-references
 
