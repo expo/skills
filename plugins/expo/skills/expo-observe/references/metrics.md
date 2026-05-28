@@ -1,10 +1,3 @@
----
-name: expo-observe-metrics
-description: Use when interpreting EAS Observe metrics or dashboards: what each metric measures, target thresholds, common causes of poor values, and optimization recommendations.
-version: 1.0.0
-license: MIT
----
-
 # EAS Observe metrics — interpretation cheatsheet
 
 Quick reference for reading EAS Observe dashboards and CLI output.
@@ -50,5 +43,5 @@ Every TTI event carries three frame-rate params. The pattern of high/low values 
 ## Cross-references
 
 - Full metric definitions and optimization guidance: https://docs.expo.dev/eas/observe/reference/metrics/
-- Setup steps (`AppMetricsRoot` / `ObserveRoot`, `markInteractive`): see the `expo-observe-setup` skill.
-- Querying metrics via the EAS CLI: see the `expo-observe-queries` skill.
+- Setup steps (`AppMetricsRoot` / `ObserveRoot`, `markInteractive`): see [`./setup.md`](./setup.md).
+- Querying metrics via the EAS CLI: see [`./queries.md`](./queries.md).

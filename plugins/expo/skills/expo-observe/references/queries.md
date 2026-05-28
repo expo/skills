@@ -1,10 +1,3 @@
----
-name: expo-observe-queries
-description: Use when you need to query EAS Observe data for an Expo app including startup metrics, per-route navigation metrics, individual performance metric samples, user-defined events and versions.
-version: 1.0.0
-license: MIT
----
-
 # EAS Observe CLI
 
 EAS Observe collects app performance telemetry and custom events from Expo apps and exposes them through five EAS CLI commands. Pass the `--help` flag to any command for the latest API.

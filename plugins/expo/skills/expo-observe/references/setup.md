@@ -1,13 +1,6 @@
----
-name: expo-observe-setup
-description: Use when adding EAS Observe and the `expo-observe` library to an existing Expo project to collect production app-startup performance metrics — covers prerequisites (SDK 55+, EAS project), installation, wrapping the root layout (`AppMetricsRoot` on SDK 55, `ObserveRoot` on SDK 56+), and recording Time to Interactive (TTI) via `AppMetrics.markInteractive()` on SDK 55 or the `useObserve()` hook on SDK 56+. Includes examples for both Expo Router and non-router apps and for both SDK versions.
-version: 1.0.0
-license: MIT
----
-
 # Set up EAS Observe in an existing project
 
-EAS Observe collects app-startup performance metrics (cold launch, warm launch, bundle load, TTR, TTI) from production Expo apps. This skill summarizes the steps to add `expo-observe` to an existing project.
+EAS Observe collects app-startup performance metrics (cold launch, warm launch, bundle load, TTR, TTI) from production Expo apps. This reference summarizes the steps to add `expo-observe` to an existing project.
 
 > Source: https://docs.expo.dev/eas/observe/get-started/ — consult this page for the latest guidance.
 
@@ -183,11 +176,11 @@ eas build
 
 Open the **Observe** tab in the EAS dashboard at `https://expo.dev/accounts/[account]/projects/[project]/observe` to view metrics from the app.
 
-To query metrics from the terminal with the EAS CLI, see the `expo-observe-queries` skill. For interpreting the metrics themselves, see `expo-observe-metrics`.
+To query metrics from the terminal with the EAS CLI, see [`./queries.md`](./queries.md). For interpreting the metrics themselves, see [`./metrics.md`](./metrics.md).
 
 ## Optional — per-route navigation metrics (SDK 56+)
 
-By default `expo-observe` records app-wide startup metrics only. To additionally get **per-route / per-screen** navigation metrics (`cold_ttr`, `warm_ttr`, and a per-navigation `tti`, each tagged with the route/screen), enable one of the navigation integrations. These require **SDK 56 or later**; on earlier SDKs they are silent no-ops. Query the resulting data with `eas observe:routes` (see the `expo-observe-queries` skill).
+By default `expo-observe` records app-wide startup metrics only. To additionally get **per-route / per-screen** navigation metrics (`cold_ttr`, `warm_ttr`, and a per-navigation `tti`, each tagged with the route/screen), enable one of the navigation integrations. These require **SDK 56 or later**; on earlier SDKs they are silent no-ops. Query the resulting data with `eas observe:routes` (see [`./queries.md`](./queries.md)).
 
 Pick the integration that matches the app's router:
 
