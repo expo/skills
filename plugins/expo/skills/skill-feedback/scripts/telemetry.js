@@ -12,7 +12,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { OPT_OUT_PATH, telemetryConfigured } = require("./telemetry_common.js");
+const { OPT_OUT_PATH, telemetryConfigured, isCI } = require("./telemetry_common.js");
 
 function disabledByEnv() {
   const flag = String(process.env.EXPO_SKILLS_TELEMETRY || "").trim().toLowerCase();
@@ -25,9 +25,11 @@ function disabledByEnv() {
 function printStatus() {
   const byFile = fs.existsSync(OPT_OUT_PATH);
   const byEnv = disabledByEnv();
-  if (byFile || byEnv) {
+  const byCI = isCI();
+  if (byFile || byEnv || byCI) {
     const reasons = [];
     if (byFile) reasons.push(`opt-out file (${OPT_OUT_PATH})`);
+    if (byCI) reasons.push("CI environment");
     if (byEnv) reasons.push(`env var ${byEnv}`);
     console.log(`Expo skills telemetry: DISABLED — via ${reasons.join(" and ")}.`);
   } else if (!telemetryConfigured()) {

@@ -33,13 +33,35 @@ const INSTALLATION_ID_PATH = path.join(
 // subprocesses). Toggle it with scripts/telemetry.js --off / --on.
 const OPT_OUT_PATH = path.join(os.homedir(), ".expo-skills", "opt-out");
 
+// Marker so the one-time "we collect anonymous telemetry" notice prints once.
+const NOTICE_PATH = path.join(os.homedir(), ".expo-skills", "notice-shown");
+
+// CI detection — skip telemetry in automated environments so usage data reflects
+// real humans. Honors the common CI=true convention plus major providers' signals.
+function isCI() {
+  const ci = String(process.env.CI || "").trim().toLowerCase();
+  if (ci && ci !== "0" && ci !== "false") return true;
+  return Boolean(
+    process.env.GITHUB_ACTIONS ||
+      process.env.GITLAB_CI ||
+      process.env.CIRCLECI ||
+      process.env.TRAVIS ||
+      process.env.BUILDKITE ||
+      process.env.JENKINS_URL ||
+      process.env.TEAMCITY_VERSION ||
+      process.env.TF_BUILD
+  );
+}
+
 // Opt-out switch. Disabled when EXPO_SKILLS_TELEMETRY is 0/false/off/no, or
 // when the cross-tool DO_NOT_TRACK convention (https://consoledonottrack.com)
 // is set to anything other than 0/false.
 function telemetryDisabled() {
   // 1) Persistent opt-out file — the reliable, launch-independent switch.
   try { if (fs.existsSync(OPT_OUT_PATH)) return true; } catch {}
-  // 2) Env vars — for CI / global opt-out.
+  // 2) Skip automated / CI environments.
+  if (isCI()) return true;
+  // 3) Env vars — for global opt-out.
   const flag = String(process.env.EXPO_SKILLS_TELEMETRY || "").trim().toLowerCase();
   if (["0", "false", "off", "no"].includes(flag)) return true;
   const dnt = String(process.env.DO_NOT_TRACK || "").trim().toLowerCase();
@@ -67,6 +89,28 @@ function detectHarness() {
     return "codex";
   }
   return "unknown";
+}
+
+// Friendly OS + CPU arch for event properties (non-PII).
+function platformProps() {
+  const osName = { darwin: "macos", win32: "windows" }[process.platform] || process.platform;
+  return { os: osName, arch: process.arch };
+}
+
+// Print a one-time transparency notice the first time real telemetry is sent.
+// Best-effort and gated by an atomic marker, so it appears at most once per machine.
+function maybeShowFirstRunNotice() {
+  try {
+    fs.mkdirSync(path.dirname(NOTICE_PATH), { recursive: true, mode: 0o700 });
+    const fd = fs.openSync(NOTICE_PATH, "wx", 0o600); // succeeds only the first time
+    fs.closeSync(fd);
+    process.stderr.write(
+      "expo-skills: sending anonymous usage analytics (skill name only — no code, prompts, " +
+        "or personal data). Turn off with `telemetry.js --off` or EXPO_SKILLS_TELEMETRY=0.\n"
+    );
+  } catch {
+    // Already shown, or filesystem unavailable — stay silent.
+  }
 }
 
 function shortHash(value, length = 16) {
@@ -177,6 +221,9 @@ module.exports = {
   telemetryDisabled,
   telemetryConfigured,
   detectHarness,
+  isCI,
+  platformProps,
+  maybeShowFirstRunNotice,
   shortHash,
   stableStringify,
   parseContext,

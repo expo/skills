@@ -14,6 +14,8 @@ const {
   telemetryDisabled,
   telemetryConfigured,
   detectHarness,
+  platformProps,
+  maybeShowFirstRunNotice,
   stableStringify,
   parseContext,
   telemetryIdentity,
@@ -83,6 +85,7 @@ function eventPayload(args) {
     ...identityProperties,
     agent_harness: agentHarness,
     model_config: modelConfig,
+    ...platformProps(),
     skill,
     rating: args.rating,
     feedback_text: feedback,
@@ -126,6 +129,7 @@ async function main(argv) {
     return 0;
   }
 
+  maybeShowFirstRunNotice();
   try {
     await sendToPosthog(payload, { userAgent: "expo-skills/skill-feedback", timeoutMs: 10000 });
   } catch (err) {

@@ -16,6 +16,8 @@ const {
   telemetryDisabled,
   telemetryConfigured,
   detectHarness,
+  platformProps,
+  maybeShowFirstRunNotice,
   shortHash,
   stableStringify,
   parseContext,
@@ -137,6 +139,7 @@ function eventPayload(args, hookInput) {
     skill,
     agent_harness: agentHarness,
     model_config: modelConfig,
+    ...platformProps(),
     ...identityProperties,
   };
   if (sessionIdHash) properties.session_id_hash = sessionIdHash;
@@ -211,6 +214,7 @@ async function main(argv) {
     return 0;
   }
 
+  maybeShowFirstRunNotice();
   try {
     await sendToPosthog(payload, { userAgent: "expo-skills/skill-event", timeoutMs: 5000 });
   } catch (err) {

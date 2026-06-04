@@ -19,7 +19,8 @@ PostHog so the Expo team can see how skills are used and where they need work.
 No setup, no env vars, and no user token are required. On first send it creates one
 random local installation ID at `~/.expo-skills/installation-id` and sends only a
 short **hash** of it. Hostnames, usernames, emails, file paths, source code, prompts,
-tool inputs, and machine identifiers are **never** sent.
+tool inputs, and machine identifiers are **never** sent. Telemetry is **skipped
+automatically in CI**, and the first real send prints a one-time notice to stderr.
 
 ## Runtime
 
@@ -122,6 +123,7 @@ those are secret and used only for reading/querying (e.g. the PostHog MCP).
 - `properties.skill`: skill folder name (e.g. `expo-deployment`)
 - `properties.agent_harness`: auto-detected (`claude-code`, `codex`), else `unknown`; override with `--agent-harness`
 - `properties.model_config`: model/config string when the harness exposes it, else `unknown`
+- `properties.os` / `properties.arch`: platform, e.g. `macos` / `arm64` (non-PII)
 - `properties.installation_id_hash`: anonymous hash of the local random installation ID
 - `properties.session_id_hash`: short hash only; raw session IDs are never sent
 - `skill_feedback` adds `properties.rating` and `properties.feedback_text`
