@@ -6,12 +6,22 @@ This repository contains official Expo AI agent skills. The primary distribution
 
 ```
 .claude-plugin/
-  marketplace.json          # Marketplace catalog for the repo
+  marketplace.json          # Claude Code marketplace catalog
+.agents/
+  plugins/
+    marketplace.json        # Codex marketplace catalog
+.cursor-plugin/
+  marketplace.json          # Cursor marketplace catalog
 plugins/
   expo/
     .claude-plugin/
-      plugin.json           # Plugin manifest
-    .mcp.json               # Expo MCP server configuration
+      plugin.json           # Claude Code plugin manifest
+    .codex-plugin/
+      plugin.json           # Codex plugin manifest
+    .cursor-plugin/
+      plugin.json           # Cursor plugin manifest
+    .mcp.json               # Claude Code and Codex MCP server configuration
+    mcp.json                # Cursor MCP server configuration
     skills/
       skill-name/
         SKILL.md            # Main skill file
@@ -22,7 +32,7 @@ README.md                   # User-facing installation instructions
 CONTRIBUTING.md             # Contributor guidance
 ```
 
-The marketplace currently exposes `expo` as the active plugin. It also keeps deprecated aliases such as `expo-app-design`, `upgrading-expo`, and `expo-deployment` pointing at `./plugins/expo` for backward compatibility.
+The Claude Code marketplace currently exposes `expo` as the active plugin. It also keeps deprecated aliases such as `expo-app-design`, `upgrading-expo`, and `expo-deployment` pointing at `./plugins/expo` for backward compatibility. The Codex and Cursor marketplaces expose only the active `expo` plugin because their marketplace entries must match the plugin manifest name.
 
 ## Plugin Manifest
 
@@ -114,7 +124,13 @@ Consult these resources as needed:
 
 ## Marketplace Configuration
 
-The root `.claude-plugin/marketplace.json` file catalogs installable plugins:
+This repo has one shared plugin implementation at `plugins/expo` and separate marketplace wrappers for each agent ecosystem:
+
+- `.claude-plugin/marketplace.json`: Claude Code marketplace.
+- `.agents/plugins/marketplace.json`: Codex marketplace.
+- `.cursor-plugin/marketplace.json`: Cursor marketplace.
+
+Claude Code and Cursor marketplace entries use string `source` paths:
 
 ```json
 {
@@ -136,13 +152,39 @@ The root `.claude-plugin/marketplace.json` file catalogs installable plugins:
 }
 ```
 
-Plugin entry fields:
+Codex marketplace entries use an object `source` plus install policy and category:
+
+```json
+{
+  "name": "marketplace-name",
+  "interface": {
+    "displayName": "Marketplace Display Name"
+  },
+  "plugins": [
+    {
+      "name": "plugin-name",
+      "source": {
+        "source": "local",
+        "path": "./plugins/plugin-name"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
+```
+
+Marketplace entry fields:
 
 - `name` is required and uses kebab-case.
-- `source` is required and should be a relative path to the plugin directory.
-- `description` should be concise and user-facing.
+- `source` is required and should point at the plugin directory relative to the marketplace root.
+- `description` fields, when present, should be concise and user-facing.
+- Codex entries must include `policy.installation`, `policy.authentication`, and `category`.
 
-When changing marketplace aliases, preserve backward compatibility unless the task explicitly removes an old install path.
+When changing Claude Code marketplace aliases, preserve backward compatibility unless the task explicitly removes an old install path. Do not add deprecated alias entries to Codex or Cursor unless their plugin manifest names also match.
 
 ## Adding a Skill
 
@@ -157,6 +199,7 @@ When changing marketplace aliases, preserve backward compatibility unless the ta
 Validate the changed surface before publishing:
 
 ```bash
+claude plugin validate .
 claude plugin validate ./plugins/expo
 ```
 
@@ -164,9 +207,23 @@ For JSON-only changes, also verify the edited JSON file parses:
 
 ```bash
 python3 -m json.tool .claude-plugin/marketplace.json >/dev/null
+python3 -m json.tool .agents/plugins/marketplace.json >/dev/null
+python3 -m json.tool .cursor-plugin/marketplace.json >/dev/null
 python3 -m json.tool plugins/expo/.claude-plugin/plugin.json >/dev/null
+python3 -m json.tool plugins/expo/.codex-plugin/plugin.json >/dev/null
+python3 -m json.tool plugins/expo/.cursor-plugin/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/.mcp.json >/dev/null
+python3 -m json.tool plugins/expo/mcp.json >/dev/null
 ```
+
+For Codex marketplace changes, verify registration in an isolated Codex home before using your real config:
+
+```bash
+mkdir -p .context/codex-home .context/fake-home
+CODEX_HOME="$PWD/.context/codex-home" HOME="$PWD/.context/fake-home" codex plugin marketplace add "$PWD"
+```
+
+For Cursor marketplace changes, validate against Cursor's plugin template validator when available. This workspace has `bun`, so the Node-based validator can be run with Bun.
 
 If a skill includes scripts, run the relevant script-level validation from that skill's `scripts/` directory.
 
@@ -180,6 +237,12 @@ Users install the active plugin from this marketplace:
 ```
 
 The deprecated marketplace entries are compatibility aliases only. New documentation should point users to `/plugin install expo`.
+
+Codex users can add this repository as a marketplace and then install `expo` from the Codex plugin directory:
+
+```text
+codex plugin marketplace add expo/skills --ref main
+```
 
 ## Conventions in This Repo
 

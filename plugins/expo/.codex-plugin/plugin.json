@@ -1,0 +1,51 @@
+{
+  "name": "expo",
+  "version": "1.0.0",
+  "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo and React Native apps.",
+  "author": {
+    "name": "Expo Team",
+    "email": "support@expo.dev",
+    "url": "https://expo.dev"
+  },
+  "homepage": "https://docs.expo.dev/",
+  "repository": "https://github.com/expo/skills/tree/main/plugins/expo",
+  "license": "MIT",
+  "keywords": [
+    "expo",
+    "react-native",
+    "expo-router",
+    "eas",
+    "mobile",
+    "ios",
+    "android",
+    "deployment",
+    "upgrades",
+    "native-modules",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Expo",
+    "shortDescription": "Build, deploy, upgrade, and debug Expo and React Native apps",
+    "longDescription": "Official Expo-authored skills for building Expo Router UI, authoring API routes, configuring data fetching and styling, writing Expo native modules, creating dev clients, upgrading Expo SDKs, observing apps, and deploying Expo apps with EAS workflows, builds, hosting, TestFlight, App Store, and Play Store guidance.",
+    "developerName": "Expo",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write",
+      "MCP"
+    ],
+    "websiteURL": "https://expo.dev/",
+    "privacyPolicyURL": "https://expo.dev/privacy",
+    "termsOfServiceURL": "https://expo.dev/terms",
+    "defaultPrompt": [
+      "Build an Expo Router UI",
+      "Upgrade this app to the latest Expo SDK",
+      "Deploy this Expo app with EAS"
+    ],
+    "brandColor": "#0072DE",
+    "screenshots": []
+  }
+}

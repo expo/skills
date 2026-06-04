@@ -1,0 +1,18 @@
+{
+  "name": "expo-plugins",
+  "owner": {
+    "name": "Expo Team",
+    "email": "support@expo.dev"
+  },
+  "metadata": {
+    "description": "Expo's official plugins for Cursor",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "expo",
+      "source": "./plugins/expo",
+      "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo apps."
+    }
+  ]
+}

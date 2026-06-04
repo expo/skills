@@ -1,0 +1,20 @@
+{
+  "name": "expo-plugins",
+  "interface": {
+    "displayName": "Expo Skills"
+  },
+  "plugins": [
+    {
+      "name": "expo",
+      "source": {
+        "source": "local",
+        "path": "./plugins/expo"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

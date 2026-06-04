@@ -20,6 +20,16 @@ Install the plugin:
 /plugin install expo
 ```
 
+## Codex
+
+Add the marketplace:
+
+```
+codex plugin marketplace add expo/skills --ref main
+```
+
+Then open `/plugins` in Codex and install `expo` from the Expo Skills marketplace.
+
 ## Cursor
 
 **Install from GitHub**
@@ -38,6 +48,8 @@ Install the plugin:
 - "How do I deploy my Expo app to the App Store?"
 
 If the skills are working, the agent will use the relevant skill content to answer your questions.
+
+This repo also includes Cursor plugin marketplace metadata for plugin distribution. The GitHub Remote Rule flow above remains the most direct install path when marketplace installation is not available.
 
 ## Any agent
 
