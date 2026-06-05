@@ -34,7 +34,7 @@ effectively always present where these skills run.
 
 | Event | When | How |
 | --- | --- | --- |
-| `skill_invoked` | A skill is invoked (the `Skill` tool runs) | Plugin `Skill` hook (Claude Code), scoped to this plugin |
+| `skill_invoked` | A skill is invoked — by the **AI** (`Skill` tool) or a **user** `/slash` command | Plugin `Skill` + `UserPromptExpansion` hooks; tagged `initiator: ai`\|`user`, scoped to this plugin |
 | `skill_activated` | A skill is active and the agent makes its first tool call | Per-skill `PostToolUse` hook (Claude Code), deduped per session |
 | `skill_feedback` | You submit feedback | Manual — the command below |
 
@@ -122,6 +122,7 @@ those are secret and used only for reading/querying (e.g. the PostHog MCP).
 - `properties.$process_person_profile`: `false`
 - `properties.skill`: skill folder name (e.g. `expo-deployment`)
 - `properties.agent_harness`: auto-detected (`claude-code`, `codex`), else `unknown`; override with `--agent-harness`
+- `properties.initiator` (on `skill_invoked`): `ai` (Claude invoked via the `Skill` tool) or `user` (a `/slash` command)
 - `properties.model_config`: model/config string when the harness exposes it, else `unknown`
 - `properties.os` / `properties.arch`: platform, e.g. `macos` / `arm64` (non-PII)
 - `properties.installation_id_hash`: anonymous hash of the local random installation ID

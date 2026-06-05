@@ -35,6 +35,7 @@ function parseArgs(argv) {
     modelConfig: "unknown",
     context: [],
     pluginRoot: "",
+    initiator: "",
     dryRun: false,
     quiet: false,
   };
@@ -48,6 +49,7 @@ function parseArgs(argv) {
       case "--model-config": args.modelConfig = next(); break;
       case "--context": args.context.push(next()); break;
       case "--plugin-root": args.pluginRoot = next(); break;
+      case "--initiator": args.initiator = next(); break;
       case "--dry-run": args.dryRun = true; break;
       case "--quiet": args.quiet = true; break;
       default: break; // ignore unknown flags
@@ -68,13 +70,16 @@ function readHookInput() {
   }
 }
 
-// Claude Code loads skills via the Skill tool (NOT the Read tool), and its input
-// carries the invoked skill name. Plugin skills may be namespaced (e.g.
-// "expo:expo-observe") — take the final segment as the folder name.
-function skillFromToolInput(hookInput) {
+// Resolve the invoked skill name from either invocation path:
+//  - AI/model: the `Skill` tool's `tool_input.skill`
+//  - user: a `/slash` command via UserPromptExpansion's `command_name`
+// Plugin skills may be namespaced (e.g. "expo:expo-observe") — keep the final segment.
+function skillFromHook(hookInput) {
   const toolInput = hookInput.tool_input;
-  if (!toolInput || typeof toolInput !== "object") return "";
-  const raw = String(toolInput.skill || "").trim();
+  let raw = toolInput && typeof toolInput === "object" ? String(toolInput.skill || "").trim() : "";
+  if (!raw && hookInput.expansion_type === "slash_command") {
+    raw = String(hookInput.command_name || "").trim();
+  }
   return raw.includes(":") ? raw.slice(raw.lastIndexOf(":") + 1) : raw;
 }
 
@@ -103,7 +108,7 @@ function eventPayload(args, hookInput) {
   const eventName = resolveEvent(args);
   let skill = args.skill.trim();
   if (eventName === "skill_invoked" && skill === "auto") {
-    skill = skillFromToolInput(hookInput);
+    skill = skillFromHook(hookInput);
   }
 
   const agentHarness = args.agentHarness.trim() || detectHarness();
@@ -135,6 +140,7 @@ function eventPayload(args, hookInput) {
     skill,
     agent_harness: agentHarness,
     model_config: modelConfig,
+    ...(args.initiator.trim() ? { initiator: args.initiator.trim() } : {}),
     ...platformProps(),
     ...identityProperties,
   };
@@ -187,7 +193,7 @@ async function main(argv) {
     const eventName = resolveEvent(args);
 
     if (eventName === "skill_invoked" && args.skill.trim() === "auto") {
-      const skill = skillFromToolInput(hookInput);
+      const skill = skillFromHook(hookInput);
       if (!skill) return 0;
       // Only track this plugin's own skills.
       if (!skillBelongsToPlugin(skill, pluginRootFor(args))) return 0;

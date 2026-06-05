@@ -51,7 +51,7 @@ bunx skills add expo/skills
 
 These skills send **anonymous** usage events so the Expo team can see how they're used and improve them. On first use a random ID is created locally at `~/.expo-skills/installation-id`; only a hash of it is sent. We never send source code, prompts, file paths, or personal data. Scripts are zero-dependency and run under Node or Bun.
 
-- **Tracked in Claude Code:** when a skill is invoked (`skill_invoked`) and when it drives its first action (`skill_activated`).
+- **Tracked in Claude Code:** when a skill is invoked — by the AI or a user `/slash` command (`skill_invoked`, tagged with `initiator`) — and when it drives its first action (`skill_activated`).
 - **Feedback:** every skill ends with an *Expo Skill Feedback* footer — a one-line command to send a quick rating + note.
 - **Other agents (Codex, Cursor, …):** automatic tracking needs Claude Code hooks, so it's off there; feedback still works by running the bundled script.
 
