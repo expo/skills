@@ -7,13 +7,14 @@
     "email": "support@expo.dev",
     "url": "https://expo.dev"
   },
-  "homepage": "https://docs.expo.dev/",
+  "homepage": "https://docs.expo.dev/skills/",
   "repository": "https://github.com/expo/skills/tree/main/plugins/expo",
   "license": "MIT",
   "keywords": [
     "expo",
     "react-native",
     "expo-router",
+    "codex-run-actions",
     "eas",
     "mobile",
     "ios",
@@ -21,6 +22,9 @@
     "deployment",
     "upgrades",
     "native-modules",
+    "app-clips",
+    "brownfield",
+    "eas-update",
     "mcp"
   ],
   "skills": "./skills/",
@@ -28,7 +32,7 @@
   "interface": {
     "displayName": "Expo",
     "shortDescription": "Build, deploy, upgrade, and debug Expo and React Native apps",
-    "longDescription": "Official Expo-authored skills for building Expo Router UI, authoring API routes, configuring data fetching and styling, writing Expo native modules, creating dev clients, upgrading Expo SDKs, observing apps, and deploying Expo apps with EAS workflows, builds, hosting, TestFlight, App Store, and Play Store guidance.",
+    "longDescription": "Official Expo-authored skills for building Expo Router UI, authoring API routes, configuring data fetching and styling, writing Expo native modules, adding App Clips, integrating Expo into brownfield native apps, inspecting EAS Update health, creating dev clients, upgrading Expo SDKs, wiring Codex app Run actions, using Expo MCP, and deploying Expo apps with EAS workflows, builds, hosting, TestFlight, App Store, and Play Store guidance.",
     "developerName": "Expo",
     "category": "Developer Tools",
     "capabilities": [
@@ -41,11 +45,14 @@
     "privacyPolicyURL": "https://expo.dev/privacy",
     "termsOfServiceURL": "https://expo.dev/terms",
     "defaultPrompt": [
-      "Build an Expo Router UI",
-      "Upgrade this app to the latest Expo SDK",
+      "Build a mobile app with Expo and React Native",
+      "Build a tab-based app with Expo Router",
+      "Upgrade to the latest Expo SDK and fix breaking changes",
       "Deploy this Expo app with EAS"
     ],
-    "brandColor": "#0072DE",
-    "screenshots": []
+    "composerIcon": "./assets/expo.png",
+    "logo": "./assets/expo.png",
+    "screenshots": [],
+    "brandColor": "#000020"
   }
 }
