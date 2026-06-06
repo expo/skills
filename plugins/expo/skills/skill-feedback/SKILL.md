@@ -66,13 +66,15 @@ auto-detect). Only the `hooks/hooks.json` **wiring** is Claude-specific.
 - **Claude Code** — fully wired. `skill_invoked` fires via `hooks/hooks.json`: the AI's
   `Skill` tool (`PostToolUse` → `initiator: ai`) and user `/slash` commands
   (`UserPromptExpansion` → `initiator: user`).
-- **Codex** — Codex now loads plugin `hooks/hooks.json` (openai/codex#17331, closed) and
-  exposes a `PLUGIN_ROOT` env var ≈ `${CLAUDE_PLUGIN_ROOT}`. But it has **no skill-invocation
-  event yet**: there is no `Skill` tool, `UserPromptExpansion` is unimplemented, and
-  dedicated skill hooks are still on the roadmap (openai/codex#21753) — so our matchers have
-  nothing to bind to in Codex today. **To enable when a skill event lands:** add a Codex entry
-  to `hooks/hooks.json` calling `run.sh`/`skill-event.js` with `${PLUGIN_ROOT}` and
-  `--initiator`, and add Codex's skill-name field to `skillFromHook()`. No other script change.
+- **Codex** — not wired, and blocked on Codex itself (verified against codex-cli 0.130.0 +
+  `openai/codex` main): its 10 hook events (`PostToolUse`, `UserPromptSubmit`, `SessionStart`,
+  …) include **none for skills**, and no payload carries the skill name — skills are injected
+  as `<skill>` context (not invoked as a tool), and Codex's `SkillInvoked` is internal
+  analytics never exposed to hooks. Plugin-bundled hooks are also **off by default**
+  (`plugin_hooks`, under development), and user/project hooks need a trust approval. Codex
+  *does* alias `CLAUDE_PLUGIN_ROOT`, so our paths already resolve — so when Codex ships a skill
+  hook event/field and stabilizes `plugin_hooks`, enabling us is a tiny add (one hooks entry +
+  one `skillFromHook` field). Until then, `skill_feedback` (run the script) is the Codex signal.
 - **Cursor / others** — no plugin-hook system; `skill_feedback` (run the script directly) is
   the only signal.
 
