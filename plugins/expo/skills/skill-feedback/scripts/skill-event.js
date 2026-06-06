@@ -57,18 +57,22 @@ function readHookInput() {
   }
 }
 
-// Resolve the invoked skill name from the hook payload. Per-harness shapes:
-//   - Claude Code Skill tool: tool_input.skill   (e.g. "expo:expo-observe")
-//   - Claude Code /slash:     command_name        (UserPromptExpansion)
-//   - Codex: add its skill-invocation field here once Codex ships a skill hook
-//     (openai/codex#21753). The rest of the pipeline is already harness-agnostic.
+// Resolve the invoked skill name from the hook payload. The name arrives in different
+// fields across harnesses and payload shapes, so check every plausible location — the
+// strict skillBelongsToPlugin() scoping downstream keeps this safe even when permissive
+// (anything that isn't really one of our skills is dropped):
+//   - Claude Code Skill tool:        tool_input.skill        (e.g. "expo:expo-observe")
+//   - Claude Code /slash command:    command_name            (UserPromptExpansion)
+//   - Codex / future skill hooks:    tool_input.skill_name, top-level skill / skill_name
+// Codex mirrors Claude's hook event names (parity tracker openai/codex#21753) and aliases
+// CLAUDE_PLUGIN_ROOT, so the existing hooks fire there unchanged once Codex enables plugin
+// hooks — this resolver just has to tolerate whatever field the payload uses for the name.
 // Plugin skills are namespaced (e.g. "expo:expo-observe") — keep the final segment.
 function skillFromHook(hookInput) {
-  const toolInput = hookInput.tool_input;
-  let raw = toolInput && typeof toolInput === "object" ? String(toolInput.skill || "").trim() : "";
-  if (!raw && hookInput.expansion_type === "slash_command") {
-    raw = String(hookInput.command_name || "").trim();
-  }
+  const ti = hookInput && typeof hookInput.tool_input === "object" && hookInput.tool_input ? hookInput.tool_input : {};
+  const raw = String(
+    ti.skill || ti.skill_name || hookInput.command_name || hookInput.skill || hookInput.skill_name || ""
+  ).trim();
   return raw.includes(":") ? raw.slice(raw.lastIndexOf(":") + 1) : raw;
 }
 

@@ -66,15 +66,16 @@ auto-detect). Only the `hooks/hooks.json` **wiring** is Claude-specific.
 - **Claude Code** — fully wired. `skill_invoked` fires via `hooks/hooks.json`: the AI's
   `Skill` tool (`PostToolUse` → `initiator: ai`) and user `/slash` commands
   (`UserPromptExpansion` → `initiator: user`).
-- **Codex** — not wired, and blocked on Codex itself (verified against codex-cli 0.130.0 +
-  `openai/codex` main): its 10 hook events (`PostToolUse`, `UserPromptSubmit`, `SessionStart`,
-  …) include **none for skills**, and no payload carries the skill name — skills are injected
-  as `<skill>` context (not invoked as a tool), and Codex's `SkillInvoked` is internal
-  analytics never exposed to hooks. Plugin-bundled hooks are also **off by default**
-  (`plugin_hooks`, under development), and user/project hooks need a trust approval. Codex
-  *does* alias `CLAUDE_PLUGIN_ROOT`, so our paths already resolve — so when Codex ships a skill
-  hook event/field and stabilizes `plugin_hooks`, enabling us is a tiny add (one hooks entry +
-  one `skillFromHook` field). Until then, `skill_feedback` (run the script) is the Codex signal.
+- **Codex** — built to light up **automatically** when Codex catches up, no rework from us.
+  We use Claude's hook event names (`Skill`, `UserPromptExpansion`), Codex **aliases
+  `CLAUDE_PLUGIN_ROOT`**, and `skillFromHook()` tolerates any payload field for the skill name
+  — so the existing `hooks/hooks.json` fires in a parity Codex unchanged. It just can't fire
+  *yet*: verified against codex-cli 0.130.0 + `openai/codex` main, none of Codex's 10 hook
+  events are skill-aware (the `SkillInvoked` fact is internal analytics, not hook-exposed),
+  `UserPromptExpansion` isn't implemented, and plugin-bundled hooks are **off by default**
+  (`plugin_hooks`, under development). So Codex is gated on OpenAI reaching skill-hook parity
+  (openai/codex#21753) + enabling `plugin_hooks`; if it instead ships a *native* skill event,
+  the only addition is one matcher. Until then, `skill_feedback` is the Codex signal.
 - **Cursor / others** — no plugin-hook system; `skill_feedback` (run the script directly) is
   the only signal.
 
