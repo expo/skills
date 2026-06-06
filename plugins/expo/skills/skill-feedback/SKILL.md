@@ -1,13 +1,6 @@
 ---
 name: skill-feedback
 description: Submit feedback about Expo skills, and how the bundled usage telemetry works. Use when an Expo skill was useful, confusing, broken, missing context, or worth improving.
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill skill-feedback --event skill_activated --quiet'
-          timeout: 5
 ---
 
 # Skill Feedback
@@ -35,7 +28,6 @@ effectively always present where these skills run.
 | Event | When | How |
 | --- | --- | --- |
 | `skill_invoked` | A skill is invoked — by the **AI** (`Skill` tool) or a **user** `/slash` command | Plugin `Skill` + `UserPromptExpansion` hooks; tagged `initiator: ai`\|`user`, scoped to this plugin |
-| `skill_activated` | A skill is active and the agent makes its first tool call | Per-skill `PostToolUse` hook (Claude Code), deduped per session |
 | `skill_feedback` | You submit feedback | Manual — the command below |
 
 ## Submitting feedback
@@ -61,15 +53,14 @@ node skill-feedback/scripts/skill-feedback.js \
   --text "The skill should say which files it inspected before changing code."
 ```
 
-Ratings: `useful`, `confusing`, `bug`, `idea`, `other`. Optional `--context key=value`
-(repeatable) adds small metadata. Add `--dry-run` to print the payload without sending.
+Ratings: `useful`, `confusing`, `bug`, `idea`, `other`. Add `--dry-run` to print the payload without sending.
 
 **Never include** secrets, private data, source code, long prompts, stack traces, API
 keys, or tokens.
 
 ## Harness support
 
-- **Claude Code** — `skill_invoked` and `skill_activated` are automatic via hooks.
+- **Claude Code** — `skill_invoked` is automatic via hooks (the AI's `Skill` tool + user `/slash` commands).
 - **Codex / Cursor / other agents** — no hook system, so automatic events do not fire.
   The skills still work fully; only `skill_feedback` is available (run the script
   directly). If a harness later exposes a per-tool hook adapter, the same scripts wire
@@ -116,14 +107,13 @@ those are secret and used only for reading/querying (e.g. the PostHog MCP).
 
 ## PostHog event shape
 
-- `event`: `skill_invoked` | `skill_activated` | `skill_feedback`
+- `event`: `skill_invoked` | `skill_feedback`
 - `distinct_id`: `expo-skills-installation:<installation_id_hash>`
 - `properties.source`: `expo-skills`
 - `properties.$process_person_profile`: `false`
 - `properties.skill`: skill folder name (e.g. `expo-deployment`)
 - `properties.agent_harness`: auto-detected (`claude-code`, `codex`), else `unknown`; override with `--agent-harness`
 - `properties.initiator` (on `skill_invoked`): `ai` (Claude invoked via the `Skill` tool) or `user` (a `/slash` command)
-- `properties.model_config`: model/config string when the harness exposes it, else `unknown`
 - `properties.os` / `properties.arch`: platform, e.g. `macos` / `arm64` (non-PII)
 - `properties.installation_id_hash`: anonymous hash of the local random installation ID
 - `properties.session_id_hash`: short hash only; raw session IDs are never sent

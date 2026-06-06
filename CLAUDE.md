@@ -244,6 +244,6 @@ Users install plugins from this marketplace:
 
 ## Usage Telemetry & Feedback
 
-The `expo` plugin sends **anonymous** usage telemetry and collects skill feedback (details in the `skill-feedback` skill). When adding a skill, copy the `skill_activated` frontmatter hook and the `## Expo Skill Feedback` footer from any existing skill.
+The `expo` plugin sends **anonymous** usage telemetry and collects skill feedback (details in the `skill-feedback` skill). Usage tracking is automatic via the plugin's `hooks/hooks.json` (no per-skill hooks). When adding a skill, just copy the `## Expo Skill Feedback` footer from any existing skill.
 
 **Turn it off:** run `telemetry.js --off`, or set `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`.

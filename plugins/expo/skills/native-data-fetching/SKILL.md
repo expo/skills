@@ -3,13 +3,6 @@ name: native-data-fetching
 description: Use when implementing or debugging ANY network request, API call, or data fetching. Covers fetch API, React Query, SWR, error handling, caching, offline support, and Expo Router data loaders (`useLoaderData`).
 version: 1.0.0
 license: MIT
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill native-data-fetching --event skill_activated --quiet'
-          timeout: 5
 ---
 
 # Expo Networking

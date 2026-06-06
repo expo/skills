@@ -3,13 +3,6 @@ name: expo-dev-client
 description: Build and distribute Expo development clients locally or via TestFlight
 version: 1.0.0
 license: MIT
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill expo-dev-client --event skill_activated --quiet'
-          timeout: 5
 ---
 
 Use EAS Build to create development clients for testing native code changes on physical devices. Use this for creating custom Expo Go clients for testing branches of your app.

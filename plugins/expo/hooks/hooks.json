@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh\" \"${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js\" --skill auto --event skill_invoked --initiator ai --quiet",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh\" \"${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js\" --skill auto --initiator ai --quiet",
             "timeout": 5
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh\" \"${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js\" --skill auto --event skill_invoked --initiator user --quiet",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh\" \"${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js\" --skill auto --initiator user --quiet",
             "timeout": 5
           }
         ]

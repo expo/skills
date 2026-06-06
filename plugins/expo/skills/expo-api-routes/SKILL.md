@@ -3,13 +3,6 @@ name: expo-api-routes
 description: Guidelines for creating API routes in Expo Router with EAS Hosting
 version: 1.0.0
 license: MIT
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill expo-api-routes --event skill_activated --quiet'
-          timeout: 5
 ---
 
 ## When to Use API Routes

@@ -1,13 +1,6 @@
 ---
 name: Expo UI SwiftUI
 description: "`@expo/ui/swift-ui` package lets you use SwiftUI Views and modifiers in your app."
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill expo-ui-swift-ui --event skill_activated --quiet'
-          timeout: 5
 ---
 
 > The instructions in this skill apply to SDK 55 only. For other SDK versions, refer to the Expo UI SwiftUI docs for that version for the most accurate information.

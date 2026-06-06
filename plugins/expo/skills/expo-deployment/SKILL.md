@@ -3,13 +3,6 @@ name: expo-deployment
 description: Deploying Expo apps to iOS App Store, Android Play Store, web hosting, and API routes
 version: 1.0.0
 license: MIT
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill expo-deployment --event skill_activated --quiet'
-          timeout: 5
 ---
 
 # Deployment

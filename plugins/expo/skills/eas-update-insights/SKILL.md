@@ -4,13 +4,6 @@ description: "Check the health of published EAS Updates: crash rates, install/la
 version: 1.0.0
 license: MIT
 allowed-tools: "Bash(eas *)"
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill eas-update-insights --event skill_activated --quiet'
-          timeout: 5
 ---
 
 # EAS Update Insights

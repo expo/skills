@@ -3,13 +3,6 @@ name: upgrading-expo
 description: Guidelines for upgrading Expo SDK versions and fixing dependency issues
 version: 1.0.0
 license: MIT
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill upgrading-expo --event skill_activated --quiet'
-          timeout: 5
 ---
 
 ## References

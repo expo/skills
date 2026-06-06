@@ -4,13 +4,6 @@ description: Helps understand and write EAS workflow YAML files for Expo project
 allowed-tools: "Read,Write,Bash(node:*)"
 version: 1.0.0
 license: MIT License
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill expo-cicd-workflows --event skill_activated --quiet'
-          timeout: 5
 ---
 
 # EAS Workflows Skill

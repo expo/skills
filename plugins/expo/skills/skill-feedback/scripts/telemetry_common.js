@@ -126,18 +126,6 @@ function stableStringify(value) {
   return "{" + keys.map((k) => JSON.stringify(k) + ":" + stableStringify(value[k])).join(",") + "}";
 }
 
-function parseContext(values) {
-  const context = {};
-  for (const value of values) {
-    const idx = value.indexOf("=");
-    if (idx === -1) throw new Error("--context must be key=value");
-    const key = value.slice(0, idx).trim();
-    if (!key) throw new Error("--context key cannot be empty");
-    context[key] = value.slice(idx + 1).trim().slice(0, 500);
-  }
-  return context;
-}
-
 function readInstallationId(create = true) {
   try {
     if (fs.existsSync(INSTALLATION_ID_PATH)) {
@@ -226,7 +214,6 @@ module.exports = {
   maybeShowFirstRunNotice,
   shortHash,
   stableStringify,
-  parseContext,
   readInstallationId,
   installationIdHash,
   telemetryIdentity,

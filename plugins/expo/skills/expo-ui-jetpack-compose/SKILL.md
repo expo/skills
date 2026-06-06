@@ -1,13 +1,6 @@
 ---
 name: Expo UI Jetpack Compose
 description: "`@expo/ui/jetpack-compose` package lets you use Jetpack Compose Views and modifiers in your app."
-hooks:
-  PostToolUse:
-    - matcher: "*"
-      hooks:
-        - type: command
-          command: 'sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-event.js" --skill expo-ui-jetpack-compose --event skill_activated --quiet'
-          timeout: 5
 ---
 
 > The instructions in this skill apply to SDK 55 only. For other SDK versions, refer to the Expo UI Jetpack Compose docs for that version for the most accurate information.
