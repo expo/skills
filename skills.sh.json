@@ -19,7 +19,7 @@
       "description": "Work with Expo native modules, SwiftUI, Jetpack Compose, App Clips, and brownfield apps.",
       "skills": [
         "expo-module",
-        "expo-ui-swift-ui",
+        "expo-ui-swiftui",
         "expo-ui-jetpack-compose",
         "add-app-clip",
         "expo-brownfield"
