@@ -16,12 +16,12 @@ Skills give AI agents focused Expo knowledge: when to use Expo APIs, how to stru
 
 ## Installation
 
-Use the skills CLI for most agents. Use plugin marketplace commands when you specifically want the bundled `expo` plugin in an agent that supports plugin marketplaces.
+Use the skills CLI if you want Expo skills available to any supported agent on your machine. Use a plugin install if you want to install Expo only inside one specific agent, such as Claude Code or Codex.
 
 | Path | Best for |
 | --- | --- |
-| Skills CLI | Recommended for Claude Code, Cursor, Codex, GitHub Copilot, Windsurf, Gemini, and other agents that load `SKILL.md` files. |
-| Plugin marketplace | Claude Code and Codex users who want the bundled `expo` plugin. |
+| Skills CLI | Cross-agent installs for Claude Code, Cursor, Codex, GitHub Copilot, Windsurf, Gemini, and other agents that load `SKILL.md` files. |
+| Plugin install | Per-agent installs for Claude Code or Codex. |
 | Cursor Remote Rule | Cursor users who want the direct GitHub-based install path. |
 
 ### Skills CLI Recommended
@@ -150,22 +150,11 @@ Use `npx skills add expo/skills` for agents that load `SKILL.md` files, includin
 
 ### Should I install the skills or the plugin?
 
-Use `npx skills add expo/skills` for most agents. Use the plugin install only if your agent supports plugins and you want the bundled `expo` plugin.
+Use `npx skills add expo/skills` if you want the skills available across supported agents on your machine. Use a plugin install if you only want to add Expo to one specific agent.
 
 ### What is the source of truth?
 
 Expo documentation, Expo CLI, and EAS CLI are the source of truth. These skills teach agents how to apply Expo guidance in real projects.
-
-## Contributing
-
-New skills should stay focused, use kebab-case names, and include concise `SKILL.md` frontmatter. Put detailed supporting material in `references/` and reusable checks in `scripts/`. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contribution baseline.
-
-Validate plugin changes before publishing:
-
-```bash
-claude plugin validate .
-claude plugin validate ./plugins/expo
-```
 
 ## License
 
