@@ -1,0 +1,174 @@
+<p align="center">
+  <img src="assets/expo-skills.png" alt="Expo Skills" width="100%" />
+</p>
+
+# Expo Skills
+
+Official AI agent skills from the Expo team for building, deploying, upgrading, and debugging Expo apps.
+
+<p>
+  <a href="https://skills.sh/expo/skills"><img src="https://skills.sh/b/expo/skills" alt="skills.sh installs" /></a>
+  <img src="https://img.shields.io/badge/Expo-official-000020" alt="Official Expo" />
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" />
+</p>
+
+Skills give AI agents focused Expo knowledge: when to use Expo APIs, how to structure common workflows, and which Expo, EAS, React Native, iOS, and Android constraints matter. Expo documentation, Expo CLI, and EAS CLI remain the source of truth; these skills help agents apply them correctly.
+
+## Installation
+
+Use the skills CLI for most agents. Use plugin marketplace commands when you specifically want the bundled `expo` plugin in an agent that supports plugin marketplaces.
+
+| Path | Best for |
+| --- | --- |
+| Skills CLI | Recommended for Claude Code, Cursor, Codex, GitHub Copilot, Windsurf, Gemini, and other agents that load `SKILL.md` files. |
+| Plugin marketplace | Claude Code and Codex users who want the bundled `expo` plugin. |
+| Cursor Remote Rule | Cursor users who want the direct GitHub-based install path. |
+
+### Skills CLI Recommended
+
+Install with the [skills CLI](https://skills.sh/docs/cli):
+
+```text
+npx skills add expo/skills
+```
+
+This installs the skills for supported local agents using the open `SKILL.md` format.
+
+For most agents, this is the only install command you need. Run it from the project root, then restart or refresh your agent session so it can discover the installed `SKILL.md` files.
+
+### Claude Code Plugin
+
+Add the plugin marketplace:
+
+```text
+/plugin marketplace add expo/skills
+```
+
+Install the plugin:
+
+```text
+/plugin install expo
+```
+
+### Codex Plugin
+
+Add the marketplace:
+
+```text
+codex plugin marketplace add expo/skills --ref main
+```
+
+Then open `/plugins` in Codex and install `expo` from the Expo Skills marketplace.
+
+### Cursor
+
+Install from GitHub:
+
+1. Open Cursor Settings (Cmd+Shift+J / Ctrl+Shift+J)
+2. Navigate to `Rules & Command` -> `Project Rules` -> Add Rule -> Remote Rule (GitHub)
+3. Enter `https://github.com/expo/skills.git`
+
+Skills are automatically discovered and used by the agent based on context. When you ask questions about Expo development, the agent uses the relevant skills based on their descriptions.
+
+Skills do not appear in Cursor's `/` slash command menu. The `/` menu is for custom commands, not skills.
+
+Verify installation by asking Cursor Expo-specific questions like:
+
+- "How do I build a UI with Expo Router?"
+- "How do I make API calls in my Expo app?"
+- "How do I deploy my Expo app to the App Store?"
+
+This repo includes Cursor plugin marketplace metadata for future plugin distribution, but the GitHub Remote Rule flow above is the current direct install path.
+
+### Any Agent
+
+```text
+bunx skills add expo/skills
+```
+
+This extracts the skills individually, so you will need to manually upgrade them.
+
+## Try It
+
+After installing, ask your agent Expo-specific questions like:
+
+- "Build a native-feeling Expo Router screen with tabs, modals, and animations."
+- "Set up Tailwind CSS v4 and NativeWind v5 in this Expo app."
+- "Create an EAS workflow that builds previews on pull requests."
+- "Help me upgrade this app to the latest Expo SDK."
+- "Check whether this EAS Update rollout is healthy."
+
+Agents choose the right skill from the task context and each skill's description.
+
+## Skills Included
+
+### App Design and Architecture
+
+| Skill | Use it for |
+| --- | --- |
+| `building-native-ui` | Expo Router screens, navigation, styling, animations, native tabs, and app UI patterns. |
+| `native-data-fetching` | API calls, React Query, SWR, caching, offline support, and Expo Router data loaders. |
+| `expo-api-routes` | Expo Router API routes with EAS Hosting. |
+| `expo-tailwind-setup` | Tailwind CSS v4, `react-native-css`, and NativeWind v5 setup. |
+| `use-dom` | Expo DOM components for gradually using web code in native apps. |
+| `expo-dev-client` | Local and TestFlight development client builds. |
+
+### Native and Platform Work
+
+| Skill | Use it for |
+| --- | --- |
+| `expo-module` | Expo native modules and views with Swift, Kotlin, TypeScript, config plugins, and autolinking. |
+| `expo-ui-swift-ui` | `@expo/ui/swift-ui` components and modifiers. |
+| `expo-ui-jetpack-compose` | `@expo/ui/jetpack-compose` views and modifiers. |
+| `add-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
+| `expo-brownfield` | Adding Expo or React Native to an existing iOS or Android app. |
+
+### Deployment, CI, and Observability
+
+| Skill | Use it for |
+| --- | --- |
+| `expo-deployment` | App Store, Play Store, TestFlight, EAS Build, web hosting, and API route deployment. |
+| `expo-cicd-workflows` | EAS Workflow YAML files and CI/CD automation. |
+| `expo-observe` | EAS Observe setup and launch, route, event, and version metrics. |
+| `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
+
+### Maintenance
+
+| Skill | Use it for |
+| --- | --- |
+| `upgrading-expo` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
+
+## Expo MCP Server
+
+Skills teach an agent how Expo work gets done. The [Expo MCP server](https://docs.expo.dev/eas/ai/mcp/) gives it live access to actually do that work: read the latest Expo docs on demand, install compatible dependencies with `npx expo install`, trigger and monitor EAS builds and workflows, pull crash data from TestFlight, and screenshot a running app in the simulator.
+
+The `expo` plugin bundles this MCP configuration, so Claude Code and Codex plugin installs wire it up automatically. For other agents, or to add it on its own, follow the [Expo MCP setup guide](https://docs.expo.dev/eas/ai/mcp/).
+
+## FAQ
+
+### Which agents are supported?
+
+Use `npx skills add expo/skills` for agents that load `SKILL.md` files, including Claude Code, Cursor, Codex, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, OpenCode, Kiro CLI, and similar tools.
+
+### Should I install the skills or the plugin?
+
+Use the skills CLI if you want the broadest cross-agent install path. Use the plugin marketplace when your agent supports bundled plugins and you want the `expo` plugin metadata alongside the skills.
+
+### What is the source of truth?
+
+Expo documentation, Expo CLI, and EAS CLI are the source of truth. These skills teach agents how to apply Expo guidance in real projects.
+
+## Contributing
+
+New skills should stay focused, use kebab-case names, and include concise `SKILL.md` frontmatter. Put detailed supporting material in `references/` and reusable checks in `scripts/`. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the contribution baseline.
+
+Validate plugin changes before publishing:
+
+```bash
+claude plugin validate .
+claude plugin validate ./plugins/expo
+```
+
+## License
+
+MIT

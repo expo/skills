@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/expo-skills.png" alt="Expo Skills" width="100%" />
+</p>
+
 # Expo Skills
 
 Official AI agent skills from the Expo team for building, deploying, and debugging robust Expo apps.

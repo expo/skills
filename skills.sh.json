@@ -1,0 +1,46 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "App Design",
+      "description": "Build Expo Router screens, native-feeling UI, styling, data fetching, and API routes.",
+      "skills": [
+        "building-native-ui",
+        "native-data-fetching",
+        "expo-api-routes",
+        "expo-tailwind-setup",
+        "use-dom",
+        "expo-dev-client"
+      ]
+    },
+    {
+      "title": "Native Platform",
+      "description": "Work with Expo native modules, SwiftUI, Jetpack Compose, App Clips, and brownfield apps.",
+      "skills": [
+        "expo-module",
+        "expo-ui-swift-ui",
+        "expo-ui-jetpack-compose",
+        "add-app-clip",
+        "expo-brownfield"
+      ]
+    },
+    {
+      "title": "Deploy and Observe",
+      "description": "Ship apps with EAS Build, EAS Workflows, EAS Update, EAS Observe, stores, and hosting.",
+      "skills": [
+        "expo-deployment",
+        "expo-cicd-workflows",
+        "expo-observe",
+        "eas-update-insights"
+      ]
+    },
+    {
+      "title": "Maintenance",
+      "description": "Upgrade Expo SDK versions and fix dependency, cache, and migration issues.",
+      "skills": [
+        "upgrading-expo"
+      ]
+    }
+  ]
+}
