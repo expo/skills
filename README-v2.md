@@ -78,8 +78,6 @@ Verify installation by asking Cursor Expo-specific questions like:
 - "How do I make API calls in my Expo app?"
 - "How do I deploy my Expo app to the App Store?"
 
-This repo includes Cursor plugin marketplace metadata for future plugin distribution, but the GitHub Remote Rule flow above is the current direct install path.
-
 ### Any Agent
 
 ```text
@@ -152,7 +150,7 @@ Use `npx skills add expo/skills` for agents that load `SKILL.md` files, includin
 
 ### Should I install the skills or the plugin?
 
-Use the skills CLI if you want the broadest cross-agent install path. Use the plugin marketplace when your agent supports bundled plugins and you want the `expo` plugin metadata alongside the skills.
+Use `npx skills add expo/skills` for most agents. Use the plugin install only if your agent supports plugins and you want the bundled `expo` plugin.
 
 ### What is the source of truth?
 
