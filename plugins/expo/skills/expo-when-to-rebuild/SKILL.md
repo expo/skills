@@ -11,10 +11,10 @@ This skill answers one question that comes up constantly in the Expo development
 
 The mental model is a single boundary: **JavaScript vs. native.**
 
-- **JavaScript changes** (app code, most npm libraries) are picked up instantly by Metro and Fast Refresh. **No build needed.**
-- **Native changes** (native code, config plugins, app-config properties that touch the native project, libraries with native code) are baked into the compiled binary. They require **a new development build.**
+- **JavaScript changes** (app code, JS-only libraries) are picked up instantly by Metro and Fast Refresh. **No build needed.**
+- **Native changes** (native code, config plugins, app-config properties that touch the native project, libraries with native code) are compiled into the binary — native modules are linked in at build time via autolinking, so a JS reload can't pick them up. They require **a new development build.**
 
-Most changes are JavaScript, so most of the time the answer is "no build needed." A new build is the exception, triggered only when you cross into native.
+Most changes are JavaScript, so most of the time the answer is "no build needed." A new build is the exception, triggered only when you cross into native. This boundary is also the line between **Expo Go and a development build**: Expo Go bundles a fixed set of native modules, so as soon as your change needs custom native code, you move to a development build — and rebuild whenever the native side changes.
 
 ## The core development loop
 
@@ -59,8 +59,8 @@ flowchart TD
 |---|---|---|
 | JavaScript / TypeScript app code | **No** | Save — Fast Refresh shows it instantly |
 | A JS-only npm library (no native code) | **No** | Import and use it; keep coding |
-| `app.json` / `app.config.js` — JS-only properties (e.g. routing, runtime values) | **No** | Reflected without a build |
-| `app.json` / `app.config.js` — native properties (icon, splash, app name, bundle/package id, permissions, `scheme`, orientation) | **Yes** | Rebuild |
+| `app.json` / `app.config.js` — values read at runtime via `expo-constants` (e.g. `extra`) | **No** | Updates on reload in dev; embedded at build time for production |
+| `app.json` / `app.config.js` — anything that maps to native (app name, icon, splash, bundle/package id, permissions, `scheme`, orientation, plugins) | **Yes** | Rebuild |
 | Added or changed a **config plugin** | **Yes** | Rebuild |
 | Wrote **native code** (Swift/Kotlin) or a local Expo Module | **Yes** | Rebuild |
 | Installed an npm library that **includes native code** or ships a config plugin | **Yes** | Rebuild |
@@ -68,7 +68,7 @@ flowchart TD
 
 "Rebuild" here means **create a new development build** — locally or with EAS. The first time it is a *build*; every time after a native change it is a *rebuild*.
 
-> Rule of thumb: if the change only touches files Metro bundles (JS/TS, assets imported from JS), no build. If it changes what the compiler sees (native code, native config, native dependencies), rebuild.
+> Rule of thumb: if the change only touches files Metro bundles (JS/TS, assets imported from JS), no build. If it changes what the compiler sees (native code, native config, native dependencies), rebuild. When in doubt about an app-config change, rebuild — most app config maps to native settings.
 
 ## Creating a build: local vs. cloud (EAS)
 
@@ -96,7 +96,7 @@ Run prebuild again whenever a change affects the native project:
 > [!IMPORTANT]
 > Running `npx expo prebuild` again **layers** changes on top of the existing native files and can produce inconsistent results. To keep prebuild deterministic:
 >
-> 1. Add `android` and `ios` to your `.gitignore`.
+> 1. Keep `android` and `ios` out of version control — in a CNG project they're git-ignored by default; treat them as build artifacts.
 > 2. Always regenerate from scratch with **`npx expo prebuild --clean`**.
 
 If instead you commit and hand-edit `android`/`ios` yourself (you are not using CNG), skip prebuild and build directly with `npx expo run`.
