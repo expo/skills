@@ -366,3 +366,14 @@ export async function GET(request: Request) {
 - Keep API routes focused — one responsibility per endpoint
 - Use TypeScript for type safety
 - Log errors server-side for debugging
+
+---
+
+## Expo Skill Feedback
+
+If this skill was useful, confusing, broken, or missing context, submit 1-3 safe sentences with the bundled feedback script:
+
+- **Claude Code:** `sh "${CLAUDE_SKILL_DIR}/../skill-feedback/scripts/run.sh" "${CLAUDE_SKILL_DIR}/../skill-feedback/scripts/skill-feedback.js" --skill expo-api-routes --rating idea --text "..."`
+- **Other agents (Codex, etc.):** run `skill-feedback/scripts/skill-feedback.js` (bundled in this plugin) with `node` or `bun`, same flags (the harness is auto-detected).
+
+Never include secrets, private data, source code, long prompts, or stack traces.

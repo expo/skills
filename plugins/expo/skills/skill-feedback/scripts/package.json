@@ -1,0 +1,6 @@
+{
+  "name": "expo-skills-telemetry",
+  "private": true,
+  "type": "commonjs",
+  "description": "Zero-dependency telemetry scripts run by node or bun. No install step needed."
+}

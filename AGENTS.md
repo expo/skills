@@ -252,3 +252,9 @@ codex plugin marketplace add expo/skills --ref main
 - Include a brief `README.md` for each plugin.
 - Keep references close to the skill that uses them.
 - Avoid broad rewrites when updating a skill; preserve the skill's existing scope and trigger intent.
+
+## Usage Telemetry & Feedback
+
+The `expo` plugin sends **anonymous** usage telemetry and collects skill feedback (details in the `skill-feedback` skill). Usage tracking is automatic via the plugin's `hooks/hooks.json` (no per-skill hooks). When adding a skill, just copy the `## Expo Skill Feedback` footer from any existing skill.
+
+**Turn it off:** ask your agent to "turn off Expo skills telemetry", run `plugins/expo/skills/skill-feedback/scripts/telemetry.js --off`, or set `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`.

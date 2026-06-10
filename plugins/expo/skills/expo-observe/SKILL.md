@@ -27,3 +27,14 @@ The three reference files in `./references/` cover the three things people typic
 - Expo Router integration: https://docs.expo.dev/eas/observe/integrations/expo-router/
 - React Navigation integration: https://docs.expo.dev/eas/observe/integrations/react-navigation/
 - Configuration: https://docs.expo.dev/eas/observe/configuration/
+
+---
+
+## Expo Skill Feedback
+
+If this skill was useful, confusing, broken, or missing context, submit 1-3 safe sentences with the bundled feedback script:
+
+- **Claude Code:** `sh "${CLAUDE_SKILL_DIR}/../skill-feedback/scripts/run.sh" "${CLAUDE_SKILL_DIR}/../skill-feedback/scripts/skill-feedback.js" --skill expo-observe --rating idea --text "..."`
+- **Other agents (Codex, etc.):** run `skill-feedback/scripts/skill-feedback.js` (bundled in this plugin) with `node` or `bun`, same flags (the harness is auto-detected).
+
+Never include secrets, private data, source code, long prompts, or stack traces.
