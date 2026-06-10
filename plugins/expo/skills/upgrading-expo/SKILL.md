@@ -15,6 +15,48 @@ license: MIT
 - ./references/expo-av-to-video.md -- SDK +55: Migrate video playback from expo-av to expo-video
 - ./references/react-navigation-to-expo-router.md -- SDK +56: Migrate `@react-navigation/*` imports to `expo-router` entry points (codemod + manual mapping)
 
+## Review CHANGELOG Breaking Changes
+
+Before touching the codebase, fetch the official changelog and surface every breaking change between the user's current SDK and the target SDK.
+
+1. Detect versions:
+   - Current SDK: `expo` version in `package.json`
+   - Target SDK: the version being upgraded to (latest, `@next`, or user-specified)
+
+2. Fetch the raw CHANGELOG:
+
+   `https://raw.githubusercontent.com/expo/expo/main/CHANGELOG.md`
+
+3. The file is organized as:
+
+   ```
+   ## Unpublished
+   ### 🛠 Breaking changes
+   - Entry ([#12345](pr-link) by [@author](user-link))
+   ## 55.0.0 — YYYY-MM-DD
+   ### 🛠 Breaking changes
+   - ...
+   ```
+
+   Extract the `### 🛠 Breaking changes` block from every `## <version>.0.0` heading where `current < version ≤ target`. If target is a beta/preview, also include the `## Unpublished` section.
+
+4. Filter to what's relevant for this project:
+   - Cross-reference the user's `package.json` — drop entries for packages they don't depend on (e.g., skip `expo-dev-menu` if not installed).
+   - Drop entries that are clearly internal-only (changes to test fixtures, CI, or `expo-modules-core` internals not exposed to app developers).
+   - For topics covered by existing reference files in this skill (e.g., `expo-av` → see `./references/expo-av-to-audio.md` and `./references/expo-av-to-video.md`), point the user to the reference instead of restating the migration.
+
+5. Present the result as a bulleted list grouped by package, preserving the original PR links so the user can dig deeper:
+
+   ```
+   ### expo-router (SDK 55)
+   - Removed `useNavigationContainerRef` ([#12345](...))
+
+   ### react-native (SDK 54 → 55)
+   - Minimum iOS version bumped to 15.1 ([#23456](...))
+   ```
+
+6. Ask the user to confirm before proceeding to install. Pause if any entry requires non-trivial code changes.
+
 ## Beta/Preview Releases
 
 Beta versions use `.preview` suffix (e.g., `55.0.0-preview.2`), published under `@next` tag.
@@ -27,16 +69,18 @@ npx expo install expo@next --fix  # install beta
 
 ## Step-by-Step Upgrade Process
 
-1. Upgrade Expo and dependencies
+1. Review breaking changes (see "Review CHANGELOG Breaking Changes" above)
+
+2. Upgrade Expo and dependencies
 
 ```bash
 npx expo install expo@latest
 npx expo install --fix
 ```
 
-2. Run diagnostics: `npx expo-doctor`
+3. Run diagnostics: `npx expo-doctor`
 
-3. Clear caches and reinstall
+4. Clear caches and reinstall
 
 ```bash
 npx expo export -p ios --clear
@@ -106,6 +150,7 @@ Check if package.json has excluded packages:
 ```
 
 Exclusions are often workarounds that may no longer be needed after upgrading. Review each one.
+
 ## Removing patches
 
 Check if there are any outdated patches in the `patches/` directory. Remove them if they are no longer needed.
