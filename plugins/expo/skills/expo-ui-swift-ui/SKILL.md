@@ -23,7 +23,7 @@ A native rebuild is required after installation (`npx expo run:ios`).
 - `RNHostView` is specifically for embedding RN components inside a SwiftUI tree. Example:
 
 ```jsx
-import { Host, VStack, RNHostView } from "@expo-ui/swift-ui";
+import { Host, VStack, RNHostView } from "@expo/ui/swift-ui";
 import { Pressable } from "react-native";
 
 <Host matchContents>
