@@ -120,20 +120,20 @@ Standard `eas.json` for production deployments:
 
 - Use `npx testflight` for quick TestFlight submissions
 - Configure Apple credentials via `eas credentials`
-- See ./reference/testflight.md for credential setup
-- See ./reference/ios-app-store.md for App Store submission
+- See ./references/testflight.md for credential setup
+- See ./references/ios-app-store.md for App Store submission
 
 ### Android
 
 - Set up Google Play Console service account
 - Configure tracks: internal → closed → open → production
-- See ./reference/play-store.md for detailed setup
+- See ./references/play-store.md for detailed setup
 
 ### Web
 
 - EAS Hosting provides preview URLs for PRs
 - Production deploys to your custom domain
-- See ./reference/workflows.md for CI/CD automation
+- See ./references/workflows.md for CI/CD automation
 
 ## Automated Deployments
 
@@ -162,7 +162,7 @@ jobs:
       profile: production
 ```
 
-See ./reference/workflows.md for more workflow examples.
+See ./references/workflows.md for more workflow examples.
 
 ## Version Management
 
