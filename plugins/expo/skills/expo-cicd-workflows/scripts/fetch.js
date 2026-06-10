@@ -92,6 +92,20 @@ function parseMaxAge(cacheControl) {
   return match ? parseInt(match[1], 10) : null;
 }
 
+const ALLOWED_URL_PREFIXES = [
+  'https://api.expo.dev/',
+  'https://raw.githubusercontent.com/expo/',
+  'https://docs.expo.dev/',
+];
+
+function assertAllowedUrl(url) {
+  if (!ALLOWED_URL_PREFIXES.some((prefix) => url.startsWith(prefix))) {
+    throw new Error(
+      `URL not permitted. Allowed prefixes:\n${ALLOWED_URL_PREFIXES.map((p) => `  ${p}`).join('\n')}`
+    );
+  }
+}
+
 if (import.meta.main) {
   const url = process.argv[2];
 
@@ -104,6 +118,7 @@ Cache is stored in: ${CACHE_DIRECTORY}/`);
     process.exit(url ? 0 : 1);
   }
 
+  assertAllowedUrl(url);
   const data = await fetchCached(url);
   console.log(data);
 }
