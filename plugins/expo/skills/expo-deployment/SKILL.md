@@ -1,6 +1,6 @@
 ---
 name: expo-deployment
-description: Deploying Expo apps to iOS App Store, Android Play Store, web hosting, and API routes
+description: Deploy Expo apps to production with EAS — build and submit to the iOS App Store, Google Play Store, and TestFlight, configure eas.json build and submit profiles, manage app versions and build numbers, publish App Store metadata and ASO, and deploy web bundles and API routes via EAS Hosting. Use whenever the user is preparing a production build, running eas build or eas submit, shipping to TestFlight, releasing or rolling out to the app stores, bumping version or build numbers, or setting up store listing metadata for an Expo app.
 version: 1.0.0
 license: MIT
 ---
@@ -77,6 +77,8 @@ npx eas-cli@latest deploy --prod
 npx eas-cli@latest deploy
 ```
 
+Expo Router API routes deploy together with the web bundle on EAS Hosting — `eas deploy` ships both. To author or configure the API routes themselves, use the `expo-api-routes` skill.
+
 ## EAS Configuration
 
 Standard `eas.json` for production deployments:
@@ -120,49 +122,24 @@ Standard `eas.json` for production deployments:
 
 - Use `npx testflight` for quick TestFlight submissions
 - Configure Apple credentials via `eas credentials`
-- See ./reference/testflight.md for credential setup
-- See ./reference/ios-app-store.md for App Store submission
+- See ./references/testflight.md for credential setup
+- See ./references/ios-app-store.md for App Store submission
 
 ### Android
 
 - Set up Google Play Console service account
 - Configure tracks: internal → closed → open → production
-- See ./reference/play-store.md for detailed setup
+- See ./references/play-store.md for detailed setup
 
 ### Web
 
 - EAS Hosting provides preview URLs for PRs
 - Production deploys to your custom domain
-- See ./reference/workflows.md for CI/CD automation
+- See ./references/workflows.md for CI/CD automation
 
 ## Automated Deployments
 
-Use EAS Workflows for CI/CD:
-
-```yaml
-# .eas/workflows/release.yml
-name: Release
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  build-ios:
-    type: build
-    params:
-      platform: ios
-      profile: production
-
-  submit-ios:
-    type: submit
-    needs: [build-ios]
-    params:
-      platform: ios
-      profile: production
-```
-
-See ./reference/workflows.md for more workflow examples.
+EAS Workflows automate the build → submit → update → deploy pipeline for CI/CD. See ./references/workflows.md for deployment-oriented examples. To author or validate workflow YAML, use the `expo-cicd-workflows` skill — it works from the live workflow schema.
 
 ## Version Management
 

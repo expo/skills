@@ -1,5 +1,21 @@
 # Submitting to iOS App Store
 
+## Contents
+
+- [Prerequisites](#prerequisites)
+- [Credential Setup](#credential-setup)
+- [Submission Commands](#submission-commands)
+- [App Store Connect Configuration](#app-store-connect-configuration)
+- [TestFlight vs App Store](#testflight-vs-app-store)
+- [App Review Process](#app-review-process)
+- [Version and Build Numbers](#version-and-build-numbers)
+- [Release Options](#release-options)
+- [Certificates and Provisioning](#certificates-and-provisioning)
+- [App Store Metadata](#app-store-metadata)
+- [Troubleshooting](#troubleshooting)
+- [CI/CD Integration](#cicd-integration)
+- [Tips](#tips)
+
 ## Prerequisites
 
 1. **Apple Developer Account** - Enroll at [developer.apple.com](https://developer.apple.com)
