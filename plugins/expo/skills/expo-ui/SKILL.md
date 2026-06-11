@@ -39,6 +39,6 @@ Consult these resources as needed:
 references/
   universal.md             Universal @expo/ui components and when to use them (SDK 56+)
   drop-in-replacements.md  API-compatible replacements for RN community UI libraries
-  swift-ui.md              Platform-specific iOS UI: @expo/ui/swift-ui components and modifiers
-  jetpack-compose.md       Platform-specific Android UI: @expo/ui/jetpack-compose components and modifiers (incl. LazyColumn, icons)
+  swift-ui.md              Platform-specific iOS UI: @expo/ui/swift-ui components, modifiers, RNHostView, useNativeState
+  jetpack-compose.md       Platform-specific Android UI: @expo/ui/jetpack-compose components, modifiers, LazyColumn caveat, icons, useNativeState
 ```

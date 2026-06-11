@@ -30,6 +30,37 @@ import { Host, Column, Button, Text } from '@expo/ui';
 | Disclosure & presentation | `BottomSheet`, `Collapsible` |
 | Collections & forms | `List` (with `ListItem`), `FieldGroup` |
 
+> **`List` is not suitable for large lists.** Each `ListItem` is a JSX node processed on the JS thread — for large datasets this causes noticeable slowdowns.
+
+## TextInput and useNativeState
+
+`TextInput` from `@expo/ui` is **not like React Native's TextInput** — its `value` and `selection` props take an `ObservableState` object (from `useNativeState`), not a plain string. This is what enables synchronous, flicker-free updates: when the user types, `onChangeText` runs as a worklet on the UI thread and writes directly to `value` without a React render cycle.
+
+Requires `react-native-worklets`. Without it the worklet directive has no effect and flickering remains.
+
+```tsx
+import { Host, TextInput, useNativeState } from '@expo/ui';
+import { useCallback } from 'react';
+
+export default function MyInput() {
+  const text = useNativeState('');
+
+  const handleChangeText = useCallback((value: string) => {
+    'worklet';
+    // transform synchronously on the UI thread — no React re-render
+    text.value = value === 'Hello' ? 'World' : value;
+  }, [text]);
+
+  return (
+    <Host matchContents>
+      <TextInput value={text} onChangeText={handleChangeText} placeholder="Type here" />
+    </Host>
+  );
+}
+```
+
+Docs — https://docs.expo.dev/versions/latest/sdk/ui/universal/textinput/index.md
+
 ## Confirming the API
 
 `@expo/ui` is versioned with the Expo SDK (e.g. `56.0.x` for SDK 56) and its API can change between SDK versions, so the **installed package's TypeScript types (`.d.ts`) are the most reliable source of truth** — they match the version in your project, while the docs track latest. Read the relevant component's `.d.ts` from the installed `@expo/ui` package in `node_modules`. Use the docs as the human-readable reference:
