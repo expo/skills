@@ -2,12 +2,6 @@
 
 `@expo/ui` ships API-compatible replacements for popular React Native community libraries, powered by native `@expo/ui` components (Jetpack Compose on Android, SwiftUI on iOS). Use these when migrating an existing app off a community UI dependency — the API matches the library being replaced, so the swap is usually just the import path.
 
-## Installation
-
-```bash
-npx expo install @expo/ui
-```
-
 ## Available replacements
 
 Every drop-in lives under `@expo/ui/community/<kebab-case-name>`. Note which are default vs named imports.
@@ -30,4 +24,4 @@ Each component has a dedicated docs page with setup and usage:
 - Overview — https://docs.expo.dev/versions/latest/sdk/ui/drop-in-replacements/index.md
 - Per component — https://docs.expo.dev/versions/latest/sdk/ui/drop-in-replacements/{component}/index.md (slug is the component name lowercased, no hyphens, e.g. `bottomsheet`, `datetimepicker`, `segmentedcontrol`)
 
-Check the component's doc page for platform support (several support Expo Go) and any props that differ from the library being replaced.
+The installed package's TypeScript types (`.d.ts`) are the most reliable source of truth for the exact props on your SDK version (@expo/ui is versioned with the SDK and its API can change between versions). Use the doc page to find platform support and any props that differ from the library being replaced.

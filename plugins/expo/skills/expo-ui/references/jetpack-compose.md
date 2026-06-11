@@ -6,7 +6,7 @@ Use this layer only when the universal `@expo/ui` components don't cover what yo
 
 - Expo UI's API mirrors Jetpack Compose's API. Use Jetpack Compose and Material Design 3 knowledge to decide which components or modifiers to use. If you need deeper Jetpack Compose or Material 3 guidance (e.g. which component to pick, layout patterns, theming), spawn a subagent to research [Jetpack Compose](https://developer.android.com/develop/ui/compose/components) and [Material Design 3](https://m3.material.io/) best practices.
 - Components are imported from `@expo/ui/jetpack-compose`, modifiers from `@expo/ui/jetpack-compose/modifiers`.
-- **Always read the `.d.ts` type files** to confirm the exact API before using a component or modifier. Run `node -e "console.log(path.dirname(require.resolve('@expo/ui/jetpack-compose')))"` to locate the package, then read the relevant `{ComponentName}/index.d.ts` files. This is the most reliable source of truth.
+- **Always read the `.d.ts` type files** to confirm the exact API before using a component or modifier — read the relevant `{ComponentName}/index.d.ts` from the installed `@expo/ui/jetpack-compose` package in `node_modules`. This is the most reliable source of truth.
 - When about to use a component, fetch its docs to confirm the API — https://docs.expo.dev/versions/latest/sdk/ui/jetpack-compose/{component-name}/index.md
 - When unsure about a modifier's API, refer to the docs — https://docs.expo.dev/versions/latest/sdk/ui/jetpack-compose/modifiers/index.md
 - Every Jetpack Compose tree must be wrapped in `Host`. Use `<Host matchContents>` for intrinsic sizing, or `<Host style={{ flex: 1 }}>` when you need explicit size (e.g. as a parent of `LazyColumn`). Example:
@@ -22,6 +22,9 @@ import { fillMaxWidth, paddingAll } from "@expo/ui/jetpack-compose/modifiers";
   </Column>
 </Host>;
 ```
+
+- `RNHostView` embeds React Native components inside a Jetpack Compose tree (the same concept as in `@expo/ui/swift-ui`) — wrap any RN child in `<RNHostView>`.
+- If a required composable or modifier is missing in Expo UI, it can be extended via a local Expo module. See: https://docs.expo.dev/guides/expo-ui-jetpack-compose/extending/index.md. Confirm with the user before extending.
 
 ## Key Components
 
