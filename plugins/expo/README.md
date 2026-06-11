@@ -70,8 +70,7 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - **expo-brownfield** — Integrate Expo and React Native into existing native iOS or Android apps
 - **expo-dev-client** — Build and distribute Expo development clients locally or via TestFlight
 - **expo-tailwind-setup** — Set up Tailwind CSS v4 in Expo with NativeWind v5
-- **expo-ui-jetpack-compose** — Jetpack Compose UI components for Expo
-- **expo-ui-swift-ui** — SwiftUI components for Expo
+- **expo-ui** — Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **native-data-fetching** — Network requests, API calls, caching, and offline support
 - **use-dom** — Run web code in a webview on native using DOM components
 
