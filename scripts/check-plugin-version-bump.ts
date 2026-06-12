@@ -1,12 +1,23 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { semver } from "bun";
+
+type PluginManifest = {
+  label: string;
+  path: string;
+};
+
+type VersionRow = PluginManifest & {
+  baseVersion: unknown;
+  currentVersion: unknown;
+};
 
 const baseRef = process.argv[2] ?? "origin/main";
 
-const pluginManifests = [
+const pluginManifests: PluginManifest[] = [
   {
     label: "Claude",
     path: "plugins/expo/.claude-plugin/plugin.json",
@@ -30,7 +41,7 @@ const versionedPluginPaths = [
   "plugins/expo/mcp.json",
 ];
 
-function runGit(args) {
+function runGit(args: string[]) {
   return execFileSync("git", args, { encoding: "utf8" }).trim();
 }
 
@@ -39,7 +50,7 @@ function getChangedFiles() {
   return output ? output.split("\n") : [];
 }
 
-function readJson(path) {
+function readJson(path: string) {
   try {
     return JSON.parse(readFileSync(path, "utf8"));
   } catch {
@@ -47,7 +58,7 @@ function readJson(path) {
   }
 }
 
-function readBaseJson(path) {
+function readBaseJson(path: string) {
   try {
     return JSON.parse(runGit(["show", `${baseRef}:${path}`]));
   } catch {
@@ -55,117 +66,37 @@ function readBaseJson(path) {
   }
 }
 
-function parseSemver(version) {
+function isSemver(version: unknown): version is string {
   if (typeof version !== "string") {
-    return null;
+    return false;
   }
 
-  const match = version.match(
-    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/
-  );
-
-  if (!match) {
-    return null;
+  try {
+    return semver.satisfies(version, version);
+  } catch {
+    return false;
   }
-
-  return {
-    major: Number(match[1]),
-    minor: Number(match[2]),
-    patch: Number(match[3]),
-    prerelease: match[4]?.split(".") ?? [],
-  };
 }
 
-function compareIdentifiers(left, right) {
-  const leftIsNumeric = /^\d+$/.test(left);
-  const rightIsNumeric = /^\d+$/.test(right);
-
-  if (leftIsNumeric && rightIsNumeric) {
-    return Number(left) - Number(right);
-  }
-
-  if (leftIsNumeric) {
-    return -1;
-  }
-
-  if (rightIsNumeric) {
-    return 1;
-  }
-
-  if (left < right) {
-    return -1;
-  }
-
-  if (left > right) {
-    return 1;
-  }
-
-  return 0;
-}
-
-function compareSemver(leftVersion, rightVersion) {
-  const left = parseSemver(leftVersion);
-  const right = parseSemver(rightVersion);
-
-  if (!left || !right) {
-    throw new Error(`Cannot compare invalid semver values: ${leftVersion}, ${rightVersion}`);
-  }
-
-  for (const field of ["major", "minor", "patch"]) {
-    if (left[field] !== right[field]) {
-      return left[field] - right[field];
-    }
-  }
-
-  if (left.prerelease.length === 0 && right.prerelease.length === 0) {
-    return 0;
-  }
-
-  if (left.prerelease.length === 0) {
-    return 1;
-  }
-
-  if (right.prerelease.length === 0) {
-    return -1;
-  }
-
-  const length = Math.max(left.prerelease.length, right.prerelease.length);
-  for (let index = 0; index < length; index += 1) {
-    const leftPart = left.prerelease[index];
-    const rightPart = right.prerelease[index];
-
-    if (leftPart === undefined) {
-      return -1;
-    }
-
-    if (rightPart === undefined) {
-      return 1;
-    }
-
-    const comparison = compareIdentifiers(leftPart, rightPart);
-    if (comparison !== 0) {
-      return comparison;
-    }
-  }
-
-  return 0;
-}
-
-function hasVersionedPluginChange(path) {
+function hasVersionedPluginChange(path: string) {
   return versionedPluginPaths.some((entry) =>
     entry.endsWith("/") ? path.startsWith(entry) : path === entry
   );
 }
 
-function formatVersionRows(rows) {
+function formatVersion(version: unknown) {
+  return typeof version === "string" ? version : "—";
+}
+
+function formatVersionRows(rows: VersionRow[]) {
   return [
     "| Plugin | main | PR |",
     "| --- | --- | --- |",
-    ...rows.map((row) => `| ${row.label} | ${row.baseVersion ?? "—"} | ${row.currentVersion ?? "—"} |`),
+    ...rows.map((row) => `| ${row.label} | ${formatVersion(row.baseVersion)} | ${formatVersion(row.currentVersion)} |`),
   ].join("\n");
 }
 
-function writeSummary(markdown) {
+function writeSummary(markdown: string) {
   const summaryPath = process.env.VERSION_CHECK_SUMMARY_PATH;
   if (!summaryPath) {
     return;
@@ -175,7 +106,7 @@ function writeSummary(markdown) {
   writeFileSync(summaryPath, `${markdown}\n`);
 }
 
-function complete(success, markdown) {
+function complete(success: boolean, markdown: string): never {
   writeSummary(markdown);
   console.log(markdown);
   process.exit(success ? 0 : 1);
@@ -195,27 +126,27 @@ if (versionedChanges.length === 0) {
   );
 }
 
-const rows = pluginManifests.map((manifest) => ({
+const rows: VersionRow[] = pluginManifests.map((manifest) => ({
   ...manifest,
   baseVersion: readBaseJson(manifest.path)?.version,
   currentVersion: readJson(manifest.path)?.version,
 }));
 
-const errors = [];
+const errors: string[] = [];
 const currentVersions = new Set(rows.map((row) => row.currentVersion));
 const baseVersions = new Set(rows.map((row) => row.baseVersion));
 
 for (const row of rows) {
   if (row.baseVersion === undefined) {
     errors.push(`${row.label} manifest is missing or has no version on main (${row.path}).`);
-  } else if (!parseSemver(row.baseVersion)) {
-    errors.push(`${row.label} has an invalid semver version on main: ${row.baseVersion}`);
+  } else if (!isSemver(row.baseVersion)) {
+    errors.push(`${row.label} has an invalid semver version on main: ${formatVersion(row.baseVersion)}`);
   }
 
   if (row.currentVersion === undefined) {
     errors.push(`${row.label} manifest is missing or has no version in this PR (${row.path}).`);
-  } else if (!parseSemver(row.currentVersion)) {
-    errors.push(`${row.label} has an invalid semver version in this PR: ${row.currentVersion}`);
+  } else if (!isSemver(row.currentVersion)) {
+    errors.push(`${row.label} has an invalid semver version in this PR: ${formatVersion(row.currentVersion)}`);
   }
 }
 
@@ -229,8 +160,8 @@ if (currentVersions.size !== 1) {
 
 if (errors.length === 0) {
   for (const row of rows) {
-    if (compareSemver(row.currentVersion, row.baseVersion) <= 0) {
-      errors.push(`${row.label} version must be greater than main (${row.baseVersion}).`);
+    if (semver.order(row.currentVersion as string, row.baseVersion as string) <= 0) {
+      errors.push(`${row.label} version must be greater than main (${formatVersion(row.baseVersion)}).`);
     }
   }
 }

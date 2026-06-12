@@ -15,7 +15,6 @@ concurrency:
 permissions:
   contents: read
   issues: write
-  pull-requests: read
 
 jobs:
   check:
@@ -28,12 +27,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Check plugin version bump
         id: version-check
         continue-on-error: true
         env:
           VERSION_CHECK_SUMMARY_PATH: .context/plugin-version-check-summary.md
-        run: node scripts/check-plugin-version-bump.mjs origin/main
+        run: bun scripts/check-plugin-version-bump.ts origin/main
 
       - name: Add workflow summary
         if: always() && hashFiles('.context/plugin-version-check-summary.md') != ''
