@@ -61,11 +61,13 @@ You can also open `/plugins` in Codex and install `expo` from the OpenAI-curated
 
 Claude Code and Codex plugin installs are updated through their official plugin marketplaces.
 
-For skills CLI installs, update local skills with:
+For skills CLI installs, update every installed Expo skill with:
 
 ```text
 npx skills@latest update
 ```
+
+The skills CLI updates skills that are already installed in the selected project or global scope; you do not pass `expo/skills` again.
 
 To update one installed Expo skill by name:
 
