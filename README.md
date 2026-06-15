@@ -30,10 +30,10 @@ For Claude Code or Codex, install the plugin so updates are handled by the offic
 Install all Expo skills with the [skills CLI](https://skills.sh/docs/cli):
 
 ```text
-npx skills@latest add expo/skills --all
+npx skills@latest add expo/skills --skill '*'
 ```
 
-This installs every Expo skill and skips the interactive selector.
+This selects every Expo skill without selecting every agent. The CLI will still ask where to install them; to target one agent directly, add `--agent <agent>`.
 
 For most agents, this is the only install command you need. Run it from the project root, then restart or refresh your agent session so it can discover the installed `SKILL.md` files.
 
@@ -133,11 +133,11 @@ The `expo` plugin bundles this MCP configuration, so Claude Code and Codex plugi
 
 ### Which AI coding agents are supported?
 
-Use `npx skills@latest add expo/skills` for Cursor, OpenCode, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, Kiro CLI, and similar AI coding tools.
+Use `npx skills@latest add expo/skills --skill '*'` for Cursor, OpenCode, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, Kiro CLI, and similar AI coding tools.
 
 ### Should I install the skills or the plugin?
 
-Use the plugin for Claude Code or Codex; it stays updated through the plugin marketplace. Use `npx skills@latest add expo/skills` for Cursor, OpenCode, and other AI coding agents.
+Use the plugin for Claude Code or Codex; it stays updated through the plugin marketplace. Use `npx skills@latest add expo/skills --skill '*'` for Cursor, OpenCode, and other AI coding agents.
 
 ### What is the source of truth?
 
