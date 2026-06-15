@@ -27,13 +27,13 @@ For Claude Code or Codex, install the plugin so updates are handled by the offic
 
 ### Skills CLI
 
-Install with the [skills CLI](https://skills.sh/docs/cli):
+Install all Expo skills with the [skills CLI](https://skills.sh/docs/cli):
 
 ```text
-npx skills@latest add expo/skills
+npx skills@latest add expo/skills --all
 ```
 
-This installs the skills for supported local agents using the open `SKILL.md` format.
+This installs every Expo skill and skips the interactive selector.
 
 For most agents, this is the only install command you need. Run it from the project root, then restart or refresh your agent session so it can discover the installed `SKILL.md` files.
 
