@@ -131,7 +131,7 @@ Use `npx skills@latest add expo/skills` for tools and agents that load `SKILL.md
 
 ### Should I install the skills or the plugin?
 
-Use the plugin for Claude Code or Codex. It installs Expo into that agent and keeps the bundled skills updated through the official plugin marketplace. Use `npx skills@latest add expo/skills` for Cursor, OpenCode, and other tools or agents that load `SKILL.md` files.
+Use the plugin for Claude Code or Codex; it stays updated through the plugin marketplace. Use `npx skills@latest add expo/skills` for Cursor, OpenCode, and other tools or agents that load `SKILL.md` files.
 
 ### What is the source of truth?
 
