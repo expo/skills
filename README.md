@@ -4,7 +4,7 @@
   </a>
 </p>
 
-<h3 align="center">Expo Skills</h3>
+<h1 align="center">Expo Skills</h1>
 
 <p align="center">
   <a href="https://skills.sh/expo/skills"><img src="https://skills.sh/b/expo/skills" alt="skills.sh installs" /></a>
