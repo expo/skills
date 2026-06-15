@@ -18,13 +18,12 @@ Skills give AI agents focused Expo knowledge: when to use Expo APIs, how to stru
 
 ## Installation
 
-Use a plugin install if you want to add Expo to one specific agent, such as Claude Code or Codex. Use the skills CLI for Cursor and other agents that load `SKILL.md` files.
+Use a plugin install for Claude Code or Codex. Use the skills CLI for Cursor and other agents that load `SKILL.md` files.
 
 | Path | Best for |
 | --- | --- |
-| Plugin install | Per-agent installs for Claude Code or Codex. |
+| Plugin install | Claude Code or Codex installs from their official plugin marketplaces. |
 | Skills CLI | Cursor, GitHub Copilot, Windsurf, Gemini, and other agents that load `SKILL.md` files. |
-| Cursor Remote Rule | Cursor users who prefer adding the GitHub repo directly. |
 
 ### Skills CLI
 
@@ -38,53 +37,29 @@ This installs the skills for supported local agents using the open `SKILL.md` fo
 
 For most agents, this is the only install command you need. Run it from the project root, then restart or refresh your agent session so it can discover the installed `SKILL.md` files.
 
-### Claude Code Plugin
-
-Add the plugin marketplace:
+Update CLI-installed skills with:
 
 ```text
-/plugin marketplace add expo/skills
+npx skills@latest update
 ```
 
-Install the plugin:
+### Claude Code Plugin
+
+Install from the official Claude Code plugin marketplace:
 
 ```text
-/plugin install expo
+/plugin install expo@claude-plugins-official
 ```
 
 ### Codex Plugin
 
-Add the marketplace:
+Install from the OpenAI-curated Codex marketplace:
 
 ```text
-codex plugin marketplace add expo/skills --ref main
+codex plugin add expo@openai-curated
 ```
 
-Then open `/plugins` in Codex and install `expo` from the Expo Skills marketplace.
-
-### Cursor
-
-Cursor can use the skills CLI:
-
-```text
-npx skills@latest add expo/skills
-```
-
-Or add this repo as a Remote Rule:
-
-1. Open Cursor Settings (Cmd+Shift+J / Ctrl+Shift+J)
-2. Navigate to `Rules & Command` -> `Project Rules` -> Add Rule -> Remote Rule (GitHub)
-3. Enter `https://github.com/expo/skills.git`
-
-Skills are automatically discovered and used by the agent based on context. When you ask questions about Expo development, the agent uses the relevant skills based on their descriptions.
-
-Skills do not appear in Cursor's `/` slash command menu. The `/` menu is for custom commands, not skills.
-
-Verify installation by asking Cursor Expo-specific questions like:
-
-- "How do I build a UI with Expo Router?"
-- "How do I make API calls in my Expo app?"
-- "How do I deploy my Expo app to the App Store?"
+You can also open `/plugins` in Codex and install `expo` from the OpenAI-curated marketplace.
 
 ## Try It
 
@@ -150,7 +125,7 @@ Use `npx skills add expo/skills` for agents that load `SKILL.md` files, includin
 
 ### Should I install the skills or the plugin?
 
-Use `npx skills add expo/skills` if you want the skills available across supported agents on your machine. Use a plugin install if you only want to add Expo to one specific agent.
+Use a plugin install for Claude Code or Codex. Use `npx skills@latest add expo/skills` for Cursor and other agents that load `SKILL.md` files.
 
 ### What is the source of truth?
 
