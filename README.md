@@ -55,6 +55,16 @@ codex plugin add expo@openai-curated
 
 You can also open `/plugins` in Codex and install `expo` from the OpenAI-curated marketplace.
 
+## Updating
+
+Claude Code and Codex plugin installs are updated through their official plugin marketplaces.
+
+For skills CLI installs, update local skills with:
+
+```text
+npx skills@latest update
+```
+
 ## Try It
 
 After installing, ask your agent Expo-specific questions like:
