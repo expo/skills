@@ -18,12 +18,12 @@ Skills give AI agents focused Expo knowledge: when to use Expo APIs, how to stru
 
 ## Installation
 
-For Claude Code or Codex, install the plugin so updates are handled by the official plugin marketplace. For Cursor, OpenCode, and other tools or agents that load `SKILL.md` files, use the skills CLI.
+For Claude Code or Codex, install the plugin so updates are handled by the official plugin marketplace. For Cursor, OpenCode, and other supported agents, use the skills CLI.
 
 | Path | Best for |
 | --- | --- |
 | Plugin install | Claude Code or Codex, with updates handled by their official plugin marketplaces. |
-| Skills CLI | Cursor, OpenCode, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, Kiro CLI, and other tools or agents that load `SKILL.md` files. |
+| Skills CLI | Cursor, OpenCode, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, Kiro CLI, and other supported agents. |
 
 ### Skills CLI
 
@@ -127,11 +127,11 @@ The `expo` plugin bundles this MCP configuration, so Claude Code and Codex plugi
 
 ### Which agents are supported?
 
-Use `npx skills@latest add expo/skills` for tools and agents that load `SKILL.md` files, including Cursor, OpenCode, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, Kiro CLI, and similar tools.
+Use `npx skills@latest add expo/skills` for Cursor, OpenCode, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, Kiro CLI, and similar tools.
 
 ### Should I install the skills or the plugin?
 
-Use the plugin for Claude Code or Codex; it stays updated through the plugin marketplace. Use `npx skills@latest add expo/skills` for Cursor, OpenCode, and other tools or agents that load `SKILL.md` files.
+Use the plugin for Claude Code or Codex; it stays updated through the plugin marketplace. Use `npx skills@latest add expo/skills` for Cursor, OpenCode, and other supported agents.
 
 ### What is the source of truth?
 
