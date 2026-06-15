@@ -1,6 +1,8 @@
-<p align="center">
-  <img src="assets/expo-skills.png" alt="Expo Skills" width="100%" />
-</p>
+<div align="center">
+  <a href="https://docs.expo.dev/skills/" target="_blank">
+    <img src="assets/expo-skills.png" alt="Expo Skills" width="100%" />
+  </a>
+</div>
 
 # Expo Skills
 
