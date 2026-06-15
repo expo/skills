@@ -18,20 +18,20 @@ Skills give AI agents focused Expo knowledge: when to use Expo APIs, how to stru
 
 ## Installation
 
-Use the skills CLI if you want Expo skills available to any supported agent on your machine. Use a plugin install if you want to install Expo only inside one specific agent, such as Claude Code or Codex.
+Use a plugin install if you want to add Expo to one specific agent, such as Claude Code or Codex. Use the skills CLI for Cursor and other agents that load `SKILL.md` files.
 
 | Path | Best for |
 | --- | --- |
-| Skills CLI | Cross-agent installs for Claude Code, Cursor, Codex, GitHub Copilot, Windsurf, Gemini, and other agents that load `SKILL.md` files. |
 | Plugin install | Per-agent installs for Claude Code or Codex. |
-| Cursor Remote Rule | Cursor users who want the direct GitHub-based install path. |
+| Skills CLI | Cursor, GitHub Copilot, Windsurf, Gemini, and other agents that load `SKILL.md` files. |
+| Cursor Remote Rule | Cursor users who prefer adding the GitHub repo directly. |
 
-### Skills CLI (Recommended)
+### Skills CLI
 
 Install with the [skills CLI](https://skills.sh/docs/cli):
 
 ```text
-npx skills add expo/skills
+npx skills@latest add expo/skills
 ```
 
 This installs the skills for supported local agents using the open `SKILL.md` format.
@@ -64,7 +64,13 @@ Then open `/plugins` in Codex and install `expo` from the Expo Skills marketplac
 
 ### Cursor
 
-Install from GitHub:
+Cursor can use the skills CLI:
+
+```text
+npx skills@latest add expo/skills
+```
+
+Or add this repo as a Remote Rule:
 
 1. Open Cursor Settings (Cmd+Shift+J / Ctrl+Shift+J)
 2. Navigate to `Rules & Command` -> `Project Rules` -> Add Rule -> Remote Rule (GitHub)
@@ -79,14 +85,6 @@ Verify installation by asking Cursor Expo-specific questions like:
 - "How do I build a UI with Expo Router?"
 - "How do I make API calls in my Expo app?"
 - "How do I deploy my Expo app to the App Store?"
-
-### Any Agent
-
-```text
-bunx skills add expo/skills
-```
-
-This extracts the skills individually, so you will need to manually upgrade them.
 
 ## Try It
 
