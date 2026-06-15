@@ -67,6 +67,12 @@ For skills CLI installs, update local skills with:
 npx skills@latest update
 ```
 
+To update one installed Expo skill by name:
+
+```text
+npx skills@latest update building-native-ui
+```
+
 ## Try It
 
 After installing, ask your agent Expo-specific questions like:
