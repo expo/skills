@@ -26,7 +26,7 @@ Use the skills CLI if you want Expo skills available to any supported agent on y
 | Plugin install | Per-agent installs for Claude Code or Codex. |
 | Cursor Remote Rule | Cursor users who want the direct GitHub-based install path. |
 
-### Skills CLI Recommended
+### Skills CLI (Recommended)
 
 Install with the [skills CLI](https://skills.sh/docs/cli):
 
