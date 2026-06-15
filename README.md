@@ -42,8 +42,10 @@ For most agents, this is the only install command you need. Run it from the proj
 Install from the official Claude Code plugin marketplace:
 
 ```text
-/plugin install expo@claude-plugins-official
+claude plugin install expo@claude-plugins-official
 ```
+
+You can also run `/plugin install expo@claude-plugins-official` inside Claude Code.
 
 ### Codex Plugin
 
