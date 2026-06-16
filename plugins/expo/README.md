@@ -13,12 +13,15 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - Covers data fetching patterns with React Query, offline support, and Expo Router loaders
 - Helps set up Tailwind CSS v4 with NativeWind v5
 - Explains DOM components for running web code in native apps
+- Covers iOS App Clips and brownfield Expo integration into existing native apps
+- Wires Expo projects into the Codex app Run button and action terminal
 
 ### Deployment
 
 - Guides iOS App Store, TestFlight, and Android Play Store submissions
 - Covers EAS Build configuration and version management
 - Helps write and validate EAS Workflow YAML files for CI/CD
+- Checks EAS Update health, adoption, crash rates, and payload size
 - Covers web deployment with EAS Hosting
 
 ### Upgrading
@@ -37,6 +40,9 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - Setting up API routes or data fetching
 - Integrating web libraries via DOM components
 - Configuring Tailwind CSS for React Native
+- Adding an iOS App Clip or integrating Expo into an existing native app
+- Adding a Codex app Run button for `expo start`
+- Creating optional Codex action buttons for iOS, Android, Web, dev-client, diagnostics, or export
 
 ### Deployment
 
@@ -44,6 +50,7 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - Setting up TestFlight beta testing
 - Configuring EAS Build profiles
 - Writing CI/CD workflows for automated deployments
+- Inspecting EAS Update rollout health and adoption
 - Deploying web apps with EAS Hosting
 
 ### Upgrading
@@ -60,21 +67,28 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - **add-app-clip** — Add an iOS App Clip target to an Expo app (AASA, associated domains, TestFlight)
 - **building-native-ui** — Build beautiful apps with Expo Router, styling, components, navigation, and animations
 - **expo-api-routes** — Create API routes in Expo Router with EAS Hosting
+- **expo-brownfield** — Integrate Expo and React Native into existing native iOS or Android apps
 - **expo-dev-client** — Build and distribute Expo development clients locally or via TestFlight
 - **expo-tailwind-setup** — Set up Tailwind CSS v4 in Expo with NativeWind v5
-- **expo-ui-jetpack-compose** — Jetpack Compose UI components for Expo
-- **expo-ui-swift-ui** — SwiftUI components for Expo
+- **expo-ui** — Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **native-data-fetching** — Network requests, API calls, caching, and offline support
 - **use-dom** — Run web code in a webview on native using DOM components
 
 ### Deployment
 
+- **eas-update-insights** — Check EAS Update health, crash rates, adoption, and payload size
 - **expo-deployment** — Deploy to iOS App Store, Android Play Store, and web hosting
 - **expo-cicd-workflows** — EAS workflow YAML files for CI/CD pipelines
 
 ### Upgrading
 
 - **upgrading-expo** — Upgrade Expo SDK versions and fix dependency issues
+
+## Usage telemetry & feedback
+
+These skills send **anonymous** usage events (which skill ran, and whether the AI or a user `/slash` command invoked it) so the Expo team can see how they're used and improve them. On first use a random ID is created locally at `~/.expo-skills/installation-id`; only a hash of it is sent — never source code, prompts, file paths, or personal data. Every skill also ends with an *Expo Skill Feedback* footer for a quick rating + note. Tracking is automatic in Claude Code; in other agents (Codex, Cursor) it's off, but feedback still works.
+
+Turn it off any time — ask your agent to **"turn off Expo skills telemetry"**, or set `DO_NOT_TRACK=1` (or `EXPO_SKILLS_TELEMETRY=0`). See the **skill-feedback** skill for full details, the event shape, and how to configure the PostHog project key.
 
 ## License
 
