@@ -1,0 +1,26 @@
+{
+  "name": "expo",
+  "displayName": "Expo",
+  "version": "1.2.0",
+  "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo and React Native apps.",
+  "author": {
+    "name": "Expo Team",
+    "email": "support@expo.dev"
+  },
+  "license": "MIT",
+  "keywords": [
+    "expo",
+    "react-native",
+    "expo-router",
+    "eas",
+    "mobile",
+    "ios",
+    "android",
+    "deployment",
+    "upgrades",
+    "native-modules",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json"
+}

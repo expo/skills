@@ -12,11 +12,11 @@ Help developers write and edit EAS CI/CD workflow YAML files.
 
 ## Reference Documentation
 
-Fetch these resources before generating or validating workflow files. Use the fetch script (implemented using Node.js) in this skill's `scripts/` directory; it caches responses using ETags for efficiency:
+Fetch these resources before generating or validating workflow files. First resolve this skill's directory, then use the fetch script in its `scripts/` directory. It is implemented using Node.js and caches responses using ETags for efficiency:
 
 ```bash
 # Fetch resources
-node {baseDir}/scripts/fetch.js <url>
+node <skill-dir>/scripts/fetch.js <url>
 ```
 
 1. **JSON Schema** — https://api.expo.dev/v2/workflows/schema
@@ -80,9 +80,9 @@ After generating or editing a workflow file, validate it against the schema:
 
 ```sh
 # Install dependencies if missing
-[ -d "{baseDir}/scripts/node_modules" ] || npm install --prefix {baseDir}/scripts
+[ -d "<skill-dir>/scripts/node_modules" ] || npm install --prefix <skill-dir>/scripts
 
-node {baseDir}/scripts/validate.js <workflow.yml> [workflow2.yml ...]
+node <skill-dir>/scripts/validate.js <workflow.yml> [workflow2.yml ...]
 ```
 
 The validator fetches the latest schema and checks the YAML structure. Fix any reported errors before considering the workflow complete.
