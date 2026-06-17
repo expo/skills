@@ -1,6 +1,6 @@
 ---
 name: expo-examples
-description: Find, inspect, and scaffold from Expo's official example projects — the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, React Navigation, Tailwind/NativeWind, and more) — to ground new work in proven, version-matched patterns. Use when integrating a third-party library or service into an Expo app, when the user wants a reference implementation, starting point, or inspiration for a feature, when they ask "is there an example for X" or "how does Expo do X", or when they want to scaffold a project with `npx create-expo --example`.
+description: Expo's official example projects — the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, NativeWind, and more). Use when integrating a third-party library or service into an existing Expo app and you want the canonical, version-matched pattern to adapt, or when scaffolding a new project from one with `npx create-expo --example`.
 allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx create-expo:*),Bash(npx degit:*),Bash(bun create:*)"
 version: 1.0.0
 license: MIT
@@ -10,11 +10,11 @@ license: MIT
 
 [expo/examples](https://github.com/expo/examples) is Expo's official library of ~70 **integration examples** — directories named `with-<library>` (e.g. `with-stripe`, `with-maps`), each built around **one** library or service. These are not full apps: they're **managed** projects (no `ios/`/`android/` dirs — native setup is via config plugins), and the typical one is a **single screen of ~100–200 lines**. Mine them for the canonical integration *pattern* — the dependency set, `app.json` config plugins, and minimal wiring Expo maintains against the current SDK — and adapt that into the user's app. Don't expect to lift an application architecture from them.
 
-Reach for an example before hand-rolling an integration. **At a glance:** ~68 are single-concern `with-*` demos; **8 are full-stack** (include Expo Router `+api` routes): `with-stripe`, `with-clerk`, `with-better-auth`, `with-openai`, `with-router-ai`, `with-graphql`, `with-s3`, `with-satori`; a few are larger showcases (`with-shadcn`, `with-router-tv`, `with-react-navigation`); and `blank` / `stickersmash` are starters, not integrations.
+Reach for an example before hand-rolling an integration. (Kinds — full-stack, showcases, starters — are noted in `./references/catalog.md`.)
 
 ## Two modes
 
-1. **Inspiration / adapt** (most common) — the user already has a project. Find the matching example, read its key files, and apply the *pattern* to their code. Do **not** scaffold a whole new project on top of theirs.
+1. **Inspiration / adapt** (most common) — the user already has a project. Find the matching example, read its key files, and apply the *pattern* to their code.
 2. **Scaffold** — greenfield. Start a fresh project directly from the example.
 
 ## Workflow
@@ -30,7 +30,7 @@ gh api repos/expo/examples/contents --jq '.[] | select(.type=="dir" and (.name|s
 gh api repos/expo/examples/contents/meta.json --jq '.content' | base64 -d
 ```
 
-`meta.json` is the source of truth for what's renamed or dead. If the example is in its `deprecated` map, don't recommend it — follow the `message` to the modern alternative. If it's in `aliases`, use the `destination`.
+`meta.json` is the source of truth for what's renamed or dead (deprecated examples are removed from the repo tree but still listed here, each with a `message`). If an example is in its `deprecated` map, don't recommend it — follow the `message` to the modern path. If it's in `aliases`, use the `destination`.
 
 ### 2a. Inspiration mode — study without touching the user's project
 
@@ -75,12 +75,13 @@ When the user already has an app, **add only what the example introduces; never 
 
 - **Version-align — don't copy pinned versions.** Examples track the **latest** SDK, so their `package.json` pins won't match an older project. Add only the *missing* deps with `npx expo install <pkg>` (it resolves SDK-correct versions) instead of copying exact versions.
 - **Merge config, don't replace it.** Add only the `app.json`/`app.config.*` plugins and permissions the example introduces that the user lacks — keep their existing config block intact.
-- **Port the integration code**, adapting imports and paths to the user's structure rather than pasting verbatim.
+- **Port the integration code.**
 - **Recreate env vars** from the example's `.env` shape — it holds placeholders, never working secrets.
+
+**Done when** the integration code is ported and every dependency, config plugin, permission, and env var it needs is accounted for in the user's app — not when it merely *looks* wired up.
 
 ## Gotchas
 
-- **Deprecated / aliased examples.** `meta.json` marks some examples deprecated (library unmaintained or feature moved) and some as aliases (renamed). Deprecated ones are removed from the repo tree but still listed there with a `message` pointing to the modern path — always check it (step 1) so you never recommend a dead example.
 - **Default branch is `master`,** not `main` (matters for raw URLs and sparse checkout).
 - **Single-click deploy.** Every example has a launch URL: `https://launch.expo.dev/?github=https://github.com/expo/examples/tree/master/<example>`.
 

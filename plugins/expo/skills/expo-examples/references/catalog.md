@@ -4,6 +4,12 @@ A categorized view of [expo/examples](https://github.com/expo/examples) for fast
 
 Use any name with `npx create-expo --example <name>` (scaffold) or inspect it via `gh api repos/expo/examples/contents/<name>/<file>`.
 
+Most are single-screen integrations; a few differ:
+
+- **Full-stack** (include Expo Router `+api` routes — a backend too): `with-stripe`, `with-clerk`, `with-better-auth`, `with-openai`, `with-router-ai`, `with-graphql`, `with-s3`, `with-satori`.
+- **Larger showcases:** `with-shadcn`, `with-router-tv`, `with-router-menus`, `with-react-navigation`, `with-webgpu`.
+- **Starters (not integrations):** `blank`, `stickersmash`.
+
 ## Auth & identity
 - `with-clerk` — Clerk authentication
 - `with-auth0` — Auth0 login
