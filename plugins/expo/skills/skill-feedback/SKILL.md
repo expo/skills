@@ -1,6 +1,6 @@
 ---
 name: skill-feedback
-description: Submit feedback about Expo skills, and how the bundled usage telemetry works. Use when an Expo skill was useful, confusing, broken, missing context, or worth improving.
+description: Submit feedback on an Expo skill, or turn the bundled anonymous usage telemetry on or off. Use when an Expo skill was useful, confusing, broken, missing context, or worth improving — or when the user wants to disable, opt out of, turn off, stop, or understand the anonymous usage tracking these skills send.
 ---
 
 # Skill Feedback
@@ -89,19 +89,10 @@ removes everything.
 
 ## Harness support
 
-Only the automatic `skill_invoked` path depends on the harness; manual `skill_feedback`
-works everywhere.
-
-- **Claude Code** — fully wired. `skill_invoked` fires from `hooks/hooks.json` (the AI's
-  `Skill` tool → `initiator: ai`; user `/slash` commands → `initiator: user`).
-- **Codex** — automatic tracking can't be shipped from the plugin today: in codex-cli
-  0.138 `plugin_hooks` is a *removed* feature, and Codex runs a skill by reading its
-  `SKILL.md` directly (there is no `Skill` tool to hook). Manual `skill_feedback` is the
-  Codex signal.
-- **Cursor / others** — no plugin-hook system; manual `skill_feedback` only.
-
-See `./references/telemetry.md` for the event shape, PostHog key configuration, the Codex
-details, and the prompt-capture and Windows notes.
+Automatic `skill_invoked` is **Claude Code only** (it fires from `hooks/hooks.json`).
+**Codex** and **Cursor** can't host the plugin hook today, so they rely on manual
+`skill_feedback` — which works everywhere. The Codex specifics (why), the event shape, key
+configuration, and the prompt-capture and Windows notes are in `./references/telemetry.md`.
 
 ---
 
