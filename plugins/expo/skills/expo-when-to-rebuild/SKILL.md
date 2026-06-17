@@ -5,16 +5,11 @@ description: Decide whether a JavaScript, app-config, or dependency change requi
 
 # When to Rebuild an Expo App
 
-This skill answers one question that comes up constantly in the Expo development loop:
+The one question this skill answers: **I changed something — will it just show up, or do I need a new native build?**
 
-> **I changed something — will it just show up, or do I need a new native build?**
+It comes down to a single boundary. A change that stays in **JavaScript** is picked up instantly by Metro and Fast Refresh — no build. A change that crosses into **native** is compiled into the binary (native modules are linked in at build time via autolinking), so it needs a new development build. This is also the line between **Expo Go and a development build**: Expo Go ships a fixed set of native modules, so the moment your change needs custom native code you switch to a development build — and rebuild whenever the native side changes.
 
-The mental model is a single boundary: **JavaScript vs. native.**
-
-- **JavaScript changes** (app code, JS-only libraries) are picked up instantly by Metro and Fast Refresh. **No build needed.**
-- **Native changes** (native code, config plugins, app-config properties that touch the native project, libraries with native code) are compiled into the binary — native modules are linked in at build time via autolinking, so a JS reload can't pick them up. They require **a new development build.**
-
-Most changes are JavaScript, so most of the time the answer is "no build needed." A new build is the exception, triggered only when you cross into native. This boundary is also the line between **Expo Go and a development build**: Expo Go bundles a fixed set of native modules, so as soon as your change needs custom native code, you move to a development build — and rebuild whenever the native side changes.
+The diagram below is the flow; ["What counts as native"](#what-counts-as-native) resolves its two decision points.
 
 ## The core development loop
 
@@ -53,22 +48,16 @@ flowchart TD
     Reflect([See the change<br/>reflected in your app])
 ```
 
-## Quick decision: does my change need a new build?
+"Rebuild" means **create a new development build** (locally or with EAS). The first one is a *build*; every one after a native change is a *rebuild*.
 
-| You changed… | New build? | What to do |
-|---|---|---|
-| JavaScript / TypeScript app code | **No** | Save — Fast Refresh shows it instantly |
-| A JS-only npm library (no native code) | **No** | Import and use it; keep coding |
-| `app.json` / `app.config.js` — values read at runtime via `expo-constants` (e.g. `extra`) | **No** | Updates on reload in dev; embedded at build time for production |
-| `app.json` / `app.config.js` — anything that maps to native (app name, icon, splash, bundle/package id, permissions, `scheme`, orientation, plugins) | **Yes** | Rebuild |
-| Added or changed a **config plugin** | **Yes** | Rebuild |
-| Wrote **native code** (Swift/Kotlin) or a local Expo Module | **Yes** | Rebuild |
-| Installed an npm library that **includes native code** or ships a config plugin | **Yes** | Rebuild |
-| Bumped the Expo SDK / upgraded native dependencies | **Yes** | Rebuild (see [upgrading-expo](../upgrading-expo/SKILL.md)) |
+## What counts as "native"
 
-"Rebuild" here means **create a new development build** — locally or with EAS. The first time it is a *build*; every time after a native change it is a *rebuild*.
+The diagram's two decision diamonds resolve like this:
 
-> Rule of thumb: if the change only touches files Metro bundles (JS/TS, assets imported from JS), no build. If it changes what the compiler sees (native code, native config, native dependencies), rebuild. When in doubt about an app-config change, rebuild — most app config maps to native settings.
+- **"Does the change impact the native project?"** (app config) — **Yes** for anything that maps to a native setting: app name, icon, splash, `ios.bundleIdentifier` / `android.package`, permissions, `scheme`, `orientation`, and any `plugins` / config plugin. **No** for values read at runtime via `expo-constants` (e.g. `extra`), which update on reload in dev. When unsure, treat it as native and rebuild.
+- **"Does the library include native code?"** — **Yes** if the package ships native code or a config plugin (or its install steps tell you to edit `app.json` or native files); **No** for pure-JavaScript packages, which Metro just bundles.
+
+Bumping the Expo SDK or upgrading native dependencies always crosses into native — rebuild (see [upgrading-expo](../upgrading-expo/SKILL.md)).
 
 ## Creating a build: local vs. cloud (EAS)
 
@@ -87,11 +76,7 @@ For the mechanics of creating and distributing the build (EAS profiles, TestFlig
 
 ### When do I need to run prebuild again?
 
-Run prebuild again whenever a change affects the native project:
-
-- App-config **native properties** (icon, splash, permissions, bundle id, plugins…)
-- A **config plugin** added or changed
-- A **native dependency** added, removed, or upgraded
+Re-run prebuild for any change that crosses into native — the same changes covered in ["What counts as native"](#what-counts-as-native) (a native app-config property, a config plugin, or a native dependency).
 
 > [!IMPORTANT]
 > Running `npx expo prebuild` again **layers** changes on top of the existing native files and can produce inconsistent results. To keep prebuild deterministic:
@@ -103,7 +88,7 @@ If instead you commit and hand-edit `android`/`ios` yourself (you are not using 
 
 ### Note on `npx expo run`
 
-`npx expo run:ios` / `npx expo run:android` generate the native directories *before* compiling. After that first build, **JavaScript changes do not need a rebuild** — Metro and Fast Refresh handle them. Only native code, native config, or native dependency changes require you to rebuild.
+`npx expo run:ios` / `npx expo run:android` generate the native directories before compiling, so the first run doubles as your prebuild.
 
 ## Related skills
 
