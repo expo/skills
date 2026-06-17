@@ -1,0 +1,96 @@
+---
+name: expo-examples
+description: Find, inspect, and scaffold from Expo's official example projects — the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, React Navigation, Tailwind/NativeWind, and more) — to ground new work in proven, version-matched patterns. Use when integrating a third-party library or service into an Expo app, when the user wants a reference implementation, starting point, or inspiration for a feature, when they ask "is there an example for X" or "how does Expo do X", or when they want to scaffold a project with `npx create-expo --example`.
+allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx create-expo:*),Bash(npx degit:*),Bash(bun create:*)"
+version: 1.0.0
+license: MIT
+---
+
+# Expo Examples
+
+[expo/examples](https://github.com/expo/examples) is Expo's official library of ~70 **integration examples** — directories named `with-<library>` (e.g. `with-stripe`, `with-maps`), each built around **one** library or service. These are not full apps: they're **managed** projects (no `ios/`/`android/` dirs — native setup is via config plugins), and the typical one is a **single screen of ~100–200 lines**. Mine them for the canonical integration *pattern* — the dependency set, `app.json` config plugins, and minimal wiring Expo maintains against the current SDK — and adapt that into the user's app. Don't expect to lift an application architecture from them.
+
+Reach for an example before hand-rolling an integration. **At a glance:** ~68 are single-concern `with-*` demos; **8 are full-stack** (include Expo Router `+api` routes): `with-stripe`, `with-clerk`, `with-better-auth`, `with-openai`, `with-router-ai`, `with-graphql`, `with-s3`, `with-satori`; a few are larger showcases (`with-shadcn`, `with-router-tv`, `with-react-navigation`); and `blank` / `stickersmash` are starters, not integrations.
+
+## Two modes
+
+1. **Inspiration / adapt** (most common) — the user already has a project. Find the matching example, read its key files, and apply the *pattern* to their code. Do **not** scaffold a whole new project on top of theirs.
+2. **Scaffold** — greenfield. Start a fresh project directly from the example.
+
+## Workflow
+
+### 1. Find the right example
+
+Map the user's need to an example name (e.g. payments → `with-stripe`, auth → `with-clerk`). `./references/catalog.md` is a categorized snapshot for fast triage — but it drifts, so confirm against the live list:
+
+```bash
+# Live example names:
+gh api repos/expo/examples/contents --jq '.[] | select(.type=="dir" and (.name|startswith(".")|not)) | .name'
+# Aliases (renamed) + deprecated (dead/moved) examples — check before recommending:
+gh api repos/expo/examples/contents/meta.json --jq '.content' | base64 -d
+```
+
+`meta.json` is the source of truth for what's renamed or dead. If the example is in its `deprecated` map, don't recommend it — follow the `message` to the modern alternative. If it's in `aliases`, use the `destination`.
+
+### 2a. Inspiration mode — study without touching the user's project
+
+The common case: the user already has an app and wants to see how Expo does something. Read the example as **reference** and apply the patterns by hand — never scaffold an example on top of their project.
+
+**First, list the whole example in one call.** Integration code is often nested (e.g. Stripe's server routes live in `app/api/`), so a one-level listing misses the important files:
+
+```bash
+gh api 'repos/expo/examples/git/trees/master?recursive=1' \
+  --jq '.tree[].path | select(startswith("with-stripe/"))'
+```
+
+**Then read the high-signal files first:** `README.md` (setup) → `package.json` (deps) → `app.json` (config plugins / permissions) → the integration code the manifest revealed → `.env` (required secrets). Per file:
+
+```bash
+gh api repos/expo/examples/contents/with-stripe/utils/stripe-server.ts --jq '.content' | base64 -d
+# No gh? Raw URL (branch is master):
+curl -s https://raw.githubusercontent.com/expo/examples/master/with-stripe/utils/stripe-server.ts
+```
+
+**To study the whole example locally** — read it freely, then apply by hand — pull just that one example into a **throwaway/gitignored dir, not the user's project**:
+
+```bash
+npx degit expo/examples/with-stripe /tmp/expo-ref/with-stripe   # clean copy, no git history
+# fallback without degit (sparse-checkout, no full ~64 MB clone):
+git clone --depth 1 --filter=blob:none --sparse https://github.com/expo/examples.git /tmp/expo-ref/examples \
+  && (cd /tmp/expo-ref/examples && git sparse-checkout set with-stripe)
+```
+
+Read from there with Grep/Read; delete the scratch dir when done.
+
+### 2b. Scaffold mode — new project from an example
+
+```bash
+npx create-expo --example with-stripe   # short form:  npx create-expo -e with-stripe
+bun create expo --example with-stripe    # with bun
+```
+
+### 3. Adapt into the user's app — non-destructively (critical)
+
+When the user already has an app, **add only what the example introduces; never overwrite their setup.**
+
+- **Version-align — don't copy pinned versions.** Examples track the **latest** SDK, so their `package.json` pins won't match an older project. Add only the *missing* deps with `npx expo install <pkg>` (it resolves SDK-correct versions) instead of copying exact versions.
+- **Merge config, don't replace it.** Add only the `app.json`/`app.config.*` plugins and permissions the example introduces that the user lacks — keep their existing config block intact.
+- **Port the integration code**, adapting imports and paths to the user's structure rather than pasting verbatim.
+- **Recreate env vars** from the example's `.env` shape — it holds placeholders, never working secrets.
+
+## Gotchas
+
+- **Deprecated / aliased examples.** `meta.json` marks some examples deprecated (library unmaintained or feature moved) and some as aliases (renamed). Deprecated ones are removed from the repo tree but still listed there with a `message` pointing to the modern path — always check it (step 1) so you never recommend a dead example.
+- **Default branch is `master`,** not `main` (matters for raw URLs and sparse checkout).
+- **Single-click deploy.** Every example has a launch URL: `https://launch.expo.dev/?github=https://github.com/expo/examples/tree/master/<example>`.
+
+## Related skills
+
+- Tailwind / NativeWind styling → `expo-tailwind-setup`
+- Native UI components → `building-native-ui`
+- Authoring a native module → `expo-module`
+- Upgrade the SDK before adopting a latest-SDK example → `upgrading-expo`
+
+## References
+
+- `./references/catalog.md` — categorized snapshot of the example library for fast triage.
