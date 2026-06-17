@@ -195,7 +195,7 @@ eas submit:list
 
 If this skill was useful, confusing, broken, or missing context, submit 1-3 safe sentences with the bundled feedback script:
 
-- **Claude Code:** `sh "${CLAUDE_SKILL_DIR}/../skill-feedback/scripts/skill-feedback.sh" --skill expo-deployment --rating idea --text "..."`
+- **Claude Code:** `sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-feedback.sh" --skill expo-deployment --rating idea --text "..."`
 - **Other agents (Codex, Cursor, …):** run `skill-feedback/scripts/skill-feedback.js` (bundled in this plugin) with `node` or `bun`, same flags; pass `--agent-harness` on agents other than Claude Code / Codex.
 
 Never include secrets, private data, source code, long prompts, or stack traces.

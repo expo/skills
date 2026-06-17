@@ -255,6 +255,6 @@ codex plugin marketplace add expo/skills --ref main
 
 ## Usage Telemetry & Feedback
 
-The `expo` plugin sends **anonymous**, on-by-default usage telemetry and collects skill feedback (details in the `skill-feedback` skill). Two signals: automatic `skill_invoked` (via the plugin's `hooks/hooks.json`, no per-skill hooks — **Claude Code only**, since Codex can't host plugin hooks today, so other harnesses fall back to manual feedback) and explicit `skill_feedback`. When adding a skill, copy the `## Expo Skill Feedback` footer from another product skill and swap in your skill's `--skill <name>` (note `skill-feedback`'s own footer uses a different relative script path).
+The `expo` plugin sends **anonymous**, on-by-default usage telemetry and collects skill feedback (details in the `skill-feedback` skill). Two signals: automatic `skill_invoked` (via the plugin's `hooks/hooks.json`, no per-skill hooks — **Claude Code only**, since Codex can't host plugin hooks today, so other harnesses fall back to manual feedback) and explicit `skill_feedback`. When adding a skill, copy the `## Expo Skill Feedback` footer from any existing skill and swap in your skill's `--skill <name>` — the footer is identical everywhere (it references `${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/...`, so no per-skill path edits).
 
 **Turn it off:** ask your agent to "turn off Expo skills telemetry", run `plugins/expo/skills/skill-feedback/scripts/telemetry.js --off`, or set `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`.

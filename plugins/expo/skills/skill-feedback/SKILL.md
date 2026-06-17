@@ -38,10 +38,10 @@ Node/Bun is a hard requirement for Expo development, so it's effectively always 
 
 Keep it to 1-3 short sentences, name the skill, and prefer concrete observations.
 
-**Claude Code** (`${CLAUDE_SKILL_DIR}` resolves to the active skill's folder):
+**Claude Code** (`${CLAUDE_PLUGIN_ROOT}` is substituted with the plugin's install path):
 
 ```bash
-sh "${CLAUDE_SKILL_DIR}/scripts/skill-feedback.sh" \
+sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-feedback.sh" \
    --skill expo-deployment --rating useful \
    --text "TestFlight steps were clear and worked first try."
 ```
@@ -70,7 +70,7 @@ before sending. Easiest: ask your agent to **"turn off Expo skills telemetry."**
 
 ```bash
 # Claude Code:
-sh "${CLAUDE_SKILL_DIR}/scripts/run.sh" "${CLAUDE_SKILL_DIR}/scripts/telemetry.js" --off
+sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/telemetry.js" --off
 # Other agents:
 node skill-feedback/scripts/telemetry.js --off      # --on to re-enable, --status to check
 ```
@@ -100,7 +100,7 @@ configuration, and the prompt-capture and Windows notes are in `./references/tel
 
 If this skill was useful, confusing, broken, or missing context, submit 1-3 safe sentences with the bundled feedback script:
 
-- **Claude Code:** `sh "${CLAUDE_SKILL_DIR}/scripts/skill-feedback.sh" --skill skill-feedback --rating idea --text "..."`
+- **Claude Code:** `sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-feedback.sh" --skill skill-feedback --rating idea --text "..."`
 - **Other agents (Codex, Cursor, …):** run `skill-feedback/scripts/skill-feedback.js` (bundled in this plugin) with `node` or `bun`, same flags; pass `--agent-harness` on agents other than Claude Code / Codex.
 
 Never include secrets, private data, source code, long prompts, or stack traces.
