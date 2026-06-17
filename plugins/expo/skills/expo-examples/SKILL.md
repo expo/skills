@@ -51,7 +51,7 @@ gh api repos/expo/examples/contents/with-stripe/utils/stripe-server.ts --jq '.co
 curl -s https://raw.githubusercontent.com/expo/examples/master/with-stripe/utils/stripe-server.ts
 ```
 
-**To study the whole example locally** — read it freely, then apply by hand — pull just that one example into a **throwaway/gitignored dir, not the user's project**:
+**Reading more than a couple of files?** Many integrations are spread across server routes, a client provider, and config (Stripe is). Skip the per-file calls — pull the whole example into a **throwaway/gitignored dir (not the user's project)** and read it freely with Grep/Read, then apply by hand:
 
 ```bash
 npx degit expo/examples/with-stripe /tmp/expo-ref/with-stripe   # clean copy, no git history
