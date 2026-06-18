@@ -67,35 +67,22 @@ to a predictable path.
 The explicit `skill-feedback.sh` path does **not** detach — it runs in the foreground and
 awaits the send, because it reports success/failure back to the user.
 
-## Harness support, in depth
+## Why Claude Code only
 
-- **Claude Code** — fully wired via `hooks/hooks.json`: `PostToolUse` matcher `Skill`
-  (the AI's `Skill` tool → `initiator: ai`) and `UserPromptExpansion` (user `/slash`
-  commands → `initiator: user`).
+`skill_invoked` is wired for Claude Code via `hooks/hooks.json`: `PostToolUse` matcher
+`Skill` (the AI's `Skill` tool → `initiator: ai`) and `UserPromptExpansion` (user `/slash`
+→ `initiator: user`). Both are verified firing end-to-end.
 
-- **Codex** — `skill_invoked` cannot fire from the plugin today (verified against
-  codex-cli 0.138.0):
-  1. **Plugin hooks are removed.** `codex features list` shows `plugin_hooks` = stage
-     `removed`, state `false`. The general hook engine (`hooks`) is stable, but it only
-     loads hooks from the user / project / managed layers (a `hooks.json`/`hooks.toml` in
-     `CODEX_HOME` or `config.toml [hooks]`), not from a plugin. A `hooks` key in
-     `.codex-plugin/plugin.json` is accepted by the installer but never registers a hook —
-     and Codex's own plugin scaffolder explicitly says to omit unsupported manifest fields
-     including `hooks`. So we do **not** ship a Codex plugin hooks file.
-  2. **Skills aren't tool-invoked.** Codex injects the skill catalog into context and the
-     model reads a skill's `SKILL.md` with its normal file/shell tools — there is no
-     `Skill` tool. So a `PostToolUse` matcher on `tool_name == "Skill"` would never fire,
-     and matching the generic `shell`/read tool would be noisy and brittle.
-  3. **No `UserPromptExpansion`.** Codex has `UserPromptSubmit` (fires on every prompt,
-     not skill-scoped), so the Claude user-path event key is ignored.
+Other harnesses have no automatic signal, and we deliberately do **not** ship a
+Codex/Cursor hooks file. On **Codex** (verified against codex-cli 0.138 + the `openai/codex`
+source): plugin-bundled hooks are a *removed* feature (`Feature::PluginHooks` =
+`Stage::Removed`), and Codex runs a skill by reading its `SKILL.md` directly — there is no
+`Skill` tool and no skill-invocation event in the `HookEventName` enum, so nothing can
+observe skill use. **Cursor** and others have no plugin-hook system. The bundled
+`skill_feedback` script still runs anywhere if invoked directly.
 
-  Good news for the future: Codex **aliases** `CLAUDE_PLUGIN_ROOT` / `CLAUDE_PLUGIN_DATA`
-  (confirmed in the hook engine's env table), so if both gaps close — `plugin_hooks`
-  returns *and* skill use becomes observable via a hook event — the wiring is small. Until
-  then, manual `skill_feedback` is the Codex signal.
-
-- **Cursor / others** — no plugin-hook system at all; manual `skill_feedback` (run the
-  bundled script directly) is the only signal.
+If OpenAI re-introduces `plugin_hooks` *and* adds a skill event, the wiring is small —
+Codex already aliases `${CLAUDE_PLUGIN_ROOT}`.
 
 ## Windows
 

@@ -283,9 +283,8 @@ See [./references/native-module.md](./references/native-module.md) for the Swift
 
 ## Expo Skill Feedback
 
-If this skill was useful, confusing, broken, or missing context, submit 1-3 safe sentences with the bundled feedback script:
+If this skill was useful, confusing, broken, or missing context, submit 1-3 safe sentences:
 
-- **Claude Code:** `sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-feedback.sh" --skill add-app-clip --rating idea --text "..."`
-- **Other agents (Codex, Cursor, …):** run `skill-feedback/scripts/skill-feedback.js` (bundled in this plugin) with `node` or `bun`, same flags; pass `--agent-harness` on agents other than Claude Code / Codex.
+`sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-feedback.sh" --skill add-app-clip --rating idea --text "..."`
 
-Never include secrets, private data, source code, long prompts, or stack traces.
+Never include secrets, source code, or long prompts.
