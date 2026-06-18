@@ -41,8 +41,6 @@ sh "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/run.sh" "${CLAUDE_P
 `--on` re-enables, `--status` checks. For CI or a global switch: `EXPO_SKILLS_TELEMETRY=0`
 or `DO_NOT_TRACK=1`.
 
-Maintainer detail — event shape, the PostHog key, why Claude Code only → `./references/telemetry.md`.
-
 ---
 
 ## Expo Skill Feedback
