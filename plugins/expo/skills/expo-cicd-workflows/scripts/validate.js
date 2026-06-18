@@ -14,8 +14,15 @@ const SCHEMA_URL = 'https://api.expo.dev/v2/workflows/schema';
 
 async function fetchSchema() {
   const data = await fetchCached(SCHEMA_URL);
-  const body = JSON.parse(data);
-  return body.data;
+  try {
+    const body = JSON.parse(data);
+    if (!body || typeof body.data !== 'object') {
+      throw new Error('Invalid schema response structure');
+    }
+    return body.data;
+  } catch (e) {
+    throw new Error(`Failed to parse schema: ${e.message}`);
+  }
 }
 
 function createValidator(schema) {
@@ -57,9 +64,7 @@ if (import.meta.main) {
   const files = args.filter((a) => !a.startsWith('-'));
 
   if (files.length === 0 || args.includes('--help') || args.includes('-h')) {
-    console.log(`Usage: validate <workflow.yml> [workflow2.yml ...]
-
-Validates EAS workflow YAML files against the official schema.`);
+    console.log(`Usage: validate <workflow.yml> [workflow2.yml ...]\n\nValidates EAS workflow YAML files against the official schema.`);
     process.exit(files.length === 0 ? 1 : 0);
   }
 
