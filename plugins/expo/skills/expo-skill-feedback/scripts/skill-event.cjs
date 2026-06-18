@@ -18,7 +18,7 @@ const {
   platformProps,
   telemetryIdentity,
   sendToPosthog,
-} = require("./telemetry_common.js");
+} = require("./telemetry_common.cjs");
 
 const EVENT = "skill_invoked";
 

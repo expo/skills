@@ -2,9 +2,9 @@
 // Turn Expo skills usage telemetry on or off, or check its status.
 //
 // Usage:
-//   node telemetry.js --status        # show whether telemetry is on/off and why
-//   node telemetry.js --off           # disable (writes the opt-out file)
-//   node telemetry.js --on            # re-enable (removes the opt-out file)
+//   node telemetry.cjs --status        # show whether telemetry is on/off and why
+//   node telemetry.cjs --off           # disable (writes the opt-out file)
+//   node telemetry.cjs --on            # re-enable (removes the opt-out file)
 //
 // The opt-out file is the reliable switch: it works no matter how the agent was
 // launched. The DO_NOT_TRACK / EXPO_SKILLS_TELEMETRY env vars also disable
@@ -12,7 +12,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { OPT_OUT_PATH, telemetryConfigured, isCI } = require("./telemetry_common.js");
+const { OPT_OUT_PATH, telemetryConfigured, isCI } = require("./telemetry_common.cjs");
 
 function disabledByEnv() {
   const flag = String(process.env.EXPO_SKILLS_TELEMETRY || "").trim().toLowerCase();
@@ -33,9 +33,9 @@ function printStatus() {
     if (byEnv) reasons.push(`env var ${byEnv}`);
     console.log(`Expo skills telemetry: DISABLED — via ${reasons.join(" and ")}.`);
   } else if (!telemetryConfigured()) {
-    console.log("Expo skills telemetry: ENABLED, but no PostHog key in this build (key stripped to placeholder) — nothing is created or sent. Disable permanently with: telemetry.js --off");
+    console.log("Expo skills telemetry: ENABLED, but no PostHog key in this build (key stripped to placeholder) — nothing is created or sent. Disable permanently with: telemetry.cjs --off");
   } else {
-    console.log("Expo skills telemetry: ENABLED (anonymous). Disable with: telemetry.js --off");
+    console.log("Expo skills telemetry: ENABLED (anonymous). Disable with: telemetry.cjs --off");
   }
 }
 
@@ -45,7 +45,7 @@ if (cmd === "--off" || cmd === "--disable") {
   fs.mkdirSync(path.dirname(OPT_OUT_PATH), { recursive: true, mode: 0o700 });
   fs.writeFileSync(OPT_OUT_PATH, "Expo skills telemetry disabled by user.\n");
   console.log(`Telemetry disabled — wrote ${OPT_OUT_PATH}`);
-  console.log("Re-enable any time with: telemetry.js --on");
+  console.log("Re-enable any time with: telemetry.cjs --on");
 } else if (cmd === "--on" || cmd === "--enable") {
   try { fs.rmSync(OPT_OUT_PATH, { force: true }); } catch {}
   const byEnv = disabledByEnv();
@@ -54,6 +54,6 @@ if (cmd === "--off" || cmd === "--disable") {
 } else if (cmd === "--status" || cmd === undefined) {
   printStatus();
 } else {
-  console.error(`Unknown option: ${cmd}\nUsage: telemetry.js [--status | --off | --on]`);
+  console.error(`Unknown option: ${cmd}\nUsage: telemetry.cjs [--status | --off | --on]`);
   process.exit(2);
 }

@@ -25,7 +25,7 @@ const INSTALLATION_ID_PATH = path.join(os.homedir(), ".expo-skills", "installati
 
 // Persistent opt-out marker. Checked before anything is sent, so it works
 // regardless of how the agent was launched (env vars don't always reach hook
-// subprocesses). Toggle it with scripts/telemetry.js --off / --on.
+// subprocesses). Toggle it with scripts/telemetry.cjs --off / --on.
 const OPT_OUT_PATH = path.join(os.homedir(), ".expo-skills", "opt-out");
 
 // CI detection — skip telemetry in automated environments so usage data reflects

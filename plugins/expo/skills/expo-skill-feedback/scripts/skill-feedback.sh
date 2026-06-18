@@ -8,4 +8,4 @@
 # Usage: sh skill-feedback.sh --skill <name> --rating <rating> --text "..." [--dry-run]
 
 dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-exec sh "$dir/run.sh" "$dir/skill-feedback.js" "$@"
+exec sh "$dir/run.sh" "$dir/skill-feedback.cjs" "$@"

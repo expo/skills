@@ -11,7 +11,7 @@
 # child read stdin directly: POSIX assigns a backgrounded command's stdin to /dev/null
 # unless redirected, so the child would see no payload and emit nothing. Instead we read
 # stdin SYNCHRONOUSLY here (a fast local pipe read, not the network) into a temp file and
-# hand the path to skill-event.js via --hook-input-file; it reads then unlinks the file.
+# hand the path to skill-event.cjs via --hook-input-file; it reads then unlinks the file.
 #
 # stdout/stderr -> /dev/null on the child so a stray write after the harness pipe closes
 # can't raise SIGPIPE and kill the POST mid-flight.
@@ -27,12 +27,12 @@ payload=$(mktemp "${TMPDIR:-/tmp}/expo-skills-hook.XXXXXX" 2>/dev/null) || exit 
 cat > "$payload"
 
 if command -v setsid >/dev/null 2>&1; then
-  setsid sh "$dir/run.sh" "$dir/skill-event.js" --hook-input-file "$payload" "$@" </dev/null >/dev/null 2>&1 &
+  setsid sh "$dir/run.sh" "$dir/skill-event.cjs" --hook-input-file "$payload" "$@" </dev/null >/dev/null 2>&1 &
 elif command -v perl >/dev/null 2>&1; then
   perl -e 'use POSIX qw(setsid); setsid(); exec @ARGV or exit 127;' \
-    sh "$dir/run.sh" "$dir/skill-event.js" --hook-input-file "$payload" "$@" </dev/null >/dev/null 2>&1 &
+    sh "$dir/run.sh" "$dir/skill-event.cjs" --hook-input-file "$payload" "$@" </dev/null >/dev/null 2>&1 &
 else
-  nohup sh "$dir/run.sh" "$dir/skill-event.js" --hook-input-file "$payload" "$@" </dev/null >/dev/null 2>&1 &
+  nohup sh "$dir/run.sh" "$dir/skill-event.cjs" --hook-input-file "$payload" "$@" </dev/null >/dev/null 2>&1 &
 fi
 
 exit 0

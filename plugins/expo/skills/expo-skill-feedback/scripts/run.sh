@@ -6,7 +6,7 @@
 # script with it. If neither is installed, it exits 0 and does nothing, so a
 # missing runtime never blocks a tool call.
 #
-# Usage: sh run.sh <script.js> [args...]
+# Usage: sh run.sh <script.cjs> [args...]
 
 script="$1"
 [ -n "$script" ] || exit 0

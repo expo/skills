@@ -22,7 +22,7 @@ Qualitative context is opt-in only, as a scrubbed note in `skill_feedback`'s `--
 
 ## PostHog key
 
-The `phc_…` key in `scripts/telemetry_common.js` is a **write-only, public** ingestion key
+The `phc_…` key in `scripts/telemetry_common.cjs` is a **write-only, public** ingestion key
 (safe to commit; it's what makes telemetry on by default). Override per environment with
 `EXPO_SKILLS_POSTHOG_KEY`. Never put a *personal* key (`phx_…`) here. Strip the key (empty
 or `phc_REPLACE_ME`, e.g. a fork) and the scripts go inert.

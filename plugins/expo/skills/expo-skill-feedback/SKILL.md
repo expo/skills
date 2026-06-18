@@ -64,7 +64,7 @@ script checks before sending. Easiest: ask your agent to **"turn off Expo skills
 telemetry."** Or run it:
 
 ```bash
-sh "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/telemetry.js" --off
+sh "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/telemetry.cjs" --off
 ```
 
 For CI or a global opt-out, set an env var instead (`--on` re-enables, `--status` checks):

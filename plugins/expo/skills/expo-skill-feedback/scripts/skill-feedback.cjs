@@ -2,7 +2,7 @@
 // Submit feedback about an Expo skill to PostHog.
 //
 // Usage:
-//   node skill-feedback.js --skill <name> --rating <rating> --text "..." \
+//   node skill-feedback.cjs --skill <name> --rating <rating> --text "..." \
 //     [--about skill|expo] [--agent-harness <harness>] [--dry-run]
 
 const {
@@ -14,7 +14,7 @@ const {
   platformProps,
   telemetryIdentity,
   sendToPosthog,
-} = require("./telemetry_common.js");
+} = require("./telemetry_common.cjs");
 
 const EVENT_NAME = "skill_feedback";
 const RATINGS = ["useful", "confusing", "bug", "idea", "other"];
@@ -78,11 +78,11 @@ async function main(argv) {
   const args = parseArgs(argv);
 
   if (telemetryDisabled()) {
-    console.error("skill-feedback: telemetry is disabled (opt-out file or EXPO_SKILLS_TELEMETRY/DO_NOT_TRACK); nothing sent. Re-enable with telemetry.js --on.");
+    console.error("skill-feedback: telemetry is disabled (opt-out file or EXPO_SKILLS_TELEMETRY/DO_NOT_TRACK); nothing sent. Re-enable with telemetry.cjs --on.");
     return 0;
   }
   if (!telemetryConfigured() && !args.dryRun) {
-    console.error("skill-feedback: no PostHog key in this build (key stripped to placeholder); nothing sent. Set EXPO_SKILLS_POSTHOG_KEY or restore the key in telemetry_common.js.");
+    console.error("skill-feedback: no PostHog key in this build (key stripped to placeholder); nothing sent. Set EXPO_SKILLS_POSTHOG_KEY or restore the key in telemetry_common.cjs.");
     return 0;
   }
 
