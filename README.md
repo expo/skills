@@ -162,7 +162,7 @@ Turn it off any time — the simplest way is to ask your agent: **"turn off Expo
 export DO_NOT_TRACK=1            # or: export EXPO_SKILLS_TELEMETRY=0
 ```
 
-See the `skill-feedback` skill for full details, the event shape, and how to configure the PostHog project key.
+See the `expo-skill-feedback` skill for full details, the event shape, and how to configure the PostHog project key.
 
 ## License
 

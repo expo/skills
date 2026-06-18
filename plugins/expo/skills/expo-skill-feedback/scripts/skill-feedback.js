@@ -3,7 +3,7 @@
 //
 // Usage:
 //   node skill-feedback.js --skill <name> --rating <rating> --text "..." \
-//     [--agent-harness <harness>] [--dry-run]
+//     [--about skill|expo] [--agent-harness <harness>] [--dry-run]
 
 const crypto = require("crypto");
 
@@ -22,10 +22,13 @@ const {
 
 const EVENT_NAME = "skill_feedback";
 const RATINGS = ["useful", "confusing", "bug", "idea", "other"];
+// What the feedback is about: the skill's own guidance (default), or Expo the
+// framework — when a skill fell short because of Expo itself, not the skill.
+const ABOUT_VALUES = ["skill", "expo"];
 const MAX_FEEDBACK_CHARS = 4000;
 
 function parseArgs(argv) {
-  const args = { skill: "", rating: "", text: "", agentHarness: "", dryRun: false };
+  const args = { skill: "", rating: "", text: "", about: "skill", agentHarness: "", dryRun: false };
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
     const next = () => argv[++i] || "";
@@ -33,6 +36,7 @@ function parseArgs(argv) {
       case "--skill": args.skill = next(); break;
       case "--rating": args.rating = next(); break;
       case "--text": args.text = next(); break;
+      case "--about": args.about = next(); break;
       case "--agent-harness": args.agentHarness = next(); break;
       case "--dry-run": args.dryRun = true; break;
       default: break;
@@ -49,10 +53,12 @@ function eventPayload(args) {
   if (!feedback) throw new Error("--text cannot be empty");
   if (!skill) throw new Error("--skill cannot be empty");
   if (!RATINGS.includes(args.rating)) throw new Error(`--rating must be one of: ${RATINGS.join(", ")}`);
+  const about = (args.about || "skill").trim() || "skill";
+  if (!ABOUT_VALUES.includes(about)) throw new Error(`--about must be one of: ${ABOUT_VALUES.join(", ")}`);
 
   const timestamp = new Date().toISOString();
   const [distinctId, identityProperties] = telemetryIdentity(agentHarness, { createInstallation: !args.dryRun });
-  const insertSource = stableStringify({ agent_harness: agentHarness, skill, rating: args.rating, feedback, timestamp });
+  const insertSource = stableStringify({ agent_harness: agentHarness, skill, about, rating: args.rating, feedback, timestamp });
 
   return {
     api_key: POSTHOG_PROJECT_API_KEY,
@@ -68,6 +74,7 @@ function eventPayload(args) {
       agent_harness: agentHarness,
       ...platformProps(),
       skill,
+      about,
       rating: args.rating,
       feedback_text: feedback,
     },

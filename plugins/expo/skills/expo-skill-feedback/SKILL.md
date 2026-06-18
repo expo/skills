@@ -1,6 +1,6 @@
 ---
-name: skill-feedback
-description: Submit feedback on an Expo skill, or turn the bundled anonymous usage telemetry on or off. Use when an Expo skill was useful, confusing, broken, missing context, or worth improving — or when the user wants to disable, opt out of, turn off, stop, or understand the anonymous usage tracking these skills send.
+name: expo-skill-feedback
+description: Submit feedback on an Expo skill — or on Expo itself — or turn the bundled anonymous usage telemetry on or off. Use when an Expo skill was useful, confusing, broken, missing context, or worth improving; when something fell short because of Expo (an SDK bug or confusing framework behavior) rather than the skill; or when the user wants to disable, opt out of, turn off, stop, or understand the anonymous usage tracking these skills send.
 ---
 
 # Skill Feedback
@@ -39,15 +39,19 @@ Node/Bun is a hard requirement for Expo development, so it's effectively always 
 or missing something, send a quick note so the team can fix it (a note when it worked well
 helps too). Keep it to 1-3 short sentences, prefer concrete observations, and pass **the
 skill you're giving feedback on** to `--skill` — usually the skill whose footer sent you
-here, not `skill-feedback` itself (`${CLAUDE_PLUGIN_ROOT}` resolves to the plugin's install path):
+here, not `expo-skill-feedback` itself (`${CLAUDE_PLUGIN_ROOT}` resolves to the plugin's install path):
 
 ```bash
-sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/skill-feedback.sh" \
+sh "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/skill-feedback.sh" \
    --skill expo-deployment --rating useful \
    --text "TestFlight steps were clear and worked first try."
 ```
 
 Ratings: `useful`, `confusing`, `bug`, `idea`, `other`. Add `--dry-run` to print the payload without sending.
+
+If the trouble is with **Expo itself** rather than the skill (e.g. an SDK bug or confusing
+framework behavior the skill couldn't paper over), add `--about expo` (default `skill`) so
+the team can tell framework issues from skill issues.
 
 **Never include** secrets, private data, source code, long prompts, stack traces, API
 keys, or tokens.
@@ -60,7 +64,7 @@ script checks before sending. Easiest: ask your agent to **"turn off Expo skills
 telemetry."** Or run it:
 
 ```bash
-sh "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/skill-feedback/scripts/telemetry.js" --off
+sh "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/run.sh" "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/telemetry.js" --off
 ```
 
 For CI or a global opt-out, set an env var instead (`--on` re-enables, `--status` checks):
@@ -83,4 +87,4 @@ harnesses have no automatic signal, and the prompt-capture and Windows notes.
 
 ## Expo Skill Feedback
 
-Help make these skills better — feedback goes **straight to the Expo team, and it's anonymous**. Be proactive: flag anything wrong, confusing, outdated, or missing (a quick note when something worked well helps too). See *Submitting feedback* above for the command. Never include secrets, source code, or long prompts.
+Help make these skills better — feedback goes **straight to the Expo team, and it's anonymous**. Be proactive: flag anything wrong, confusing, outdated, or missing — in a skill or in **Expo itself** (`--about expo`). A quick note when something worked well helps too. See *Submitting feedback* above for the command. Never include secrets, source code, or long prompts.
