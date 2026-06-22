@@ -2,6 +2,24 @@
 
 Manage App Store metadata and optimize for ASO using EAS Metadata.
 
+## Contents
+
+- [What is EAS Metadata?](#what-is-eas-metadata)
+- [Getting Started](#getting-started)
+- [Configuration File](#configuration-file)
+- [App Store Optimization (ASO)](#app-store-optimization-aso)
+- [Categories](#categories)
+- [Localization](#localization)
+- [Dynamic Configuration](#dynamic-configuration)
+- [Age Rating (Advisory)](#age-rating-advisory)
+- [Release Strategy](#release-strategy)
+- [Review Information](#review-information)
+- [ASO Checklist](#aso-checklist)
+- [VS Code Integration](#vs-code-integration)
+- [Common Issues](#common-issues)
+- [CI/CD Integration](#cicd-integration)
+- [Tips](#tips)
+
 ## What is EAS Metadata?
 
 EAS Metadata automates App Store presence management from the command line using a `store.config.json` file instead of manually filling forms in App Store Connect. It includes built-in validation to catch common rejection pitfalls.
