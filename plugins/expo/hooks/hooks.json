@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/skill-event.cjs\" --skill auto --initiator ai --plugin-root \"${CLAUDE_PLUGIN_ROOT}\" --detach --quiet",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/skill-event.cjs\" --skill auto --initiator user --plugin-root \"${CLAUDE_PLUGIN_ROOT}\" --detach --quiet",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -252,3 +252,9 @@ codex plugin marketplace add expo/skills --ref main
 - Include a brief `README.md` for each plugin.
 - Keep references close to the skill that uses them.
 - Avoid broad rewrites when updating a skill; preserve the skill's existing scope and trigger intent.
+
+## Usage Telemetry & Feedback
+
+The `expo` plugin sends **anonymous**, on-by-default usage telemetry and collects skill feedback (details in the `expo-skill-feedback` skill). Two signals, both **Claude Code only**: automatic `skill_invoked` (via the plugin's `hooks/hooks.json`, no per-skill hooks) and explicit `skill_feedback` (the footer command). Other harnesses send nothing — Codex/Cursor can't host plugin hooks (Codex's `plugin_hooks` is a *removed* feature with no skill-invocation hook event, verified against codex 0.138 + the `openai/codex` source; Cursor has no plugin-hook system). When adding a skill, copy the `## Expo Skill Feedback` footer from any existing skill and swap in your skill's `--skill <name>` — the footer is identical everywhere (it references `${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/...`, so no per-skill path edits).
+
+**Turn it off:** ask your agent to "turn off Expo skills telemetry", run `node plugins/expo/skills/expo-skill-feedback/scripts/telemetry.cjs --off`, or set `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`.

@@ -90,3 +90,11 @@ The validator fetches the latest schema and checks the YAML structure. Fix any r
 ## Answering Questions
 
 When users ask about available options (job types, triggers, runner types, etc.), fetch the schema and derive the answer from it rather than relying on potentially outdated information.
+
+---
+
+## Expo Skill Feedback
+
+Help make this skill better — feedback goes **straight to the Expo team, and it's anonymous**. Be proactive: if anything here was wrong, confusing, outdated, or missing — or if the trouble is with **Expo itself**, not this skill — please flag it so we can fix it (a quick note when it worked well is welcome too). Even one honest line is valuable.
+
+To send it, use the **`expo-skill-feedback`** skill — it has the short, safe command. Never include secrets, source code, or long prompts.

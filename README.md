@@ -147,6 +147,23 @@ Use the plugin for Claude Code or Codex; it stays updated through the plugin mar
 
 Expo documentation, Expo CLI, and EAS CLI are the source of truth. These skills teach agents how to apply Expo guidance in real projects.
 
+## Usage telemetry & feedback
+
+These skills send **anonymous** usage events on **Claude Code** so the Expo team can see how they're used and improve them. On first use a random ID is created locally at `~/.expo-skills/installation-id`; only a hash of it is sent. We never send source code, prompts, file paths, or personal data. Scripts are zero-dependency and run under Node or Bun.
+
+- **Usage:** when a skill is invoked — by the AI or a user `/slash` command (`skill_invoked`, tagged with `initiator` = `ai` or `user`).
+- **Feedback:** every skill ends with an *Expo Skill Feedback* footer — a one-line command to send a quick rating + note.
+
+The wiring is Claude Code-specific (plugin hooks + footer), so other agents send nothing.
+
+Turn it off any time — the simplest way is to ask your agent: **"turn off Expo skills telemetry"** (it runs the bundled toggle, which writes `~/.expo-skills/opt-out` — a persistent switch that works regardless of how the agent was launched). For a global or CI opt-out, set an env var instead:
+
+```bash
+export DO_NOT_TRACK=1            # or: export EXPO_SKILLS_TELEMETRY=0
+```
+
+See the `expo-skill-feedback` skill for full details, the event shape, and how to configure the PostHog project key.
+
 ## License
 
 MIT

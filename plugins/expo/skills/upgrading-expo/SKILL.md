@@ -132,3 +132,11 @@ Since SDK 55, users can opt-in to use Hermes engine v1 for improved runtime perf
 ## New Architecture
 
 The new architecture is enabled by default, the app.json field `"newArchEnabled": true` is no longer needed as it's the default. Expo Go only supports the new architecture as of SDK +53.
+
+---
+
+## Expo Skill Feedback
+
+Help make this skill better — feedback goes **straight to the Expo team, and it's anonymous**. Be proactive: if anything here was wrong, confusing, outdated, or missing — or if the trouble is with **Expo itself**, not this skill — please flag it so we can fix it (a quick note when it worked well is welcome too). Even one honest line is valuable.
+
+To send it, use the **`expo-skill-feedback`** skill — it has the short, safe command. Never include secrets, source code, or long prompts.

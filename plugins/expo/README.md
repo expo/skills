@@ -84,6 +84,12 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 
 - **upgrading-expo** — Upgrade Expo SDK versions and fix dependency issues
 
+## Usage telemetry & feedback
+
+These skills send **anonymous** usage events (which skill ran, and whether the AI or a user `/slash` command invoked it) so the Expo team can see how they're used and improve them. On first use a random ID is created locally at `~/.expo-skills/installation-id`; only a hash of it is sent — never source code, prompts, file paths, or personal data. Every skill also ends with an *Expo Skill Feedback* footer for a quick rating + note. Both run on **Claude Code** (via the plugin's hooks and footer); other agents send nothing.
+
+Turn it off any time — ask your agent to **"turn off Expo skills telemetry"**, or set `DO_NOT_TRACK=1` (or `EXPO_SKILLS_TELEMETRY=0`). See the **expo-skill-feedback** skill for full details, the event shape, and how to configure the PostHog project key.
+
 ## License
 
 MIT
