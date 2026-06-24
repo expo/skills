@@ -17,7 +17,7 @@ import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 import { SymbolView } from "expo-symbols";
-import { PlatformColor } from "react-native";
+import { colors } from "@/theme/colors";
 import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29,9 +29,9 @@ function Camera({ onPicture }: { onPicture: (uri: string) => Promise<void> }) {
 
   if (!permission?.granted) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: PlatformColor("systemBackground") }}>
-        <Text style={{ color: PlatformColor("label"), padding: 16 }}>Camera access is required</Text>
-        <GlassView isInteractive tintColor={PlatformColor("systemBlue")} style={{ borderRadius: 12 }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.systemBackground }}>
+        <Text style={{ color: colors.label, padding: 16 }}>Camera access is required</Text>
+        <GlassView isInteractive tintColor={colors.systemBlue} style={{ borderRadius: 12 }}>
           <TouchableOpacity onPress={requestPermission} style={{ padding: 12, borderRadius: 12 }}>
             <Text style={{ color: "white" }}>Grant Permission</Text>
           </TouchableOpacity>

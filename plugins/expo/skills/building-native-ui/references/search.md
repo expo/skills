@@ -208,7 +208,7 @@ function SearchResults({ search, items }) {
   if (search && filtered.length === 0) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: PlatformColor("secondaryLabel") }}>
+        <Text style={{ color: colors.secondaryLabel }}>
           No results for "{search}"
         </Text>
       </View>
@@ -231,7 +231,7 @@ function SearchScreen() {
   if (!search && recentSearches.length > 0) {
     return (
       <View>
-        <Text style={{ color: PlatformColor("secondaryLabel") }}>
+        <Text style={{ color: colors.secondaryLabel }}>
           Recent Searches
         </Text>
         {recentSearches.map((term) => (

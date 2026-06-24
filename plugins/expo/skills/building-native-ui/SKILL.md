@@ -125,6 +125,55 @@ Follow Apple Human Interface Guidelines.
 - When padding a ScrollView, use `contentContainerStyle` padding and gap instead of padding on the ScrollView itself (reduces clipping)
 - CSS and Tailwind are not supported - use inline styles
 
+## Colors
+
+Apple semantic color names (`label`, `secondaryLabel`, `separator`, `systemBackground`, `systemBlue`, etc.) exist **only on iOS**. Rendering `PlatformColor("label")` on Android crashes with `ColorValue: None of the paths in the resource_paths array resolved`.
+
+Never pass a raw `PlatformColor(...)` with an Apple name to a cross-platform view. Wrap every one in `Platform.select`, mapping the iOS name to its Android theme attribute with a hex fallback. Keep them in one helper and import `colors.*` everywhere:
+
+```tsx
+// theme/colors.ts
+import { Platform, PlatformColor } from "react-native";
+
+export const colors = {
+  label: Platform.select({
+    ios: PlatformColor("label"),
+    android: PlatformColor("?android:attr/textColorPrimary"),
+    default: "#000",
+  }),
+  secondaryLabel: Platform.select({
+    ios: PlatformColor("secondaryLabel"),
+    android: PlatformColor("?android:attr/textColorSecondary"),
+    default: "#3c3c43",
+  }),
+  separator: Platform.select({
+    ios: PlatformColor("separator"),
+    android: "#c6c6c8", // no framework color attr (listDivider is a drawable)
+    default: "#c6c6c8",
+  }),
+  systemBackground: Platform.select({
+    ios: PlatformColor("systemBackground"),
+    android: PlatformColor("?android:attr/colorBackground"),
+    default: "#fff",
+  }),
+  systemBlue: Platform.select({
+    ios: PlatformColor("systemBlue"),
+    android: PlatformColor("?android:attr/colorAccent"),
+    default: "#007aff",
+  }),
+};
+```
+
+`Platform.select` only resolves the current platform's value, so the iOS-only names never reach Android. Style with `colors.label`, `colors.separator`, etc. — not raw `PlatformColor(...)`.
+
+| iOS semantic name | Android theme attribute |
+| --- | --- |
+| `label` | `?android:attr/textColorPrimary` |
+| `secondaryLabel` | `?android:attr/textColorSecondary` |
+| `systemBackground` | `?android:attr/colorBackground` |
+| `systemBlue` | `?android:attr/colorAccent` |
+| `separator` | none — use a hex fallback |
+
 ## Text Styling
 
 - Add the `selectable` prop to every `<Text/>` element displaying important data or error messages
@@ -294,7 +343,7 @@ Create a shared group route so both tabs can push common screens:
 ```tsx
 // app/(index,search)/_layout.tsx
 import { Stack } from "expo-router/stack";
-import { PlatformColor } from "react-native";
+import { colors } from "@/theme/colors";
 
 export default function Layout({ segment }) {
   const screen = segment.match(/\((.*)\)/)?.[1]!;
@@ -307,7 +356,7 @@ export default function Layout({ segment }) {
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
-        headerTitleStyle: { color: PlatformColor("label") },
+        headerTitleStyle: { color: colors.label },
         headerLargeTitle: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",
