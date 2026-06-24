@@ -71,6 +71,7 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - **expo-dev-client** — Build and distribute Expo development clients locally or via TestFlight
 - **expo-tailwind-setup** — Set up Tailwind CSS v4 in Expo with NativeWind v5
 - **expo-ui** — Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
+- **expo-when-to-rebuild** — Decide whether a change needs a new native build, and whether to use EAS Build, local, or `prebuild --clean`
 - **native-data-fetching** — Network requests, API calls, caching, and offline support
 - **use-dom** — Run web code in a webview on native using DOM components
 
