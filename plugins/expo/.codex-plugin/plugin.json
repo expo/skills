@@ -1,6 +1,6 @@
 {
   "name": "expo",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo and React Native apps.",
   "author": {
     "name": "Expo Team",
@@ -35,12 +35,7 @@
     "longDescription": "Official Expo-authored skills for building Expo Router UI, authoring API routes, configuring data fetching and styling, writing Expo native modules, adding App Clips, integrating Expo into brownfield native apps, inspecting EAS Update health, creating dev clients, upgrading Expo SDKs, wiring Codex app Run actions, using Expo MCP, and deploying Expo apps with EAS workflows, builds, hosting, TestFlight, App Store, and Play Store guidance.",
     "developerName": "Expo",
     "category": "Developer Tools",
-    "capabilities": [
-      "Interactive",
-      "Read",
-      "Write",
-      "MCP"
-    ],
+    "capabilities": ["Interactive", "Read", "Write", "MCP"],
     "websiteURL": "https://expo.dev/",
     "privacyPolicyURL": "https://expo.dev/privacy",
     "termsOfServiceURL": "https://expo.dev/terms",
