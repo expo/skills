@@ -73,6 +73,7 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - **expo-ui** — Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **native-data-fetching** — Network requests, API calls, caching, and offline support
 - **use-dom** — Run web code in a webview on native using DOM components
+- **add-integration** — Add popular integrations (auth, payments, database, styling, animations, etc.) from expo/examples
 
 ### Deployment
 
