@@ -88,6 +88,8 @@ See `./references/route-structure.md` for detailed route conventions.
 - `React.use` not `React.useContext`
 - `expo-image` Image component instead of intrinsic element `img`
 - `expo-glass-effect` for liquid glass backdrops
+- `Color` from `expo-router` for native semantic colors, not raw `PlatformColor` (type-safe, auto-adapts to light/dark)
+- In SDK 56+, never import from `@react-navigation/*` directly — use `expo-router/react-navigation` instead (covers `@react-navigation/native`, `/core`, `/elements`, `/routers`)
 
 ## Responsiveness
 
@@ -127,52 +129,55 @@ Follow Apple Human Interface Guidelines.
 
 ## Colors
 
-Apple semantic color names (`label`, `secondaryLabel`, `separator`, `systemBackground`, `systemBlue`, etc.) exist **only on iOS**. Rendering `PlatformColor("label")` on Android crashes with `ColorValue: None of the paths in the resource_paths array resolved`.
+Use the `Color` API from `expo-router` for native semantic colors. It is a type-safe wrapper over `PlatformColor` that exposes iOS UIKit colors through `Color.ios.*` and Android Material 3 colors through `Color.android.material.*` (static) or `Color.android.dynamic.*` (adapts to the user's wallpaper on Android 12+). These resolve on-device and automatically adapt to light/dark mode and accessibility settings, so you no longer maintain separate light/dark hex tables or a `colors.web.ts` file.
 
-Never pass a raw `PlatformColor(...)` with an Apple name to a cross-platform view. Wrap every one in `Platform.select`, mapping the iOS name to its Android theme attribute with a hex fallback. Keep them in one helper and import `colors.*` everywhere:
+`Color` is platform-specific, so wrap each value in `Platform.select` with a `default` hex fallback for web. Centralize the palette in `theme/colors.ts` and import `colors` everywhere:
 
 ```tsx
 // theme/colors.ts
-import { Platform, PlatformColor } from "react-native";
+import { Platform } from "react-native";
+import { Color } from "expo-router";
 
 export const colors = {
   label: Platform.select({
-    ios: PlatformColor("label"),
-    android: PlatformColor("?android:attr/textColorPrimary"),
-    default: "#000",
-  }),
+    ios: Color.ios.label,
+    android: Color.android.dynamic.onSurface,
+    default: "#000000",
+  })!,
   secondaryLabel: Platform.select({
-    ios: PlatformColor("secondaryLabel"),
-    android: PlatformColor("?android:attr/textColorSecondary"),
+    ios: Color.ios.secondaryLabel,
+    android: Color.android.dynamic.onSurfaceVariant,
     default: "#3c3c43",
-  }),
+  })!,
   separator: Platform.select({
-    ios: PlatformColor("separator"),
-    android: "#c6c6c8", // no framework color attr (listDivider is a drawable)
+    ios: Color.ios.separator,
+    android: Color.android.dynamic.outlineVariant,
     default: "#c6c6c8",
-  }),
+  })!,
   systemBackground: Platform.select({
-    ios: PlatformColor("systemBackground"),
-    android: PlatformColor("?android:attr/colorBackground"),
-    default: "#fff",
-  }),
+    ios: Color.ios.systemBackground,
+    android: Color.android.dynamic.surface,
+    default: "#ffffff",
+  })!,
   systemBlue: Platform.select({
-    ios: PlatformColor("systemBlue"),
-    android: PlatformColor("?android:attr/colorAccent"),
+    ios: Color.ios.systemBlue,
+    android: Color.android.dynamic.primary,
     default: "#007aff",
-  }),
+  })!,
 };
 ```
 
-`Platform.select` only resolves the current platform's value, so the iOS-only names never reach Android. Style with `colors.label`, `colors.separator`, etc. — not raw `PlatformColor(...)`.
+```tsx
+import { colors } from "@/theme/colors";
 
-| iOS semantic name | Android theme attribute |
-| --- | --- |
-| `label` | `?android:attr/textColorPrimary` |
-| `secondaryLabel` | `?android:attr/textColorSecondary` |
-| `systemBackground` | `?android:attr/colorBackground` |
-| `systemBlue` | `?android:attr/colorAccent` |
-| `separator` | none — use a hex fallback |
+<View style={{ backgroundColor: colors.systemBackground }}>
+  <Text style={{ color: colors.label }}>Title</Text>
+</View>;
+```
+
+- iOS re-resolves these colors automatically when the system theme changes. On Android, call `useColorScheme()` inside any component that renders them so it re-renders when the theme flips (required when React Compiler memoizes the component).
+- Don't pass `Color` / `PlatformColor` values into Reanimated styles — use static colors there (see `references/animations.md`).
+- `Platform.select({...})!` returns `string | OpaqueColorValue`. Most React Native style props accept `ColorValue` (`string | OpaqueColorValue`) so this works fine. But some third-party props only accept `string` (e.g. `tintColor` on `expo-image`). Cast when needed: `colors.label as string`.
 
 ## Text Styling
 
@@ -320,20 +325,22 @@ app/
 
 ```tsx
 // app/_layout.tsx
-import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
-import { Theme } from "../components/theme";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { ThemeProvider, DarkTheme, DefaultTheme } from "expo-router/react-navigation";
+import { useColorScheme } from "react-native";
 
 export default function Layout() {
+  const colorScheme = useColorScheme();
   return (
-    <Theme>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <NativeTabs>
         <NativeTabs.Trigger name="(index)">
-          <Icon sf="list.dash" />
-          <Label>Items</Label>
+          <NativeTabs.Trigger.Icon sf="list.dash" md="list" />
+          <NativeTabs.Trigger.Label>Items</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="(search)" role="search" />
       </NativeTabs>
-    </Theme>
+    </ThemeProvider>
   );
 }
 ```
