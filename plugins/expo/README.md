@@ -6,6 +6,7 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 
 ### App Design
 
+- Recommends a starting folder structure for new (greenfield) projects
 - Provides UI guidelines following Apple Human Interface Guidelines
 - Covers Expo Router navigation patterns (stacks, tabs, modals, sheets)
 - Explains native iOS controls, SF Symbols, animations, and visual effects
@@ -69,6 +70,7 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - **expo-api-routes** — Create API routes in Expo Router with EAS Hosting
 - **expo-brownfield** — Integrate Expo and React Native into existing native iOS or Android apps
 - **expo-dev-client** — Build and distribute Expo development clients locally or via TestFlight
+- **expo-project-structure** — Recommended folder structure for new (greenfield) Expo projects
 - **expo-tailwind-setup** — Set up Tailwind CSS v4 in Expo with NativeWind v5
 - **expo-ui** — Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **native-data-fetching** — Network requests, API calls, caching, and offline support
