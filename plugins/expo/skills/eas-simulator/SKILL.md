@@ -1,9 +1,9 @@
 ---
 name: eas-simulator
-description: "Run and control a user's app on a remote iOS/Android simulator hosted on EAS cloud. Always read before executing any `eas simulator:*` commands — it has the current syntax for this experimental API. Use whenever the user needs a simulator they can't run locally — 'run my app on a cloud simulator', 'use eas simulator to run/install/screenshot my app', 'I'm on Linux/Cursor and need an iOS device', 'no sim on this box / headless CI', 'let an agent click through my app and screenshot it', 'test my dev build on a remote sim with live reload', 'stream a sim's screen to my browser' — even when they don't say 'EAS Simulator' or 'cloud'. Covers `eas simulator:*` plus installing a build and a dev-build live-edit loop. On a host WITHOUT a local simulator (Linux, CI, cloud sandbox) it's the default — just use it; on macOS, where a local sim exists, do NOT auto-trigger for a plain 'run on the simulator' — use it only for a cloud/remote/shareable sim, an iOS version they lack, or an agent-driven session. NOT for local sims (expo run:ios, Xcode, Android Studio), EAS Build/Update, web preview, or physical devices."
+description: "Run and control a user's app on a remote iOS/Android simulator hosted on EAS cloud. Always read before executing any `eas simulator:*` commands — it has the current syntax for this experimental API. Use whenever the user needs a simulator they can't run locally — 'run my app on a cloud simulator', 'use eas simulator to run/install/screenshot my app', 'I'm on Linux/Cursor and need an iOS device', 'no sim on this box / headless CI', 'let an agent click through my app and screenshot it', 'test my dev build on a remote sim with live reload', 'stream a sim's screen to my browser' — even when they don't say 'EAS Simulator' or 'cloud'. On a host WITHOUT a local simulator (Linux, CI, cloud sandbox) it's the default — just use it; on macOS, do NOT auto-trigger for a plain 'run on the simulator' — use it only for a cloud/remote/shareable sim, an iOS version they lack, or an agent-driven session. NOT for local sims (expo run:ios, Xcode, Android Studio), EAS Build/Update, web preview, or physical devices."
 version: 1.0.0
 license: MIT
-allowed-tools: "Bash(npx *), Bash(eas *), Bash(expo *), Bash(xcodebuild*), Bash(pod*)"
+allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(npx expo *), Bash(eas *), Bash(expo *), Bash(xcodebuild*), Bash(pod*)"
 ---
 
 # EAS Simulator
@@ -22,12 +22,21 @@ The frontmatter `description` carries the trigger phrases. In short: use this to
 - **macOS:** local sims exist and a cloud session costs money + latency, so **ask first** ("a remote cloud sim — to share a live preview, offload, or test an iOS version you lack — or just run locally?") unless the user explicitly said cloud/remote/shareable.
 - Always honor an explicit choice; for "run it locally" hand off to `expo run:ios` / Xcode.
 
+```bash
+# Programmatic detection — run this to decide before doing anything else:
+if [ "$(uname -s)" != "Darwin" ] || ! command -v simctl &>/dev/null; then
+  echo "no local sim — proceed with EAS Simulator"
+else
+  echo "local sim available — ask the user (cloud or local?)"
+fi
+```
+
 ## Prerequisites
 
 - **Run every `eas` command via `npx --yes eas-cli@latest …`** — guarantees a CLI new enough to have `simulator:*` (a global `eas` is often too old), and `--yes` skips npx's prompt. (Bare `eas` is fine if `eas --version` is current.)
 - **Authenticated.** Interactive machine → `npx --yes eas-cli@latest login`. **Cloud sandbox / CI / headless agent has no browser login — set `EXPO_TOKEN`** (expo.dev → Account → Access Tokens) in the env instead. Verify either way with `npx --yes eas-cli@latest whoami`.
 - Run from an Expo **project directory.** A fresh app needs one-time setup: `npx --yes eas-cli@latest init` to create/link the project (when there's no `projectId`), and **set `ios.bundleIdentifier`** in app config if it's missing — a fresh `create-expo-app` often has none, and `prebuild`/`eas build` need it (they prompt or fail without it; e.g. `dev.<owner>.<slug>`). Read current config with `npx expo config --json` (it may live in `app.config.js`). The first Mode-C run is slow (native build); later runs reuse it.
-- A controller to drive the device. This skill uses **agent-device** (open source, MIT), run on demand via `npx agent-device@latest` — nothing globally installed.
+- A controller to drive the device. This skill uses **agent-device** (open source, MIT), run on demand via `npx agent-device@latest` — nothing globally installed. **argent** is an alternative (`--type argent` in `simulator:start`); see [references/controllers.md](./references/controllers.md).
 - **`.env.eas-simulator`** is written/managed by eas-cli (not this skill): it holds the session id (`EAS_SIMULATOR_SESSION_ID`) + the daemon URL/**token**, so `get`/`stop`/`exec` default to that session (usually **omit `--id`**; pass `--id <id>` to target another). It carries a **token → keep it gitignored** (eas-cli marks it "do not commit" but may not add the ignore rule, and a fresh app's `.gitignore` won't cover it — add `.env.eas-simulator` if missing).
 - `--max-duration-minutes` is paid-plan only; otherwise a default applies.
 

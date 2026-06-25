@@ -30,13 +30,42 @@ Run `npx --yes eas-cli@latest simulator:exec npx agent-device@latest --help` (an
 
 ## argent (alternative)
 
-`npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`), and you link a local argent client:
+`npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).
+
+**argent is a driver, not an installer.** Its `reinstall-app` tool runs `xcrun simctl install` on the remote VM with a literal local path — it does not upload a binary or accept a URL. **Always use agent-device (or `install-from-source`) for the install step**, then use argent to drive the already-installed app.
+
+**Connecting to Cursor's MCP.** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 
 ```bash
-# The positional must be the full http(s):// tools URL (it sets the host). `link` runs a health check
-# against <url>/tools — if the session isn't live yet it fails; add --no-verify to skip that check.
-argent link '<ARGENT_TOOLS_URL>' --token '<ARGENT_AUTH_TOKEN>' --yes
-# then restart your editor so its Argent MCP uses the remote session
+npm install -g @swmansion/argent
 ```
 
-Known issue: argent screenshots have failed on EAS worker VMs (an `NSPasteboard` crash, because the worker runs under a System LaunchDaemon session with no window server). If you hit it, use agent-device or file an issue upstream.
+Then run `argent init --yes` to register the Argent MCP server in `.cursor/mcp.json`. Wire the session credentials in as env vars (this is argent's highest-precedence resolution — no `argent link` or `~/.argent/link.json` needed, and it works in sandboxed shells):
+
+```json
+{
+  "mcpServers": {
+    "argent": {
+      "command": "argent",
+      "args": ["mcp"],
+      "env": {
+        "ARGENT_TOOLS_URL": "<ARGENT_TOOLS_URL from simulator:start>",
+        "ARGENT_AUTH_TOKEN": "<ARGENT_AUTH_TOKEN from simulator:start>"
+      }
+    }
+  }
+}
+```
+
+`.cursor/mcp.json` now carries a session token — **add it to `.gitignore`**. Then reload Cursor (Cmd+Shift+P → "Reload Window") and Argent's MCP tools drive the remote sim from chat.
+
+Alternatively, on a non-sandboxed machine you can use `argent link` instead of env vars:
+
+```bash
+# --no-verify skips the health check if the session isn't fully live yet
+argent link '<ARGENT_TOOLS_URL>' --token '<ARGENT_AUTH_TOKEN>' --yes
+```
+
+**Known issues:**
+- Screenshots crash on EAS worker VMs (`NSPasteboard` error — worker runs under a System LaunchDaemon with no window server). Fall back to agent-device for screenshots.
+- `argent init --help` launches an interactive wizard regardless of the flag — use `--yes` to skip it, or read the package source for non-interactive flags.
