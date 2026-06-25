@@ -67,13 +67,15 @@ The `install` here **uploads** the (~90MB) `.app` to the remote daemon over the 
 ⚠️ **Order matters:** build FIRST, `start` the session LAST. The build takes ~15-20 min and a session left idle that long times out (`ERR_NGROK_3200`) — don't `start` until you have the artifact URL.
 
 ```bash
-# 1. Add a simulator build profile to eas.json
-cat > eas.json <<'JSON'
-{
-  "cli": { "version": ">= 20.0.0", "appVersionSource": "remote" },
-  "build": { "sim": { "ios": { "simulator": true } } }
-}
-JSON
+# 1. Add a simulator build profile to eas.json (merges — won't overwrite existing profiles)
+node -e "
+const fs = require('fs');
+const p = 'eas.json';
+const c = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
+c.build = c.build || {};
+c.build.sim = { ios: { simulator: true } };
+fs.writeFileSync(p, JSON.stringify(c, null, 2) + '\n');
+"
 
 # 2. Build (no credentials prompt for a simulator build). Prints an artifact URL when done (~15-20 min).
 npx --yes eas-cli@latest build --platform ios --profile sim --non-interactive
@@ -99,7 +101,31 @@ This is the agentic edit-and-see loop: a **dev (Debug) build** loads JS from you
 
 ⚠️ **Don't install a release build as a "quick interim" and screenshot it** — that interim shows stale, build-time code (the "outdated screenshot" trap). Go straight to the dev build + Metro; screenshot only after the dev client is connected to Metro.
 
-**No local Mac toolchain?** (the common cloud/Linux case) Build the dev client on **EAS** instead of step 1: add a profile with `{"developmentClient": true, "ios": {"simulator": true}}`, run `npx --yes eas-cli@latest build --platform ios --profile dev-sim`, and in step 3 use `install-from-source <artifact-url>` (VM downloads it) instead of the local `install`. Steps 2 and 4–7 (Metro tunnel + connect) are identical — your edited JS still loads live from your local Metro.
+**No local Mac toolchain?** (the common cloud/Linux case) Build the dev client on **EAS** instead of step 1 below. ⚠️ Same order-matters rule as Mode B: build first, start the session after you have the artifact URL.
+
+```bash
+# ── Non-Mac path: replace step 1 with these ──────────────────────────────────
+
+# Add a dev-sim profile (merges — won't overwrite existing profiles)
+node -e "
+const fs = require('fs');
+const p = 'eas.json';
+const c = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
+c.build = c.build || {};
+c.build['dev-sim'] = { developmentClient: true, ios: { simulator: true } };
+fs.writeFileSync(p, JSON.stringify(c, null, 2) + '\n');
+"
+
+# Build (~15-20 min). Prints an artifact URL when done.
+npx --yes eas-cli@latest build --platform ios --profile dev-sim --non-interactive
+# → https://expo.dev/artifacts/eas/<hash>.tar.gz
+
+# Start a session AFTER the build finishes (don't start early — idle sessions time out).
+# Then in step 3 below, use install-from-source (VM downloads the artifact) instead of local install:
+ART="https://expo.dev/artifacts/eas/<hash>.tar.gz"
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest install-from-source "$ART" --platform ios
+# Continue from step 3a (open the dev client, enter Metro URL) onward — identical to the Mac path.
+```
 
 ```bash
 # 1. Add expo-dev-client and build a Debug (dev-client) simulator .app
