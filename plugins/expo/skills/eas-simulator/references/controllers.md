@@ -10,23 +10,19 @@
 
 agent-device is a thin **client** talking to a **daemon** (the daemon runs on the VM in a session). `npx --yes eas-cli@latest simulator:exec` sets `AGENT_DEVICE_DAEMON_BASE_URL` + `AGENT_DEVICE_DAEMON_AUTH_TOKEN` from `.env.eas-simulator`, which switches the client into remote mode. Selectors and `@e`-refs come from the latest `snapshot`.
 
-| Verb | Notes |
-|---|---|
-| `apps --platform ios` | List installed apps (blank session → none) |
-| `install <appId> <path> --platform ios` | Install a local binary; **uploads** it to the daemon. `--platform` (or an open session) is required. |
-| `install-from-source <url> --platform ios` | The VM **downloads** from the URL (use for EAS artifacts; avoids a big upload). Also `--github-actions-artifact`. |
-| `open <appId\|deep-link> --platform ios` | Launch an app by bundle id, or follow an app **deep link** (`exp+slug://…`) — a custom-scheme deep link triggers a system "Open in '<app>'?" dialog you must `press`. **Not** the `webPreviewUrl` (a browser preview for the user, never the device). |
-| `snapshot -i` | Interactive accessibility tree → `@e1`-style refs. iOS snapshots can be slow (tens of seconds). |
-| `press <ref\|selector> [x y]` | **Tap.** The verb is `press`, NOT `tap`. Selector form e.g. `press 'label="Open"'`. |
-| `fill <ref> "text"` | Type into a field |
-| `screenshot <path>` | Capture to a local PNG (downloaded from the daemon) |
-| `gesture <pan\|fling\|swipe\|pinch\|rotate\|transform>` / `swipe` / `scroll` / `longpress` / `type` / `back` / `home` | Standard interactions — `gesture` needs a kind subcommand |
-| `metro prepare (--public-base-url <url> \| --proxy-base-url <url>)` / `metro reload` | Wire a dev client to Metro / reload (Mode C). `--proxy-base-url` = optional bridge origin for remote Metro access — **not exercised by this skill's flow** (run-your-app.md connects via the public tunnel URL). |
-| `logs` / `record` / `network` / `perf` | Evidence capture |
+For the full verb set and agentic loop guidance, run:
 
-Run `npx --yes eas-cli@latest simulator:exec npx agent-device@latest --help` (and `<verb> --help`) for the authoritative, current set — the CLI help is the source of truth.
+```bash
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest --help
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest help workflow
+```
 
-**Proven in this skill's flows:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`. The rest (`gesture`/`scroll`/`longpress`/`logs`/`record`/`network`/`perf`/`metro`) are real in the CLI but not exercised here — confirm shape via `<verb> --help` before relying on them.
+The CLI help is written for agents and is the source of truth. EAS-specific notes:
+
+- **`press`, not `tap`.** The tap verb is `press` — `tap` is not a verb.
+- **`snapshot -i` is slow on iOS** — tens of seconds is normal; wait for it.
+- **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts — avoids a large upload).
+- **Proven in this skill's flows:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`. Others (`gesture`/`scroll`/`logs`/`record`/`network`/`perf`/`metro`) are real in the CLI but not exercised here — confirm via `<verb> --help` before relying on them.
 
 ## argent (alternative)
 
