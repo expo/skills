@@ -77,6 +77,7 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 ### Deployment
 
 - **eas-update-insights** — Check EAS Update health, crash rates, adoption, and payload size
+- **eas-simulator** — Run and drive your app on a remote iOS/Android simulator on EAS cloud, from the CLI or an AI agent
 - **expo-deployment** — Deploy to iOS App Store, Android Play Store, and web hosting
 - **expo-cicd-workflows** — EAS workflow YAML files for CI/CD pipelines
 

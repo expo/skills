@@ -32,7 +32,8 @@
         "expo-deployment",
         "expo-cicd-workflows",
         "expo-observe",
-        "eas-update-insights"
+        "eas-update-insights",
+        "eas-simulator"
       ]
     },
     {
