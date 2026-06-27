@@ -10,14 +10,14 @@
 
 agent-device is a thin **client** talking to a **daemon** (the daemon runs on the VM in a session). `npx --yes eas-cli@latest simulator:exec` sets `AGENT_DEVICE_DAEMON_BASE_URL` + `AGENT_DEVICE_DAEMON_AUTH_TOKEN` from `.env.eas-simulator`, which switches the client into remote mode. Selectors and `@e`-refs come from the latest `snapshot`.
 
-For the full verb set and agentic loop guidance, run:
+The CLI help is written for agents and is the source of truth — run these for the full verb set and agentic loop guidance:
 
 ```bash
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest --help
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest help workflow
 ```
 
-The CLI help is written for agents and is the source of truth. EAS-specific notes:
+EAS-specific notes:
 
 - **`press`, not `tap`.** The tap verb is `press` — `tap` is not a verb.
 - **`snapshot -i` is slow on iOS** — tens of seconds is normal; wait for it.
@@ -30,13 +30,13 @@ The CLI help is written for agents and is the source of truth. EAS-specific note
 
 **argent is a driver, not an installer.** Its `reinstall-app` tool runs `xcrun simctl install` on the remote VM with a literal local path — it does not upload a binary or accept a URL. **Always use agent-device (or `install-from-source`) for the install step**, then use argent to drive the already-installed app.
 
-**Connecting to Cursor's MCP.** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
+**Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 
 ```bash
 npm install -g @swmansion/argent
 ```
 
-Then run `argent init --yes` to register the Argent MCP server in `.cursor/mcp.json`. Wire the session credentials in as env vars (this is argent's highest-precedence resolution — no `argent link` or `~/.argent/link.json` needed, and it works in sandboxed shells):
+Then run `argent init --yes` to register the Argent MCP server. Wire the session credentials in as env vars — this is argent's highest-precedence resolution (no `argent link` or `~/.argent/link.json` needed, works in sandboxed shells):
 
 ```json
 {
@@ -53,7 +53,7 @@ Then run `argent init --yes` to register the Argent MCP server in `.cursor/mcp.j
 }
 ```
 
-`.cursor/mcp.json` now carries a session token — **add it to `.gitignore`**. Then reload Cursor (Cmd+Shift+P → "Reload Window") and Argent's MCP tools drive the remote sim from chat.
+The MCP config file location varies by agent: `.cursor/mcp.json` (Cursor), `.claude/mcp.json` (Claude Code), `mcp.json` in the Codex project root. It now carries a session token — **add it to `.gitignore`**. Reload the agent after editing so it picks up the new config.
 
 Alternatively, on a non-sandboxed machine you can use `argent link` instead of env vars:
 
