@@ -24,7 +24,7 @@ The frontmatter `description` carries the trigger phrases. In short: use this to
 
 ```bash
 # Programmatic detection — run this to decide before doing anything else:
-if [ "$(uname -s)" != "Darwin" ] || ! command -v simctl &>/dev/null; then
+if [ "$(uname -s)" != "Darwin" ] || ! xcrun --find simctl &>/dev/null 2>&1; then
   echo "no local sim — proceed with EAS Simulator"
 else
   echo "local sim available — ask the user (cloud or local?)"
