@@ -102,6 +102,10 @@ Add it to the correct group (framework vs paid) in all of:
 - `plugins/expo/skills/README.md`
 - `README.md`
 
+Also add a one-line entry to the `expo-overview` Skill Map
+(`plugins/expo/skills/expo-overview/SKILL.md`) so the router can dispatch to the new skill.
+The `skill routing coverage` workflow (`bun scripts/check-overview-routing.ts`) enforces this.
+
 ### 9. Add the feedback instructions
 
 Every `SKILL.md` ends with a canonical feedback block whose subject matches the skill name. Add or

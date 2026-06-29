@@ -203,8 +203,9 @@ Follow the full guide in `CONTRIBUTING.md`. In short:
 3. Add focused reference files under `references/` when the skill needs more detail than belongs in the main `SKILL.md`, scripts under `scripts/` only for reusable logic, and `agents/openai.yaml` for Codex triggering.
 4. Add the canonical feedback block with `bun scripts/check-skill-limits.ts --fix-feedback`; CI verifies that its subject matches the skill name.
 5. Register the skill in every catalog: `skills.sh.json`, `plugins/expo/README.md`, `plugins/expo/skills/README.md`, and the root `README.md`.
-6. Bump the version in all four plugin manifests together with `bun scripts/check-plugin-version-bump.ts --set-version <version>` (they must match and be greater than main; CI-enforced).
-7. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
+6. Add a one-line entry for the skill to the `expo-overview` Skill Map (`plugins/expo/skills/expo-overview/SKILL.md`) so the router can dispatch to it. This is enforced by the `skill routing coverage` workflow (`bun scripts/check-overview-routing.ts`).
+7. Bump the version in all four plugin manifests together with `bun scripts/check-plugin-version-bump.ts --set-version <version>` (they must match and be greater than main; CI-enforced).
+8. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
 
 ## Testing Plugins
 

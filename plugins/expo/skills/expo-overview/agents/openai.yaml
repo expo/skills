@@ -1,0 +1,4 @@
+interface:
+  display_name: "Expo Overview"
+  short_description: "Entry point and router for Expo / EAS tasks: always load first when Expo or React Native is mentioned, classify the goal, route to the right expo-* / eas-* skill, and apply shared setup rules"
+  default_prompt: "Use $expo-overview first whenever a task mentions Expo, EAS, or React Native — even when the stack or SDK version is already fully specified. Classify the user's goal, route to the right expo-* / eas-* skill, and apply the shared environment and setup rules the other Expo skills rely on."

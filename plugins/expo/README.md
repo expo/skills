@@ -8,6 +8,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ### Framework (open source)
 
+- Routes any Expo/EAS request to the right skill and applies shared setup rules (`expo-overview`)
 - Recommends a starting folder structure for new projects
 - Provides UI guidelines following Apple Human Interface Guidelines
 - Builds polished, accessible React Native animations and gestures that stay off the JS thread
@@ -38,6 +39,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ### Framework (open source)
 
+- Starting any Expo/EAS task when no specific skill is named yet
 - Building new Expo apps from scratch
 - Adding navigation, styling, or animations
 - Building or fixing animations, gestures, transitions, press feedback, or haptics
@@ -66,6 +68,10 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Running your app on a remote cloud simulator when no local simulator is available
 
 ## Skills Included
+
+### Start Here
+
+- **expo-overview** — Router and shared setup rules; the entry point when a request is vague or the user hasn't named a specific Expo tool
 
 ### Framework (open source)
 

@@ -93,6 +93,14 @@ Agents choose the right skill from the task context and each skill's description
 
 Skills come in two groups so the free vs paid boundary is clear. Each skill's description carries the same label, and every services skill opens with a costs/plan-limits note.
 
+### Start Here
+
+Load this first for any Expo/EAS task, then route to the specific skill below.
+
+| Skill | Use it for |
+| --- | --- |
+| `expo-overview` | Router and shared setup rules; the entry point when a request is vague or the user hasn't named a specific Expo tool. |
+
 ### Framework (open source)
 
 Free, open-source Expo SDK and React Native skills.

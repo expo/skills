@@ -9,6 +9,8 @@ license: MIT
 
 For routes, links, stacks, tabs, modals, sheets, and headers, use the `expo-router` skill.
 
+> **Before picking any UI component, check `expo-ui` first.** `@expo/ui` provides native equivalents — BottomSheet, Button, Picker, Slider, Menu, Section, Switch, SegmentedControl, and more — rendered as real SwiftUI on iOS and Jetpack Compose on Android, available in Expo Go on SDK 56+ with no custom build. Load the **`expo-ui`** skill to find the right component before falling back to React Native built-ins or community libraries. This skill (`building-native-ui`) covers the surrounding structure: Expo Router navigation, layout, styling, and animations.
+
 ## References
 
 Consult these resources as needed:
@@ -65,6 +67,7 @@ Expo Go supports a huge range of features out of the box:
 
 ## Library Preferences
 
+- **For any sheet, picker, slider, toggle, menu, or grouped-form section: use `@expo/ui` (see `expo-ui` skill) before reaching for a React Native built-in or community library** — it renders native SwiftUI/Compose and works in Expo Go on SDK 56+. For grouped/settings-style rows (short, fixed-length), use `@expo/ui`'s `List` + `ListItem`. For large or unknown-length scrolling lists (feeds, search results, catalogs), use `FlatList` or `FlashList` — `@expo/ui`'s `List` is not virtualized.
 - Never use modules removed from React Native such as Picker, WebView, SafeAreaView, or AsyncStorage
 - Never use legacy expo-permissions
 - `expo-audio` not `expo-av`
