@@ -1,6 +1,6 @@
 # Run the migration as a goal loop
 
-Disclosed reference for [`web-to-native`](../SKILL.md), step 4. Step 4 is a repeat-until-done loop (port → nativize → verify → check off), which is exactly the shape of a **goal loop** — a single objective re-injected every turn until the worklist is empty. This file carries a ready-shaped objective for that loop: a migration-specific, lightweight `plan-for-goal`, so you don't have to author one.
+Disclosed reference for [`web-to-native`](../SKILL.md) — the recommended way to drive the whole migration. The migration is a repeat-until-done loop (assess → nativize each screen → verify → check off), which is exactly the shape of a **goal loop**: a single objective re-injected every turn until the worklist is empty. This file carries a ready-shaped objective — a migration-specific, lightweight `plan-for-goal` — and, crucially, the objective **re-reads this skill every iteration**, so the loop keeps following the playbook (and self-bootstraps the assess step if no worklist exists yet).
 
 Use it in one of two modes depending on the agent you're running.
 
@@ -17,29 +17,25 @@ Write the filled-in objective to `migration-goal.md` in the project, then give t
 Fill the two `<…>` slots, then run or hand off verbatim. It is written to survive re-injection — it restates its own worklist, direction, and stop condition every turn.
 
 ```
-Goal: migrate <APP NAME> from web (DOM components) to native, one screen per iteration, until done.
+Goal: migrate <APP NAME> from web to a native Expo app by following the web-to-native skill, one screen per iteration, until done.
 
-Worklist: migration-progress.md. Each iteration:
-1. Open migration-progress.md and take the top unchecked item under "nativize-now".
-   If none remain, STOP and print a summary of every screen migrated.
-2. Replace that screen's 'use dom' component with native UI — View/Text/Image,
-   Expo Router navigation, FlatList/FlashList for lists, @expo/ui for native
-   components (sheets, pickers, sliders). Match the web screen's behavior and data.
-3. For every web idiom you touch (className, onClick, localStorage, window, fetch,
-   relative URLs, …) apply the native equivalent from references/false-friends.md.
-   Leave no web-only API behind.
-4. Verify by COMPARING the two running apps — not a clean build: with a browser
-   agent open the route in the web original (dev server or deployed URL) and
-   capture it; with a device agent / simulator open the same route in the native
-   app and capture it; compare layout, content, behavior. Native primitives, NO
-   webview, matches the web screen. If it doesn't, fix it this iteration.
-5. Check the item off in migration-progress.md and append one line at the bottom:
+Each iteration, FIRST re-read the playbook — plugins/expo/skills/web-to-native/SKILL.md (and its references) — then:
+1. If migration-progress.md doesn't exist yet, do the skill's step 1 (Assess) to
+   create the worklist, then stop. Otherwise open it and take the top unchecked
+   item under "nativize-now"; if none remain, STOP and summarize every screen.
+2. Redesign that screen native per the skill's step 4 — reach for @expo/ui FIRST
+   (real SwiftUI/Compose), then building-native-ui (NativeTabs, liquid glass,
+   large titles); RN primitives only for custom layouts. NEVER a webview port.
+   Use references/native-patterns.md (UX patterns) and references/false-friends.md
+   (idioms). Match the web screen's content and behavior.
+3. Verify per references/verify-on-device.md: compare the running web original
+   (browser agent) against the native screen (simulator / argent) — content and
+   behavior parity, NOT pixels (it should look more native). If it doesn't match,
+   fix it this iteration.
+4. Check the item off in migration-progress.md, appending one line:
    "<screen> — done", or "<screen> — blocked: <reason>" and skip it.
 
-Rules: exactly one screen per iteration. Never touch "nativize-later" items.
-The app must build green at the end of every iteration.
-Direction: it should feel like a native app, not a website in a shell.
-
+Rules: one screen per pass; the app builds green each iteration; @expo/ui before RN primitives; never touch "nativize-later" items.
 Base API URL for native (no relative paths): <EXPO_PUBLIC_API_URL>
 ```
 
