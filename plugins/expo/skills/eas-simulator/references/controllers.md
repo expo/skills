@@ -63,5 +63,4 @@ argent link '<ARGENT_TOOLS_URL>' --token '<ARGENT_AUTH_TOKEN>' --yes
 ```
 
 **Known issues:**
-- Screenshots crash on EAS worker VMs (`NSPasteboard` error — worker runs under a System LaunchDaemon with no window server). Fall back to agent-device for screenshots.
 - `argent init --help` launches an interactive wizard regardless of the flag — use `--yes` to skip it, or read the package source for non-interactive flags.
