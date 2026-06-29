@@ -25,3 +25,15 @@ Disclosed reference for [`web-to-native`](../SKILL.md), step 4. `false-friends.m
 | Multi-column layout | single column + tabs / stack | One thing at a time on a phone |
 
 **The test:** if a screenshot of the native screen could pass for the web version, you reskinned it. Redesign until it could pass for a screen the OS shipped.
+
+## Feel — beyond the components
+
+The table gets the right *components*; "native" also lives in *motion and touch* — and a web port arrives with almost none, so you must add it. The tooling is all in `building-native-ui`; reach for it, don't hand-roll:
+
+- **Transitions for free** — use Expo Router's native-stack so push/pop, modals, and sheets animate with real platform physics; shared-element zoom via `building-native-ui` `zoom-transitions.md`.
+- **Motion** — Reanimated (`withSpring`/`withTiming`; `entering`/`exiting` for list items) + `react-native-gesture-handler` for swipes/drags → `building-native-ui` `animations.md`.
+- **Touch** — `expo-haptics` on commits, selection changes, and pull-to-refresh — choreography, not just a toast buzz.
+- **Native rhythm** — large-title collapse on scroll, momentum / inverted scroll, a keyboard that pushes content (`KeyboardAvoidingView`).
+- **Respect reduced motion** — gate non-essential animation on Reanimated's `useReducedMotion()`.
+
+**Feel can't be screenshotted.** A janky transition or wrong easing passes a still-image parity check and still betrays the app — for screens with motion, verify with a short recording (`xcrun simctl io booted recordVideo feel.mov`, or a device-agent flow), not just a screenshot.

@@ -36,6 +36,8 @@ agent-browser screenshot web.png   # visual reference
 
 **C. Compare** the two for the same route — layout, content, behavior. Diff the structures (agent-browser `snapshot` against argent `describe` / `debugger-component-tree`), not just pixels. Pass only on parity: same data, and params passed into a DOM webview must produce the same result.
 
+**Feel needs motion, not a still.** For a nativized screen with transitions, gestures, or haptics, a screenshot can't catch a janky push or wrong easing — capture a short recording (`xcrun simctl io booted recordVideo feel.mov`, or an argent flow) and confirm it moves like a native app (see `native-patterns.md` → Feel).
+
 ## What "pass" looks like
 - **DOM-shelled screen (step 3):** the web UI renders inside the native header/shell; params from the native route drive it the same as on web.
 - **Nativized screen (step 4):** native primitives only, no webview; matches the web original screen.
