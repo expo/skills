@@ -60,6 +60,10 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ## Skills Included
 
+### Start Here
+
+- **expo-overview** — Router and shared setup rules; the entry point when a request is vague or the user hasn't named a specific Expo tool
+
 ### Framework (open source)
 
 - **expo-router** - Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, and headers
