@@ -61,6 +61,37 @@ export default function MyInput() {
 
 Docs — https://docs.expo.dev/versions/latest/sdk/ui/universal/textinput/index.md
 
+## BottomSheet
+
+`BottomSheet` is a universal slide-up sheet. Control it with `isPresented` / `onDismiss` — **not** `isOpen`, `isOpened`, `onIsOpenedChange`, or `onChange` (those belong to other sheet APIs; the universal `BottomSheet` does not accept them). `snapPoints` is optional and accepts `'half'`, `'full'`, `{ fraction }`, or `{ height }`; when omitted the sheet auto-sizes to its content.
+
+```tsx
+import { Host, BottomSheet, Column, Button, Text } from '@expo/ui';
+import { useState } from 'react';
+
+export default function MapScreen() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <Host>
+      <Button onPress={() => setIsOpen(true)}>Show details</Button>
+      <BottomSheet
+        isPresented={isOpen}
+        onDismiss={() => setIsOpen(false)}
+        snapPoints={['half', 'full']}
+      >
+        <Column>
+          <Text>Sheet content</Text>
+          <Button onPress={() => setIsOpen(false)}>Close</Button>
+        </Column>
+      </BottomSheet>
+    </Host>
+  );
+}
+```
+
+> **Don't confuse the universal `BottomSheet` with the drop-in `@gorhom/bottom-sheet` replacement** (`@expo/ui/community/bottom-sheet`). They are different components with different APIs. Use the universal one when building new UI; use the drop-in only when migrating an existing `@gorhom/bottom-sheet` integration. See `./drop-in-replacements.md`.
+
 ## Confirming the API
 
 `@expo/ui` is versioned with the Expo SDK (e.g. `56.0.x` for SDK 56) and its API can change between SDK versions, so the **installed package's TypeScript types (`.d.ts`) are the most reliable source of truth** — they match the version in your project, while the docs track latest. Read the relevant component's `.d.ts` from the installed `@expo/ui` package in `node_modules`. Use the docs as the human-readable reference:

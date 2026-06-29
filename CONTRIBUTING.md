@@ -101,6 +101,10 @@ Add it to the correct group (framework vs paid) in all of:
 - `plugins/expo/skills/README.md`
 - `README.md`
 
+Also add a one-line entry to the `expo-overview` Skill Map
+(`plugins/expo/skills/expo-overview/SKILL.md`) so the router can dispatch to the new skill.
+The `skill routing coverage` workflow (`bun scripts/check-overview-routing.ts`) enforces this.
+
 ### 9. Bump the plugin version
 
 Bump `version` in **all three** manifests together - they must match each other and be greater
