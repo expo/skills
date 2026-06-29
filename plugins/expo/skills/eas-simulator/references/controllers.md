@@ -36,7 +36,15 @@ EAS-specific notes:
 npm install -g @swmansion/argent
 ```
 
-Then run `argent init --yes` to register the Argent MCP server. Wire the session credentials in as env vars — this is argent's highest-precedence resolution (no `argent link` or `~/.argent/link.json` needed, works in sandboxed shells):
+Then run `argent init --yes` to register the Argent MCP server. Link the session credentials with `argent link` — the recommended path:
+
+```bash
+argent link '<ARGENT_TOOLS_URL>' --token '<ARGENT_AUTH_TOKEN>' --yes
+```
+
+Reload the agent after linking so its `argent mcp` process picks up the remote session.
+
+**Sandboxed shells** (Claude Code, some CI environments) can't write to `~/.argent/` so `argent link` won't work there. Use env vars in the MCP config file instead — this is argent's highest-precedence resolution and overrides any link:
 
 ```json
 {
@@ -53,14 +61,7 @@ Then run `argent init --yes` to register the Argent MCP server. Wire the session
 }
 ```
 
-The MCP config file location varies by agent: `.cursor/mcp.json` (Cursor), `.claude/mcp.json` (Claude Code), `mcp.json` in the Codex project root. It now carries a session token — **add it to `.gitignore`**. Reload the agent after editing so it picks up the new config.
-
-Alternatively, on a non-sandboxed machine you can use `argent link` instead of env vars:
-
-```bash
-# --no-verify skips the health check if the session isn't fully live yet
-argent link '<ARGENT_TOOLS_URL>' --token '<ARGENT_AUTH_TOKEN>' --yes
-```
+MCP config file location: `.cursor/mcp.json` (Cursor), `.claude/mcp.json` (Claude Code), `mcp.json` in the Codex project root. It carries a session token — **add it to `.gitignore`**.
 
 **Known issues:**
 - `argent init --help` launches an interactive wizard regardless of the flag — use `--yes` to skip it, or read the package source for non-interactive flags.
