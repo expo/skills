@@ -7,6 +7,8 @@ license: MIT
 
 # Expo UI Guidelines
 
+> **Before picking any UI component, check `expo-ui` first.** `@expo/ui` provides native equivalents — BottomSheet, Button, Picker, Slider, Menu, Section, Switch, SegmentedControl, and more — rendered as real SwiftUI on iOS and Jetpack Compose on Android, available in Expo Go on SDK 56+ with no custom build. Load the **`expo-ui`** skill to find the right component before falling back to React Native built-ins or community libraries. This skill (`building-native-ui`) covers the surrounding structure: Expo Router navigation, layout, styling, and animations.
+
 ## References
 
 Consult these resources as needed:
@@ -78,6 +80,7 @@ See `./references/route-structure.md` for detailed route conventions.
 
 ## Library Preferences
 
+- **For any sheet, picker, slider, toggle, menu, or grouped-form section: use `@expo/ui` (see `expo-ui` skill) before reaching for a React Native built-in or community library** — it renders native SwiftUI/Compose and works in Expo Go on SDK 56+. For grouped/settings-style rows (short, fixed-length), use `@expo/ui`'s `List` + `ListItem`. For large or unknown-length scrolling lists (feeds, search results, catalogs), use `FlatList` or `FlashList` — `@expo/ui`'s `List` is not virtualized.
 - Never use modules removed from React Native such as Picker, WebView, SafeAreaView, or AsyncStorage
 - Never use legacy expo-permissions
 - `expo-audio` not `expo-av`
@@ -105,7 +108,7 @@ See `./references/route-structure.md` for detailed route conventions.
 - Use views with built-in haptics like `<Switch />` from React Native and `@react-native-community/datetimepicker`
 - When a route belongs to a Stack, its first child should almost always be a ScrollView with `contentInsetAdjustmentBehavior="automatic"` set
 - When adding a `ScrollView` to the page it should almost always be the first component inside the route component
-- Prefer `headerSearchBarOptions` in Stack.Screen options to add a search bar
+- Search bars belong in the Stack header via `headerSearchBarOptions` — **never** as a floating `View` pinned above content or above the tab bar. See `./references/search.md`.
 - Use the `<Text selectable />` prop on text containing data that could be copied
 - Consider formatting large numbers like 1.4M or 38k
 - Never use intrinsic elements like 'img' or 'div' unless in a webview or Expo DOM component

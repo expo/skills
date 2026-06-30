@@ -62,6 +62,10 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 
 ## Skills Included
 
+### Start Here
+
+- **expo-overview** — Router and shared setup rules; the entry point when a request is vague or the user hasn't named a specific Expo tool
+
 ### App Design
 
 - **add-app-clip** — Add an iOS App Clip target to an Expo app (AASA, associated domains, TestFlight)
@@ -69,6 +73,8 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - **expo-api-routes** — Create API routes in Expo Router with EAS Hosting
 - **expo-brownfield** — Integrate Expo and React Native into existing native iOS or Android apps
 - **expo-dev-client** — Build and distribute Expo development clients locally or via TestFlight
+- **expo-examples** — Canonical, version-matched patterns from the official expo/examples repo (Stripe, Clerk, Supabase, and more)
+- **expo-module** — Write Expo native modules and views with the Expo Modules API (Swift, Kotlin, TypeScript)
 - **expo-tailwind-setup** — Set up Tailwind CSS v4 in Expo with NativeWind v5
 - **expo-ui** — Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **native-data-fetching** — Network requests, API calls, caching, and offline support
@@ -79,6 +85,7 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 - **eas-update-insights** — Check EAS Update health, crash rates, adoption, and payload size
 - **expo-deployment** — Deploy to iOS App Store, Android Play Store, and web hosting
 - **expo-cicd-workflows** — EAS workflow YAML files for CI/CD pipelines
+- **expo-observe** — Measure startup, launch, and TTI performance with EAS Observe
 
 ### Upgrading
 

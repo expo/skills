@@ -191,8 +191,9 @@ When changing Claude Code marketplace aliases, preserve backward compatibility u
 1. Create `plugins/expo/skills/my-skill/SKILL.md`.
 2. Add focused reference files under `plugins/expo/skills/my-skill/references/` when the skill needs more detail than belongs in the main `SKILL.md`.
 3. Add scripts under `plugins/expo/skills/my-skill/scripts/` only for reusable logic.
-4. Update `plugins/expo/README.md` or the root `README.md` only when the user-facing installation or usage story changes.
-5. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
+4. Add a one-line entry for the skill to the `expo-overview` Skill Map (`plugins/expo/skills/expo-overview/SKILL.md`) so the router can dispatch to it. This is enforced by the `skill routing coverage` workflow (`bun scripts/check-overview-routing.ts`).
+5. Update `plugins/expo/README.md` or the root `README.md` only when the user-facing installation or usage story changes.
+6. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
 
 ## Testing Plugins
 
