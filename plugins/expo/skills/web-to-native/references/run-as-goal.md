@@ -1,6 +1,6 @@
 # Run the migration as a goal loop
 
-Disclosed reference for [`web-to-native`](../SKILL.md) — the recommended way to drive the whole migration. The migration is a repeat-until-done loop (assess → nativize each screen → verify → check off), which is exactly the shape of a **goal loop**: a single objective re-injected every turn until the worklist is empty. This file carries a ready-shaped objective — a migration-specific, lightweight `plan-for-goal` — and, crucially, the objective **re-reads this skill every iteration**, so the loop keeps following the playbook (and self-bootstraps the assess step if no worklist exists yet).
+Disclosed reference for [`web-to-native`](../SKILL.md) — the recommended way to drive the whole migration. The migration is a repeat-until-done loop (assess → nativize each screen → verify → check off), which is exactly the shape of a **goal loop**: a single objective re-injected every turn until the worklist is empty. This file carries a ready-shaped, migration-specific objective — and, crucially, the objective **re-reads this skill every iteration**, so the loop keeps following the playbook (and self-bootstraps the assess step if no worklist exists yet).
 
 Use it in one of two modes depending on the agent you're running.
 
@@ -39,6 +39,6 @@ Rules: one screen per pass; the app builds green each iteration; @expo/ui before
 Base API URL for native (no relative paths): <EXPO_PUBLIC_API_URL>
 ```
 
-## Why this and not the full `plan-for-goal`
+## Why a pre-shaped objective
 
-`plan-for-goal` is the general skill for turning *any* conversation into a goal objective. This is the same idea pre-shaped for one known task, so the objective, worklist, and self-verification path are already filled in. Reach for `plan-for-goal` instead only when the migration needs direction this template doesn't cover.
+The objective is filled in for this migration — worklist, redesign rules, and self-verification path already wired to the skill's references — so you can launch the loop without authoring one from scratch. Tailor the `<…>` slots and direction when a specific migration needs more than the template covers.

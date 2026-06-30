@@ -2,14 +2,14 @@
 
 Disclosed reference for [`web-to-native`](../SKILL.md), step 4. `false-friends.md` translates *idioms* (`div` → `View`); this translates *UX patterns* — a web interaction into its native equivalent. Step 4 isn't a port, it's this redesign.
 
-**Reach for `@expo/ui` first.** It renders real SwiftUI (iOS) and Jetpack Compose (Android), so its components look and feel *exactly* like the OS — the difference between "native-ish RN" and "indistinguishable from an app Apple/Google shipped." See the `expo-ui` skill. Drop to styled RN primitives only for what `@expo/ui` doesn't cover: custom layouts (chat bubbles, bespoke cards) and **large data lists** (`@expo/ui` `List` is a JS-thread node per item — use `FlashList`/`FlatList` for feeds). `@expo/ui` is a native module → needs a **dev build**, not Expo Go.
+**Reach for `@expo/ui` first.** It renders real SwiftUI (iOS) and Jetpack Compose (Android), so its components look and feel *exactly* like the OS — the difference between "native-ish RN" and "indistinguishable from an app Apple/Google shipped." See the `expo-ui` skill. Drop to styled RN primitives only for what `@expo/ui` doesn't cover: custom layouts (chat bubbles, bespoke cards) and **large data lists** (`@expo/ui` `List` is a JS-thread node per item — use `FlashList`/`FlatList` for feeds). `@expo/ui` runs in **Expo Go** (SDK 56+) — no dev build needed; reach for a dev build (the `expo-dev-client` skill) only for *custom* native modules.
 
 | Web pattern | Native redesign — reach for first | Why |
 |---|---|---|
 | Top tab bar / nav links | **NativeTabs** — bottom, liquid glass on iOS 26 (`building-native-ui`) | Thumb-reachable, OS-native bar |
 | Page header / breadcrumb | **large-title** Stack header + header **search field** (`building-native-ui`) | The native screen frame |
 | In-page tabs / toggle group | **SegmentedControl** — `@expo/ui` (`community/segmented-control`) | Native segmented switch |
-| Modal / dialog | **BottomSheet** — `@expo/ui` (`community/bottom-sheet`) | Sheets *are* the native modal |
+| Modal / dialog | **BottomSheet** — `@expo/ui` | Sheets *are* the native modal |
 | `<select>` / dropdown | **Picker**, or long-press **MenuView** — `@expo/ui` (`community/menu`) | Native wheel / menu, no popover |
 | Accordion / "show more" | **Collapsible** — `@expo/ui` | Native disclosure |
 | Settings / short list | **List** + **FieldGroup** rows (Switch / Picker / TextInput) — `@expo/ui` | The Settings-app look |
@@ -36,4 +36,4 @@ The table gets the right *components*; "native" also lives in *motion and touch*
 - **Native rhythm** — large-title collapse on scroll, momentum / inverted scroll, a keyboard that pushes content (`KeyboardAvoidingView`).
 - **Respect reduced motion** — gate non-essential animation on Reanimated's `useReducedMotion()`.
 
-**Feel can't be screenshotted.** A janky transition or wrong easing passes a still-image parity check and still betrays the app — for screens with motion, verify with a short recording (`xcrun simctl io booted recordVideo feel.mov`, or a device-agent flow), not just a screenshot.
+**Feel can't be screenshotted.** A janky transition or wrong easing passes a still-image parity check and still betrays the app — for screens with motion, verify with a short recording (iOS `xcrun simctl io booted recordVideo feel.mov`; Android `adb shell screenrecord`; or a device-agent flow), not just a screenshot.

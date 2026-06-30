@@ -24,7 +24,7 @@ flowchart TD
 - **Migrate, don't rewrite.** Never big-bang it; every step keeps the app shippable.
 - **Ship on day one.** The web UI runs in a DOM-component shell (step 3) before anything is nativized — that's the milestone; everything after is polish.
 - **Strangle by value.** Nativize the hot screens; leave the rest in the webview. Each DOM screen carries a ~2 MB web runtime — reason enough not to ship everything as DOM.
-- **Nativize means redesign, not reskin.** A strangled screen should look like Apple/Google shipped it, not the web page reskinned. **Reach for `@expo/ui` first** — it renders real SwiftUI/Compose, so it feels *exactly* like the OS; styled RN primitives are the fallback for custom layouts only. Plus platform navigation + liquid glass (`building-native-ui`: NativeTabs, `expo-glass-effect`, large titles) and mobile UX (sheets, swipe, haptics). The web→native pattern map is [`./references/native-patterns.md`](./references/native-patterns.md). If it still feels like a website, you ported instead of redesigned.
+- **Nativize means redesign, not reskin.** A strangled screen should look like Apple/Google shipped it, not the web page reskinned. **Reach for `@expo/ui` first** — it renders real SwiftUI/Compose, so it feels *exactly* like the OS; styled RN primitives are the fallback for custom layouts only. Plus platform navigation (`building-native-ui`: NativeTabs, large titles), liquid glass and native components via `@expo/ui`, and mobile UX (sheets, swipe, haptics). The web→native pattern map is [`./references/native-patterns.md`](./references/native-patterns.md). If it still feels like a website, you ported instead of redesigned.
 - **Verify by running, not compiling.** A clean build proves nothing (a blank webview compiles fine). Run each screen — but judge *content and behavior* against the web original, not pixels (a nativized screen should look more native, not identical).
 - **Orchestrate, don't reinvent.** Each step routes into an existing skill. The value here is the *order* and the *gotchas* — the idiom-by-idiom mappings live in [`./references/false-friends.md`](./references/false-friends.md).
 
@@ -55,7 +55,7 @@ Bring every screen over as a DOM component (`'use dom'`, per the `use-dom` skill
 
 ### 4. Strangle screens to native — by value
 
-Walk `migration-progress.md` top-down. For each screen, *redesign* it native — don't port the web layout. Reach for **`@expo/ui` first** (real SwiftUI/Compose — buttons, lists, sheets, pickers, sliders; [`./references/native-patterns.md`](./references/native-patterns.md) maps which web pattern becomes which native component), then platform navigation + liquid glass (`building-native-ui` — NativeTabs, `expo-glass-effect`, large titles), and mobile UX (swipe, haptics, momentum/inverted scroll); RN primitives only for custom layouts. Consult [`./references/false-friends.md`](./references/false-friends.md) for each idiom. **These native modules aren't in Expo Go** — `@expo/ui`, `expo-glass-effect`, and custom modules need a **dev build** (`npx expo run:ios`) to run and verify. Verify *content and behavior* against the running web original (the look should become more native), then check it off. One screen per pass, app shippable throughout. It's a loop over a durable worklist, so it can run unattended — hand it to a goal loop ([`./references/run-as-goal.md`](./references/run-as-goal.md)).
+Walk `migration-progress.md` top-down. For each screen, *redesign* it native — don't port the web layout. Reach for **`@expo/ui` first** (real SwiftUI/Compose — buttons, lists, sheets, pickers, sliders; [`./references/native-patterns.md`](./references/native-patterns.md) maps which web pattern becomes which native component), then platform navigation (`building-native-ui` — NativeTabs, large titles) and mobile UX (swipe, haptics, momentum/inverted scroll); RN primitives only for custom layouts. Consult [`./references/false-friends.md`](./references/false-friends.md) for each idiom. `@expo/ui` and DOM components both run in **Expo Go** (SDK 56+) — a dev build (the `expo-dev-client` skill) is only needed for *custom* native modules. Verify *content and behavior* against the running web original (the look should become more native), then check it off. One screen per pass, app shippable throughout. It's a loop over a durable worklist, so it can run unattended — hand it to a goal loop ([`./references/run-as-goal.md`](./references/run-as-goal.md)).
 
 ### 5. Wire data, auth, and storage
 
@@ -67,7 +67,7 @@ The web data layer doesn't survive the move — relative fetches, cookie session
 
 ## Verify by running, not compiling
 
-A green `expo export` proves a screen *bundles*, not that it *renders* — a DOM screen missing `react-native-webview` exports clean and shows blank. So after the shell and after every nativized screen, compare the two **running** apps for the same route:
+A green `expo export` proves a screen *bundles*, not that it *renders* — a screen can build and still render blank or mis-render. So after the shell and after every nativized screen, compare the two **running** apps for the same route:
 
 - **Web original** — capture it with **`agent-browser`** (vercel-labs CLI): `open` the route, `snapshot --json` the accessibility tree, `screenshot`.
 - **Native** — drive the simulator with **`argent`**: `describe` / `debugger-component-tree` for structure, `flow` to replay the check each pass.
@@ -79,5 +79,5 @@ Pass on parity of **content and behavior** — not pixels: a nativized screen sh
 - [`./references/false-friends.md`](./references/false-friends.md) — web idiom → native equivalent + the gotcha for each. The lookup for steps 3–5, and for any web dev unlearning idioms.
 - [`./references/native-patterns.md`](./references/native-patterns.md) — web UX *pattern* → native redesign (`@expo/ui`-first). The step-4 redesign playbook so screens feel OS-native, not reskinned.
 - [`./references/verify-on-device.md`](./references/verify-on-device.md) — the two-agent parity recipe: drive the web app (browser agent) and the native app (argent), open the same route, compare.
-- [`./references/run-as-goal.md`](./references/run-as-goal.md) — a ready-shaped goal objective for driving step 4 unattended; a migration-specific, lightweight `plan-for-goal`.
+- [`./references/run-as-goal.md`](./references/run-as-goal.md) — a ready-shaped, migration-specific goal objective for driving step 4 unattended (re-reads this skill each iteration).
 - [Expo — From Web to Native with React](https://expo.dev/blog/from-web-to-native-with-react) — the canonical guide this skill operationalizes.

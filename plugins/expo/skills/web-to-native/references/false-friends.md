@@ -65,7 +65,7 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 
 | Web | Native | Gotcha |
 |---|---|---|
-| `localStorage` / `sessionStorage` | `AsyncStorage` or `MMKV` | **Async** API (`await`). MMKV is synchronous and faster if you need it. |
+| `localStorage` / `sessionStorage` | `expo-sqlite` `localStorage` (sync drop-in), or `AsyncStorage` / `MMKV` | `expo-sqlite` ships a synchronous, web-compatible `localStorage` — the closest swap. `AsyncStorage` is async (`await`); `MMKV` is sync + fast. |
 | Cookies / `document.cookie` | `expo-secure-store` + headers | No cookie jar by default. Store tokens in SecureStore; send as auth headers. |
 | Auth via session cookie | token in SecureStore | Redesign auth around bearer tokens, not browser sessions. |
 | In-memory React state | same | `useState`/`useReducer`/`useContext` transfer unchanged. |
@@ -78,7 +78,7 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 | `window.matchMedia('(prefers-color-scheme: dark)')` | `useColorScheme()` | Hook from `react-native`, reactive to the system theme. Web theme bootstrap scripts in the layout don't run. |
 | `window.innerWidth/Height` | `useWindowDimensions()` | Reactive hook; updates on rotation. |
 | `navigator.*`, Web APIs | Expo SDK modules | e.g. camera → `expo-camera`, geolocation → `expo-location`, clipboard → `expo-clipboard`. |
-| `alert()` / `confirm()` | `Alert.alert(...)` | Native modal API with button arrays; no blocking `confirm`. |
+| `alert()` / `confirm()` / `prompt()` | `alert()` works; `Alert.alert(...)` for the rest | RN provides a global `alert()`; `confirm()` / `prompt()` don't exist — use `Alert.alert` with a button array. |
 | `process.env.X` | `process.env.EXPO_PUBLIC_X` | Only `EXPO_PUBLIC_`-prefixed vars are inlined into the client bundle. |
 | `console.log` | `console.log` | Works — shows in the dev tools/terminal. |
 | `dangerouslySetInnerHTML` | — | No DOM to inject into. Render data, or use a DOM component / WebView. |
