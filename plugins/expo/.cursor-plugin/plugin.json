@@ -1,7 +1,11 @@
 {
   "name": "expo",
   "displayName": "Expo",
-  "version": "1.3.2",
+
+
+
+  "version": "1.4.1",
+
   "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo and React Native apps.",
   "author": {
     "name": "Expo Team",
