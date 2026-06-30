@@ -22,18 +22,22 @@ Goal: migrate <APP NAME> from web to a native Expo app by following the web-to-n
 Each iteration, FIRST re-read the playbook — plugins/expo/skills/web-to-native/SKILL.md (and its references) — then:
 1. If migration-progress.md doesn't exist yet, do the skill's step 1 (Assess) to
    create the worklist, then stop. Otherwise open it and take the top unchecked
-   item under "nativize-now"; if none remain, STOP and summarize every screen.
+   item under "nativize-now"; if none are left unresolved (every nativize-now is
+   done or blocked), STOP and summarize what shipped + what's blocked and why.
 2. Redesign that screen native per the skill's step 4 — reach for @expo/ui FIRST
-   (real SwiftUI/Compose), then building-native-ui (NativeTabs, liquid glass,
-   large titles); RN primitives only for custom layouts. NEVER a webview port.
+   (real SwiftUI/Compose), then building-native-ui (NativeTabs, large titles);
+   RN primitives only for custom layouts. NEVER a webview port.
    Use references/native-patterns.md (UX patterns) and references/false-friends.md
    (idioms). Match the web screen's content and behavior.
 3. Verify per references/verify-on-device.md: compare the running web original
    (browser agent) against the native screen (simulator / argent) — content and
-   behavior parity, NOT pixels (it should look more native). If it doesn't match,
-   fix it this iteration.
+   behavior parity, NOT pixels (it should look more native). If it's off for reasons
+   IN the code, fix it this iteration. If it's blocked by something OUTSIDE the code
+   (missing backend/auth/data, or a secret you can't supply), don't loop — mark it
+   blocked in step 4 and move on.
 4. Check the item off in migration-progress.md, appending one line:
-   "<screen> — done", or "<screen> — blocked: <reason>" and skip it.
+   "<screen> — done", or "<screen> — blocked: <reason> — needs <what would unlock>".
+   Either way the item is resolved; never revisit a blocked one.
 
 Rules: one screen per pass; the app builds green each iteration; @expo/ui before RN primitives; never touch "nativize-later" items.
 Base API URL for native (no relative paths): <EXPO_PUBLIC_API_URL>
