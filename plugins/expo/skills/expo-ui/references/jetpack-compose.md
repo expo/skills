@@ -1,18 +1,52 @@
 # Platform-specific Android UI: `@expo/ui/jetpack-compose`
 
-Use this layer only when the universal `@expo/ui` components don't cover what you need on Android (see `./universal.md` first). This requires a platform-specific tree, typically in an `.android.tsx` file.
+> **Android only.** Code that imports from `@expo/ui/jetpack-compose` will crash on iOS with "Unable to get view config" errors. Always place this code in an `.android.tsx` component file or guard it with `Platform.OS === 'android'`. `Host` must be imported from `@expo/ui` (the universal root), not from `@expo/ui/jetpack-compose`.
+
+Use this layer only when the universal `@expo/ui` components don't cover what you need on Android (see `./universal.md` first). This requires a platform-specific tree.
+
+### File placement with Expo Router
+
+**Do not put `.android.tsx` files inside `app/` or `src/app/`.** Expo Router does not support platform-extension suffixes for route files and will throw a "no fallback sibling" Render Error.
+
+Place platform-specific component files in `components/` (or any directory outside the route tree), then import them from a regular route file:
+
+```
+src/components/ProductList.android.tsx   ← Compose tree lives here
+src/app/product-list.tsx                 ← regular Expo Router route, imports the component
+```
+
+`src/app/product-list.tsx`:
+```tsx
+import ProductList from '../components/ProductList';
+export default ProductList;
+```
+
+Alternatively, keep everything in one regular route file and branch on `Platform.OS`:
+
+```tsx
+// src/app/product-list.tsx
+import { Platform } from 'react-native';
+const ComposeList = Platform.OS === 'android' ? require('../components/ProductList.android').default : null;
+```
 
 ## Instructions
 
 - Expo UI's API mirrors Jetpack Compose's API. Use Jetpack Compose and Material Design 3 knowledge to decide which components or modifiers to use. If you need deeper Jetpack Compose or Material 3 guidance (e.g. which component to pick, layout patterns, theming), spawn a subagent to research [Jetpack Compose](https://developer.android.com/develop/ui/compose/components) and [Material Design 3](https://m3.material.io/) best practices.
 - Components are imported from `@expo/ui/jetpack-compose`, modifiers from `@expo/ui/jetpack-compose/modifiers`.
-- **Always read the `.d.ts` type files** to confirm the exact API before using a component or modifier — read the relevant `{ComponentName}/index.d.ts` from the installed `@expo/ui/jetpack-compose` package in `node_modules`. This is the most reliable source of truth.
+- **Before writing any code, run the list-components script** to get the exact components and modifiers available in the installed version:
+  ```bash
+  node <skill-root>/scripts/list-components.js <project-path>          # names only (compact)
+  node <skill-root>/scripts/list-components.js <project-path> --docs   # with one-line descriptions
+  ```
+  (`<skill-root>` is the directory containing this `references/` folder.)
+- **Always read the `.d.ts` type files** to confirm prop shapes and signatures — read the relevant `{ComponentName}/index.d.ts` from the installed `@expo/ui/jetpack-compose` package in `node_modules`. This is the most reliable source of truth.
 - When about to use a component, fetch its docs to confirm the API — https://docs.expo.dev/versions/latest/sdk/ui/jetpack-compose/{component-name}/index.md
 - When unsure about a modifier's API, refer to the docs — https://docs.expo.dev/versions/latest/sdk/ui/jetpack-compose/modifiers/index.md
 - Every Jetpack Compose tree must be wrapped in `Host`. Use `<Host matchContents>` for intrinsic sizing, or `<Host style={{ flex: 1 }}>` when you need explicit size (e.g. as a parent of `LazyColumn`). Example:
 
 ```jsx
-import { Host, Column, Button, Text } from "@expo/ui/jetpack-compose";
+import { Host } from "@expo/ui";                              // Host always from universal root
+import { Column, Button, Text } from "@expo/ui/jetpack-compose";
 import { fillMaxWidth, paddingAll } from "@expo/ui/jetpack-compose/modifiers";
 
 <Host matchContents>
