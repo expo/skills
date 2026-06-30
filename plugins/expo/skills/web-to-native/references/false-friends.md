@@ -65,7 +65,7 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 
 | Web | Native | Gotcha |
 |---|---|---|
-| `localStorage` / `sessionStorage` | `expo-sqlite` `localStorage` (sync drop-in), or `AsyncStorage` / `MMKV` | `expo-sqlite` ships a synchronous, web-compatible `localStorage` — the closest swap. `AsyncStorage` is async (`await`); `MMKV` is sync + fast. |
+| `localStorage` / `sessionStorage` | `expo-sqlite` (`globalThis.localStorage`) | `import 'expo-sqlite/localStorage/install';` polyfills the global `localStorage`, so existing code works as-is (or `expo-sqlite/kv-store`). **No `sessionStorage` equivalent** — native has no session concept. |
 | Cookies / `document.cookie` | `expo-secure-store` + headers | No cookie jar by default. Store tokens in SecureStore; send as auth headers. |
 | Auth via session cookie | token in SecureStore | Redesign auth around bearer tokens, not browser sessions. |
 | In-memory React state | same | `useState`/`useReducer`/`useContext` transfer unchanged. |
@@ -93,6 +93,20 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 | `fetch`, React Query, SWR | same | The libraries themselves work on native — see `native-data-fetching`. |
 | Next.js API routes | Expo Router API routes | Move server endpoints to Expo API routes on EAS Hosting — see `expo-api-routes`. |
 | Streaming responses (SSE, AI SDK `useChat`) | `expo/fetch` with `textStreaming` | RN's built-in `fetch` can't read a streaming response body. Use `expo/fetch` (streams, and works with the Vercel AI SDK) or an XHR-based polyfill. |
+
+## Third-party services & SDKs
+
+Browser SDKs don't run on native — each needs a native equivalent. The canonical, version-matched integrations live in the `expo-examples` skill (the `expo/examples` repo); reach for those instead of wiring from scratch.
+
+| Web service | Native | Gotcha |
+|---|---|---|
+| **Stripe.js — digital goods / subscriptions** | store **In-App Purchase** via **RevenueCat** (`react-native-purchases`) | **Policy, not just an SDK swap.** Apple & Google *require* IAP for in-app digital goods and take ~15–30%; shipping Stripe for them gets the app rejected. Decide at assess time — it can change the business model. |
+| **Stripe.js — physical goods / services** | `@stripe/stripe-react-native` (PaymentSheet, Apple/Google Pay) | Stripe's RN SDK is allowed for physical goods; see `expo-examples` `with-stripe`. |
+| Google Maps JS | `react-native-maps` | A native map view, not an embedded iframe. |
+| Web Push | `expo-notifications` (APNs / FCM) | Different delivery + permission model. |
+| OAuth redirect flow | `expo-auth-session` (deep-link OAuth), or a native auth SDK (Clerk, Supabase…) | No browser redirect — an app deep link completes the flow. |
+| GA / Segment.js analytics | native SDK (`posthog-react-native`, Segment RN) | The web JS snippet won't load; swap for the native SDK. |
+| `<input type=file>` / `getUserMedia` | `expo-image-picker` / `expo-camera` / `expo-document-picker` | Native pickers + runtime permissions. |
 
 ## Scrolling, keyboard & safe area
 
