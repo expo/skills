@@ -18,10 +18,12 @@ function findSkillFiles(dir: string): string[] {
 
 function parseSkill(path: string): { description: string; bodyLines: number } {
   const content = readFileSync(path, "utf8");
+  // captures everything between the two --- fences (group 1 = frontmatter, group 2 = body)
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) return { description: "", bodyLines: 0 };
   const frontmatter = match[1];
   const body = match[2];
+  // matches "description: <value>" — optional quotes, multiline value
   const descMatch = frontmatter.match(/^description:\s*["']?([\s\S]*?)["']?\s*$/m);
   const description = descMatch ? descMatch[1].replace(/^"|"$/g, "") : "";
   return { description, bodyLines: body.split("\n").length };
