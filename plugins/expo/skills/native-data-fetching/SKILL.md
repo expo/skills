@@ -496,10 +496,8 @@ User: "How do I handle authentication tokens?"
 
 User: "API calls are slow"
 -> Check caching strategy, use React Query staleTime
-
 User: "How do I configure different API URLs for dev and prod?"
 -> Use EXPO*PUBLIC* env vars with .env.development and .env.production files
-
 User: "Where should I put my API key?"
 -> Client-safe keys: EXPO*PUBLIC* in .env. Secret keys: non-prefixed env vars in API routes only
 
