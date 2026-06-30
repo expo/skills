@@ -1,58 +1,106 @@
 ---
 name: expo-project-structure
-description: Folder structure for a new Expo app — the SDK 55+ `src/` layout, Expo Router `app/` for routes, plus `components/`, `features/`, `hooks/`, `lib/`, `constants/`. Use when scaffolding or laying out a greenfield Expo project, or deciding where a file should live in one. Greenfield guidance only — never restructure an existing app to match.
+description: Folder structure for a new Expo app. Use when scaffolding or laying out a new Expo project with Expo Router, or deciding where a file should live in one. For new projects only — never restructure an existing app to match.
 version: 1.0.0
 license: MIT
 ---
 
 # Expo Project Structure
 
-A starting skeleton for a **greenfield** Expo app — one with no committed folder structure yet.
+A starting skeleton for a **new** Expo app — one with no committed folder structure yet.
 
-**Apply only to greenfield projects.** If the app already has a layout, follow its existing conventions and leave files where they are — this is a default to start from, never a standard to enforce or migrate toward. When unsure whether a project counts as greenfield, ask before moving anything.
+**Apply only to new projects.** If the app already has a layout, follow its existing conventions and leave files where they are — a default to start from, never a standard to enforce or migrate toward. When unsure whether a project is new, ask before moving anything.
 
-## The `src/` layout
-
-Since SDK 55, the default `create-expo-app` template ships a top-level `src/` — don't recreate it. For a blank or pre-55 project, create `src/` yourself and point the import alias at it in `tsconfig.json`: `"@/*": ["./src/*"]`.
+The whole layout, assembled from the rules below:
 
 ```
-src/
-  app/          # Expo Router routes ONLY — screens, layouts, navigation
-  components/   # UI shared across features
-    ui/         #   design-system primitives (Button, Card, Text)
-    common/     #   other generic shared components
-  features/     # Self-contained feature modules — auth/, feed/, profile/
-  hooks/        # Global custom hooks
-  lib/          # API clients, SDK wrappers, third-party config
-  constants/    # Theme, colors, layout metrics, config values
-  utils/        # Pure helper functions
-  store/        # Global state (Redux / Zustand / Jotai), if any
-  types/        # Shared TypeScript types
+├── assets/
+├── scripts/
+├── src/
+│   ├── app/                       # Expo Router routes ONLY — every file is a route
+│   │   ├── api/                   #   server API routes, grouped here
+│   │   │   ├── user+api.ts
+│   │   │   └── settings+api.ts
+│   │   ├── _layout.tsx
+│   │   ├── _layout.web.tsx         #   platform-specific layout
+│   │   ├── index.tsx
+│   │   └── settings.tsx
+│   ├── components/                 # reusable UI: button, card, table…
+│   │   ├── table/                  #   complex component → folder + index.tsx
+│   │   │   ├── cell.tsx
+│   │   │   └── index.tsx
+│   │   ├── bar-chart.tsx
+│   │   ├── bar-chart.web.tsx        #   platform-specific variant
+│   │   └── button.tsx
+│   ├── screens/                    # screen bodies that route files render
+│   │   ├── home/
+│   │   │   ├── card.tsx            #   used only by Home — not shared
+│   │   │   └── index.tsx           #   rendered by src/app/index.tsx
+│   │   └── settings.tsx
+│   ├── server/                     # server-only helpers used by app/api
+│   │   ├── auth.ts
+│   │   └── db.ts
+│   ├── utils/                      # standalone helpers + colocated tests
+│   │   ├── format-date.ts
+│   │   └── format-date.test.ts
+│   ├── hooks/                      # reusable hooks: use-theme.ts…
+│   ├── constants.ts
+│   └── theme.ts
+├── app.json
+├── eas.json
+└── package.json
 ```
 
-Create a directory on first need — an empty `store/` or `types/` earns its place only when something fills it.
+## `src/` and `src/app`
 
-## `src/app` is routes-only
+Keep app code under `src/` to separate it from config files. Expo Router supports both `app/` and `src/app/` out of the box — to switch, move the folder and restart the bundler. The default template aliases `@/*` to `./src/*` in `tsconfig.json`.
 
-`src/app` holds nothing but route files — screens, `_layout` files, and navigation. Everything else (components, hooks, helpers) lives in the sibling directories above. If both `app/` and `src/app/` exist, Expo Router uses `src/app/` only.
+`src/app` is **routes-only**: every file there becomes a route, so nothing else belongs in it. Everything below lives in sibling folders.
 
-## Colocate by feature; promote only what's shared
+## components/ — reusable UI
 
-The lever that keeps a growing app maintainable: **colocate** each feature's own code inside its `features/<name>/` folder, and lift code up to the shared directories only once a *second* feature actually uses it.
+Generic, reused UI (button, card, table) with one named export each. Name files in **kebab-case** (`bar-chart.tsx`), matching the SDK 55 default template. When a component grows, give it its own folder with the root in `index.tsx` and **colocate** its private sub-components beside it — the import path (`@/components/table`) stays unchanged.
 
+## screens/ — screen bodies
+
+Because `app/` files must be routes, complex screen UI that isn't reused has no home there. Put it in `screens/` and let each route just render its screen:
+
+```tsx
+import { Home } from "@/screens/home";
+
+export default function HomeScreen() {
+  // route-specific concerns only — e.g. read url params here
+  return <Home />;
+}
 ```
-features/auth/
-  components/   # used only by auth — not in src/components
-  hooks/
-  api.ts
-  types.ts
-```
 
-- A component used by one screen stays with that screen or feature. Only genuinely cross-feature components belong in `src/components/`.
-- Same rule for `hooks/`, `utils/`, and `types/`: feature-local until a second feature needs them.
+**Colocate** a screen's private components inside its folder (`screens/home/components/`). A bonus: the same screen can render under multiple routes.
 
-## Stays at the project root
+## server/ + app/api/ — separate server code
 
-Config and assets stay outside `src/`: `app.json` / `app.config.ts`, `package.json`, `metro.config.js`, `tsconfig.json`, `assets/`, and `public/`.
+Appending `+api` to a file in `app/` makes it a server **API route**. Server code is different from frontend code — it runs in a Node-like EAS Hosting environment and can read secret env vars (`process.env.X`, not just `EXPO_PUBLIC_*`). Keep it apart:
 
-For the `src/` precedence and alias mechanics, see Expo's docs: https://docs.expo.dev/router/reference/src-directory/
+- Group all routes under `app/api/` → `/api/user`, `/api/settings`. This colocates them and avoids collisions (e.g. a `/user` screen and a `/user` route).
+- Put shared server-only helpers in `src/server/`.
+- Consider ESLint rules that fence `+api` files and `server/` off from frontend-only checks.
+
+## Platform-specific code
+
+Small differences: use `Platform.select` / `Platform.OS`. For larger ones, split into platform files instead of inline `if/else` — `bar-chart.tsx` + `bar-chart.web.tsx`, imported extension-free (`@/components/bar-chart`); Metro picks the right file per target.
+
+- Props must be identical across variants.
+- A default file (no platform extension) is always required — make it a no-op if the component is single-platform.
+- Supported extensions: `.ios`, `.android`, `.native`, `.web`.
+
+## Colocate styles and tests
+
+- **Styles:** keep the `StyleSheet.create({ ... })` object at the bottom of the component file rather than in a separate `.styles` file.
+- **Tests:** put `format-date.test.ts` next to `format-date.ts` (preferred over a separate `__tests__/` folder) so tested files are obvious at a glance.
+
+## AI and config files
+
+Agent instructions live at the repo root — `AGENTS.md` / `CLAUDE.md`, with project skills under `.claude/`. Other config and assets stay outside `src/`: `app.json` / `app.config.ts`, `eas.json`, `package.json`, `assets/`, and `scripts/`.
+
+---
+
+Based on [Expo app folder structure best practices](https://expo.dev/blog/expo-app-folder-structure-best-practices) by Kadi Kraman. For `src/` precedence and alias mechanics, see the [Expo docs](https://docs.expo.dev/router/reference/src-directory/).
