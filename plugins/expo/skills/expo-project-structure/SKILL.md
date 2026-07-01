@@ -59,7 +59,7 @@ Keep app code under `src/` to separate it from config files. Expo Router support
 
 ## components/ — reusable UI
 
-Generic, reused UI (button, card, table) with one named export each. Name files in **kebab-case** (`bar-chart.tsx`), matching the SDK 55 default template. When a component grows, give it its own folder with the root in `index.tsx` and **colocate** its private sub-components beside it — the import path (`@/components/table`) stays unchanged.
+Generic, reused UI (button, card, table) with one named export each. Name files in **kebab-case** (`bar-chart.tsx`), matching the default `create-expo-app` template. When a component grows, give it its own folder with the root in `index.tsx` and **colocate** its private sub-components beside it — the import path (`@/components/table`) stays unchanged.
 
 ## screens/ — screen bodies
 
