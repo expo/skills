@@ -64,6 +64,15 @@ The `install` here **uploads** the (~90MB) `.app` to the remote daemon over the 
 
 **Explicit-only** (see the SKILL.md mode picker): a *static* EAS artifact for CI/sharing, or when the user names an existing EAS build. For no-Mac **live** iteration use Mode C with an EAS dev-client build (see Mode C below), not this. **Simulator builds are unsigned, so EAS asks for no credentials.**
 
+⚠️ **Check for an existing build first.** Before triggering a new build, check if a fingerprint-matched one already exists — it saves ~15-20 min:
+
+```bash
+npx --yes eas-cli@latest build:list --platform ios --status finished --json | \
+  head -20   # look for a sim build whose fingerprint matches current source
+```
+
+If one matches, skip straight to step 3 with its artifact URL.
+
 ⚠️ **Order matters:** build FIRST, `start` the session LAST. The build takes ~15-20 min and a session left idle that long times out (`ERR_NGROK_3200`) — don't `start` until you have the artifact URL.
 
 ```bash

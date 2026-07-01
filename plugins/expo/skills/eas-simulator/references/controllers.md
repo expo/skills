@@ -28,7 +28,7 @@ EAS-specific notes:
 
 `npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).
 
-**argent is a driver, not an installer.** Its `reinstall-app` tool runs `xcrun simctl install` on the remote VM with a literal local path — it does not upload a binary or accept a URL. **Always use agent-device (or `install-from-source`) for the install step**, then use argent to drive the already-installed app.
+**argent sessions cannot install apps today.** `--type argent` provisions only an argent daemon on the VM — there is no agent-device daemon, so agent-device install commands don't apply. Use argent to drive an app that is already on the sim (e.g. start with `--type agent-device` to install, then switch; or use an EAS build with `install-from-source` via an agent-device session first).
 
 **Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 
