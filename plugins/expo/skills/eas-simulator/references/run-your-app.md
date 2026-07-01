@@ -67,7 +67,7 @@ The `install` here **uploads** the (~90MB) `.app` to the remote daemon over the 
 ⚠️ **Check for an existing build first.** Before triggering a new build, check if a fingerprint-matched one already exists — it saves ~15-20 min:
 
 ```bash
-npx --yes eas-cli@latest build:list --platform ios --status finished --json | \
+npx --yes eas-cli@latest build:list --platform ios --profile <your-sim-profile> --status finished --json | \
   head -20   # look for a sim build whose fingerprint matches current source
 ```
 

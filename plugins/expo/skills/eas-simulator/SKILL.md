@@ -114,7 +114,7 @@ Quick decision — **default to C; A and B are explicit-only:**
 | `snapshot -i` | Interactive accessibility tree → `@e1`-style refs |
 | `press <ref\|selector>` | Tap (e.g. `press @e2` or `press 'label="Open"'`) — **the tap verb is `press`, not `tap`** |
 | `fill <ref> "text"` | Type into a field |
-| `screenshot <path>` | Capture the screen to a local PNG (downloaded from the daemon) |
+| `screenshot <path>` | Capture the screen to a local PNG (downloaded from the daemon) — requires an app to be open (`open` first) |
 | `metro prepare` / `metro reload` | Point a dev client at Metro / reload (Mode C) |
 
 For the full verb set and the `argent` controller alternative, see [references/controllers.md](./references/controllers.md).
