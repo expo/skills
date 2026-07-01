@@ -120,6 +120,7 @@ Agents choose the right skill from the task context and each skill's description
 | `expo-cicd-workflows` | EAS Workflow YAML files and CI/CD automation. |
 | `expo-observe` | EAS Observe setup and launch, route, event, and version metrics. |
 | `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
+| `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator on EAS cloud — from the CLI or an agent, with a live browser preview (iOS only). |
 
 ### Maintenance
 
