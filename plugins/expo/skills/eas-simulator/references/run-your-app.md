@@ -76,16 +76,11 @@ If one matches, skip straight to step 3 with its artifact URL.
 ⚠️ **Order matters:** build FIRST, `start` the session LAST. The build takes ~15-20 min and a session left idle that long times out (`ERR_NGROK_3200`) — don't `start` until you have the artifact URL.
 
 ```bash
-# 1. Add a simulator build profile to eas.json — skip if one already exists.
-#    Check first: if eas.json already has a build profile with `"simulator": true`, use it and skip this step.
-node -e "
-const fs = require('fs');
-const p = 'eas.json';
-const c = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
-c.build = c.build || {};
-c.build.sim = c.build.sim || { ios: { simulator: true } };
-fs.writeFileSync(p, JSON.stringify(c, null, 2) + '\n');
-"
+# 1. Find or create a simulator build profile in eas.json.
+#    Read eas.json if it exists and look for a build profile with ios.simulator: true.
+#    If one exists, note its name and skip to step 2.
+#    If not, add one named "sim" — use node, python3, jq, or a direct JSON edit, whichever
+#    is available. Preserve all other profiles. Minimum: { "ios": { "simulator": true } }
 
 # 2. Build (no credentials prompt for a simulator build). Prints an artifact URL when done (~15-20 min).
 npx --yes eas-cli@latest build --platform ios --profile sim --non-interactive
@@ -116,16 +111,11 @@ This is the agentic edit-and-see loop: a **dev (Debug) build** loads JS from you
 ```bash
 # ── Non-Mac path: replace step 1 with these ──────────────────────────────────
 
-# Add a dev-sim profile — skip if one already exists.
-#    Check first: if eas.json already has a build profile with `developmentClient: true` + `"simulator": true`, use it and skip this step.
-node -e "
-const fs = require('fs');
-const p = 'eas.json';
-const c = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : {};
-c.build = c.build || {};
-c.build['dev-sim'] = c.build['dev-sim'] || { developmentClient: true, ios: { simulator: true } };
-fs.writeFileSync(p, JSON.stringify(c, null, 2) + '\n');
-"
+# Find or create a dev-client simulator build profile in eas.json.
+#    Read eas.json if it exists and look for a build profile with developmentClient: true + ios.simulator: true.
+#    If one exists, note its name and skip to the build step.
+#    If not, add one named "dev-sim" — use node, python3, jq, or a direct JSON edit, whichever
+#    is available. Preserve all other profiles. Minimum: { "developmentClient": true, "ios": { "simulator": true } }
 
 # Build (~15-20 min). Prints an artifact URL when done.
 npx --yes eas-cli@latest build --platform ios --profile dev-sim --non-interactive
