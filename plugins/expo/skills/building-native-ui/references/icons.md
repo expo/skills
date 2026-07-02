@@ -6,10 +6,10 @@ Use SF Symbols for native feel. Never use FontAwesome or Ionicons.
 
 ```tsx
 import { SymbolView } from "expo-symbols";
-import { PlatformColor } from "react-native";
+import { colors } from "@/theme/colors";
 
 <SymbolView
-  tintColor={PlatformColor("label")}
+  tintColor={colors.label}
   resizeMode="scaleAspectFit"
   name="square.and.arrow.down"
   style={{ width: 16, height: 16 }}
@@ -21,7 +21,7 @@ import { PlatformColor } from "react-native";
 ```tsx
 <SymbolView
   name="star.fill"                    // SF Symbol name (required)
-  tintColor={PlatformColor("label")}  // Icon color
+  tintColor={colors.label}            // Icon color
   size={24}                           // Shorthand for width/height
   resizeMode="scaleAspectFit"         // How to scale
   weight="regular"                    // thin | ultraLight | light | regular | medium | semibold | bold | heavy | black
@@ -209,5 +209,5 @@ Some symbols support multiple colors:
 - Always use SF Symbols over vector icon libraries
 - Match symbol weight to nearby text weight
 - Use `.fill` variants for selected/active states
-- Use PlatformColor for tint to support dark mode
+- Use the cross-platform `colors` helper (see SKILL.md "Colors") for tint to support dark mode
 - Keep icons at consistent sizes (16, 20, 24, 32)

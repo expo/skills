@@ -214,7 +214,7 @@ Animate list items with delays:
 - Use layout animations when items are added/removed from lists
 - Use `useAnimatedStyle` for scroll-driven animations
 - Prefer `interpolate` with "clamp" for bounded values
-- You can't pass PlatformColors to reanimated views or styles; use static colors instead
+- You can't pass `Color` (from expo-router) or `PlatformColor` values to reanimated views or styles; use static colors instead
 - Keep animations under 300ms for responsive feel
 - Use spring animations for natural movement
 - Avoid animating layout properties (width, height) when possible — prefer transforms

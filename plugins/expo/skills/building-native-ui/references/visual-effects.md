@@ -98,11 +98,11 @@ Add `isInteractive` for buttons and pressable glass:
 ```tsx
 import { GlassView } from "expo-glass-effect";
 import { SymbolView } from "expo-symbols";
-import { PlatformColor } from "react-native";
+import { colors } from "@/theme/colors";
 
 <GlassView isInteractive style={{ borderRadius: 50 }}>
   <Pressable style={{ padding: 12 }} onPress={handlePress}>
-    <SymbolView name="plus" tintColor={PlatformColor("label")} size={36} />
+    <SymbolView name="plus" tintColor={colors.label} size={36} />
   </Pressable>
 </GlassView>
 ```
@@ -116,7 +116,7 @@ function GlassButton({ icon, onPress }) {
   return (
     <GlassView isInteractive style={{ borderRadius: 50 }}>
       <Pressable style={{ padding: 12 }} onPress={onPress}>
-        <SymbolView name={icon} tintColor={PlatformColor("label")} size={24} />
+        <SymbolView name={icon} tintColor={colors.label} size={24} />
       </Pressable>
     </GlassView>
   );
@@ -131,10 +131,10 @@ function GlassButton({ icon, onPress }) {
 
 ```tsx
 <GlassView style={{ borderRadius: 20, padding: 20 }}>
-  <Text style={{ fontSize: 18, fontWeight: '600', color: PlatformColor("label") }}>
+  <Text style={{ fontSize: 18, fontWeight: '600', color: colors.label }}>
     Card Title
   </Text>
-  <Text style={{ color: PlatformColor("secondaryLabel"), marginTop: 8 }}>
+  <Text style={{ color: colors.secondaryLabel, marginTop: 8 }}>
     Card content goes here
   </Text>
 </GlassView>
