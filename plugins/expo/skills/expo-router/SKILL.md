@@ -74,10 +74,10 @@ Whenever possible, include a `<Link.Preview>` to follow iOS conventions. Add con
 
 ### Page Title
 
-Set the page title in Stack.Screen options:
+Set the page title with `Stack.Title`:
 
 ```tsx
-<Stack.Screen options={{ title: "Home" }} />
+<Stack.Title>Home</Stack.Title>
 ```
 
 ## Context Menus
