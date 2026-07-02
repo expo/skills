@@ -245,6 +245,67 @@ Requires `@react-navigation/native` 7.0.0 or later. Same `useObserve()` screen u
 
 In both integrations, `useObserve()` is safe to leave in place even when the integration is disabled or the router package is absent — it falls back to the global `markInteractive`.
 
+## Optional — custom events (SDK 56+)
+
+Beyond the automatic startup and navigation metrics, you can record your own named events from anywhere in the app to track product moments — a completed onboarding, an exported report, a selected item. Use `Observe.logEvent(name, options?)`.
+
+> Source: https://docs.expo.dev/eas/observe/events/ — consult this page for the latest guidance.
+
+```tsx
+import { Observe } from 'expo-observe';
+
+function handleOnboardingComplete() {
+  Observe.logEvent('onboarding.completed');
+}
+```
+
+`logEvent` is a plain function call — it is **not** a hook and needs no `useObserve()`. Call it from event handlers, effects, or any non-render code. The event is persisted on-device and dispatched on the next flush (see dispatch notes below); the call returns immediately and never blocks the UI.
+
+### Parameters
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `name` | `string` | yes | Stable, dot-separated identifier, e.g. `'report.exported'`. |
+| `options.attributes` | `Record<string, string \| number \| boolean \| array \| nested object>` | no | Structured context attached to the event. |
+| `options.body` | `string` | no | Free-form message complementing the structured attributes. |
+| `options.severity` | `'trace' \| 'debug' \| 'info' \| 'warn' \| 'error' \| 'fatal'` | no | Defaults to `'info'`. |
+
+**Attributes** are the primary way to make an event queryable — attach the identifiers and measurements you'll want to filter or break down by:
+
+```tsx
+Observe.logEvent('report.exported', {
+  attributes: {
+    format: 'csv',
+    rowCount: 1248,
+    durationMs: 532,
+    filters: ['status:active', 'region:us-west'],
+  },
+});
+```
+
+**Severity and body** suit operational events you may want to triage by level:
+
+```tsx
+Observe.logEvent('cache.evicted', {
+  body: 'Cache evicted because disk pressure exceeded the configured threshold.',
+  severity: 'warn',
+  attributes: { evictedItemCount: 42, freedBytes: 1048576 },
+});
+```
+
+### Naming and privacy
+
+- **Use lowercase, dot-separated names** (`task.completed`, `onboarding.skipped`). Keep them stable — `report_exported` and `report.exported` bucket as two separate events in the dashboard.
+- **Never put PII in event names, attribute keys, or attribute values.** Everything is transmitted off-device and visible in the dashboard.
+
+### Dispatch
+
+Custom events are persisted on-device, batched, and dispatched on the next flush as **OpenTelemetry log records** — the same delivery path and timing as other metrics. The debug-build caveat from [Step 4](#step-4--build-the-app) applies unchanged: debug builds don't dispatch unless `configure({ dispatchInDebug: true })` is set.
+
+### Viewing events
+
+Custom events appear under the **Events** tab in the Observe dashboard, and are queryable from the terminal with `eas observe:events` — see [`./queries.md`](./queries.md).
+
 ## Quick checklist
 
 - [ ] SDK ≥ 55, EAS project linked.
@@ -252,4 +313,5 @@ In both integrations, `useObserve()` is safe to leave in place even when the int
 - [ ] Root component exported through `AppMetricsRoot.wrap(...)` (SDK 55) or `ObserveRoot.wrap(...)` (SDK 56+).
 - [ ] `markInteractive()` called from every entry screen once it is genuinely interactive — global `AppMetrics.markInteractive()` on SDK 55, or `useObserve()` hook on SDK 56+.
 - [ ] (Optional, SDK 56+) Per-route metrics enabled via `Observe.configure({ integrations: { ... } })`, plus `<ObserveNavigationContainer>` for React Navigation.
+- [ ] (Optional, SDK 56+) Custom events emitted via `Observe.logEvent(name, { attributes })` with stable, lowercase, dot-separated names and no PII.
 - [ ] New build produced with `eas build` and metrics visible in the Observe dashboard.
