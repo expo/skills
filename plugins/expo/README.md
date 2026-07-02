@@ -65,10 +65,11 @@ Official AI agent skills from the Expo team for building, deploying, upgrading, 
 ### App Design
 
 - **add-app-clip** — Add an iOS App Clip target to an Expo app (AASA, associated domains, TestFlight)
-- **building-native-ui** — Build beautiful apps with Expo Router, styling, components, navigation, and animations
+- **building-native-ui** — Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, animations, and visual effects
 - **expo-api-routes** — Create API routes in Expo Router with EAS Hosting
 - **expo-brownfield** — Integrate Expo and React Native into existing native iOS or Android apps
 - **expo-dev-client** — Build and distribute Expo development clients locally or via TestFlight
+- **expo-router** — Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, and headers
 - **expo-tailwind-setup** — Set up Tailwind CSS v4 in Expo with NativeWind v5
 - **expo-ui** — Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **native-data-fetching** — Network requests, API calls, caching, and offline support

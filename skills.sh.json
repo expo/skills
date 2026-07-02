@@ -7,6 +7,7 @@
       "description": "Build Expo Router screens, native-feeling UI, styling, data fetching, and API routes.",
       "skills": [
         "building-native-ui",
+        "expo-router",
         "native-data-fetching",
         "expo-api-routes",
         "expo-tailwind-setup",

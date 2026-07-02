@@ -6,8 +6,8 @@ Disclosed reference for [`web-to-native`](../SKILL.md), step 4. `false-friends.m
 
 | Web pattern | Native redesign — reach for first | Why |
 |---|---|---|
-| Top tab bar / nav links | **NativeTabs** — bottom, liquid glass on iOS 26 (`building-native-ui`) | Thumb-reachable, OS-native bar |
-| Page header / breadcrumb | **large-title** Stack header + header **search field** (`building-native-ui`) | The native screen frame |
+| Top tab bar / nav links | **NativeTabs** — bottom, liquid glass on iOS 26 (`expo-router`) | Thumb-reachable, OS-native bar |
+| Page header / breadcrumb | **large-title** Stack header + header **search field** (`expo-router`) | The native screen frame |
 | In-page tabs / toggle group | **SegmentedControl** — `@expo/ui` (`community/segmented-control`) | Native segmented switch |
 | Modal / dialog | **BottomSheet** — `@expo/ui` | Sheets *are* the native modal |
 | `<select>` / dropdown | **Picker**, or long-press **MenuView** — `@expo/ui` (`community/menu`) | Native wheel / menu, no popover |
@@ -28,9 +28,9 @@ Disclosed reference for [`web-to-native`](../SKILL.md), step 4. `false-friends.m
 
 ## Feel — beyond the components
 
-The table gets the right *components*; "native" also lives in *motion and touch* — and a web port arrives with almost none, so you must add it. The tooling is all in `building-native-ui`; reach for it, don't hand-roll:
+The table gets the right *components*; "native" also lives in *motion and touch* — and a web port arrives with almost none, so you must add it. The tooling is in `expo-router` (navigation/transitions) and `building-native-ui` (motion/effects); reach for it, don't hand-roll:
 
-- **Transitions for free** — use Expo Router's native-stack so push/pop, modals, and sheets animate with real platform physics; shared-element zoom via `building-native-ui` `zoom-transitions.md`.
+- **Transitions for free** — use Expo Router's native-stack so push/pop, modals, and sheets animate with real platform physics; shared-element zoom via `expo-router` `zoom-transitions.md`.
 - **Motion** — Reanimated (`withSpring`/`withTiming`; `entering`/`exiting` for list items) + `react-native-gesture-handler` for swipes/drags → `building-native-ui` `animations.md`.
 - **Touch** — `expo-haptics` on commits, selection changes, and pull-to-refresh — choreography, not just a toast buzz.
 - **Native rhythm** — large-title collapse on scroll, momentum / inverted scroll, a keyboard that pushes content (`KeyboardAvoidingView`).

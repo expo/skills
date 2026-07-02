@@ -95,7 +95,8 @@ Agents choose the right skill from the task context and each skill's description
 
 | Skill | Use it for |
 | --- | --- |
-| `building-native-ui` | Expo Router screens, navigation, styling, animations, native tabs, and app UI patterns. |
+| `building-native-ui` | Native-feeling screen styling, semantic colors, controls, icons, media, animations, and visual effects. |
+| `expo-router` | Expo Router navigation: file-based routes, links, native stacks, modals, sheets, native tabs, and headers. |
 | `native-data-fetching` | API calls, React Query, SWR, caching, offline support, and Expo Router data loaders. |
 | `expo-api-routes` | Expo Router API routes with EAS Hosting. |
 | `expo-tailwind-setup` | Tailwind CSS v4, `react-native-css`, and NativeWind v5 setup. |

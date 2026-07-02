@@ -25,7 +25,7 @@ Each iteration, FIRST re-read the playbook — plugins/expo/skills/web-to-native
    item under "nativize-now"; if none are left unresolved (every nativize-now is
    done or blocked), STOP and summarize what shipped + what's blocked and why.
 2. Redesign that screen native per the skill's step 4 — reach for @expo/ui FIRST
-   (real SwiftUI/Compose), then building-native-ui (NativeTabs, large titles);
+   (real SwiftUI/Compose), then expo-router (NativeTabs, large titles);
    RN primitives only for custom layouts. NEVER a webview port.
    Use references/native-patterns.md (UX patterns) and references/false-friends.md
    (idioms). Match the web screen's content and behavior.
