@@ -23,10 +23,6 @@ references/
   zoom-transitions.md    Apple Zoom: fluid zoom transitions with Link.AppleZoom (iOS 18+)
 ```
 
-## Running the App
-
-**Try Expo Go first before creating custom builds.** Most Expo Router apps run in Expo Go without any custom native code — run `npx expo start` and scan the QR code. Only reach for `npx expo run:ios/android` or `eas build` when you add custom native code (local Expo modules, Apple targets, third-party native modules, or native config that can't live in `app.json`).
-
 ## Code Style
 
 - Always use kebab-case for file names, e.g. `comment-card.tsx`
