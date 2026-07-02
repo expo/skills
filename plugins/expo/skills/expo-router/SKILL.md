@@ -45,7 +45,7 @@ See `./references/route-structure.md` for detailed route conventions.
 
 ## Behavior
 
-- Prefer `headerSearchBarOptions` in Stack.Screen options to add a search bar
+- Prefer `Stack.SearchBar` to add a search bar to a screen
 
 # Navigation
 
