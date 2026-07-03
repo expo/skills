@@ -245,7 +245,7 @@ Requires `@react-navigation/native` 7.0.0 or later. Same `useObserve()` screen u
 
 In both integrations, `useObserve()` is safe to leave in place even when the integration is disabled or the router package is absent — it falls back to the global `markInteractive`.
 
-## Optional — custom events (SDK 56+)
+## Optional — user-defined events (SDK 56+)
 
 Beyond the automatic startup and navigation metrics, you can record your own named events from anywhere in the app to track product moments — a completed onboarding, an exported report, a selected item. Use `Observe.logEvent(name, options?)`.
 
@@ -283,7 +283,7 @@ Observe.logEvent('report.exported', {
 });
 ```
 
-**Severity and body** suit operational events you may want to triage by level:
+**Severity and body** may be used for operational events you may want to triage by level:
 
 ```tsx
 Observe.logEvent('cache.evicted', {
@@ -300,11 +300,11 @@ Observe.logEvent('cache.evicted', {
 
 ### Dispatch
 
-Custom events are persisted on-device, batched, and dispatched on the next flush as **OpenTelemetry log records** — the same delivery path and timing as other metrics. The debug-build caveat from [Step 4](#step-4--build-the-app) applies unchanged: debug builds don't dispatch unless `configure({ dispatchInDebug: true })` is set.
+User-defined events are persisted on-device, batched, and dispatched on the next flush as **OpenTelemetry log records** — the same delivery path and timing as other metrics. The debug-build caveat from [Step 4](#step-4--build-the-app) applies unchanged: debug builds don't dispatch unless `configure({ dispatchInDebug: true })` is set.
 
 ### Viewing events
 
-Custom events appear under the **Events** tab in the Observe dashboard, and are queryable from the terminal with `eas observe:events` — see [`./queries.md`](./queries.md).
+User-defined events appear under the **Events** tab in the Observe dashboard, and are queryable from the terminal with `eas observe:events` — see [`./queries.md`](./queries.md).
 
 ## Quick checklist
 
