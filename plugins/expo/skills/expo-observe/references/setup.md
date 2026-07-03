@@ -313,5 +313,5 @@ User-defined events appear under the **Events** tab in the Observe dashboard, an
 - [ ] Root component exported through `AppMetricsRoot.wrap(...)` (SDK 55) or `ObserveRoot.wrap(...)` (SDK 56+).
 - [ ] `markInteractive()` called from every entry screen once it is genuinely interactive — global `AppMetrics.markInteractive()` on SDK 55, or `useObserve()` hook on SDK 56+.
 - [ ] (Optional, SDK 56+) Per-route metrics enabled via `Observe.configure({ integrations: { ... } })`, plus `<ObserveNavigationContainer>` for React Navigation.
-- [ ] (Optional, SDK 56+) Custom events emitted via `Observe.logEvent(name, { attributes })` with stable, lowercase, dot-separated names and no PII.
+- [ ] (Optional, SDK 56+) User-defined events emitted via `Observe.logEvent(name, { attributes })` with stable, lowercase, dot-separated names and no PII.
 - [ ] New build produced with `eas build` and metrics visible in the Observe dashboard.
