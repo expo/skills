@@ -1,4 +1,4 @@
 interface:
   display_name: "Expo Tailwind Setup"
-  short_description: "Set up Tailwind CSS v4, react-native-css, Nativewind v5, and CSS wrappers in Expo"
-  default_prompt: "Use $expo-tailwind-setup to install and configure Tailwind CSS v4 with Expo, Nativewind v5, react-native-css, Metro, PostCSS, global CSS, typed component wrappers, and theme variables."
+  short_description: "Set up Tailwind CSS v4, react-native-css, and Nativewind v5 in Expo"
+  default_prompt: "Use $expo-tailwind-setup to install and configure Tailwind CSS v4 with Expo, Nativewind v5, react-native-css, Metro, PostCSS, global CSS, TypeScript types, and theme variables."
