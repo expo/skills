@@ -1,13 +1,13 @@
 ---
 name: expo-tailwind-setup
-description: Framework (OSS). Set up Tailwind CSS v4 in Expo with react-native-css and NativeWind v5 for universal styling
-version: 1.0.0
+description: Framework (OSS). Set up Tailwind CSS v4 in Expo with react-native-css and Nativewind v5 for universal styling
+version: 1.0.1
 license: MIT
 ---
 
 # Tailwind CSS Setup for Expo with react-native-css
 
-This guide covers setting up Tailwind CSS v4 in Expo using react-native-css and NativeWind v5 for universal styling across iOS, Android, and Web.
+This guide covers setting up Tailwind CSS v4 in Expo using react-native-css and Nativewind v5 for universal styling across iOS, Android, and Web.
 
 ## Overview
 
@@ -15,7 +15,7 @@ This setup uses:
 
 - **Tailwind CSS v4** - Modern CSS-first configuration
 - **react-native-css** - CSS runtime for React Native
-- **NativeWind v5** - Metro transformer for Tailwind in React Native
+- **Nativewind v5** - Metro transformer for Tailwind in React Native
 - **@tailwindcss/postcss** - PostCSS plugin for Tailwind v4
 
 ## Installation
@@ -105,10 +105,10 @@ Create `src/global.css`:
 
 ## IMPORTANT: No Babel Config Needed
 
-With Tailwind v4 and NativeWind v5, you do NOT need a babel.config.js for Tailwind. Remove any NativeWind babel presets if present:
+With Tailwind v4 and Nativewind v5, you do NOT need a babel.config.js for Tailwind. Remove any Nativewind babel presets if present:
 
 ```js
-// DELETE babel.config.js if it only contains NativeWind config
+// DELETE babel.config.js if it only contains Nativewind config
 // The following is NO LONGER needed:
 // module.exports = function (api) {
 //   api.cache(true);
@@ -449,7 +449,7 @@ function MyComponent() {
 }
 ```
 
-## Key Differences from NativeWind v4 / Tailwind v3
+## Key Differences from Nativewind v4 / Tailwind v3
 
 1. **No babel.config.js** - Configuration is now CSS-first
 2. **PostCSS plugin** - Uses `@tailwindcss/postcss` instead of `tailwindcss`
