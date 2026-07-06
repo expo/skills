@@ -74,7 +74,7 @@ npx skills@latest update
 To update a single Expo skill, pass its name:
 
 ```text
-npx skills@latest update building-native-ui
+npx skills@latest update expo-router
 ```
 
 ## Try It
@@ -91,43 +91,40 @@ Agents choose the right skill from the task context and each skill's description
 
 ## Skills Included
 
-### App Design and Architecture
+Skills come in two groups so the free vs paid boundary is clear. Each skill's description carries the same label, and every services skill opens with a costs/plan-limits note.
+
+### Framework (open source)
+
+Free, open-source Expo SDK and React Native skills.
 
 | Skill | Use it for |
 | --- | --- |
-| `building-native-ui` | Native-feeling screen styling, semantic colors, controls, icons, media, animations, and visual effects. |
 | `expo-router` | Expo Router navigation: file-based routes, links, native stacks, modals, sheets, native tabs, and headers. |
-| `native-data-fetching` | API calls, React Query, SWR, caching, offline support, and Expo Router data loaders. |
-| `expo-api-routes` | Expo Router API routes with EAS Hosting. |
+| `expo-native-ui` | Native-feeling screen styling, semantic colors, controls, icons, media, animations, and visual effects. |
+| `expo-ui` | `@expo/ui` native components: universal cross-platform first, with SwiftUI and Jetpack Compose for platform-specific needs. |
+| `expo-data-fetching` | API calls, React Query, SWR, caching, offline support, and Expo Router data loaders. |
 | `expo-tailwind-setup` | Tailwind CSS v4, `react-native-css`, and NativeWind v5 setup. |
-| `use-dom` | Expo DOM components for gradually using web code in native apps. |
-| `expo-dev-client` | Local and TestFlight development client builds. |
-
-### Native and Platform Work
-
-| Skill | Use it for |
-| --- | --- |
+| `expo-dom` | Expo DOM components for gradually using web code in native apps. |
+| `expo-web-to-native` | Migrating an existing web/React app (Next.js, Vite, CRA) to a native iOS/Android app with Expo. |
 | `expo-module` | Expo native modules and views with Swift, Kotlin, TypeScript, config plugins, and autolinking. |
-| `expo-ui-swift-ui` | `@expo/ui/swift-ui` components and modifiers. |
-| `expo-ui-jetpack-compose` | `@expo/ui/jetpack-compose` views and modifiers. |
-| `add-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
 | `expo-brownfield` | Adding Expo or React Native to an existing iOS or Android app. |
+| `expo-dev-client` | Development clients (local builds are free; EAS Build/TestFlight is a paid step). |
+| `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold a new project from. |
+| `expo-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
+| `expo-upgrade` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
 
-### Deployment, CI, and Observability
+### Services & paid distribution
+
+Skills whose core purpose uses paid Expo Application Services (EAS).
 
 | Skill | Use it for |
 | --- | --- |
-| `expo-deployment` | App Store, Play Store, TestFlight, EAS Build, web hosting, and API route deployment. |
-| `expo-cicd-workflows` | EAS Workflow YAML files and CI/CD automation. |
-| `expo-observe` | EAS Observe setup and launch, route, event, and version metrics. |
+| `eas-app-stores` | Production builds, App Store, Play Store, TestFlight, eas.json profiles, versioning, and store metadata. |
+| `eas-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. |
+| `eas-workflows` | EAS Workflow YAML files and CI/CD automation. |
+| `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. |
 | `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
-| `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator on EAS cloud — from the CLI or an agent, with a live browser preview (iOS only). |
-
-### Maintenance
-
-| Skill | Use it for |
-| --- | --- |
-| `upgrading-expo` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
+| `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator on EAS cloud - from the CLI or an agent, with a live browser preview (iOS only). |
 
 ## Expo MCP Server
 
