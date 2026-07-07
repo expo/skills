@@ -1,6 +1,6 @@
 ---
 name: expo-examples
-description: Expo's official example projects — the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, NativeWind, and more). Use when integrating a third-party library or service into an existing Expo app and you want the canonical, version-matched pattern to adapt, or when scaffolding a new project from one with `npx create-expo --example`.
+description: Framework (OSS). Expo's official example projects - the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, NativeWind, and more). Use when integrating a third-party library or service into an existing Expo app and you want the canonical, version-matched pattern to adapt, or when scaffolding a new project from one with `npx create-expo --example`.
 allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx create-expo:*),Bash(npx degit:*),Bash(bun create:*)"
 version: 1.0.0
 license: MIT
@@ -88,10 +88,11 @@ When the user already has an app, **add only what the example introduces; never 
 ## Related skills
 
 - Tailwind / NativeWind styling → `expo-tailwind-setup`
-- Native UI components → `building-native-ui`
+- Native UI components (@expo/ui package) → `expo-ui`
+- Styling and native-feeling screens → `expo-native-ui`
 - Navigation and routing → `expo-router`
 - Authoring a native module → `expo-module`
-- Upgrade the SDK before adopting a latest-SDK example → `upgrading-expo`
+- Upgrade the SDK before adopting a latest-SDK example → `expo-upgrade`
 
 ## References
 

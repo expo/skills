@@ -3,45 +3,34 @@
   "notGrouped": "bottom",
   "groupings": [
     {
-      "title": "App Design",
-      "description": "Build Expo Router screens, native-feeling UI, styling, data fetching, and API routes.",
+      "title": "Framework (open source)",
+      "description": "Free, open-source Expo SDK and React Native skills: UI, navigation, styling, data fetching, native modules, DOM, examples, and SDK upgrades.",
       "skills": [
-        "building-native-ui",
         "expo-router",
-        "native-data-fetching",
-        "expo-api-routes",
+        "expo-native-ui",
+        "expo-ui",
+        "expo-data-fetching",
         "expo-tailwind-setup",
-        "use-dom",
-        "expo-dev-client"
-      ]
-    },
-    {
-      "title": "Native Platform",
-      "description": "Work with Expo native modules, SwiftUI, Jetpack Compose, App Clips, and brownfield apps.",
-      "skills": [
+        "expo-dom",
+        "expo-web-to-native",
         "expo-module",
-        "expo-ui-swiftui",
-        "expo-ui-jetpack-compose",
-        "add-app-clip",
-        "expo-brownfield"
+        "expo-brownfield",
+        "expo-dev-client",
+        "expo-examples",
+        "expo-app-clip",
+        "expo-upgrade"
       ]
     },
     {
-      "title": "Deploy and Observe",
-      "description": "Ship apps with EAS Build, EAS Workflows, EAS Update, EAS Observe, stores, and hosting.",
+      "title": "Services & paid distribution",
+      "description": "Skills whose core purpose uses paid Expo Application Services (EAS). Each one discloses costs and plan limits up front.",
       "skills": [
-        "expo-deployment",
-        "expo-cicd-workflows",
-        "expo-observe",
+        "eas-app-stores",
+        "eas-hosting",
+        "eas-workflows",
+        "eas-observe",
         "eas-update-insights",
         "eas-simulator"
-      ]
-    },
-    {
-      "title": "Maintenance",
-      "description": "Upgrade Expo SDK versions and fix dependency, cache, and migration issues.",
-      "skills": [
-        "upgrading-expo"
       ]
     }
   ]
