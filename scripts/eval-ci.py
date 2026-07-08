@@ -490,6 +490,23 @@ def bundle_app_source(app, dest):
          "-C", str(app.parent), app.name], capture_output=True)
 
 
+def bundle_results(out_root):
+    """One clean tarball of the run's outputs with paths RELATIVE to out_root.
+
+    `eas/upload_artifact` archives absolute paths (findArtifacts always
+    path.join(rootDir, ...)), so uploading loose files buries them under
+    `Users/expo/workingdir/build/.eval-out/…`. Pre-tarring with `-C out_root`
+    gives a clean extract (`./eval-report.md`, `./iteration-1/…/index.png`).
+    Excludes the raw fixture app dirs (node_modules/native) — the app source is
+    already captured in generated-app.tar.gz.
+    """
+    dest = Path(out_root) / "eval-results.tar.gz"
+    run(["tar", "czf", str(dest), "-C", str(out_root),
+         "--exclude=./eval-results.tar.gz", "--exclude=*/app", "."],
+        capture_output=True)
+    return dest
+
+
 def count_captured(out_dir, routes):
     captured = 0
     for rt in routes:
@@ -740,6 +757,9 @@ def cmd_run(args):
     # Best-effort viewer for the runtime tier (nice as an artifact).
     if tier == "runtime":
         run(["python3", str(GENERATE_VIEWER), str(out_root)], capture_output=True)
+
+    # Clean, relative-path bundle for the CI artifact upload.
+    bundle_results(out_root)
 
     print(report)
     print(f"\n[eval-ci] summary: {out_root}/eval-summary.json", file=sys.stderr)
