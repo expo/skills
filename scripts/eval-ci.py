@@ -85,8 +85,10 @@ RUNTIME_SKILLS = {
     "expo-web-to-native",
 }
 
-# Per-executor timeouts (seconds). Runtime builds a full multi-screen app.
-EXECUTOR_TIMEOUT = {"static": 900, "runtime": 1200}
+# Per-executor timeouts (seconds). Runtime builds a full multi-screen app; Sonnet
+# is slower to converge / more verbose than Opus on the big hot_chocolate PRD and
+# blew past 1200s, so give it more headroom. Override with --timeout.
+EXECUTOR_TIMEOUT = {"static": 900, "runtime": 2400}
 
 
 # --- Small helpers ---------------------------------------------------------
@@ -793,6 +795,8 @@ def infra_error(summary):
 
 def cmd_run(args):
     tier = args.tier
+    if getattr(args, "timeout", 0):
+        EXECUTOR_TIMEOUT[tier] = args.timeout
     prefix = "expo-plugin-eval-ci" if tier == "runtime" else "expo-skill-eval-ci"
     out_root = Path(args.out).resolve() if args.out else Path(
         tempfile.mkdtemp(prefix=f"{prefix}-"))
@@ -848,6 +852,9 @@ def main():
     r.add_argument("--prd", default=str(
         REPO_ROOT / ".claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt"))
     r.add_argument("--sdk", default="", help="Expo SDK major (default: latest)")
+    r.add_argument("--timeout", type=int, default=0,
+                   help="executor timeout seconds; override the per-tier default "
+                        "(static 900, runtime 2400)")
     r.add_argument("--model", default="claude-sonnet-5",
                    help="model for the claude -p executor — id or alias like 'sonnet' "
                         "/ 'opus' (default: claude-sonnet-5, cheaper than Opus)")
