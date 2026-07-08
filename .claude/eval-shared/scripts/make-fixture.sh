@@ -67,6 +67,14 @@ if [[ ! -d "$CACHE_DIR" ]]; then
     // A custom scheme lets a dev-build deep-link to specific routes
     // (<scheme>://<route>); harmless for Expo Go, which uses exp:// instead.
     j.expo.scheme ??= "exposkilleval";
+    // Suppress the expo-dev-client dev-menu onboarding/launch overlay so it does
+    // not cover snapshots. Dev builds apply this at prebuild; expo-dev-menu also
+    // honors showMenuAtLaunch/skipOnboarding at runtime.
+    j.expo.plugins ??= [];
+    const dcOpts = { launchMode: "most-recent", toolsButton: false, skipOnboarding: true, showMenuAtLaunch: false };
+    const di = j.expo.plugins.findIndex(p => p === "expo-dev-client" || (Array.isArray(p) && p[0] === "expo-dev-client"));
+    if (di >= 0) j.expo.plugins[di] = ["expo-dev-client", { ...(Array.isArray(j.expo.plugins[di]) ? j.expo.plugins[di][1] : {}), ...dcOpts }];
+    else j.expo.plugins.push(["expo-dev-client", dcOpts]);
     await Bun.write(f, JSON.stringify(j, null, 2) + "\n");
   ') >&2
   # The CLI normally generates expo-env.d.ts on first `expo start`; the static
