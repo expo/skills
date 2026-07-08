@@ -220,7 +220,7 @@ def cmd_detect(args):
 # --- Executor (the one model call) -----------------------------------------
 
 
-def run_executor(prompt, app_path, log_path, tier, plugin_dir=None):
+def run_executor(prompt, app_path, log_path, tier, plugin_dir=None, model=None):
     """Run one `claude -p` executor that edits the fixture in place.
 
     The executor is the long pole (minutes of a silent app build), so we poll it
@@ -239,12 +239,14 @@ def run_executor(prompt, app_path, log_path, tier, plugin_dir=None):
         "--verbose",
         "--include-partial-messages",
     ]
+    if model:
+        cmd += ["--model", model]
     if plugin_dir:
         cmd += ["--plugin-dir", str(plugin_dir)]
 
     timeout = EXECUTOR_TIMEOUT[tier]
-    log(f"executor: launching claude -p (timeout {timeout}s"
-        f"{', --plugin-dir' if plugin_dir else ''})")
+    log(f"executor: launching claude -p (model {model or 'CLI default'}, "
+        f"timeout {timeout}s{', --plugin-dir' if plugin_dir else ''})")
     start = time.time()
     timed_out = False
     with open(log_path, "w") as logf:
@@ -577,7 +579,7 @@ def cmd_run_static(args, workspace):
             continue
 
         elapsed, tokens, exec_error = run_executor(
-            static_prompt(skill, app), str(app), exec_log, "static"
+            static_prompt(skill, app), str(app), exec_log, "static", model=args.model
         )
         if exec_error:
             log(f"{tag}: executor error — {exec_error} (skipping static gate)")
@@ -640,7 +642,8 @@ def cmd_run_runtime(args, workspace):
                            "error": "fixture creation failed", "log": err[-1000:]}]}
 
     elapsed, tokens, exec_error = run_executor(
-        runtime_prompt(prd_text, app), str(app), exec_log, "runtime", plugin_dir=PLUGIN_DIR
+        runtime_prompt(prd_text, app), str(app), exec_log, "runtime",
+        plugin_dir=PLUGIN_DIR, model=args.model
     )
     usage = parse_usage(exec_log)
     log(f"skills used: {usage['skills'] or 'none'} | MCP tools: {usage['mcp_tools'] or 'none'}")
@@ -772,8 +775,8 @@ def render_report(summary):
     out_tokens = sum((c.get("tokens") or {}).get("output_tokens", 0) for c in summary["cases"])
     lines.append("")
     lines.append(
-        f"<sub>SDK {summary.get('sdk') or 'latest'} · {out_tokens:,} output tokens · "
-        f"non-interactive CI eval · advisory, does not block merge</sub>")
+        f"<sub>SDK {summary.get('sdk') or 'latest'} · model {summary.get('model') or 'default'} · "
+        f"{out_tokens:,} output tokens · non-interactive CI eval</sub>")
     return "\n".join(lines)
 
 
@@ -805,6 +808,7 @@ def cmd_run(args):
         return 2
 
     summary["infra_error"] = infra_error(summary)
+    summary["model"] = args.model
     summary["workspace"] = str(out_root)
     (out_root / "eval-summary.json").write_text(json.dumps(summary, indent=2))
     report = render_report(summary)
@@ -844,6 +848,9 @@ def main():
     r.add_argument("--prd", default=str(
         REPO_ROOT / ".claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt"))
     r.add_argument("--sdk", default="", help="Expo SDK major (default: latest)")
+    r.add_argument("--model", default="claude-sonnet-5",
+                   help="model for the claude -p executor — id or alias like 'sonnet' "
+                        "/ 'opus' (default: claude-sonnet-5, cheaper than Opus)")
     r.add_argument("--out", default="", help="output dir (default: a temp dir)")
 
     args = ap.parse_args()
