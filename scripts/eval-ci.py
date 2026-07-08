@@ -108,9 +108,46 @@ def latest_sdk():
 # --- detect ----------------------------------------------------------------
 
 
+def git_ref_exists(ref):
+    return run(
+        ["git", "rev-parse", "--verify", "--quiet", ref], capture_output=True
+    ).returncode == 0
+
+
+def best_effort_fetch():
+    """Try to make the base branch available to diff against.
+
+    On a real GitHub-triggered PR, `origin` is the connected repo and `main` is
+    fetchable. On a manual `eas workflow:run` from a local checkout, `origin` may
+    be an unreachable local path — so every fetch here is best-effort and its
+    failure is ignored (never fail the step over it).
+    """
+    run(["git", "fetch", "--no-tags", "--quiet", "origin",
+         "+refs/heads/main:refs/remotes/origin/main"], capture_output=True)
+    run(["git", "fetch", "--no-tags", "--quiet", "--deepen", "50"],
+        capture_output=True)
+
+
+def resolve_base(base):
+    """First existing ref among the requested base and common fallbacks."""
+    for c in (base, "origin/main", "origin/HEAD", "main", "HEAD~1"):
+        if c and git_ref_exists(c):
+            return c
+    return None
+
+
 def changed_files(base):
-    """Files changed relative to `base` (three-dot: since the merge base)."""
-    for args in ([f"{base}...HEAD"], [base], ["HEAD~1"]):
+    """Files changed relative to a resolved base ref.
+
+    Returns [] (which routes to tier `none`, a safe no-op) when no base ref can
+    be resolved — e.g. a shallow checkout with no history and no reachable
+    remote.
+    """
+    ref = resolve_base(base)
+    if not ref:
+        return []
+    # three-dot (since merge base) first, then two-dot, then last commit.
+    for args in ([f"{ref}...HEAD"], [ref], ["HEAD~1"]):
         r = run(["git", "diff", "--name-only", *args], capture_output=True)
         if r.returncode == 0:
             return [ln.strip() for ln in r.stdout.splitlines() if ln.strip()]
@@ -141,9 +178,27 @@ def decide_tier(skills):
 
 
 def cmd_detect(args):
-    files = changed_files(args.base)
+    # Manual-test override: set EVAL_FORCE_TIER (and EVAL_FORCE_SKILLS for the
+    # static tier) to exercise a tier from `eas workflow:run` without needing an
+    # actual skill change on the branch.
+    forced = os.environ.get("EVAL_FORCE_TIER")
+    if forced:
+        skills = os.environ.get("EVAL_FORCE_SKILLS", "")
+        print(f"[eval-ci] forced tier={forced!r} skills={skills!r}", file=sys.stderr)
+        print(f"tier={forced}")
+        print(f"skills={skills}")
+        return 0
+
+    base = os.environ.get("EVAL_BASE_REF") or args.base
+    best_effort_fetch()
+    resolved = resolve_base(base)
+    files = changed_files(base)
     skills = changed_skills(files)
     tier = decide_tier(skills)
+    # Diagnostics on stderr so they don't pollute the tier=/skills= stdout the
+    # workflow parses.
+    print(f"[eval-ci] base={base!r} resolved={resolved!r} "
+          f"changed_files={len(files)} skills={skills}", file=sys.stderr)
     print(f"tier={tier}")
     print(f"skills={','.join(skills)}")
     return 0
@@ -414,8 +469,11 @@ def cmd_run_static(args, workspace):
             capture_output=True,
         )
         if mk.returncode != 0:
+            err = ((mk.stdout or "") + (mk.stderr or "")).strip()
+            print(f"[eval-ci] make-fixture failed for {skill}:\n{err[-2000:]}",
+                  file=sys.stderr)
             cases.append({"skill": skill, "static_passed": False,
-                          "error": "fixture creation failed", "log": mk.stderr[-500:]})
+                          "error": "fixture creation failed", "log": err[-1000:]})
             continue
 
         elapsed, tokens = run_executor(
@@ -463,9 +521,11 @@ def cmd_run_runtime(args, workspace):
         capture_output=True,
     )
     if mk.returncode != 0:
+        err = ((mk.stdout or "") + (mk.stderr or "")).strip()
+        print(f"[eval-ci] make-fixture failed:\n{err[-2000:]}", file=sys.stderr)
         return {"tier": "runtime", "platform": platform, "sdk": sdk, "passed": False,
                 "cases": [{"name": "hot-chocolate", "static_passed": False,
-                           "error": "fixture creation failed"}]}
+                           "error": "fixture creation failed", "log": err[-1000:]}]}
 
     elapsed, tokens = run_executor(
         runtime_prompt(prd_text, app), str(app), log, "runtime", plugin_dir=PLUGIN_DIR

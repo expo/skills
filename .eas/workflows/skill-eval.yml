@@ -14,11 +14,10 @@ name: skill eval
 #   - Add ANTHROPIC_API_KEY as a (sensitive) EAS environment variable in the
 #     `production` environment — the `claude -p` executor reads it from env.
 #
-# VERIFY against https://api.expo.dev/v2/workflows/schema before first run:
-#   - the `set-output` shell-function syntax and whether it supports multi-line
-#     values (used to pass the report markdown to the comment job),
-#   - that python3 is on the linux image (detect + orchestrator are python),
-#   - artifact availability if you later want to attach viewer.html / PNGs.
+# Confirmed on a real run: `set-output NAME VALUE` (rejects empty VALUE; multi-line
+# markdown values work), python3 is present, and the tier gating fires correctly.
+# The EAS worker ships Node 18, so the eval jobs bump to Node 22 via nvm (claude-code
+# needs >=22; recent create-expo-app wants >=20) — see the eval steps below.
 
 on:
   pull_request:
@@ -32,23 +31,33 @@ jobs:
   detect:
     name: detect eval tier
     runs_on: linux-medium
+    env:
+      # TEMPORARY (testing): force a tier regardless of changed files. Static is
+      # the cheap path that still exercises the whole shared pipeline (node setup,
+      # make-fixture, claude executor + API key, static gate, comment); flip to
+      # `runtime` for the device-screenshot test. Remove this block to restore
+      # git-diff-based tier detection.
+      EVAL_FORCE_TIER: static
+      EVAL_FORCE_SKILLS: eas-hosting
     outputs:
       tier: ${{ steps.detect.outputs.tier }}
       skills: ${{ steps.detect.outputs.skills }}
     steps:
       - uses: eas/checkout
-      - name: fetch base branch
-        run: git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
       - name: detect
         id: detect
         run: |
-          # eval-ci.py prints `tier=...` and `skills=...`; forward them as outputs.
+          # eval-ci.py fetches the base best-effort and prints `tier=...` /
+          # `skills=...` on stdout (diagnostics go to stderr).
           out=$(python3 scripts/eval-ci.py detect --base origin/main)
           echo "$out"
           tier=$(echo "$out" | sed -n 's/^tier=//p')
           skills=$(echo "$out" | sed -n 's/^skills=//p')
-          set-output tier "$tier"       # VERIFY: EAS set-output function
-          set-output skills "$skills"
+          # EAS `set-output NAME VALUE` rejects an empty VALUE, so default to a
+          # placeholder. `skills` is only consumed when tier==static (where it is
+          # always non-empty), so the `none` placeholder is never read as a skill.
+          set-output tier "${tier:-none}"
+          set-output skills "${skills:-none}"
 
   # --- Static tier: one linux job -------------------------------------------
   static_eval:
@@ -62,20 +71,19 @@ jobs:
       result: ${{ steps.run.outputs.result }}
     steps:
       - uses: eas/checkout
-      - name: setup toolchain
-        run: |
-          npm i -g bun @anthropic-ai/claude-code
       - name: run static eval
         id: run
         run: |
-          python3 scripts/eval-ci.py run \
-            --tier static \
-            --skills "${{ needs.detect.outputs.skills }}" \
-            --out "$PWD/.eval-out"
-          report=$(cat .eval-out/eval-report.md)
-          result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')")
-          set-output report "$report"    # VERIFY: multi-line set-output support
-          set-output result "$result"
+          echo "=== worker env: node $(node -v 2>&1) | python3 $(python3 --version 2>&1) | bun $(command -v bun || echo none) ==="
+          export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+          if [ -s "$NVM_DIR/nvm.sh" ]; then . "$NVM_DIR/nvm.sh"; nvm install 22 && nvm use 22; else echo "nvm not found (node stays $(node -v))"; ls -d "$HOME/.nvm/versions/node"/* 2>/dev/null || true; fi
+          echo "node in use: $(node -v)"
+          npm i -g bun @anthropic-ai/claude-code
+          python3 scripts/eval-ci.py run --tier static --skills "${{ needs.detect.outputs.skills }}" --out "$PWD/.eval-out" || true
+          report=$(cat .eval-out/eval-report.md 2>/dev/null || echo "no report")
+          result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')" 2>/dev/null || echo failure)
+          set-output report "${report:-no report}"
+          set-output result "${result:-failure}"
 
   # --- Runtime tier: iOS (build + screenshot on the same macOS worker) ------
   runtime_ios:
@@ -89,20 +97,19 @@ jobs:
       result: ${{ steps.run.outputs.result }}
     steps:
       - uses: eas/checkout
-      - name: setup toolchain
-        run: |
-          npm i -g bun @anthropic-ai/claude-code
       - name: build + screenshot iOS
         id: run
         run: |
-          python3 scripts/eval-ci.py run \
-            --tier runtime --platform ios \
-            --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt \
-            --out "$PWD/.eval-out"
-          report=$(cat .eval-out/eval-report.md)
-          result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')")
-          set-output report "$report"
-          set-output result "$result"
+          echo "=== worker env: node $(node -v 2>&1) | python3 $(python3 --version 2>&1) | bun $(command -v bun || echo none) ==="
+          export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+          if [ -s "$NVM_DIR/nvm.sh" ]; then . "$NVM_DIR/nvm.sh"; nvm install 22 && nvm use 22; else echo "nvm not found (node stays $(node -v))"; ls -d "$HOME/.nvm/versions/node"/* 2>/dev/null || true; fi
+          echo "node in use: $(node -v)"
+          npm i -g bun @anthropic-ai/claude-code
+          python3 scripts/eval-ci.py run --tier runtime --platform ios --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt --out "$PWD/.eval-out" || true
+          report=$(cat .eval-out/eval-report.md 2>/dev/null || echo "no report")
+          result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')" 2>/dev/null || echo failure)
+          set-output report "${report:-no report}"
+          set-output result "${result:-failure}"
 
   # --- Runtime tier: Android (build + screenshot on the same linux worker) --
   runtime_android:
@@ -116,20 +123,19 @@ jobs:
       result: ${{ steps.run.outputs.result }}
     steps:
       - uses: eas/checkout
-      - name: setup toolchain
-        run: |
-          npm i -g bun @anthropic-ai/claude-code
       - name: build + screenshot Android
         id: run
         run: |
-          python3 scripts/eval-ci.py run \
-            --tier runtime --platform android \
-            --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt \
-            --out "$PWD/.eval-out"
-          report=$(cat .eval-out/eval-report.md)
-          result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')")
-          set-output report "$report"
-          set-output result "$result"
+          echo "=== worker env: node $(node -v 2>&1) | python3 $(python3 --version 2>&1) | bun $(command -v bun || echo none) ==="
+          export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+          if [ -s "$NVM_DIR/nvm.sh" ]; then . "$NVM_DIR/nvm.sh"; nvm install 22 && nvm use 22; else echo "nvm not found (node stays $(node -v))"; ls -d "$HOME/.nvm/versions/node"/* 2>/dev/null || true; fi
+          echo "node in use: $(node -v)"
+          npm i -g bun @anthropic-ai/claude-code
+          python3 scripts/eval-ci.py run --tier runtime --platform android --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt --out "$PWD/.eval-out" || true
+          report=$(cat .eval-out/eval-report.md 2>/dev/null || echo "no report")
+          result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')" 2>/dev/null || echo failure)
+          set-output report "${report:-no report}"
+          set-output result "${result:-failure}"
 
   # --- PR comments (one per tier so no empty sections render) ---------------
   # eval-ci.py always exits 0 (soft gate) — pass/fail is encoded in the report,
