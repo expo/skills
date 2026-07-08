@@ -101,6 +101,7 @@ jobs:
     needs: [detect]
     if: ${{ needs.detect.outputs.tier == 'runtime' }}
     runs_on: macos-medium          # "Runs iOS jobs, including simulators"
+    image: latest
     environment: production
     outputs:
       report: ${{ steps.run.outputs.report }}
@@ -141,6 +142,7 @@ jobs:
     needs: [detect]
     if: ${{ needs.detect.outputs.tier == 'runtime' }}
     runs_on: linux-large-nested-virtualization   # required for Android emulators
+    image: latest
     environment: production
     outputs:
       report: ${{ steps.run.outputs.report }}
