@@ -23,26 +23,32 @@ fi
 
 if xcrun simctl get_app_container booted host.exp.Exponent >/dev/null 2>&1; then
   echo "[provision-ios] Expo Go already installed" >&2
-  exit 0
+else
+  # Parse the versions API with node (present after nvm), not jq (absent on the
+  # EAS macOS worker).
+  URL="$(curl -fsSL https://api.expo.dev/v2/versions/latest | node -e \
+    'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(JSON.parse(s).data.sdkVersions[process.argv[1]].iosClientUrl||"")}catch(e){}})' \
+    "$SDK")"
+  if [[ -z "$URL" || "$URL" == "null" ]]; then
+    echo "[provision-ios] no iosClientUrl for SDK $SDK" >&2
+    exit 1
+  fi
+  TMP="$(mktemp -d)"
+  trap 'rm -rf "$TMP"' EXIT
+  echo "[provision-ios] downloading Expo Go: $URL" >&2
+  curl -fsSL "$URL" -o "$TMP/expo-go.tar.gz"
+  # The iOS client tarball is the .app bundle CONTENTS (Info.plist at the root),
+  # not a *.app wrapper — extract into a *.app dir and install that.
+  mkdir -p "$TMP/Exponent.app"
+  tar -xzf "$TMP/expo-go.tar.gz" -C "$TMP/Exponent.app"
+  xcrun simctl install booted "$TMP/Exponent.app"
+  echo "[provision-ios] installed Expo Go (host.exp.Exponent)" >&2
 fi
 
-# Parse the versions API with node (present after nvm), not jq (absent on the
-# EAS macOS worker).
-URL="$(curl -fsSL https://api.expo.dev/v2/versions/latest | node -e \
-  'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(JSON.parse(s).data.sdkVersions[process.argv[1]].iosClientUrl||"")}catch(e){}})' \
-  "$SDK")"
-if [[ -z "$URL" || "$URL" == "null" ]]; then
-  echo "[provision-ios] no iosClientUrl for SDK $SDK" >&2
-  exit 1
-fi
-
-TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
-echo "[provision-ios] downloading Expo Go: $URL" >&2
-curl -fsSL "$URL" -o "$TMP/expo-go.tar.gz"
-# The iOS client tarball is the .app bundle CONTENTS (Info.plist at the root),
-# not a *.app wrapper — extract into a *.app dir and install that.
-mkdir -p "$TMP/Exponent.app"
-tar -xzf "$TMP/expo-go.tar.gz" -C "$TMP/Exponent.app"
-xcrun simctl install booted "$TMP/Exponent.app"
-echo "[provision-ios] installed Expo Go (host.exp.Exponent)" >&2
+# Suppress Expo Go's dev-menu onboarding sheet + floating action button so they
+# don't cover route screenshots. These are NSUserDefaults on the Expo Go domain,
+# read at launch (the snapshot script terminates Expo Go before deep-linking, so
+# writing them now takes effect on the next launch).
+xcrun simctl spawn booted defaults write host.exp.Exponent EXDevMenuIsOnboardingFinished -bool YES 2>/dev/null || true
+xcrun simctl spawn booted defaults write host.exp.Exponent EXDevMenuShowFloatingActionButton -bool NO 2>/dev/null || true
+echo "[provision-ios] disabled Expo Go dev-menu onboarding + FAB" >&2
