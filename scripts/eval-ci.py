@@ -227,7 +227,8 @@ def run_executor(prompt, app_path, log_path, tier, plugin_dir=None):
     and emit a heartbeat to stderr — otherwise the CI step looks hung. The
     stream-json output goes to log_path for usage parsing.
 
-    Returns (elapsed_seconds, tokens_dict).
+    Returns (elapsed_seconds, tokens_dict, error) where error is a short string
+    if the executor failed (billing/rate-limit/API error, or timeout), else None.
     """
     cmd = [
         "claude",
@@ -245,6 +246,7 @@ def run_executor(prompt, app_path, log_path, tier, plugin_dir=None):
     log(f"executor: launching claude -p (timeout {timeout}s"
         f"{', --plugin-dir' if plugin_dir else ''})")
     start = time.time()
+    timed_out = False
     with open(log_path, "w") as logf:
         proc = subprocess.Popen(
             cmd, cwd=app_path, env=clean_env(),
@@ -260,15 +262,33 @@ def run_executor(prompt, app_path, log_path, tier, plugin_dir=None):
                 if elapsed >= timeout:
                     proc.kill()
                     log(f"executor: TIMEOUT after {int(elapsed)}s — killed")
+                    timed_out = True
                     break
                 if elapsed >= next_beat:
                     log(f"executor: still working ({int(elapsed)}s elapsed)")
                     next_beat += 60
     elapsed = round(time.time() - start, 1)
     toks = parse_tokens(log_path)
-    log(f"executor: finished in {elapsed}s "
-        f"(output tokens: {toks.get('output_tokens', 0)})")
-    return elapsed, toks
+    error = f"executor timed out after {int(elapsed)}s" if timed_out \
+        else parse_executor_error(log_path)
+    log(f"executor: finished in {elapsed}s (output tokens: "
+        f"{toks.get('output_tokens', 0)})" + (f" — ERROR: {error}" if error else ""))
+    return elapsed, toks, error
+
+
+def parse_executor_error(log_path):
+    """Return the executor's terminal error (billing/rate-limit/API failure) from
+    the stream-json log, else None. The final `result` event carries is_error +
+    the message; e.g. a depleted key yields "Credit balance is too low" (HTTP 400)
+    with 0 output tokens. Without this, such a run makes no changes and the blank
+    fixture silently passes the static gate — a false green.
+    """
+    for ev in _stream_events(log_path):
+        if ev.get("type") == "result" and ev.get("is_error"):
+            msg = str(ev.get("result") or ev.get("subtype") or "executor error").strip()
+            code = ev.get("api_error_status")
+            return msg + (f" (HTTP {code})" if code else "")
+    return None
 
 
 def _stream_events(log_path):
@@ -556,9 +576,11 @@ def cmd_run_static(args, workspace):
                           "error": "fixture creation failed", "log": err[-1000:]})
             continue
 
-        elapsed, tokens = run_executor(
+        elapsed, tokens, exec_error = run_executor(
             static_prompt(skill, app), str(app), exec_log, "static"
         )
+        if exec_error:
+            log(f"{tag}: executor error — {exec_error} (skipping static gate)")
         log(f"{tag}: running static gate (tsc + lint + export)")
         passed, static_out = run_static(app, "ios,android")
         log(f"{tag}: static gate {'PASS' if passed else 'FAIL'}")
@@ -567,14 +589,18 @@ def cmd_run_static(args, workspace):
         cases.append({
             "skill": skill,
             "static_passed": passed,
+            "executor_error": exec_error,
             "executor_seconds": elapsed,
             "tokens": tokens,
             "skills_used": usage["skills"],
             "static_tail": static_out.strip().splitlines()[-8:],
         })
 
+    # An executor error (billing/rate-limit/crash) made no real changes, so the
+    # blank fixture passing the static gate is not a real pass — treat as failed.
     return {"tier": "static", "sdk": sdk, "cases": cases,
-            "passed": all(c["static_passed"] for c in cases)}
+            "passed": all(c["static_passed"] and not c.get("executor_error")
+                           for c in cases)}
 
 
 # --- run: runtime tier -----------------------------------------------------
@@ -613,7 +639,7 @@ def cmd_run_runtime(args, workspace):
                 "cases": [{"name": "hot-chocolate", "static_passed": False,
                            "error": "fixture creation failed", "log": err[-1000:]}]}
 
-    elapsed, tokens = run_executor(
+    elapsed, tokens, exec_error = run_executor(
         runtime_prompt(prd_text, app), str(app), exec_log, "runtime", plugin_dir=PLUGIN_DIR
     )
     usage = parse_usage(exec_log)
@@ -623,7 +649,11 @@ def cmd_run_runtime(args, workspace):
     log(f"static gate {'PASS' if passed else 'FAIL'}")
 
     routes, captured, routes_total, runner_used = [], 0, 0, None
-    if passed:
+    # If the executor errored (billing/rate-limit/crash) the app is the blank
+    # fixture — don't waste a device booting to screenshot nothing.
+    if exec_error:
+        log(f"executor error — {exec_error} (skipping snapshots)")
+    elif passed:
         routes = resolve_routes(app, config_dir)
         routes_total = len(routes)
         route_csv = ",".join(r["path"] for r in routes)
@@ -673,6 +703,7 @@ def cmd_run_runtime(args, workspace):
     case = {
         "name": "hot-chocolate",
         "static_passed": passed,
+        "executor_error": exec_error,
         "routes_total": routes_total,
         "routes_captured": captured,
         "runner": runner_used,
@@ -684,8 +715,9 @@ def cmd_run_runtime(args, workspace):
         "mcp_available": usage["mcp_available"],
         "static_tail": static_out.strip().splitlines()[-8:],
     }
-    # Pass = it built (static) and at least the root screen was captured.
-    ok = passed and captured >= 1
+    # Pass = the executor really built it (no error), static gate passed, and at
+    # least the root screen was captured.
+    ok = not exec_error and passed and captured >= 1
     return {"tier": "runtime", "platform": platform, "sdk": sdk,
             "cases": [case], "passed": ok}
 
@@ -703,15 +735,27 @@ def render_report(summary):
         lines.append("| Skill | tsc + lint + export | Skills read | Exec (s) |")
         lines.append("|---|---|---|---|")
         for c in summary["cases"]:
-            status = "✅" if c.get("static_passed") else "❌"
+            status = "⚠️ executor error" if c.get("executor_error") else (
+                "✅" if c.get("static_passed") else "❌")
             used = ", ".join(c.get("skills_used") or []) or "—"
             lines.append(f"| `{c['skill']}` | {status} | {used} | {c.get('executor_seconds','—')} |")
+        errs = [c for c in summary["cases"] if c.get("executor_error")]
+        if errs:
+            lines.append("")
+            for c in errs:
+                lines.append(f"> ⚠️ `{c['skill']}` executor did not run: {c['executor_error']} "
+                             f"(nothing was built — this is not a real pass)")
     else:
         plat = summary.get("platform", "?")
         head = "✅ pass" if summary["passed"] else "❌ fail"
         lines.append(f"**Expo plugin eval — runtime ({plat})** · {head}")
         lines.append("")
         for c in summary["cases"]:
+            if c.get("executor_error"):
+                lines.append(f"- **{c['name']}** — ⚠️ executor did not run: "
+                             f"{c['executor_error']} (nothing was built — not a real pass)")
+                lines.append(f"  - executor: {c.get('executor_seconds','—')}s")
+                continue
             static = "✅" if c.get("static_passed") else "❌"
             runner = f" ({c['runner']})" if c.get("runner") else ""
             lines.append(f"- **{c['name']}** — static gate {static}, "
