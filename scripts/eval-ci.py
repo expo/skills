@@ -653,7 +653,7 @@ def cmd_run_runtime(args, workspace):
     passed, static_out = run_static(app, platform)
     log(f"static gate {'PASS' if passed else 'FAIL'}")
 
-    routes, captured, routes_total, runner_used = [], 0, 0, None
+    routes, captured, routes_total, runner_used, runners_tried = [], 0, 0, None, []
     # If the executor errored (billing/rate-limit/crash) the app is the blank
     # fixture — don't waste a device booting to screenshot nothing.
     if exec_error:
@@ -685,6 +685,7 @@ def cmd_run_runtime(args, workspace):
             log(f"native modules not in Expo Go ({', '.join(incompatible)}) — using dev build")
             runners = ["dev-build"]
         for runner in runners:
+            runners_tried.append(runner)
             log(f"capturing {routes_total} route(s) on {platform} via {runner}")
             run(
                 ["bash", str(SNAPSHOT_ROUTES[platform]), str(app), str(out_dir),
@@ -699,7 +700,8 @@ def cmd_run_runtime(args, workspace):
                 " — falling back to dev build" if runner == "expo-go"
                 else " — no screenshots"))
         log(f"captured {captured}/{routes_total} route screenshot(s)"
-            + (f" via {runner_used}" if runner_used else ""))
+            + (f" via {runner_used}" if runner_used else
+               f" (tried {', '.join(runners_tried)}, none rendered)"))
     else:
         log("skipping snapshots (static gate failed)")
 
@@ -712,6 +714,7 @@ def cmd_run_runtime(args, workspace):
         "routes_total": routes_total,
         "routes_captured": captured,
         "runner": runner_used,
+        "runners_tried": runners_tried,
         "metro_errors": metro_had_errors(out_dir),
         "executor_seconds": elapsed,
         "tokens": tokens,
@@ -762,7 +765,12 @@ def render_report(summary):
                 lines.append(f"  - executor: {c.get('executor_seconds','—')}s")
                 continue
             static = "✅" if c.get("static_passed") else "❌"
-            runner = f" ({c['runner']})" if c.get("runner") else ""
+            if c.get("runner"):
+                runner = f" ({c['runner']})"
+            elif c.get("runners_tried"):
+                runner = f" (tried {', '.join(c['runners_tried'])} — none rendered)"
+            else:
+                runner = ""
             lines.append(f"- **{c['name']}** — static gate {static}, "
                          f"routes captured {c.get('routes_captured', 0)}/{c.get('routes_total', 0)}{runner}"
                          f"{' ⚠️ metro errors' if c.get('metro_errors') else ''}")
