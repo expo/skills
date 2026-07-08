@@ -777,6 +777,17 @@ def render_report(summary):
     return "\n".join(lines)
 
 
+def infra_error(summary):
+    """True if the eval could not really run (executor billing/rate-limit/timeout
+    error, or fixture creation failed) — as opposed to a genuine skill-quality
+    failure (static gate fail / no screenshots). Only infra errors fail the CI
+    check; quality failures stay advisory (comment only)."""
+    cases = summary.get("cases") or []
+    if not cases and not summary.get("passed", True):
+        return True  # early return (PRD missing, bad platform, etc.)
+    return any(c.get("executor_error") or c.get("error") for c in cases)
+
+
 def cmd_run(args):
     tier = args.tier
     prefix = "expo-plugin-eval-ci" if tier == "runtime" else "expo-skill-eval-ci"
@@ -793,6 +804,7 @@ def cmd_run(args):
         print(f"unknown tier {tier!r}", file=sys.stderr)
         return 2
 
+    summary["infra_error"] = infra_error(summary)
     summary["workspace"] = str(out_root)
     (out_root / "eval-summary.json").write_text(json.dumps(summary, indent=2))
     report = render_report(summary)
@@ -807,6 +819,11 @@ def cmd_run(args):
 
     print(report)
     print(f"\n[eval-ci] summary: {out_root}/eval-summary.json", file=sys.stderr)
+    # Non-zero ONLY on infra errors (executor couldn't run / fixture failed) so
+    # the CI check goes red; genuine skill-quality failures stay advisory (0).
+    if summary["infra_error"]:
+        print("[eval-ci] infra error — failing the check", file=sys.stderr)
+        return 2
     return 0
 
 
