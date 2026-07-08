@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "expo-skills",
+    "slug": "expo-skills",
+    "extra": {
+      "eas": {
+        "projectId": "c0b6e656-823c-4f21-b382-0a1e8d46284f"
+      }
+    }
+  }
+}

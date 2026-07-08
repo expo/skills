@@ -1,0 +1,161 @@
+name: skill eval
+
+# Non-interactive eval of the Expo skills on every PR that touches a skill.
+# A `detect` job maps the PR's changed skills to a tier:
+#   - UI/app-building skill changed -> runtime tier: build the hot_chocolate app
+#     with the whole plugin loaded and screenshot every route on iOS + Android.
+#   - any other skill changed        -> static tier: build a small example and
+#     run tsc + lint + expo export (no device).
+# Results are posted as a PR comment. This is ADVISORY — it never blocks merge.
+#
+# Prerequisites (one-time, outside this file):
+#   - Connect this GitHub repo to the EAS project (GitHub App) so pull_request
+#     triggers and github-comment work.
+#   - Add ANTHROPIC_API_KEY as a (sensitive) EAS environment variable in the
+#     `production` environment — the `claude -p` executor reads it from env.
+#
+# VERIFY against https://api.expo.dev/v2/workflows/schema before first run:
+#   - the `set-output` shell-function syntax and whether it supports multi-line
+#     values (used to pass the report markdown to the comment job),
+#   - that python3 is on the linux image (detect + orchestrator are python),
+#   - artifact availability if you later want to attach viewer.html / PNGs.
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - plugins/expo/skills/**
+
+jobs:
+  # --- Decide the tier from the changed skills ------------------------------
+  detect:
+    name: detect eval tier
+    runs_on: linux-medium
+    outputs:
+      tier: ${{ steps.detect.outputs.tier }}
+      skills: ${{ steps.detect.outputs.skills }}
+    steps:
+      - uses: eas/checkout
+      - name: fetch base branch
+        run: git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+      - name: detect
+        id: detect
+        run: |
+          # eval-ci.py prints `tier=...` and `skills=...`; forward them as outputs.
+          out=$(python3 scripts/eval-ci.py detect --base origin/main)
+          echo "$out"
+          tier=$(echo "$out" | sed -n 's/^tier=//p')
+          skills=$(echo "$out" | sed -n 's/^skills=//p')
+          set-output tier "$tier"       # VERIFY: EAS set-output function
+          set-output skills "$skills"
+
+  # --- Static tier: one linux job -------------------------------------------
+  static_eval:
+    name: static eval
+    needs: [detect]
+    if: ${{ needs.detect.outputs.tier == 'static' }}
+    runs_on: linux-medium
+    environment: production
+    outputs:
+      report: ${{ steps.run.outputs.report }}
+      result: ${{ steps.run.outputs.result }}
+    steps:
+      - uses: eas/checkout
+      - name: setup toolchain
+        run: |
+          npm i -g bun @anthropic-ai/claude-code
+      - name: run static eval
+        id: run
+        run: |
+          python3 scripts/eval-ci.py run \
+            --tier static \
+            --skills "${{ needs.detect.outputs.skills }}" \
+            --out "$PWD/.eval-out"
+          report=$(cat .eval-out/eval-report.md)
+          result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')")
+          set-output report "$report"    # VERIFY: multi-line set-output support
+          set-output result "$result"
+
+  # --- Runtime tier: iOS (build + screenshot on the same macOS worker) ------
+  runtime_ios:
+    name: runtime eval (iOS)
+    needs: [detect]
+    if: ${{ needs.detect.outputs.tier == 'runtime' }}
+    runs_on: macos-medium          # "Runs iOS jobs, including simulators"
+    environment: production
+    outputs:
+      report: ${{ steps.run.outputs.report }}
+      result: ${{ steps.run.outputs.result }}
+    steps:
+      - uses: eas/checkout
+      - name: setup toolchain
+        run: |
+          npm i -g bun @anthropic-ai/claude-code
+      - name: build + screenshot iOS
+        id: run
+        run: |
+          python3 scripts/eval-ci.py run \
+            --tier runtime --platform ios \
+            --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt \
+            --out "$PWD/.eval-out"
+          report=$(cat .eval-out/eval-report.md)
+          result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')")
+          set-output report "$report"
+          set-output result "$result"
+
+  # --- Runtime tier: Android (build + screenshot on the same linux worker) --
+  runtime_android:
+    name: runtime eval (Android)
+    needs: [detect]
+    if: ${{ needs.detect.outputs.tier == 'runtime' }}
+    runs_on: linux-large-nested-virtualization   # required for Android emulators
+    environment: production
+    outputs:
+      report: ${{ steps.run.outputs.report }}
+      result: ${{ steps.run.outputs.result }}
+    steps:
+      - uses: eas/checkout
+      - name: setup toolchain
+        run: |
+          npm i -g bun @anthropic-ai/claude-code
+      - name: build + screenshot Android
+        id: run
+        run: |
+          python3 scripts/eval-ci.py run \
+            --tier runtime --platform android \
+            --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt \
+            --out "$PWD/.eval-out"
+          report=$(cat .eval-out/eval-report.md)
+          result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')")
+          set-output report "$report"
+          set-output result "$result"
+
+  # --- PR comments (one per tier so no empty sections render) ---------------
+  # eval-ci.py always exits 0 (soft gate) — pass/fail is encoded in the report,
+  # not the exit code — so `needs` never blocks these comment jobs on a red eval.
+  comment_static:
+    name: comment (static)
+    needs: [detect, static_eval]
+    if: ${{ needs.detect.outputs.tier == 'static' }}
+    type: github-comment
+    params:
+      payload: |
+        <!-- expo-eval -->
+        ${{ needs.static_eval.outputs.report }}
+
+  comment_runtime:
+    name: comment (runtime)
+    needs: [detect, runtime_ios, runtime_android]
+    if: ${{ needs.detect.outputs.tier == 'runtime' }}
+    type: github-comment
+    params:
+      payload: |
+        <!-- expo-eval -->
+        ## Expo plugin eval — runtime
+
+        ### iOS
+        ${{ needs.runtime_ios.outputs.report }}
+
+        ### Android
+        ${{ needs.runtime_android.outputs.report }}

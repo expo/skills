@@ -1,0 +1,297 @@
+Hot Chocolate Festival App (MVP)
+
+## Overview
+
+A single-user festival guide for discovering limited-time hot chocolate drinks, the participating cafes that serve them, and each cafe's locations. The app is inspired by the Expo Hot Chocolate example app and public hot chocolate festival apps such as YYC Hot Chocolate Fest.
+
+The app is read-heavy: festival data is bundled locally and available without sign-in. The user can search, filter, mark favourites, mark flavours as tasted, browse locations, view a map, and share flavour/location details.
+
+**Festival Context**:
+- The event runs for 28 days.
+- Participating cafes, restaurants, and chocolatiers each serve one or more hot chocolate flavours.
+- Drinks can compete for awards such as Best Hot Chocolate, Best Spirited Hot Chocolate, and a special community award.
+
+**Persistence**:
+- Favourite flavour IDs persist across app restarts.
+- Tasted flavour IDs persist across app restarts.
+- Search text and temporary filters do not need to persist after app restart.
+
+**Constraints**:
+- No user accounts, authentication, payments, ordering, coupons, check-in rewards, or server sync.
+- No admin editing UI for festival data.
+- No voting submission backend in the MVP.
+- No requirement to match the exact visual design of any existing app.
+
+- Must work on iOS, Android, and web. The mobile experience should feel native
+  on iOS and Android.
+
+Technical Requirements
+- Framework: React Native with Expo SDK 57.x
+- Must include package.json with expo, react, and react-native dependencies
+- Must include app.json with Expo configuration
+- Must include index.js as entry point that registers the root component
+- Must include a custom URL scheme for Expo dev-client runs
+- Use bundled local fixture data for flavours and locations
+- Use safe-area aware screen layout. Inputs and primary buttons must not be
+  placed under or visually collide with the iOS status bar, Dynamic Island,
+  home indicator, keyboard, or navigation chrome.
+
+## Data Model
+
+Flavour fields:
+- id (required, stable integer or string)
+- name (required)
+- description (required)
+- cafe/location id (required)
+- start date and end date (required; ISO date strings)
+- tags (array; examples: Vegan, Dairy-free, Gluten-free, Nuts, Alcoholic)
+- award label (optional; examples: Best Hot Chocolate nominee, Spirited, Cup That Runneth Over)
+
+Location fields:
+- id (required, stable integer or string)
+- cafe name (required)
+- description (optional)
+- stores (one or more)
+
+Store fields:
+- name (required)
+- address (required)
+- hours (required human-readable string)
+- latitude and longitude (required for map display)
+
+Tag values should include at least: Vegan, Dairy-free, Gluten-free, Nuts,
+Alcoholic, and Alcohol-free where applicable.
+
+Seed data must include at least:
+- 8 flavours
+- 5 cafes/locations
+- 2 cafes with multiple store addresses
+- 2 vegan flavours
+- 2 dairy-free flavours
+- 1 gluten-free flavour
+- 1 flavour containing nuts
+- 1 alcoholic or spirited flavour
+- 1 currently available flavour and 1 not-currently-available flavour relative to the device date
+
+## Primary Navigation
+
+The app has bottom tabs or equivalent primary navigation for:
+- Flavours
+- Locations
+- Map
+- About
+
+Navigation state should be stable:
+- Switching tabs preserves each tab's current screen when reasonable.
+- Detail screens have a back action that returns to the previous list.
+- Deep detail screens are reachable from both search/list results and related-detail links.
+
+## Flavour List
+
+The Flavours tab shows all festival flavours in a scrollable list.
+
+Each flavour row displays:
+- Flavour name
+- Cafe/location name
+- Tags, if any
+- Favourite state
+- Tasted state
+- Current availability state, if not currently available
+
+Actions:
+- Tap a row to open the flavour detail screen.
+- Toggle favourite from the row or detail screen.
+- Toggle tasted from the row or detail screen.
+- Share a flavour from the detail screen using the native share sheet.
+
+Sorting:
+- Default order is ascending by flavour id.
+- Filtering and search preserve ascending id order within the filtered result set.
+
+## Flavour Search
+
+The Flavours tab has a search field above or integrated into the flavour list.
+
+Matching:
+- Case-insensitive substring match against flavour name OR cafe/location name.
+
+Behavior:
+- Typing filters the list immediately.
+- Empty query shows all flavours subject to active filters.
+- Clearing the query restores the unsearched result set.
+- If no flavours match, show an empty state with a clear message such as "No flavours found" and a clear-search action.
+
+## Flavour Filters
+
+The Flavours tab has a filter menu or sheet with toggles for:
+- Favourites only
+- Current only
+- Open now only
+- Vegan
+- Dairy-free
+- Gluten-free
+- Nut-free
+- Alcohol-free
+
+Behavior:
+- Multiple filters compose with AND logic.
+- Active filter count or active filter state is visible from the toolbar/filter control.
+- A Clear All Filters action resets every filter while preserving the current search query.
+- If filters produce zero results, show an empty state with a clear-filters action.
+
+Definitions:
+- Current only means device time is between the flavour start and end dates inclusive.
+- Open now means at least one store for the flavour's cafe appears open according to its hours string. If hours cannot be parsed, treat the store as open rather than hiding it.
+- Nut-free excludes flavours tagged Nuts.
+- Alcohol-free excludes flavours tagged Alcoholic.
+
+## Flavour Detail
+
+The flavour detail screen displays:
+- Flavour name
+- Cafe/location name
+- Date range in a readable format
+- Description
+- Tags
+- Favourite toggle
+- Tasted toggle
+- Share action
+- Link to the associated location detail
+
+Behavior:
+- Toggling favourite/tasted updates the list row and persists.
+- Opening the associated location navigates to that location's detail screen.
+- Back returns to the originating screen.
+
+## Locations List
+
+The Locations tab shows a scrollable list of participating cafes/locations.
+
+Each location row displays:
+- Cafe/location name
+- Short description, if available
+- Number of store addresses
+- Number of flavours served
+- Distance from the user's current location when permission is granted. Format
+  as meters if under 1 km, otherwise kilometers to one decimal place.
+
+Actions:
+- Tap a row to open location detail.
+
+Search:
+- The Locations tab has a search field.
+- Matching is case-insensitive substring match against cafe/location name OR address.
+- Empty query shows all locations.
+- No matches show an empty state.
+
+Sort and filter:
+- Provide mutually exclusive sort options for Name and Distance.
+- Name sort is alphabetical ascending.
+- Distance sort orders nearest first and is available only after location
+  permission is granted.
+- Provide an Open Now filter that hides locations with no currently open store.
+
+Location permission:
+- Request location permission contextually on first visit to the Locations tab
+  or Map tab, not on app launch.
+- If permission is granted, show distances and enable distance sorting.
+- If permission is denied, keep the app usable; hide distances or show an
+  unobtrusive unavailable state, and disable distance sorting.
+
+## Location Detail
+
+The location detail screen displays:
+- Cafe/location name
+- Description, if available
+- Store information. If the location has multiple stores, provide a selector or
+  equivalent control for switching stores.
+- The selected store's address and hours. The address opens the device's native
+  mapping application when tapped.
+- List of flavours served by the location
+- Share action
+- Link to view the location on the Map tab or in a map section
+
+Behavior:
+- Tapping a flavour listed on a location detail opens that flavour detail.
+- The flavour list can be collapsed/expanded when there are multiple flavours.
+- Favourite and tasted toggles are available from each flavour entry.
+- Back returns to the originating screen.
+
+## Map
+
+The Map tab displays pins for every store address.
+
+Behavior:
+- Each pin is labelled with the store or cafe name.
+- Pin appearance communicates state:
+  - Default store: cup marker or equivalent in the primary map color.
+  - Store with at least one favourited flavour: star marker or highlighted marker.
+  - Currently closed store: muted or gray marker.
+- Tapping a pin opens a small detail callout or bottom sheet with store name,
+  address, hours, a native maps link, and a link to location detail.
+- The callout or bottom sheet includes a collapsible list of flavours available
+  at that store, with favourite and tasted toggles.
+- The map has a list fallback or visible location list if map rendering is unavailable.
+- A Locate Me action asks for location permission and recenters the map if permission is granted.
+- If permission is denied, show a non-blocking message and keep the festival map usable.
+- When supported by the map implementation, provide common map controls:
+  current location, compass/recenter north, visual scale, pitch or 2D/3D
+  toggle, and zoom in/out.
+
+## About
+
+The About tab explains:
+- The festival purpose and 28-day duration
+- How favourites and tasted tracking work
+- That data is stored locally on the device
+- Links to the official festival website and official festival app/store page,
+  if available in fixture data.
+
+## Empty, Loading, and Error States
+
+Initial load:
+- Show a loading state while fixture data and persisted favourite/tasted state are being read.
+
+Empty results:
+- Flavour search with no matches shows a no-results message and clear-search action.
+- Filter combinations with no matches show a no-results message and clear-filters action.
+- Location search with no matches shows a no-results message.
+
+Errors:
+- If fixture data fails to load, show a recoverable error state with retry.
+- The app must not crash if a flavour references a missing location; show "Unknown location" and keep the rest of the UI usable.
+
+## Theme Support
+
+The app respects the device's system light/dark mode setting and renders an
+appropriate color scheme in each mode. Text contrast must remain readable in
+both modes.
+
+## Accessibility and Testability
+
+Core interactive controls must be reachable by native iOS automation. Add both
+stable `testID` props and meaningful accessibility labels/roles where React
+Native supports them. Prefer standard React Native controls such as `TextInput`,
+`Pressable`, `Button`, `Switch`, and `FlatList` over custom gesture-only wrappers
+for primary flows.
+
+Core interactive controls must have stable labels and test IDs:
+- Primary tabs: flavours-tab, locations-tab, map-tab, about-tab
+- Flavour search input: flavour-search-input
+- Location search input: location-search-input
+- Filter control: flavour-filter-button
+- Clear filters action: clear-filters-button
+- Flavour rows: flavour-row-<id>
+- Location rows: location-row-<id>
+- Favourite toggles: favourite-toggle-<id>
+- Tasted toggles: tasted-toggle-<id>
+- Share actions: share-flavour-button and share-location-button
+- Locate me action: locate-me-button
+
+Touch targets should be at least 44x44 points on iOS.
+
+Search inputs must be standard editable `TextInput` elements with visible
+placeholder text, enough vertical padding to tap reliably, and no overlapping
+absolute-positioned views. Filter sheets, empty-state actions, and tab controls
+must remain discoverable in the accessibility tree and tappable by label or
+testID.
