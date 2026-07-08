@@ -32,13 +32,9 @@ jobs:
     name: detect eval tier
     runs_on: linux-medium
     env:
-      # TEMPORARY (testing): force a tier regardless of changed files. Static is
-      # the cheap path that still exercises the whole shared pipeline (node setup,
-      # make-fixture, claude executor + API key, static gate, comment); flip to
-      # `runtime` for the device-screenshot test. Remove this block to restore
-      # git-diff-based tier detection.
-      EVAL_FORCE_TIER: static
-      EVAL_FORCE_SKILLS: eas-hosting
+      # TEMPORARY (testing): force a tier regardless of changed files. Remove
+      # this block to restore git-diff-based tier detection.
+      EVAL_FORCE_TIER: runtime
     outputs:
       tier: ${{ steps.detect.outputs.tier }}
       skills: ${{ steps.detect.outputs.skills }}
@@ -79,11 +75,25 @@ jobs:
           if [ -s "$NVM_DIR/nvm.sh" ]; then . "$NVM_DIR/nvm.sh"; nvm install 22 && nvm use 22; else echo "nvm not found (node stays $(node -v))"; ls -d "$HOME/.nvm/versions/node"/* 2>/dev/null || true; fi
           echo "node in use: $(node -v)"
           npm i -g bun @anthropic-ai/claude-code
-          python3 scripts/eval-ci.py run --tier static --skills "${{ needs.detect.outputs.skills }}" --out "$PWD/.eval-out" || true
+          rc=0
+          python3 scripts/eval-ci.py run --tier static --skills "${{ needs.detect.outputs.skills }}" --out "$PWD/.eval-out" || rc=$?
           report=$(cat .eval-out/eval-report.md 2>/dev/null || echo "no report")
           result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')" 2>/dev/null || echo failure)
           set-output report "${report:-no report}"
           set-output result "${result:-failure}"
+          # eval-ci exits 2 only on infra errors (executor/fixture) → red check;
+          # genuine skill-quality failures exit 0 (advisory, comment only).
+          exit $rc
+      - name: upload artifacts
+        uses: eas/upload_artifact
+        if: ${{ always() }}
+        with:
+          type: other
+          name: eval-static
+          ignore_error: true
+          # Single pre-tarred bundle with clean paths relative to .eval-out
+          # (eas archives absolute paths, so we can't upload loose files cleanly).
+          path: .eval-out/eval-results.tar.gz
 
   # --- Runtime tier: iOS (build + screenshot on the same macOS worker) ------
   runtime_ios:
@@ -105,11 +115,25 @@ jobs:
           if [ -s "$NVM_DIR/nvm.sh" ]; then . "$NVM_DIR/nvm.sh"; nvm install 22 && nvm use 22; else echo "nvm not found (node stays $(node -v))"; ls -d "$HOME/.nvm/versions/node"/* 2>/dev/null || true; fi
           echo "node in use: $(node -v)"
           npm i -g bun @anthropic-ai/claude-code
-          python3 scripts/eval-ci.py run --tier runtime --platform ios --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt --out "$PWD/.eval-out" || true
+          rc=0
+          python3 scripts/eval-ci.py run --tier runtime --platform ios --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt --out "$PWD/.eval-out" || rc=$?
           report=$(cat .eval-out/eval-report.md 2>/dev/null || echo "no report")
           result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')" 2>/dev/null || echo failure)
           set-output report "${report:-no report}"
           set-output result "${result:-failure}"
+          # eval-ci exits 2 only on infra errors (executor/fixture) → red check;
+          # genuine skill-quality failures exit 0 (advisory, comment only).
+          exit $rc
+      - name: upload artifacts
+        uses: eas/upload_artifact
+        if: ${{ always() }}
+        with:
+          type: other
+          name: eval-ios
+          ignore_error: true
+          # Single pre-tarred bundle with clean paths relative to .eval-out
+          # (eas archives absolute paths, so we can't upload loose files cleanly).
+          path: .eval-out/eval-results.tar.gz
 
   # --- Runtime tier: Android (build + screenshot on the same linux worker) --
   runtime_android:
@@ -131,29 +155,49 @@ jobs:
           if [ -s "$NVM_DIR/nvm.sh" ]; then . "$NVM_DIR/nvm.sh"; nvm install 22 && nvm use 22; else echo "nvm not found (node stays $(node -v))"; ls -d "$HOME/.nvm/versions/node"/* 2>/dev/null || true; fi
           echo "node in use: $(node -v)"
           npm i -g bun @anthropic-ai/claude-code
-          python3 scripts/eval-ci.py run --tier runtime --platform android --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt --out "$PWD/.eval-out" || true
+          rc=0
+          python3 scripts/eval-ci.py run --tier runtime --platform android --prd .claude/skills/expo-plugin-eval/references/hot-chocolate-prd.txt --out "$PWD/.eval-out" || rc=$?
           report=$(cat .eval-out/eval-report.md 2>/dev/null || echo "no report")
           result=$(python3 -c "import json;print('success' if json.load(open('.eval-out/eval-summary.json'))['passed'] else 'failure')" 2>/dev/null || echo failure)
           set-output report "${report:-no report}"
           set-output result "${result:-failure}"
+          # eval-ci exits 2 only on infra errors (executor/fixture) → red check;
+          # genuine skill-quality failures exit 0 (advisory, comment only).
+          exit $rc
+      - name: upload artifacts
+        uses: eas/upload_artifact
+        if: ${{ always() }}
+        with:
+          type: other
+          name: eval-android
+          ignore_error: true
+          # Single pre-tarred bundle with clean paths relative to .eval-out
+          # (eas archives absolute paths, so we can't upload loose files cleanly).
+          path: .eval-out/eval-results.tar.gz
 
   # --- PR comments (one per tier so no empty sections render) ---------------
   # eval-ci.py always exits 0 (soft gate) — pass/fail is encoded in the report,
   # not the exit code — so `needs` never blocks these comment jobs on a red eval.
   comment_static:
     name: comment (static)
-    needs: [detect, static_eval]
-    if: ${{ needs.detect.outputs.tier == 'static' }}
+    # after: (not needs:) runs regardless of static_eval's pass/fail — needs:
+    # skips the comment when the eval job fails. after.<job>.outputs is available.
+    after: [detect, static_eval]
+    if: ${{ after.detect.outputs.tier == 'static' }}
     type: github-comment
     params:
       payload: |
         <!-- expo-eval -->
-        ${{ needs.static_eval.outputs.report }}
+        ${{ after.static_eval.outputs.report }}
+
+        📎 Generated app + logs: [workflow artifacts](${{ workflow.url }})
 
   comment_runtime:
     name: comment (runtime)
-    needs: [detect, runtime_ios, runtime_android]
-    if: ${{ needs.detect.outputs.tier == 'runtime' }}
+    # after: (not needs:) runs regardless of the runtime jobs' pass/fail — needs:
+    # skips the comment when an eval job fails. after.<job>.outputs is available.
+    after: [detect, runtime_ios, runtime_android]
+    if: ${{ after.detect.outputs.tier == 'runtime' }}
     type: github-comment
     params:
       payload: |
@@ -161,7 +205,9 @@ jobs:
         ## Expo plugin eval — runtime
 
         ### iOS
-        ${{ needs.runtime_ios.outputs.report }}
+        ${{ after.runtime_ios.outputs.report }}
 
         ### Android
-        ${{ needs.runtime_android.outputs.report }}
+        ${{ after.runtime_android.outputs.report }}
+
+        📎 Screenshots (`viewer.html`), generated app & logs: [workflow artifacts](${{ workflow.url }})
