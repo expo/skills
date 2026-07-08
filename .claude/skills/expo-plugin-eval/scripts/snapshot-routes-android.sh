@@ -27,7 +27,9 @@ emulator_alive() { [[ -n "$EMULATOR_PID" ]] && kill -0 "$EMULATOR_PID" 2>/dev/nu
 
 # See snapshot-android.sh: host GPU (Metal) by default; switch to "guest" if the
 # emulator self-aborts under load. Avoid swiftshader_indirect (hangs on arm64).
-GPU_MODE="host"
+# Overridable via env for CI (a headless x86_64 Linux worker needs software
+# rendering, e.g. swiftshader_indirect, which is fine off arm64).
+GPU_MODE="${EXPO_SKILL_EVAL_GPU:-host}"
 
 if [[ "$RUNNER" == "dev-build" ]]; then
   BUNDLE_TIMEOUT="${EXPO_SKILL_EVAL_BUNDLE_TIMEOUT:-900}"
@@ -117,7 +119,9 @@ fi
 if [[ "$RUNNER" == "dev-build" ]]; then
   (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo run:android --port "$PORT") </dev/null >"$LOG" 2>&1 &
 else
-  (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo start --port "$PORT" --android) </dev/null >"$LOG" 2>&1 &
+  # --go forces Expo Go even though the fixture has expo-dev-client installed
+  # (without it, `expo start` prefers the dev client and fails with no dev build).
+  (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo start --port "$PORT" --android --go) </dev/null >"$LOG" 2>&1 &
 fi
 METRO_PID=$!
 cleanup() {

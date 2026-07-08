@@ -75,7 +75,9 @@ fi
 if [[ "$RUNNER" == "dev-build" ]]; then
   (cd "$PROJECT_PATH" && exec env -u CI bunx expo run:ios --port "$PORT") </dev/null >"$LOG" 2>&1 &
 else
-  (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo start --port "$PORT" --ios) </dev/null >"$LOG" 2>&1 &
+  # --go forces Expo Go even though the fixture has expo-dev-client installed
+  # (without it, `expo start` prefers the dev client and fails with no dev build).
+  (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo start --port "$PORT" --ios --go) </dev/null >"$LOG" 2>&1 &
 fi
 METRO_PID=$!
 cleanup() {

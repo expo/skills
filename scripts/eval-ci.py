@@ -59,6 +59,14 @@ SNAPSHOT_ROUTES = {
 }
 SNAPSHOT_PORT = {"ios": "8081", "android": "8082"}
 
+# CI-only device provisioning (EAS workers ship no Expo Go / no AVD). Committed
+# next to this entrypoint; the interactive skill doesn't need them.
+CI_SCRIPTS = Path(__file__).resolve().parent
+PROVISION = {
+    "ios": CI_SCRIPTS / "ci-provision-ios.sh",
+    "android": CI_SCRIPTS / "ci-provision-android.sh",
+}
+
 # Skills whose output is a renderable app — a change to any of these runs the
 # whole-plugin runtime tier (build + screenshot the hot_chocolate app). Every
 # other skill with a SKILL.md runs the cheap static tier. Names are the
@@ -450,6 +458,25 @@ def resolve_routes(app_path, config_dir, prd_routes=None):
     return norm
 
 
+# Common native modules Expo Go can't load (need a dev build). Not exhaustive —
+# Expo Go bundles a fixed module set; these are the usual ones an app-building
+# prompt reaches for. When present, skip Expo Go and go straight to a dev build.
+EXPO_GO_INCOMPATIBLE = (
+    "react-native-maps", "react-native-vision-camera", "react-native-ble-plx",
+    "@react-native-firebase/", "react-native-google-mobile-ads",
+    "@stripe/stripe-react-native", "react-native-mmkv", "@shopify/react-native-skia",
+)
+
+
+def needs_dev_build(app):
+    """Native deps in the app that Expo Go can't run (→ dev build). [] if none."""
+    try:
+        deps = json.loads((Path(app) / "package.json").read_text()).get("dependencies", {})
+    except Exception:
+        return []
+    return [d for d in deps if any(d == x or d.startswith(x) for x in EXPO_GO_INCOMPATIBLE)]
+
+
 def count_captured(out_dir, routes):
     captured = 0
     for rt in routes:
@@ -564,20 +591,49 @@ def cmd_run_runtime(args, workspace):
     passed, static_out = run_static(app, platform)
     log(f"static gate {'PASS' if passed else 'FAIL'}")
 
-    routes, captured, routes_total = [], 0, 0
+    routes, captured, routes_total, runner_used = [], 0, 0, None
     if passed:
         routes = resolve_routes(app, config_dir)
         routes_total = len(routes)
         route_csv = ",".join(r["path"] for r in routes)
-        log(f"capturing {routes_total} route(s) on {platform}: {route_csv}")
-        env = {**os.environ, "EXPO_SKILL_EVAL_RUNNER": "expo-go"}
-        run(
-            ["bash", str(SNAPSHOT_ROUTES[platform]), str(app), str(out_dir),
-             SNAPSHOT_PORT[platform], route_csv],
-            env=env,
-        )
-        captured = count_captured(out_dir, routes)
-        log(f"captured {captured}/{routes_total} route screenshot(s)")
+
+        base_env = {**os.environ}
+        # A headless x86_64 Linux worker needs software GPU; leave the local
+        # macOS default (host) alone (swiftshader hangs on Apple Silicon).
+        if platform == "android" and sys.platform.startswith("linux"):
+            base_env["EXPO_SKILL_EVAL_GPU"] = "swiftshader_indirect"
+
+        # Provision the device with Expo Go (CI machines ship none). Best-effort:
+        # a dev build doesn't need Expo Go, so don't abort if this fails.
+        provision = PROVISION.get(platform)
+        if provision and provision.is_file():
+            log(f"provisioning {platform} device + Expo Go (sdk {sdk or 'latest'})")
+            run(["bash", str(provision), str(sdk or "")], env=base_env)
+
+        # Expo Go by default; fall back to a dev build if nothing was captured.
+        # If the app declares native modules Expo Go can't load, skip straight to
+        # a dev build (Expo Go would just render an error screen).
+        runners = ["expo-go", "dev-build"]
+        incompatible = needs_dev_build(app)
+        if incompatible:
+            log(f"native modules not in Expo Go ({', '.join(incompatible)}) — using dev build")
+            runners = ["dev-build"]
+        for runner in runners:
+            log(f"capturing {routes_total} route(s) on {platform} via {runner}")
+            run(
+                ["bash", str(SNAPSHOT_ROUTES[platform]), str(app), str(out_dir),
+                 SNAPSHOT_PORT[platform], route_csv],
+                env={**base_env, "EXPO_SKILL_EVAL_RUNNER": runner},
+            )
+            captured = count_captured(out_dir, routes)
+            if captured > 0:
+                runner_used = runner
+                break
+            log(f"{runner}: captured 0/{routes_total}" + (
+                " — falling back to dev build" if runner == "expo-go"
+                else " — no screenshots"))
+        log(f"captured {captured}/{routes_total} route screenshot(s)"
+            + (f" via {runner_used}" if runner_used else ""))
     else:
         log("skipping snapshots (static gate failed)")
 
@@ -586,6 +642,7 @@ def cmd_run_runtime(args, workspace):
         "static_passed": passed,
         "routes_total": routes_total,
         "routes_captured": captured,
+        "runner": runner_used,
         "metro_errors": metro_had_errors(out_dir),
         "executor_seconds": elapsed,
         "tokens": tokens,
@@ -623,8 +680,9 @@ def render_report(summary):
         lines.append("")
         for c in summary["cases"]:
             static = "✅" if c.get("static_passed") else "❌"
+            runner = f" ({c['runner']})" if c.get("runner") else ""
             lines.append(f"- **{c['name']}** — static gate {static}, "
-                         f"routes captured {c.get('routes_captured', 0)}/{c.get('routes_total', 0)}"
+                         f"routes captured {c.get('routes_captured', 0)}/{c.get('routes_total', 0)}{runner}"
                          f"{' ⚠️ metro errors' if c.get('metro_errors') else ''}")
             skills = ", ".join(c.get("skills_used") or []) or "none"
             mcp = c.get("mcp_tools") or []
