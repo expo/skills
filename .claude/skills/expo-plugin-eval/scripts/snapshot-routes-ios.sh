@@ -47,11 +47,22 @@ slug() {
 
 SCHEME="$(node -e "try{var a=require('$PROJECT_PATH/app.json');console.log((a.expo&&a.expo.scheme)||'exposkilleval')}catch(e){console.log('exposkilleval')}" 2>/dev/null || echo 'exposkilleval')"
 BUNDLE_ID="$(node -e "try{var a=require('$PROJECT_PATH/app.json');console.log((a.expo&&a.expo.ios&&a.expo.ios.bundleIdentifier)||'com.exposkilleval.fixture')}catch(e){console.log('com.exposkilleval.fixture')}" 2>/dev/null || echo 'com.exposkilleval.fixture')"
+APP_SLUG="$(node -e "try{var a=require('$PROJECT_PATH/app.json');console.log((a.expo&&(a.expo.slug||a.expo.name))||'fixture')}catch(e){console.log('fixture')}" 2>/dev/null || echo 'fixture')"
+# expo-dev-client registers the launcher under exp+<slug>. Loading the app from
+# Metro via that scheme is what `expo run:ios` itself does — a cold `simctl launch`
+# of the bundle id just opens the launcher's "searching for servers" screen.
+DEV_SCHEME="exp+${APP_SLUG}"
 
 deeplink() {
   local route="$1"
   if [[ "$RUNNER" == "dev-build" ]]; then
-    echo "${SCHEME}://${route#/}"
+    if [[ "$route" == "/" ]]; then
+      # Dev-launcher URL: load the app from Metro (connects the dev client).
+      echo "${DEV_SCHEME}://expo-development-client/?url=http%3A%2F%2Flocalhost%3A${PORT}"
+    else
+      # App scheme deep link — the loaded dev client forwards it to the app.
+      echo "${SCHEME}://${route#/}"
+    fi
   else
     echo "exp://127.0.0.1:$PORT/--/${route#/}"
   fi
@@ -70,6 +81,19 @@ if ! xcrun simctl list devices booted | grep -q '(Booted)'; then
   xcrun simctl boot "$UDID"
   open -a Simulator
   xcrun simctl bootstatus "$UDID"
+fi
+
+UDID="${UDID:-$(xcrun simctl list devices booted | grep -oE '[0-9A-F-]{36}' | head -1)}"
+
+# Pre-approve the custom URL schemes so `simctl openurl` doesn't raise the
+# "Open in <app>?" dialog (dev build only; Expo Go uses exp:// which never
+# prompts). Writes the simulator's launchservices scheme-approval plist —
+# key `com.apple.CoreSimulator.CoreSimulatorBridge-->{scheme}` = bundle id.
+if [[ "$RUNNER" == "dev-build" && -n "$UDID" ]]; then
+  APPROVAL="$HOME/Library/Developer/CoreSimulator/Devices/$UDID/data/Library/Preferences/com.apple.launchservices.schemeapproval"
+  for s in "$SCHEME" "$DEV_SCHEME"; do
+    defaults write "$APPROVAL" "com.apple.CoreSimulator.CoreSimulatorBridge-->$s" -string "$BUNDLE_ID" 2>/dev/null || true
+  done
 fi
 
 if [[ "$RUNNER" == "dev-build" ]]; then
@@ -130,12 +154,11 @@ for route in "${ROUTES[@]}"; do
   URL="$(deeplink "$route")"
   echo "[route] $route -> $SLUG.png  ($URL)" >&2
 
-  if [[ "$RUNNER" == "dev-build" && "$FIRST" == "1" && "$route" == "/" ]]; then
-    # Relaunch the dev client at root via simctl launch (no "Open in?" dialog).
-    xcrun simctl launch --terminate-running-process booted "$BUNDLE_ID" >/dev/null 2>&1 || true
-  else
-    xcrun simctl openurl booted "$URL" >/dev/null 2>&1 || true
-  fi
+  # openurl for every route: for dev build, "/" is the dev-launcher URL (loads
+  # the app from Metro) and other routes are app-scheme deep links; schemes were
+  # pre-approved above so no "Open in?" dialog. (Was a cold `simctl launch` for
+  # "/", which only opened the launcher's "searching for servers" screen.)
+  xcrun simctl openurl booted "$URL" >/dev/null 2>&1 || true
 
   if [[ "$FIRST" == "1" ]]; then
     # First route pays the cold-bundle wait.

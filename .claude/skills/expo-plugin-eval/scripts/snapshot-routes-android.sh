@@ -49,11 +49,19 @@ slug() {
 }
 
 SCHEME="$(node -e "try{var a=require('$PROJECT_PATH/app.json');console.log((a.expo&&a.expo.scheme)||'exposkilleval')}catch(e){console.log('exposkilleval')}" 2>/dev/null || echo 'exposkilleval')"
+APP_SLUG="$(node -e "try{var a=require('$PROJECT_PATH/app.json');console.log((a.expo&&(a.expo.slug||a.expo.name))||'fixture')}catch(e){console.log('fixture')}" 2>/dev/null || echo 'fixture')"
+# expo-dev-client launcher scheme; loading via it connects the dev client to
+# Metro (a bare `am start .MainActivity` only shows the launcher's search screen).
+DEV_SCHEME="exp+${APP_SLUG}"
 
 deeplink() {
   local route="$1"
   if [[ "$RUNNER" == "dev-build" ]]; then
-    echo "${SCHEME}://${route#/}"
+    if [[ "$route" == "/" ]]; then
+      echo "${DEV_SCHEME}://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A${PORT}"
+    else
+      echo "${SCHEME}://${route#/}"
+    fi
   else
     echo "exp://127.0.0.1:$PORT/--/${route#/}"
   fi
@@ -181,11 +189,10 @@ for route in "${ROUTES[@]}"; do
   URL="$(deeplink "$route")"
   log_step "route $route -> $SLUG.png  ($URL)"
 
-  if [[ "$RUNNER" == "dev-build" && "$FIRST" == "1" && "$route" == "/" ]]; then
-    "$ADB" shell am start -W -n "${APP_PKG}/.MainActivity" >/dev/null 2>&1 || true
-  else
-    "$ADB" shell am start -W -a android.intent.action.VIEW -d "$URL" >/dev/null 2>&1 || true
-  fi
+  # VIEW intent for every route: for dev build, "/" is the dev-launcher URL
+  # (loads the app from Metro) and other routes are app-scheme deep links. (Was a
+  # bare `am start .MainActivity` for "/", which only showed the launcher.)
+  "$ADB" shell am start -W -a android.intent.action.VIEW -d "$URL" >/dev/null 2>&1 || true
 
   if [[ "$FIRST" == "1" ]]; then
     until grep -q 'Bundled' "$LOG"; do
