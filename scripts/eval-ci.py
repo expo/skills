@@ -657,6 +657,13 @@ def main():
     r.add_argument("--out", default="", help="output dir (default: a temp dir)")
 
     args = ap.parse_args()
+    # make-fixture commits the pristine fixture; CI workers usually have no git
+    # identity configured, which makes `git commit` fatal. Provide one via env
+    # (env overrides missing user.name/email config) so it works on any runner.
+    os.environ.setdefault("GIT_AUTHOR_NAME", "expo eval-ci")
+    os.environ.setdefault("GIT_AUTHOR_EMAIL", "eval-ci@expo.dev")
+    os.environ.setdefault("GIT_COMMITTER_NAME", "expo eval-ci")
+    os.environ.setdefault("GIT_COMMITTER_EMAIL", "eval-ci@expo.dev")
     if args.mode == "detect":
         return cmd_detect(args)
     return cmd_run(args)
