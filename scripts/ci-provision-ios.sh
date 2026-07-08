@@ -26,8 +26,11 @@ if xcrun simctl get_app_container booted host.exp.Exponent >/dev/null 2>&1; then
   exit 0
 fi
 
-URL="$(curl -fsSL https://api.expo.dev/v2/versions/latest \
-  | jq -r ".data.sdkVersions[\"$SDK\"].iosClientUrl")"
+# Parse the versions API with node (present after nvm), not jq (absent on the
+# EAS macOS worker).
+URL="$(curl -fsSL https://api.expo.dev/v2/versions/latest | node -e \
+  'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(JSON.parse(s).data.sdkVersions[process.argv[1]].iosClientUrl||"")}catch(e){}})' \
+  "$SDK")"
 if [[ -z "$URL" || "$URL" == "null" ]]; then
   echo "[provision-ios] no iosClientUrl for SDK $SDK" >&2
   exit 1

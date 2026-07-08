@@ -78,8 +78,10 @@ if "$ADB" shell pm list packages 2>/dev/null | grep -q host.exp.exponent; then
   echo "[provision-android] Expo Go already installed" >&2
   exit 0
 fi
-URL="$(curl -fsSL https://api.expo.dev/v2/versions/latest \
-  | jq -r ".data.sdkVersions[\"$SDK\"].androidClientUrl")"
+# Parse the versions API with node (present after nvm), not jq (not guaranteed).
+URL="$(curl -fsSL https://api.expo.dev/v2/versions/latest | node -e \
+  'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(JSON.parse(s).data.sdkVersions[process.argv[1]].androidClientUrl||"")}catch(e){}})' \
+  "$SDK")"
 if [[ -z "$URL" || "$URL" == "null" ]]; then
   echo "[provision-android] no androidClientUrl for SDK $SDK" >&2
   exit 1
