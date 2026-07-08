@@ -477,6 +477,19 @@ def needs_dev_build(app):
     return [d for d in deps if any(d == x or d.startswith(x) for x in EXPO_GO_INCOMPATIBLE)]
 
 
+def bundle_app_source(app, dest):
+    """Tar the generated app's source (minus heavy regenerable dirs) so CI can
+    upload it as an artifact — what the model built, without node_modules or
+    native build output."""
+    app = Path(app)
+    if not app.is_dir():
+        return
+    run(["tar", "czf", str(dest),
+         "--exclude=node_modules", "--exclude=ios", "--exclude=android",
+         "--exclude=.expo", "--exclude=dist", "--exclude=.git",
+         "-C", str(app.parent), app.name], capture_output=True)
+
+
 def count_captured(out_dir, routes):
     captured = 0
     for rt in routes:
@@ -532,6 +545,7 @@ def cmd_run_static(args, workspace):
         log(f"{tag}: running static gate (tsc + lint + export)")
         passed, static_out = run_static(app, "ios,android")
         log(f"{tag}: static gate {'PASS' if passed else 'FAIL'}")
+        bundle_app_source(app, workspace / f"eval-{i}" / "generated-app.tar.gz")
         usage = parse_usage(exec_log)
         cases.append({
             "skill": skill,
@@ -636,6 +650,8 @@ def cmd_run_runtime(args, workspace):
             + (f" via {runner_used}" if runner_used else ""))
     else:
         log("skipping snapshots (static gate failed)")
+
+    bundle_app_source(app, config_dir / "generated-app.tar.gz")
 
     case = {
         "name": "hot-chocolate",
