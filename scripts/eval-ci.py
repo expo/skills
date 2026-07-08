@@ -96,6 +96,11 @@ def clean_env():
     return {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
 
 
+def log(msg):
+    """Progress line to stderr (surfaces in CI logs; flushed immediately)."""
+    print(f"[eval-ci] {msg}", file=sys.stderr, flush=True)
+
+
 def latest_sdk():
     try:
         r = run(["bash", str(LATEST_SDK)], capture_output=True, timeout=120)
@@ -210,8 +215,11 @@ def cmd_detect(args):
 def run_executor(prompt, app_path, log_path, tier, plugin_dir=None):
     """Run one `claude -p` executor that edits the fixture in place.
 
-    Returns (elapsed_seconds, tokens_dict). The stream-json output is written to
-    log_path for usage parsing.
+    The executor is the long pole (minutes of a silent app build), so we poll it
+    and emit a heartbeat to stderr — otherwise the CI step looks hung. The
+    stream-json output goes to log_path for usage parsing.
+
+    Returns (elapsed_seconds, tokens_dict).
     """
     cmd = [
         "claude",
@@ -225,22 +233,34 @@ def run_executor(prompt, app_path, log_path, tier, plugin_dir=None):
     if plugin_dir:
         cmd += ["--plugin-dir", str(plugin_dir)]
 
+    timeout = EXECUTOR_TIMEOUT[tier]
+    log(f"executor: launching claude -p (timeout {timeout}s"
+        f"{', --plugin-dir' if plugin_dir else ''})")
     start = time.time()
-    with open(log_path, "w") as log:
-        try:
-            subprocess.run(
-                cmd,
-                cwd=app_path,
-                env=clean_env(),
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                text=True,
-                timeout=EXECUTOR_TIMEOUT[tier],
-            )
-        except subprocess.TimeoutExpired:
-            log.write("\n[eval-ci] executor timed out\n")
+    with open(log_path, "w") as logf:
+        proc = subprocess.Popen(
+            cmd, cwd=app_path, env=clean_env(),
+            stdout=logf, stderr=subprocess.STDOUT, text=True,
+        )
+        next_beat = 60
+        while True:
+            try:
+                proc.wait(timeout=15)
+                break
+            except subprocess.TimeoutExpired:
+                elapsed = time.time() - start
+                if elapsed >= timeout:
+                    proc.kill()
+                    log(f"executor: TIMEOUT after {int(elapsed)}s — killed")
+                    break
+                if elapsed >= next_beat:
+                    log(f"executor: still working ({int(elapsed)}s elapsed)")
+                    next_beat += 60
     elapsed = round(time.time() - start, 1)
-    return elapsed, parse_tokens(log_path)
+    toks = parse_tokens(log_path)
+    log(f"executor: finished in {elapsed}s "
+        f"(output tokens: {toks.get('output_tokens', 0)})")
+    return elapsed, toks
 
 
 def _stream_events(log_path):
@@ -441,10 +461,10 @@ def count_captured(out_dir, routes):
 
 
 def metro_had_errors(out_dir):
-    log = Path(out_dir) / "metro.log"
-    if not log.is_file():
+    mlog = Path(out_dir) / "metro.log"
+    if not mlog.is_file():
         return None
-    text = log.read_text(errors="ignore").lower()
+    text = mlog.read_text(errors="ignore").lower()
     return any(m in text for m in ("unable to resolve", "failed to compile", "bundling failed"))
 
 
@@ -457,30 +477,35 @@ def cmd_run_static(args, workspace):
         print("no static skills to evaluate", file=sys.stderr)
         return {"tier": "static", "cases": [], "passed": True}
 
+    log("detecting Expo SDK...") if not args.sdk else None
     sdk = args.sdk or latest_sdk()
+    log(f"static tier: {len(skills)} skill(s), SDK {sdk or 'latest'}")
     cases = []
     for i, skill in enumerate(skills):
+        tag = f"[{i + 1}/{len(skills)}] {skill}"
         app = workspace / f"eval-{i}" / "app"
         app.parent.mkdir(parents=True, exist_ok=True)
-        log = workspace / f"eval-{i}" / "executor.log"
+        exec_log = workspace / f"eval-{i}" / "executor.log"
 
+        log(f"{tag}: creating fixture")
         mk = run(
             ["bash", str(MAKE_FIXTURE), str(app), *( [sdk] if sdk else [] )],
             capture_output=True,
         )
         if mk.returncode != 0:
             err = ((mk.stdout or "") + (mk.stderr or "")).strip()
-            print(f"[eval-ci] make-fixture failed for {skill}:\n{err[-2000:]}",
-                  file=sys.stderr)
+            log(f"{tag}: make-fixture FAILED\n{err[-2000:]}")
             cases.append({"skill": skill, "static_passed": False,
                           "error": "fixture creation failed", "log": err[-1000:]})
             continue
 
         elapsed, tokens = run_executor(
-            static_prompt(skill, app), str(app), log, "static"
+            static_prompt(skill, app), str(app), exec_log, "static"
         )
+        log(f"{tag}: running static gate (tsc + lint + export)")
         passed, static_out = run_static(app, "ios,android")
-        usage = parse_usage(log)
+        log(f"{tag}: static gate {'PASS' if passed else 'FAIL'}")
+        usage = parse_usage(exec_log)
         cases.append({
             "skill": skill,
             "static_passed": passed,
@@ -509,35 +534,42 @@ def cmd_run_runtime(args, workspace):
         return {"tier": "runtime", "platform": platform, "cases": [], "passed": False}
     prd_text = prd_path.read_text()
 
+    log("detecting Expo SDK...") if not args.sdk else None
     sdk = args.sdk or latest_sdk()
+    log(f"runtime tier ({platform}): SDK {sdk or 'latest'}")
     app = workspace / "eval-0" / "app"
     config_dir = workspace / "eval-0"
     config_dir.mkdir(parents=True, exist_ok=True)
-    log = config_dir / "executor.log"
+    exec_log = config_dir / "executor.log"
     out_dir = config_dir / "outputs" / platform
 
+    log("creating fixture")
     mk = run(
         ["bash", str(MAKE_FIXTURE), str(app), *( [sdk] if sdk else [] )],
         capture_output=True,
     )
     if mk.returncode != 0:
         err = ((mk.stdout or "") + (mk.stderr or "")).strip()
-        print(f"[eval-ci] make-fixture failed:\n{err[-2000:]}", file=sys.stderr)
+        log(f"make-fixture FAILED\n{err[-2000:]}")
         return {"tier": "runtime", "platform": platform, "sdk": sdk, "passed": False,
                 "cases": [{"name": "hot-chocolate", "static_passed": False,
                            "error": "fixture creation failed", "log": err[-1000:]}]}
 
     elapsed, tokens = run_executor(
-        runtime_prompt(prd_text, app), str(app), log, "runtime", plugin_dir=PLUGIN_DIR
+        runtime_prompt(prd_text, app), str(app), exec_log, "runtime", plugin_dir=PLUGIN_DIR
     )
-    usage = parse_usage(log)
+    usage = parse_usage(exec_log)
+    log(f"skills used: {usage['skills'] or 'none'} | MCP tools: {usage['mcp_tools'] or 'none'}")
+    log(f"running static gate ({platform})")
     passed, static_out = run_static(app, platform)
+    log(f"static gate {'PASS' if passed else 'FAIL'}")
 
     routes, captured, routes_total = [], 0, 0
     if passed:
         routes = resolve_routes(app, config_dir)
         routes_total = len(routes)
         route_csv = ",".join(r["path"] for r in routes)
+        log(f"capturing {routes_total} route(s) on {platform}: {route_csv}")
         env = {**os.environ, "EXPO_SKILL_EVAL_RUNNER": "expo-go"}
         run(
             ["bash", str(SNAPSHOT_ROUTES[platform]), str(app), str(out_dir),
@@ -545,6 +577,9 @@ def cmd_run_runtime(args, workspace):
             env=env,
         )
         captured = count_captured(out_dir, routes)
+        log(f"captured {captured}/{routes_total} route screenshot(s)")
+    else:
+        log("skipping snapshots (static gate failed)")
 
     case = {
         "name": "hot-chocolate",
