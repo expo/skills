@@ -508,7 +508,7 @@ Start Metro from the Expo project (or `yarn start` from the monorepo root):
 yarn start
 ```
 
-Build and run the native app normally (Android Studio / Xcode). Navigate to your React Native–powered Activity or screen — it loads JS from the Metro dev server with hot reloading.
+Build and run the native app normally (Android Studio / Xcode). Navigate to your React Native-powered Activity or screen - it loads JS from the Metro dev server with hot reloading.
 
 ### Development vs. production
 
