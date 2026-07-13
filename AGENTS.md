@@ -23,13 +23,18 @@ plugins/
     .mcp.json               # Claude Code and Codex MCP server configuration
     mcp.json                # Cursor MCP server configuration
     skills/
+      README.md             # Grouped index of all skills
       skill-name/
         SKILL.md            # Main skill file
         references/         # Optional supporting documentation
         scripts/            # Optional utility scripts
+        agents/
+          openai.yaml       # Codex trigger metadata
     README.md               # Plugin documentation
 README.md                   # User-facing installation instructions
-CONTRIBUTING.md             # Contributor guidance
+CONTRIBUTING.md             # Contributor guidance (adding skills, naming, free vs paid)
+skills.sh.json              # skills.sh catalog groupings
+scripts/                    # CI checks (skill limits, plugin version bump)
 ```
 
 The Claude Code marketplace currently exposes `expo` as the active plugin. It also keeps deprecated aliases such as `expo-app-design`, `upgrading-expo`, and `expo-deployment` pointing at `./plugins/expo` for backward compatibility. The Codex and Cursor marketplaces expose only the active `expo` plugin because their marketplace entries must match the plugin manifest name.
@@ -89,7 +94,8 @@ Frontmatter fields:
 
 Skill guidelines:
 
-- Keep `SKILL.md` focused and under 500 lines when practical.
+- Name skills `expo-*` (open-source framework) or `eas-*` (paid EAS service), and prefix the description with `Framework (OSS).` or `EAS service (paid).` to match. Paid skills open the body with a costs/plan-limits callout. See `CONTRIBUTING.md` for the full rules.
+- Keep the `SKILL.md` body under 500 lines and the `description` under 1024 characters - both are CI-enforced by `scripts/check-skill-limits.ts`.
 - Move detailed material to `references/` and load it only when the skill needs it.
 - Put reusable validation or fetching logic in `scripts/` instead of pasting large command blocks into the skill.
 - Write descriptions that match how users naturally ask for help.
@@ -188,11 +194,14 @@ When changing Claude Code marketplace aliases, preserve backward compatibility u
 
 ## Adding a Skill
 
-1. Create `plugins/expo/skills/my-skill/SKILL.md`.
-2. Add focused reference files under `plugins/expo/skills/my-skill/references/` when the skill needs more detail than belongs in the main `SKILL.md`.
-3. Add scripts under `plugins/expo/skills/my-skill/scripts/` only for reusable logic.
-4. Update `plugins/expo/README.md` or the root `README.md` only when the user-facing installation or usage story changes.
-5. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
+Follow the full guide in `CONTRIBUTING.md`. In short:
+
+1. Pick the name per the naming rule: `expo-*` for open-source framework skills, `eas-*` for paid EAS service skills.
+2. Create `plugins/expo/skills/<skill-name>/SKILL.md` with the category-prefixed description (`Framework (OSS).` or `EAS service (paid).`); paid skills open with a costs/plan-limits callout.
+3. Add focused reference files under `references/` when the skill needs more detail than belongs in the main `SKILL.md`, scripts under `scripts/` only for reusable logic, and `agents/openai.yaml` for Codex triggering.
+4. Register the skill in every catalog: `skills.sh.json`, `plugins/expo/README.md`, `plugins/expo/skills/README.md`, and the root `README.md`.
+5. Bump the version in all three plugin manifests together (they must match and be greater than main; CI-enforced).
+6. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
 
 ## Testing Plugins
 
@@ -201,6 +210,8 @@ Validate the changed surface before publishing:
 ```bash
 claude plugin validate .
 claude plugin validate ./plugins/expo
+bun scripts/check-skill-limits.ts
+bun scripts/check-plugin-version-bump.ts origin/main
 ```
 
 For JSON-only changes, also verify the edited JSON file parses:
