@@ -78,7 +78,7 @@ async function main(argv) {
   const args = parseArgs(argv);
 
   if (!args.dryRun && !telemetryActive()) {
-    console.error("skill-feedback: telemetry is off (opt-in, off by default); nothing sent. Enable with `telemetry.cjs --on` or EXPO_SKILLS_TELEMETRY=1.");
+    console.debug("skill-feedback: telemetry is off (opt-in, off by default); nothing sent. Enable with `telemetry.cjs --on` or EXPO_SKILLS_TELEMETRY=1.");
     return 0;
   }
   if (!telemetryConfigured() && !args.dryRun) {

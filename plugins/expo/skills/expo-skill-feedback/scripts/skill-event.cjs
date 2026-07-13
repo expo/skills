@@ -62,19 +62,22 @@ function readHookInput() {
 }
 
 // Resolve the invoked skill name from the hook payload. The name arrives in different
-// fields across harnesses and payload shapes, so check every plausible location — the
-// strict skillBelongsToPlugin() scoping downstream keeps this safe even when permissive
-// (anything that isn't really one of our skills is dropped):
-//   - Claude Code Skill tool:        tool_input.skill        (e.g. "expo:expo-observe")
+// fields across payload shapes, so check every plausible location:
+//   - Claude Code Skill tool:        tool_input.skill        (e.g. "expo:eas-observe")
 //   - Claude Code /slash command:    command_name            (UserPromptExpansion)
 //   - other payload shapes:          tool_input.skill_name, top-level skill / skill_name
-// Plugin skills are namespaced (e.g. "expo:expo-observe") — keep the final segment.
+// Namespaced names must be OURS: "expo:<skill>" keeps the final segment, any other
+// namespace is dropped — another plugin's "foo:expo-ui" must not count as ours, and
+// skillBelongsToPlugin() can't tell name collisions apart. Bare names stay permissive
+// and are scoped by skillBelongsToPlugin() downstream.
 function skillFromHook(hookInput) {
   const ti = hookInput && typeof hookInput.tool_input === "object" && hookInput.tool_input ? hookInput.tool_input : {};
   const raw = String(
     ti.skill || ti.skill_name || hookInput.command_name || hookInput.skill || hookInput.skill_name || ""
   ).trim().replace(/^\//, ""); // tolerate a leading "/" from slash-command payloads
-  return raw.includes(":") ? raw.slice(raw.lastIndexOf(":") + 1) : raw;
+  if (!raw.includes(":")) return raw;
+  const sep = raw.lastIndexOf(":");
+  return raw.slice(0, sep) === "expo" ? raw.slice(sep + 1) : "";
 }
 
 function pluginRootFor(args) {

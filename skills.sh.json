@@ -18,7 +18,8 @@
         "expo-dev-client",
         "expo-examples",
         "expo-app-clip",
-        "expo-upgrade"
+        "expo-upgrade",
+        "expo-skill-feedback"
       ]
     },
     {

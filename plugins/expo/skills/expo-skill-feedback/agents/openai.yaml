@@ -1,0 +1,4 @@
+interface:
+  display_name: "Expo Skill Feedback"
+  short_description: "Send anonymous feedback on an Expo skill, or turn the opt-in usage telemetry on or off (off by default)"
+  default_prompt: "Use $expo-skill-feedback to rate an Expo skill (useful, confusing, bug, idea) with a short anonymous note, or to enable, disable, or check the status of Expo skills telemetry."

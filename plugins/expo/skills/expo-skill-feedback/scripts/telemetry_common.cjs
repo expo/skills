@@ -79,7 +79,7 @@ function telemetryActive() {
   return DEFAULT_ON;
 }
 
-// A real key ships in this file, so telemetry is ON by default. This guard only
+// A real key ships in this file, so this check passes by default. This guard only
 // makes the scripts inert if someone strips the key (e.g. a fork or private build).
 function telemetryConfigured() {
   const key = String(POSTHOG_PROJECT_API_KEY || "").trim();

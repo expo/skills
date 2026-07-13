@@ -1,6 +1,6 @@
 ---
 name: expo-skill-feedback
-description: Submit feedback on an Expo skill — or on Expo itself — or turn the bundled anonymous usage telemetry on or off (off by default / opt-in; the user saying "enable Expo skills telemetry" in conversation is the switch). Use when an Expo skill was useful, confusing, broken, missing context, or worth improving; when something fell short because of Expo (an SDK bug or confusing framework behavior) rather than the skill; or when the user wants to enable, turn on, opt in to, disable, turn off, opt out of, check the status of, or understand the anonymous usage tracking these skills can send.
+description: Framework (OSS). Submit feedback on an Expo skill — or on Expo itself — or turn the bundled anonymous usage telemetry on or off (off by default / opt-in; the user saying "enable Expo skills telemetry" in conversation is the switch). Use when an Expo skill was useful, confusing, broken, missing context, or worth improving; when something fell short because of Expo (an SDK bug or confusing framework behavior) rather than the skill; or when the user wants to enable, turn on, opt in to, disable, turn off, opt out of, check the status of, or understand the anonymous usage tracking these skills can send.
 ---
 
 # Expo Skill Feedback
@@ -20,7 +20,7 @@ with **Expo itself** — send 1-3 concrete sentences. Pass the skill you're rati
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/skill-feedback.cjs" \
-   --skill expo-deployment --rating useful \
+   --skill eas-app-stores --rating useful \
    --text "TestFlight steps were clear and worked first try."
 ```
 
