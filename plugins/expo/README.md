@@ -87,6 +87,10 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **eas-update-insights** - Check EAS Update health, crash rates, adoption, and payload size
 - **eas-simulator** - Run and drive your app on a remote iOS/Android simulator on EAS cloud, from the CLI or an AI agent
 
+## Usage telemetry & feedback
+
+**Off by default** — nothing is sent unless you turn telemetry on. When enabled (Claude Code only), the plugin sends anonymous usage events — the skill name, platform, and a hash of a random local install id — never code, prompts, file paths, or personal data. Ask your agent to **"enable Expo skills telemetry"** to opt in (or set `EXPO_SKILLS_TELEMETRY=1`); turn off with `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`. Feedback on a skill goes through the **expo-skill-feedback** skill.
+
 ## License
 
 MIT

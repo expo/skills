@@ -147,6 +147,16 @@ Use the plugin for Claude Code or Codex; it stays updated through the plugin mar
 
 Expo documentation, Expo CLI, and EAS CLI are the source of truth. These skills teach agents how to apply Expo guidance in real projects.
 
+## Usage telemetry & feedback
+
+**Off by default — these skills send nothing unless you turn telemetry on.** When enabled (Claude Code only), they send anonymous usage events: the skill name, platform, and a hash of a random local install id. Never code, prompts, file paths, or personal data.
+
+- **Turn on:** ask your agent to **"enable Expo skills telemetry"**, or set `EXPO_SKILLS_TELEMETRY=1`.
+- **Turn off:** ask it to disable telemetry, or set `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`. CI never sends.
+- **Feedback:** with telemetry on, the `expo-skill-feedback` skill sends a quick anonymous rating + note about a skill.
+
+Details live in the `expo-skill-feedback` skill.
+
 ## License
 
 MIT
