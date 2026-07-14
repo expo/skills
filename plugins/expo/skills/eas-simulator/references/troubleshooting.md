@@ -4,7 +4,7 @@ Concrete errors seen while validating this flow, and the fix.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `Command simulator:start not found` | `eas-cli` too old (commands are hidden but present from ≥ 20.3.0) | Run via `npx eas-cli@latest …`, or upgrade `eas-cli`. |
+| `Command simulator:start not found` | `eas-cli` too old (commands are hidden but present from ≥ 20.3.0) | Run via `npx --yes eas-cli@latest …`, or upgrade `eas-cli`. |
 | `An Expo user account is required` / `whoami` shows logged-out | No browser login on a cloud/CI/headless box, or `EXPO_TOKEN` unset/invalid | Set **`EXPO_TOKEN`** (expo.dev → Account → Access Tokens) in the env; verify `npx --yes eas-cli@latest whoami`. (Interactive machines can `eas login`.) |
 | `simulator:start`/`build`: no linked project / missing `projectId` | A fresh `create-expo-app` isn't linked to EAS | `npx --yes eas-cli@latest init` to create/link it (writes `extra.eas.projectId`). |
 | `prebuild`/`eas build` prompts for or fails on a missing **iOS bundle identifier** | A fresh app often has no `ios.bundleIdentifier` | Set it in app config (e.g. `dev.<owner>.<slug>`); confirm via `npx expo config --json` (may live in `app.config.js`). |
@@ -29,6 +29,7 @@ Concrete errors seen while validating this flow, and the fix.
 | `expo start --tunnel` errors for a robot/`EXPO_TOKEN` user | The ngrok robot-user guard | Use tunnel v2: `EXPO_UNSTABLE_TUNNEL_V2=1 expo start --tunnel`. |
 | Unexpected charges / a session you forgot | `start --non-interactive` does NOT auto-stop | Always `npx --yes eas-cli@latest simulator:stop --id <id>`. List leftovers with `npx --yes eas-cli@latest simulator:list`. |
 | Screenshot shows **old content** / my recent edits don't appear | Running a **release build (Mode A/B)** whose JS was baked in *before* your edits — typically a reused/stale build | A/B reflect code at build time, not now. **Rebuild** (ensure the build's fingerprint matches current source), or use **Mode C** (dev + Metro) so live edits show via Fast Refresh. The screenshot itself is fresh — it's the build that's stale. (`9:41` in the status bar is the sim default, not staleness.) |
+| (argent) Every `argent run`/`tools` call returns `401 Unauthorized` right after linking | `argent link` without `--yes` no-ops on an already-linked URL ("Already linked. No changes."), keeping a stale token from a previous session | Re-link with `--yes` so the new token is written — see the link command in [controllers.md](./controllers.md). |
 
 ## Performance expectations
 
