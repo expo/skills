@@ -8,6 +8,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ### Framework (open source)
 
+- Recommends a starting folder structure for new projects
 - Provides UI guidelines following Apple Human Interface Guidelines
 - Covers Expo Router navigation patterns (stacks, tabs, modals, sheets)
 - Explains native iOS controls, SF Symbols, animations, and visual effects
@@ -62,6 +63,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ### Framework (open source)
 
+- **expo-project-structure** - Recommended folder structure for new Expo projects
 - **expo-router** - Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, and headers
 - **expo-native-ui** - Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, animations, and visual effects
 - **expo-ui** - Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
