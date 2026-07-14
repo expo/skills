@@ -63,7 +63,7 @@ Generic, reused UI (button, card, table) with one named export each. Name files 
 
 ## screens/ — screen bodies
 
-Because `app/` files must be routes, complex screen UI that isn't reused has no home there. Put it in `screens/` and let each route just render its screen:
+Because `app/` files must be routes, complex screen UI that isn't reused has no home there. Once a screen grows big enough to need breaking out to separate components, put it in `screens/` and let each route just render its screen:
 
 ```tsx
 import { Home } from "@/screens/home";
@@ -78,7 +78,7 @@ export default function HomeScreen() {
 
 ## server/ + app/api/ — separate server code
 
-Appending `+api` to a file in `app/` makes it a server **API route**. Server code is different from frontend code — it runs in a Node-like EAS Hosting environment and can read secret env vars (`process.env.X`, not just `EXPO_PUBLIC_*`). Keep it apart:
+Appending `+api` to a file in `app/` makes it a server **API route**. Server code is different from frontend code — it runs in a Node-like server environment (deployed with EAS Hosting or on [third-party services](https://docs.expo.dev/router/web/api-routes/#hosting-on-third-party-services)) and can read secret env vars (`process.env.X`, not just `EXPO_PUBLIC_*`). Keep it apart:
 
 - Group all routes under `app/api/` → `/api/user`, `/api/settings`. This colocates them and avoids collisions (e.g. a `/user` screen and a `/user` route).
 - Put shared server-only helpers in `src/server/`.
