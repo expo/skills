@@ -1,0 +1,348 @@
+# Non-interactive skill eval for PRs that touch plugins/expo/skills/**.
+# Advisory only -- results post as a PR comment, this never blocks merge.
+#
+# Runs the eval-experiments harness (github.com/expo/eval-experiments, private,
+# vendored here as a git submodule at ./eval-harness pinned to a specific
+# commit -- see .gitmodules) against all 3 reference PRDs (notes,
+# hot_chocolate, wiki_reader), authoring each with Claude Code loading the
+# skill plugin straight from THIS PR's own checked-out plugins/expo/ directory
+# (via SKILL_PLUGIN_DIR / --plugin-dir), not the published marketplace
+# version -- so this actually tests the PR's proposed changes.
+#
+# No tier/routing yet (every triggered PR runs all 3 PRDs unconditionally),
+# and only the skill-eval side runs for now -- no native iOS build/evaluator.
+# Both are natural follow-ups once this plumbing is proven out.
+#
+# Prerequisites (one-time, outside this file):
+#   - Connect this GitHub repo to the EAS project via the Expo GitHub App
+#     (project Settings > GitHub) so pull_request triggers and github-comment
+#     work.
+#   - EVAL_HARNESS_ACCESS_TOKEN: a GitHub fine-grained PAT, read-only on
+#     eval-experiments (private repo), used to fetch the eval-harness
+#     submodule on each job's fresh checkout.
+#   - EXPO_MCP_CLIENT_ID / EXPO_MCP_REFRESH_TOKEN / EXPO_TOKEN: see
+#     eval-harness/env.default (eval-experiments' own env docs) for what these
+#     are and how to bootstrap them. Optional -- authoring still works without
+#     Expo MCP, just without those tools available to the agent.
+#   - ANTHROPIC_API_KEY: already present in this environment.
+name: skill-eval-ci
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - plugins/expo/skills/**
+
+jobs:
+  # Refreshes the Expo MCP OAuth access token exactly once per workflow run
+  # and fans it out as a job output, so the 3 parallel author jobs below never
+  # each try to refresh (and self-persist the rotated refresh_token)
+  # independently -- see eval-harness's own provision_mcp_token job docs for
+  # why that's a real race once more than one authoring job runs at once.
+  provision_mcp_token:
+    name: provision Expo MCP token
+    runs_on: linux-medium
+    environment: production
+    outputs:
+      bearer_token: ${{ steps.provision.outputs.bearer_token }}
+      auth_status: ${{ steps.provision.outputs.auth_status }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: refresh Expo MCP OAuth token
+        id: provision
+        run: |
+          out=$(bash ./eval-harness/eval_harness/utils/shell/provision-mcp-token.sh)
+          bearer_token=$(echo "$out" | sed -n 's/^bearer_token=//p')
+          auth_status=$(echo "$out" | sed -n 's/^auth_status=//p')
+          echo "auth_status=$auth_status (bearer_token len ${#bearer_token})"
+          # set-output rejects an empty VALUE; author-app.sh treats the "none"
+          # placeholder the same as unset.
+          set-output bearer_token "${bearer_token:-none}"
+          set-output auth_status "${auth_status:-unconfigured}"
+
+  # --- Author + skill-eval, once per reference PRD -------------------------
+
+  author_app_notes:
+    name: author (notes)
+    needs: [provision_mcp_token]
+    runs_on: linux-medium
+    environment: production
+    env:
+      AGENT: claude-code
+      PRD: dataset/prds/notes/prd/mvp.txt
+      SCENARIO: skills_available_unmentioned
+      EXPO_MCP_BEARER_TOKEN: ${{ needs.provision_mcp_token.outputs.bearer_token }}
+      EXPO_MCP_AUTH_STATUS: ${{ needs.provision_mcp_token.outputs.auth_status }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: author app (Claude Code, this PR's own skill checkout)
+        run: |
+          export SKILL_PLUGIN_DIR="$(pwd)/plugins/expo"
+          bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
+
+      - name: Package authored app
+        if: ${{ always() }}
+        run: |
+          tar \
+            --exclude 'eval-harness/agent-workspace/*/node_modules' \
+            --exclude 'eval-harness/agent-workspace/*/.expo' \
+            --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+            -czf authored-app-notes.tar.gz -C eval-harness agent-workspace eval-out
+
+      - name: Upload authored app
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: authored-app-notes
+          path: authored-app-notes.tar.gz
+
+  author_app_hot_chocolate:
+    name: author (hot_chocolate)
+    needs: [provision_mcp_token]
+    runs_on: linux-medium
+    environment: production
+    env:
+      AGENT: claude-code
+      PRD: dataset/prds/hot_chocolate/prd/mvp.txt
+      SCENARIO: skills_available_unmentioned
+      EXPO_MCP_BEARER_TOKEN: ${{ needs.provision_mcp_token.outputs.bearer_token }}
+      EXPO_MCP_AUTH_STATUS: ${{ needs.provision_mcp_token.outputs.auth_status }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: author app (Claude Code, this PR's own skill checkout)
+        run: |
+          export SKILL_PLUGIN_DIR="$(pwd)/plugins/expo"
+          bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
+
+      - name: Package authored app
+        if: ${{ always() }}
+        run: |
+          tar \
+            --exclude 'eval-harness/agent-workspace/*/node_modules' \
+            --exclude 'eval-harness/agent-workspace/*/.expo' \
+            --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+            -czf authored-app-hot_chocolate.tar.gz -C eval-harness agent-workspace eval-out
+
+      - name: Upload authored app
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: authored-app-hot_chocolate
+          path: authored-app-hot_chocolate.tar.gz
+
+  author_app_wiki_reader:
+    name: author (wiki_reader)
+    needs: [provision_mcp_token]
+    runs_on: linux-medium
+    environment: production
+    env:
+      AGENT: claude-code
+      PRD: dataset/prds/wiki_reader/prd/mvp.txt
+      SCENARIO: skills_available_unmentioned
+      EXPO_MCP_BEARER_TOKEN: ${{ needs.provision_mcp_token.outputs.bearer_token }}
+      EXPO_MCP_AUTH_STATUS: ${{ needs.provision_mcp_token.outputs.auth_status }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: author app (Claude Code, this PR's own skill checkout)
+        run: |
+          export SKILL_PLUGIN_DIR="$(pwd)/plugins/expo"
+          bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
+
+      - name: Package authored app
+        if: ${{ always() }}
+        run: |
+          tar \
+            --exclude 'eval-harness/agent-workspace/*/node_modules' \
+            --exclude 'eval-harness/agent-workspace/*/.expo' \
+            --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+            -czf authored-app-wiki_reader.tar.gz -C eval-harness agent-workspace eval-out
+
+      - name: Upload authored app
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: authored-app-wiki_reader
+          path: authored-app-wiki_reader.tar.gz
+
+  eval_skill_notes:
+    name: skill eval (notes)
+    needs: [author_app_notes]
+    runs_on: linux-medium
+    environment: production
+    outputs:
+      report: ${{ steps.run.outputs.report }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: Download authored app
+        uses: eas/download_artifact
+        id: download_author
+        with:
+          name: authored-app-notes
+
+      - name: Analyze authored app for skill eval
+        id: run
+        run: |
+          AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
+          SCENARIO='skills_available_unmentioned' \
+          OUT_DIR=skill-eval-report-notes \
+          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          set-output report "${summary:-no report}"
+
+      - name: Package skill-eval report
+        if: ${{ always() }}
+        run: tar -czf skill-eval-report-notes.tar.gz skill-eval-report-notes
+
+      - name: Upload skill-eval report
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: skill-eval-report-notes
+          path: skill-eval-report-notes.tar.gz
+
+  eval_skill_hot_chocolate:
+    name: skill eval (hot_chocolate)
+    needs: [author_app_hot_chocolate]
+    runs_on: linux-medium
+    environment: production
+    outputs:
+      report: ${{ steps.run.outputs.report }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: Download authored app
+        uses: eas/download_artifact
+        id: download_author
+        with:
+          name: authored-app-hot_chocolate
+
+      - name: Analyze authored app for skill eval
+        id: run
+        run: |
+          AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
+          SCENARIO='skills_available_unmentioned' \
+          OUT_DIR=skill-eval-report-hot_chocolate \
+          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          set-output report "${summary:-no report}"
+
+      - name: Package skill-eval report
+        if: ${{ always() }}
+        run: tar -czf skill-eval-report-hot_chocolate.tar.gz skill-eval-report-hot_chocolate
+
+      - name: Upload skill-eval report
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: skill-eval-report-hot_chocolate
+          path: skill-eval-report-hot_chocolate.tar.gz
+
+  eval_skill_wiki_reader:
+    name: skill eval (wiki_reader)
+    needs: [author_app_wiki_reader]
+    runs_on: linux-medium
+    environment: production
+    outputs:
+      report: ${{ steps.run.outputs.report }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: Download authored app
+        uses: eas/download_artifact
+        id: download_author
+        with:
+          name: authored-app-wiki_reader
+
+      - name: Analyze authored app for skill eval
+        id: run
+        run: |
+          AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
+          SCENARIO='skills_available_unmentioned' \
+          OUT_DIR=skill-eval-report-wiki_reader \
+          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          set-output report "${summary:-no report}"
+
+      - name: Package skill-eval report
+        if: ${{ always() }}
+        run: tar -czf skill-eval-report-wiki_reader.tar.gz skill-eval-report-wiki_reader
+
+      - name: Upload skill-eval report
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: skill-eval-report-wiki_reader
+          path: skill-eval-report-wiki_reader.tar.gz
+
+  # One combined comment covering all 3 PRDs. `after:` (not `needs:`) so this
+  # still posts even if one of the eval jobs failed -- this is advisory only,
+  # it should never look like the PR is silently missing feedback.
+  comment:
+    name: comment
+    after: [eval_skill_notes, eval_skill_hot_chocolate, eval_skill_wiki_reader]
+    type: github-comment
+    params:
+      payload: |
+        <!-- expo-skill-eval -->
+        ## Expo skill eval
+
+        | App | Result |
+        |---|---|
+        | notes | ${{ after.eval_skill_notes.outputs.report }} |
+        | hot_chocolate | ${{ after.eval_skill_hot_chocolate.outputs.report }} |
+        | wiki_reader | ${{ after.eval_skill_wiki_reader.outputs.report }} |
+
+        📎 Full reports (metrics.json, report.html) + authored app source: [workflow artifacts](${{ workflow.url }})
