@@ -20,10 +20,11 @@
 #   - EVAL_HARNESS_ACCESS_TOKEN: a GitHub fine-grained PAT, read-only on
 #     eval-experiments (private repo), used to fetch the eval-harness
 #     submodule on each job's fresh checkout.
-#   - EXPO_MCP_CLIENT_ID / EXPO_MCP_REFRESH_TOKEN / EXPO_TOKEN: see
-#     eval-harness/env.default (eval-experiments' own env docs) for what these
-#     are and how to bootstrap them. Optional -- authoring still works without
-#     Expo MCP, just without those tools available to the agent.
+#   - EXPO_TOKEN: an Expo Robot User access token -- used directly as the Expo
+#     MCP server's bearer token (mcp.expo.dev accepts this token as-is, no
+#     separate OAuth login needed) and for the coding agent's own `eas build`
+#     self-verification step. See eval-harness/.env.default. Optional --
+#     authoring still works without it, just without those two capabilities.
 #   - ANTHROPIC_API_KEY: already present in this environment.
 name: skill-eval-ci
 
@@ -35,51 +36,16 @@ on:
       - plugins/expo/skills/**
 
 jobs:
-  # Refreshes the Expo MCP OAuth access token exactly once per workflow run
-  # and fans it out as a job output, so the 3 parallel author jobs below never
-  # each try to refresh (and self-persist the rotated refresh_token)
-  # independently -- see eval-harness's own provision_mcp_token job docs for
-  # why that's a real race once more than one authoring job runs at once.
-  provision_mcp_token:
-    name: provision Expo MCP token
-    runs_on: linux-medium
-    environment: production
-    outputs:
-      bearer_token: ${{ steps.provision.outputs.bearer_token }}
-      auth_status: ${{ steps.provision.outputs.auth_status }}
-    steps:
-      - uses: eas/checkout
-
-      - name: fetch eval-harness
-        run: |
-          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
-          git submodule update --init eval-harness
-
-      - name: refresh Expo MCP OAuth token
-        id: provision
-        run: |
-          out=$(bash ./eval-harness/eval_harness/utils/shell/provision-mcp-token.sh)
-          bearer_token=$(echo "$out" | sed -n 's/^bearer_token=//p')
-          auth_status=$(echo "$out" | sed -n 's/^auth_status=//p')
-          echo "auth_status=$auth_status (bearer_token len ${#bearer_token})"
-          # set-output rejects an empty VALUE; author-app.sh treats the "none"
-          # placeholder the same as unset.
-          set-output bearer_token "${bearer_token:-none}"
-          set-output auth_status "${auth_status:-unconfigured}"
-
   # --- Author + skill-eval, once per reference PRD -------------------------
 
   author_app_notes:
     name: author (notes)
-    needs: [provision_mcp_token]
     runs_on: linux-medium
     environment: production
     env:
       AGENT: claude-code
       PRD: dataset/prds/notes/prd/mvp.txt
       SCENARIO: skills_available_unmentioned
-      EXPO_MCP_BEARER_TOKEN: ${{ needs.provision_mcp_token.outputs.bearer_token }}
-      EXPO_MCP_AUTH_STATUS: ${{ needs.provision_mcp_token.outputs.auth_status }}
     steps:
       - uses: eas/checkout
 
@@ -112,15 +78,12 @@ jobs:
 
   author_app_hot_chocolate:
     name: author (hot_chocolate)
-    needs: [provision_mcp_token]
     runs_on: linux-medium
     environment: production
     env:
       AGENT: claude-code
       PRD: dataset/prds/hot_chocolate/prd/mvp.txt
       SCENARIO: skills_available_unmentioned
-      EXPO_MCP_BEARER_TOKEN: ${{ needs.provision_mcp_token.outputs.bearer_token }}
-      EXPO_MCP_AUTH_STATUS: ${{ needs.provision_mcp_token.outputs.auth_status }}
     steps:
       - uses: eas/checkout
 
@@ -153,15 +116,12 @@ jobs:
 
   author_app_wiki_reader:
     name: author (wiki_reader)
-    needs: [provision_mcp_token]
     runs_on: linux-medium
     environment: production
     env:
       AGENT: claude-code
       PRD: dataset/prds/wiki_reader/prd/mvp.txt
       SCENARIO: skills_available_unmentioned
-      EXPO_MCP_BEARER_TOKEN: ${{ needs.provision_mcp_token.outputs.bearer_token }}
-      EXPO_MCP_AUTH_STATUS: ${{ needs.provision_mcp_token.outputs.auth_status }}
     steps:
       - uses: eas/checkout
 
