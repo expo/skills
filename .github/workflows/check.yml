@@ -1,0 +1,185 @@
+name: check
+
+on:
+  pull_request:
+    branches:
+      - main
+  merge_group:
+    branches:
+      - main
+
+concurrency:
+  group: check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check:
+    name: check skills and plugin manifests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Ensure that plugin version bump script is healthy
+        id: version-check-test
+        continue-on-error: true
+        run: bun test scripts/check-plugin-version-bump.test.ts
+
+      - name: Check skill requirements
+        id: skill-limits
+        continue-on-error: true
+        run: bun scripts/check-skill-limits.ts
+
+      - name: Check plugin version bump
+        id: version-check
+        continue-on-error: true
+        env:
+          VERSION_CHECK_SUMMARY_PATH: .context/plugin-version-check-summary.md
+        run: bun scripts/check-plugin-version-bump.ts origin/main
+
+      - name: Check expo-overview routing coverage
+        id: routing-check
+        continue-on-error: true
+        env:
+          ROUTING_CHECK_SUMMARY_PATH: .context/skill-routing-check-summary.md
+        run: bun scripts/check-overview-routing.ts
+
+      # The checks above use continue-on-error so every failure surfaces in one
+      # run, but that also renders a failed check as a passing step. This step is
+      # the one that names the failures and fails the job.
+      - name: Report check results
+        if: always()
+        env:
+          SKILL_LIMITS_OUTCOME: ${{ steps.skill-limits.outcome }}
+          VERSION_CHECK_TEST_OUTCOME: ${{ steps.version-check-test.outcome }}
+          VERSION_CHECK_OUTCOME: ${{ steps.version-check.outcome }}
+          ROUTING_CHECK_OUTCOME: ${{ steps.routing-check.outcome }}
+        run: |
+          failed=0
+
+          report() {
+            local name="$1" outcome="$2" command="$3"
+            case "$outcome" in
+              success)
+                echo "| $name | pass | |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+              failure)
+                echo "| $name | **fail** | \`$command\` |" >> "$GITHUB_STEP_SUMMARY"
+                echo "::error title=$name check failed::Reproduce locally with: $command"
+                failed=1
+                ;;
+              *)
+                echo "| $name | did not run ($outcome) | |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+            esac
+          }
+
+          {
+            echo "## Check results"
+            echo ""
+            echo "| Check | Result | Reproduce locally |"
+            echo "| --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun scripts/check-skill-limits.ts"
+          report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
+          report "plugin version bump" "$VERSION_CHECK_OUTCOME" "bun scripts/check-plugin-version-bump.ts origin/main"
+          report "expo-overview routing" "$ROUTING_CHECK_OUTCOME" "bun scripts/check-overview-routing.ts"
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          for summary in .context/plugin-version-check-summary.md .context/skill-routing-check-summary.md; do
+            if [ -f "$summary" ]; then
+              cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+          exit "$failed"
+
+      - name: Comment failures on pull request
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          VERSION_CHECK_OUTCOME: ${{ steps.version-check.outcome }}
+          ROUTING_CHECK_OUTCOME: ${{ steps.routing-check.outcome }}
+        with:
+          script: |
+            const fs = require("node:fs");
+
+            const checks = [
+              {
+                marker: "<!-- expo-plugin-version-check -->",
+                path: ".context/plugin-version-check-summary.md",
+                outcome: process.env.VERSION_CHECK_OUTCOME,
+              },
+              {
+                marker: "<!-- expo-skill-routing-check -->",
+                path: ".context/skill-routing-check-summary.md",
+                outcome: process.env.ROUTING_CHECK_OUTCOME,
+              },
+            ];
+            const issue_number = context.payload.pull_request.number;
+            const { owner, repo } = context.repo;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            for (const { marker, path, outcome } of checks) {
+              const existingComment = comments.find(
+                (comment) => comment.user?.type === "Bot" && comment.body?.includes(marker)
+              );
+
+              // A passing check says nothing worth a comment, so drop the one
+              // its earlier failure left behind. Outcomes other than success and
+              // failure carry no fresh verdict, so leave any comment in place.
+              if (outcome !== "failure") {
+                if (outcome === "success" && existingComment) {
+                  await github.rest.issues.deleteComment({
+                    owner,
+                    repo,
+                    comment_id: existingComment.id,
+                  });
+                }
+
+                continue;
+              }
+
+              if (!fs.existsSync(path)) {
+                continue;
+              }
+
+              const summary = fs.readFileSync(path, "utf8");
+              const body = `${marker}\n${summary}`;
+
+              if (existingComment) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existingComment.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number,
+                  body,
+                });
+              }
+            }
