@@ -1,0 +1,114 @@
+name: check
+
+on:
+  pull_request:
+    branches:
+      - main
+  merge_group:
+    branches:
+      - main
+
+concurrency:
+  group: check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: check skills and plugin manifests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Check skill limits
+        id: skill-limits
+        continue-on-error: true
+        run: bun scripts/check-skill-limits.ts
+
+      - name: Check plugin version bump
+        id: version-check
+        continue-on-error: true
+        env:
+          VERSION_CHECK_SUMMARY_PATH: .context/plugin-version-check-summary.md
+        run: bun scripts/check-plugin-version-bump.ts origin/main
+
+      - name: Check expo-overview routing coverage
+        id: routing-check
+        continue-on-error: true
+        env:
+          ROUTING_CHECK_SUMMARY_PATH: .context/skill-routing-check-summary.md
+        run: bun scripts/check-overview-routing.ts
+
+      - name: Add workflow summary
+        if: always()
+        run: |
+          for summary in .context/plugin-version-check-summary.md .context/skill-routing-check-summary.md; do
+            if [ -f "$summary" ]; then
+              cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+      - name: Comment on pull request
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require("node:fs");
+
+            const checks = [
+              { marker: "<!-- expo-plugin-version-check -->", path: ".context/plugin-version-check-summary.md" },
+              { marker: "<!-- expo-skill-routing-check -->", path: ".context/skill-routing-check-summary.md" },
+            ];
+            const issue_number = context.payload.pull_request.number;
+            const { owner, repo } = context.repo;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            for (const { marker, path } of checks) {
+              if (!fs.existsSync(path)) {
+                continue;
+              }
+
+              const summary = fs.readFileSync(path, "utf8");
+              const body = `${marker}\n${summary}`;
+              const existingComment = comments.find(
+                (comment) => comment.user?.type === "Bot" && comment.body?.includes(marker)
+              );
+
+              if (existingComment) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existingComment.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number,
+                  body,
+                });
+              }
+            }
+
+      - name: Fail on check errors
+        if: steps.skill-limits.outcome == 'failure' || steps.version-check.outcome == 'failure' || steps.routing-check.outcome == 'failure'
+        run: exit 1

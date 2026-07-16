@@ -103,7 +103,7 @@ Add it to the correct group (framework vs paid) in all of:
 
 Also add a one-line entry to the `expo-overview` Skill Map
 (`plugins/expo/skills/expo-overview/SKILL.md`) so the router can dispatch to the new skill.
-The `skill routing coverage` workflow (`bun scripts/check-overview-routing.ts`) enforces this.
+The `check` workflow (`bun scripts/check-overview-routing.ts`) enforces this.
 
 ### 9. Bump the plugin version
 
