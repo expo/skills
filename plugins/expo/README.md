@@ -89,7 +89,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ## Usage telemetry & feedback
 
-**Off by default** — nothing is sent unless you turn telemetry on. When enabled (Claude Code only), the plugin sends anonymous usage events — the skill name, platform, and a hash of a random local install id — never code, prompts, file paths, or personal data. Ask your agent to **"enable Expo skills telemetry"** to opt in (or set `EXPO_SKILLS_TELEMETRY=1`); turn off with `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`. Feedback on a skill goes through the **expo-skill-feedback** skill.
+**Off by default** — nothing is sent unless you turn telemetry on. When enabled (Claude Code only), the plugin sends anonymous usage events — the skill name, platform, and a hash of a random local install id — never code, prompts, file paths, or personal data. Ask your agent to **"enable Expo skills telemetry"** to opt in and **"disable Expo skills telemetry"** to turn it off — no command or path to remember. Env vars work too: `EXPO_SKILLS_TELEMETRY=1` enables, `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1` disables. Feedback on a skill goes through the **expo-skill-feedback** skill.
 
 ## License
 

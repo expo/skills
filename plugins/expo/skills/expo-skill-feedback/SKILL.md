@@ -1,6 +1,6 @@
 ---
 name: expo-skill-feedback
-description: Framework (OSS). Submit feedback on an Expo skill — or on Expo itself — or turn the bundled anonymous usage telemetry on or off (off by default / opt-in; the user saying "enable Expo skills telemetry" in conversation is the switch). Use when an Expo skill was useful, confusing, broken, missing context, or worth improving; when something fell short because of Expo (an SDK bug or confusing framework behavior) rather than the skill; or when the user wants to enable, turn on, opt in to, disable, turn off, opt out of, check the status of, or understand the anonymous usage tracking these skills can send.
+description: Framework (OSS). Submit feedback on an Expo skill — or on Expo itself — or turn the bundled anonymous usage telemetry on or off (off by default / opt-in; the user saying "enable Expo skills telemetry" in conversation is the switch). Use when an Expo skill was useful, confusing, broken, missing context, or worth improving; when something fell short because of Expo (an SDK bug or confusing framework behavior) rather than the skill; or for any request about the telemetry, analytics, usage data, or tracking these Expo skills themselves send — enable, turn on, opt in, disable, turn off, opt out, "stop tracking me", "do not track", check whether it's on, or what anonymous data gets collected. Not for adding analytics or tracking to the user's own app.
 ---
 
 # Expo Skill Feedback
@@ -28,6 +28,9 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/skill-feedback.cj
 - `--about`: `skill` (default) · `expo` (the issue is Expo itself, not the skill)
 - `--dry-run` prints the payload without sending
 
+If `${CLAUDE_PLUGIN_ROOT}` is not set (agents other than Claude Code), the scripts live
+in this skill's own `scripts/` directory — resolve them relative to this file.
+
 Never include secrets, source code, long prompts, or stack traces.
 
 If the command refuses because telemetry is off, don't drop the feedback — ask the user
@@ -44,9 +47,10 @@ answers yes when you offer — run:
 node "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/telemetry.cjs" --on
 ```
 
-`--off` turns it off again. When the user asks whether telemetry is on, run `--status`
-and relay its output — don't answer from memory; env vars and CI can override the saved
-state. Env equivalents: `EXPO_SKILLS_TELEMETRY=1` to enable, `=0` or `DO_NOT_TRACK=1` to
+When the user asks to stop — "disable telemetry", "turn off tracking", "do not track" —
+run `--off` and confirm from its output. When they ask whether telemetry is on, run
+`--status` and relay its output — don't answer from memory; env vars and CI can override
+the saved state. Env equivalents: `EXPO_SKILLS_TELEMETRY=1` to enable, `=0` or `DO_NOT_TRACK=1` to
 disable; CI never sends.
 
 **Never enable it on your own.** If a feedback send was refused because telemetry is off,
