@@ -17,6 +17,7 @@ Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `F
 | `expo-dom` | Expo DOM components for gradually using web code in native apps. |
 | `expo-web-to-native` | Migrating an existing web/React app (Next.js, Vite, CRA) to a native iOS/Android app with Expo. |
 | `expo-module` | Expo native modules and views with Swift, Kotlin, TypeScript, config plugins, and autolinking. |
+| `expo-migrate-module` | Migrating a Swift Expo module from the Modules API 1.0 definition DSL to the 2.0 macro API. |
 | `expo-brownfield` | Adding Expo or React Native to an existing iOS or Android app. |
 | `expo-dev-client` | Development clients (local builds are free; EAS Build/TestFlight is a paid step). |
 | `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold from. |

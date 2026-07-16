@@ -17,6 +17,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Helps set up Tailwind CSS v4 with NativeWind v5
 - Explains DOM components for running web code in native apps
 - Covers Expo native modules, iOS App Clips, and brownfield integration into existing native apps
+- Migrates Swift Expo modules from the Modules API 1.0 definition DSL to the 2.0 macro API
 - Points at the `expo/examples` repo for canonical third-party integrations
 - Walks through Expo SDK upgrades, deprecated-package migration, cache clearing, and dependency fixes
 - Wires Expo projects into the Codex app Run button and action terminal
@@ -42,6 +43,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Migrating an existing web/React app to native with Expo
 - Configuring Tailwind CSS for React Native
 - Writing Expo native modules or integrating Expo into an existing native app
+- Migrating a Swift Expo module to the Expo Modules API 2.0 macros
 - Adapting a third-party integration from `expo/examples`
 - Upgrading to a new Expo SDK version and fixing dependency conflicts after an upgrade
 - Migrating from deprecated packages (expo-av to expo-audio/expo-video)
@@ -72,6 +74,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-dom** - Run web code in a webview on native using DOM components
 - **expo-web-to-native** - Migrate an existing web/React app to a native iOS/Android app with Expo
 - **expo-module** - Write Expo native modules and views (Swift, Kotlin, TypeScript, config plugins)
+- **expo-migrate-module** - Migrate Swift Expo modules from the Expo Modules API 1.0 definition DSL to the 2.0 macro API
 - **expo-brownfield** - Integrate Expo and React Native into existing native iOS or Android apps
 - **expo-dev-client** - Build and distribute Expo development clients (local builds free; EAS Build/TestFlight paid)
 - **expo-examples** - Adapt or scaffold from the `expo/examples` repo of `with-*` integrations

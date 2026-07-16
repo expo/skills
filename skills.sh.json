@@ -15,6 +15,7 @@
         "expo-dom",
         "expo-web-to-native",
         "expo-module",
+        "expo-migrate-module",
         "expo-brownfield",
         "expo-dev-client",
         "expo-examples",
