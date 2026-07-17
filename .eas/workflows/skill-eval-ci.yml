@@ -16,7 +16,13 @@
 #     was added.
 # The final comment shows both side by side, so a reviewer can tell whether
 # the PR's change to a skill improved or regressed trigger recall/precision
-# vs. what's on main today -- not just an after-snapshot.
+# vs. what's on main today -- not just an after-snapshot. It also shows the
+# authored code's own quality: lexical/structural uptake-check pass rates
+# (dataset/skill_invocation/uptake_checks) and build-health signals (syntax
+# parse + real `expo export` bundle, see skill_invocation/build_health) --
+# app-wide, not skill-specific. The bundle signal is only as fresh as
+# eval-harness's own author-app.sh (needs the STAGE D bundle-check commit);
+# an old submodule pin will just show "not run" (➖) for it, not an error.
 #
 # Known cost tradeoff: this doubles Claude Code authoring runs (6 instead of
 # 3 per CI run) to get a genuine before/after comparison instead of an
@@ -323,6 +329,10 @@ jobs:
       detected: ${{ steps.run.outputs.detected }}
       recall: ${{ steps.run.outputs.recall }}
       precision: ${{ steps.run.outputs.precision }}
+      lexical: ${{ steps.run.outputs.lexical }}
+      structural: ${{ steps.run.outputs.structural }}
+      syntax_ok: ${{ steps.run.outputs.syntax_ok }}
+      bundle_ok: ${{ steps.run.outputs.bundle_ok }}
     steps:
       - uses: eas/checkout
 
@@ -351,11 +361,19 @@ jobs:
           detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
           recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
           precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
+          lexical=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); c=d.get('check_category_breakdown', {}).get('lexical', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          structural=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); c=d.get('check_category_breakdown', {}).get('structural', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          syntax_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); s=d.get('build_health', {}).get('syntax'); ok=(s or {}).get('ok'); print('➖' if s is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
+          bundle_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); b=d.get('build_health', {}).get('bundle'); ok=(b or {}).get('ok'); print('➖' if b is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
           set-output report "${summary:-no report}"
           set-output expected "${expected:-?}"
           set-output detected "${detected:-?}"
           set-output recall "${recall:-?}"
           set-output precision "${precision:-?}"
+          set-output lexical "${lexical:-?}"
+          set-output structural "${structural:-?}"
+          set-output syntax_ok "${syntax_ok:-?}"
+          set-output bundle_ok "${bundle_ok:-?}"
 
       - name: Package skill-eval report
         if: ${{ always() }}
@@ -380,6 +398,10 @@ jobs:
       detected: ${{ steps.run.outputs.detected }}
       recall: ${{ steps.run.outputs.recall }}
       precision: ${{ steps.run.outputs.precision }}
+      lexical: ${{ steps.run.outputs.lexical }}
+      structural: ${{ steps.run.outputs.structural }}
+      syntax_ok: ${{ steps.run.outputs.syntax_ok }}
+      bundle_ok: ${{ steps.run.outputs.bundle_ok }}
     steps:
       - uses: eas/checkout
 
@@ -408,11 +430,19 @@ jobs:
           detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
           recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
           precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
+          lexical=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); c=d.get('check_category_breakdown', {}).get('lexical', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          structural=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); c=d.get('check_category_breakdown', {}).get('structural', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          syntax_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); s=d.get('build_health', {}).get('syntax'); ok=(s or {}).get('ok'); print('➖' if s is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
+          bundle_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); b=d.get('build_health', {}).get('bundle'); ok=(b or {}).get('ok'); print('➖' if b is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
           set-output report "${summary:-no report}"
           set-output expected "${expected:-?}"
           set-output detected "${detected:-?}"
           set-output recall "${recall:-?}"
           set-output precision "${precision:-?}"
+          set-output lexical "${lexical:-?}"
+          set-output structural "${structural:-?}"
+          set-output syntax_ok "${syntax_ok:-?}"
+          set-output bundle_ok "${bundle_ok:-?}"
 
       - name: Package skill-eval report
         if: ${{ always() }}
@@ -437,6 +467,10 @@ jobs:
       detected: ${{ steps.run.outputs.detected }}
       recall: ${{ steps.run.outputs.recall }}
       precision: ${{ steps.run.outputs.precision }}
+      lexical: ${{ steps.run.outputs.lexical }}
+      structural: ${{ steps.run.outputs.structural }}
+      syntax_ok: ${{ steps.run.outputs.syntax_ok }}
+      bundle_ok: ${{ steps.run.outputs.bundle_ok }}
     steps:
       - uses: eas/checkout
 
@@ -465,11 +499,19 @@ jobs:
           detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
           recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
           precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
+          lexical=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); c=d.get('check_category_breakdown', {}).get('lexical', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          structural=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); c=d.get('check_category_breakdown', {}).get('structural', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          syntax_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); s=d.get('build_health', {}).get('syntax'); ok=(s or {}).get('ok'); print('➖' if s is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
+          bundle_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); b=d.get('build_health', {}).get('bundle'); ok=(b or {}).get('ok'); print('➖' if b is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
           set-output report "${summary:-no report}"
           set-output expected "${expected:-?}"
           set-output detected "${detected:-?}"
           set-output recall "${recall:-?}"
           set-output precision "${precision:-?}"
+          set-output lexical "${lexical:-?}"
+          set-output structural "${structural:-?}"
+          set-output syntax_ok "${syntax_ok:-?}"
+          set-output bundle_ok "${bundle_ok:-?}"
 
       - name: Package skill-eval report
         if: ${{ always() }}
@@ -494,6 +536,10 @@ jobs:
       detected: ${{ steps.run.outputs.detected }}
       recall: ${{ steps.run.outputs.recall }}
       precision: ${{ steps.run.outputs.precision }}
+      lexical: ${{ steps.run.outputs.lexical }}
+      structural: ${{ steps.run.outputs.structural }}
+      syntax_ok: ${{ steps.run.outputs.syntax_ok }}
+      bundle_ok: ${{ steps.run.outputs.bundle_ok }}
     steps:
       - uses: eas/checkout
 
@@ -522,11 +568,19 @@ jobs:
           detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
           recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
           precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
+          lexical=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); c=d.get('check_category_breakdown', {}).get('lexical', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          structural=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); c=d.get('check_category_breakdown', {}).get('structural', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          syntax_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); s=d.get('build_health', {}).get('syntax'); ok=(s or {}).get('ok'); print('➖' if s is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
+          bundle_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); b=d.get('build_health', {}).get('bundle'); ok=(b or {}).get('ok'); print('➖' if b is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
           set-output report "${summary:-no report}"
           set-output expected "${expected:-?}"
           set-output detected "${detected:-?}"
           set-output recall "${recall:-?}"
           set-output precision "${precision:-?}"
+          set-output lexical "${lexical:-?}"
+          set-output structural "${structural:-?}"
+          set-output syntax_ok "${syntax_ok:-?}"
+          set-output bundle_ok "${bundle_ok:-?}"
 
       - name: Package skill-eval report
         if: ${{ always() }}
@@ -551,6 +605,10 @@ jobs:
       detected: ${{ steps.run.outputs.detected }}
       recall: ${{ steps.run.outputs.recall }}
       precision: ${{ steps.run.outputs.precision }}
+      lexical: ${{ steps.run.outputs.lexical }}
+      structural: ${{ steps.run.outputs.structural }}
+      syntax_ok: ${{ steps.run.outputs.syntax_ok }}
+      bundle_ok: ${{ steps.run.outputs.bundle_ok }}
     steps:
       - uses: eas/checkout
 
@@ -579,11 +637,19 @@ jobs:
           detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
           recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
           precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
+          lexical=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); c=d.get('check_category_breakdown', {}).get('lexical', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          structural=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); c=d.get('check_category_breakdown', {}).get('structural', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          syntax_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); s=d.get('build_health', {}).get('syntax'); ok=(s or {}).get('ok'); print('➖' if s is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
+          bundle_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); b=d.get('build_health', {}).get('bundle'); ok=(b or {}).get('ok'); print('➖' if b is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
           set-output report "${summary:-no report}"
           set-output expected "${expected:-?}"
           set-output detected "${detected:-?}"
           set-output recall "${recall:-?}"
           set-output precision "${precision:-?}"
+          set-output lexical "${lexical:-?}"
+          set-output structural "${structural:-?}"
+          set-output syntax_ok "${syntax_ok:-?}"
+          set-output bundle_ok "${bundle_ok:-?}"
 
       - name: Package skill-eval report
         if: ${{ always() }}
@@ -608,6 +674,10 @@ jobs:
       detected: ${{ steps.run.outputs.detected }}
       recall: ${{ steps.run.outputs.recall }}
       precision: ${{ steps.run.outputs.precision }}
+      lexical: ${{ steps.run.outputs.lexical }}
+      structural: ${{ steps.run.outputs.structural }}
+      syntax_ok: ${{ steps.run.outputs.syntax_ok }}
+      bundle_ok: ${{ steps.run.outputs.bundle_ok }}
     steps:
       - uses: eas/checkout
 
@@ -636,11 +706,19 @@ jobs:
           detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
           recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
           precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
+          lexical=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); c=d.get('check_category_breakdown', {}).get('lexical', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          structural=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); c=d.get('check_category_breakdown', {}).get('structural', {}); print(str(c.get('passed','?')) + '/' + str(c.get('total','?')))" 2>/dev/null || echo "?")
+          syntax_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); s=d.get('build_health', {}).get('syntax'); ok=(s or {}).get('ok'); print('➖' if s is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
+          bundle_ok=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); b=d.get('build_health', {}).get('bundle'); ok=(b or {}).get('ok'); print('➖' if b is None else ('❔' if ok is None else ('✅' if ok else '❌')))" 2>/dev/null || echo "?")
           set-output report "${summary:-no report}"
           set-output expected "${expected:-?}"
           set-output detected "${detected:-?}"
           set-output recall "${recall:-?}"
           set-output precision "${precision:-?}"
+          set-output lexical "${lexical:-?}"
+          set-output structural "${structural:-?}"
+          set-output syntax_ok "${syntax_ok:-?}"
+          set-output bundle_ok "${bundle_ok:-?}"
 
       - name: Package skill-eval report
         if: ${{ always() }}
@@ -677,12 +755,27 @@ jobs:
         <!-- expo-skill-eval -->
         ## Expo skill eval
 
-        Each app is authored twice: once against **main**'s current skill content, once against **this PR**'s. Same ground truth, so you can see whether this PR improves or regresses skill-trigger recall/precision.
+        Each app is authored twice: once against **main**'s current skill content, once against **this PR**'s. Same ground truth, so you can see whether this PR improves or regresses skill-trigger recall/precision -- and whether the authored code's quality changes too.
+
+        ### Trigger detection
 
         | App | Expected skills | main: detected (recall / precision) | This PR: detected (recall / precision) |
         |---|---|---|---|
         | notes | ${{ after.eval_skill_notes_pr.outputs.expected }} | ${{ after.eval_skill_notes_main.outputs.detected }} (${{ after.eval_skill_notes_main.outputs.recall }} / ${{ after.eval_skill_notes_main.outputs.precision }}) | ${{ after.eval_skill_notes_pr.outputs.detected }} (${{ after.eval_skill_notes_pr.outputs.recall }} / ${{ after.eval_skill_notes_pr.outputs.precision }}) |
         | hot_chocolate | ${{ after.eval_skill_hot_chocolate_pr.outputs.expected }} | ${{ after.eval_skill_hot_chocolate_main.outputs.detected }} (${{ after.eval_skill_hot_chocolate_main.outputs.recall }} / ${{ after.eval_skill_hot_chocolate_main.outputs.precision }}) | ${{ after.eval_skill_hot_chocolate_pr.outputs.detected }} (${{ after.eval_skill_hot_chocolate_pr.outputs.recall }} / ${{ after.eval_skill_hot_chocolate_pr.outputs.precision }}) |
         | wiki_reader | ${{ after.eval_skill_wiki_reader_pr.outputs.expected }} | ${{ after.eval_skill_wiki_reader_main.outputs.detected }} (${{ after.eval_skill_wiki_reader_main.outputs.recall }} / ${{ after.eval_skill_wiki_reader_main.outputs.precision }}) | ${{ after.eval_skill_wiki_reader_pr.outputs.detected }} (${{ after.eval_skill_wiki_reader_pr.outputs.recall }} / ${{ after.eval_skill_wiki_reader_pr.outputs.precision }}) |
+
+        ### Code quality (lexical / structural checks, syntax, bundle)
+
+        Lexical/structural are shown as passed/total uptake checks. Syntax and bundle are ✅ pass / ❌ fail / ❔ couldn't tell / ➖ not run.
+
+        | App | Side | Lexical | Structural | Syntax | Bundle |
+        |---|---|---|---|---|---|
+        | notes | main | ${{ after.eval_skill_notes_main.outputs.lexical }} | ${{ after.eval_skill_notes_main.outputs.structural }} | ${{ after.eval_skill_notes_main.outputs.syntax_ok }} | ${{ after.eval_skill_notes_main.outputs.bundle_ok }} |
+        | notes | PR | ${{ after.eval_skill_notes_pr.outputs.lexical }} | ${{ after.eval_skill_notes_pr.outputs.structural }} | ${{ after.eval_skill_notes_pr.outputs.syntax_ok }} | ${{ after.eval_skill_notes_pr.outputs.bundle_ok }} |
+        | hot_chocolate | main | ${{ after.eval_skill_hot_chocolate_main.outputs.lexical }} | ${{ after.eval_skill_hot_chocolate_main.outputs.structural }} | ${{ after.eval_skill_hot_chocolate_main.outputs.syntax_ok }} | ${{ after.eval_skill_hot_chocolate_main.outputs.bundle_ok }} |
+        | hot_chocolate | PR | ${{ after.eval_skill_hot_chocolate_pr.outputs.lexical }} | ${{ after.eval_skill_hot_chocolate_pr.outputs.structural }} | ${{ after.eval_skill_hot_chocolate_pr.outputs.syntax_ok }} | ${{ after.eval_skill_hot_chocolate_pr.outputs.bundle_ok }} |
+        | wiki_reader | main | ${{ after.eval_skill_wiki_reader_main.outputs.lexical }} | ${{ after.eval_skill_wiki_reader_main.outputs.structural }} | ${{ after.eval_skill_wiki_reader_main.outputs.syntax_ok }} | ${{ after.eval_skill_wiki_reader_main.outputs.bundle_ok }} |
+        | wiki_reader | PR | ${{ after.eval_skill_wiki_reader_pr.outputs.lexical }} | ${{ after.eval_skill_wiki_reader_pr.outputs.structural }} | ${{ after.eval_skill_wiki_reader_pr.outputs.syntax_ok }} | ${{ after.eval_skill_wiki_reader_pr.outputs.bundle_ok }} |
 
         📎 Full reports (metrics.json, report.html) + authored app source: [workflow artifacts](${{ workflow.url }})
