@@ -4,10 +4,23 @@
 # Runs the eval-experiments harness (github.com/expo/eval-experiments, private,
 # vendored here as a git submodule at ./eval-harness pinned to a specific
 # commit -- see .gitmodules) against all 3 reference PRDs (notes,
-# hot_chocolate, wiki_reader), authoring each with Claude Code loading the
-# skill plugin straight from THIS PR's own checked-out plugins/expo/ directory
-# (via SKILL_PLUGIN_DIR / --plugin-dir), not the published marketplace
-# version -- so this actually tests the PR's proposed changes.
+# hot_chocolate, wiki_reader). For each PRD, authoring runs TWICE:
+#   - "main": Claude Code loads the skill plugin content as it exists on
+#     origin/main (extracted via `git archive`, no second checkout/submodule
+#     fetch needed -- the job's own eas/checkout already carries full git
+#     history + an origin remote).
+#   - "pr": Claude Code loads the skill plugin straight from THIS PR's own
+#     checked-out plugins/expo/ directory (via SKILL_PLUGIN_DIR / --plugin-dir),
+#     not the published marketplace version -- so this actually tests the PR's
+#     proposed changes. This is the original/only mode before this comparison
+#     was added.
+# The final comment shows both side by side, so a reviewer can tell whether
+# the PR's change to a skill improved or regressed trigger recall/precision
+# vs. what's on main today -- not just an after-snapshot.
+#
+# Known cost tradeoff: this doubles Claude Code authoring runs (6 instead of
+# 3 per CI run) to get a genuine before/after comparison instead of an
+# after-only snapshot.
 #
 # No tier/routing yet (every triggered PR runs all 3 PRDs unconditionally),
 # and only the skill-eval side runs for now -- no native iOS build/evaluator.
@@ -19,7 +32,12 @@
 #     work.
 #   - EVAL_HARNESS_ACCESS_TOKEN: a GitHub fine-grained PAT, read-only on
 #     eval-experiments (private repo), used to fetch the eval-harness
-#     submodule on each job's fresh checkout.
+#     submodule on each job's fresh checkout. NOTE: this PAT is scoped to
+#     eval-experiments only, not this (expo/skills) repo -- the "extract
+#     main's skill content" step below intentionally runs BEFORE the
+#     eval-harness submodule fetch, so the `git fetch origin main` against
+#     THIS repo still uses eas/checkout's own working credentials, not the
+#     global url.insteadOf rewrite that step installs for github.com.
 #   - EXPO_TOKEN: an Expo Robot User access token -- used directly as the Expo
 #     MCP server's bearer token (mcp.expo.dev accepts this token as-is, no
 #     separate OAuth login needed) and for the coding agent's own `eas build`
@@ -36,10 +54,55 @@ on:
       - plugins/expo/skills/**
 
 jobs:
-  # --- Author + skill-eval, once per reference PRD -------------------------
+  # --- Author + skill-eval, once per reference PRD, twice per PRD ----------
+  # (once against main's skill content, once against this PR's) -------------
 
-  author_app_notes:
-    name: author (notes)
+  author_app_notes_main:
+    name: author (notes, main)
+    runs_on: linux-medium
+    environment: production
+    env:
+      AGENT: claude-code
+      PRD: dataset/prds/notes/prd/mvp.txt
+      SCENARIO: skills_available_unmentioned
+    steps:
+      - uses: eas/checkout
+
+      - name: extract main's skill content
+        run: |
+          git fetch origin main
+          mkdir -p /tmp/plugins-main
+          git archive origin/main plugins/expo | tar -x -C /tmp/plugins-main
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: author app (Claude Code, main branch skill checkout)
+        run: |
+          export SKILL_PLUGIN_DIR="/tmp/plugins-main/plugins/expo"
+          bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
+
+      - name: Package authored app
+        if: ${{ always() }}
+        run: |
+          tar \
+            --exclude 'eval-harness/agent-workspace/*/node_modules' \
+            --exclude 'eval-harness/agent-workspace/*/.expo' \
+            --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+            -czf authored-app-notes-main.tar.gz -C eval-harness agent-workspace eval-out
+
+      - name: Upload authored app
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: authored-app-notes-main
+          path: authored-app-notes-main.tar.gz
+
+  author_app_notes_pr:
+    name: author (notes, PR)
     runs_on: linux-medium
     environment: production
     env:
@@ -66,18 +129,62 @@ jobs:
             --exclude 'eval-harness/agent-workspace/*/node_modules' \
             --exclude 'eval-harness/agent-workspace/*/.expo' \
             --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
-            -czf authored-app-notes.tar.gz -C eval-harness agent-workspace eval-out
+            -czf authored-app-notes-pr.tar.gz -C eval-harness agent-workspace eval-out
 
       - name: Upload authored app
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
           type: other
-          name: authored-app-notes
-          path: authored-app-notes.tar.gz
+          name: authored-app-notes-pr
+          path: authored-app-notes-pr.tar.gz
 
-  author_app_hot_chocolate:
-    name: author (hot_chocolate)
+  author_app_hot_chocolate_main:
+    name: author (hot_chocolate, main)
+    runs_on: linux-medium
+    environment: production
+    env:
+      AGENT: claude-code
+      PRD: dataset/prds/hot_chocolate/prd/mvp.txt
+      SCENARIO: skills_available_unmentioned
+    steps:
+      - uses: eas/checkout
+
+      - name: extract main's skill content
+        run: |
+          git fetch origin main
+          mkdir -p /tmp/plugins-main
+          git archive origin/main plugins/expo | tar -x -C /tmp/plugins-main
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: author app (Claude Code, main branch skill checkout)
+        run: |
+          export SKILL_PLUGIN_DIR="/tmp/plugins-main/plugins/expo"
+          bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
+
+      - name: Package authored app
+        if: ${{ always() }}
+        run: |
+          tar \
+            --exclude 'eval-harness/agent-workspace/*/node_modules' \
+            --exclude 'eval-harness/agent-workspace/*/.expo' \
+            --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+            -czf authored-app-hot_chocolate-main.tar.gz -C eval-harness agent-workspace eval-out
+
+      - name: Upload authored app
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: authored-app-hot_chocolate-main
+          path: authored-app-hot_chocolate-main.tar.gz
+
+  author_app_hot_chocolate_pr:
+    name: author (hot_chocolate, PR)
     runs_on: linux-medium
     environment: production
     env:
@@ -104,18 +211,62 @@ jobs:
             --exclude 'eval-harness/agent-workspace/*/node_modules' \
             --exclude 'eval-harness/agent-workspace/*/.expo' \
             --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
-            -czf authored-app-hot_chocolate.tar.gz -C eval-harness agent-workspace eval-out
+            -czf authored-app-hot_chocolate-pr.tar.gz -C eval-harness agent-workspace eval-out
 
       - name: Upload authored app
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
           type: other
-          name: authored-app-hot_chocolate
-          path: authored-app-hot_chocolate.tar.gz
+          name: authored-app-hot_chocolate-pr
+          path: authored-app-hot_chocolate-pr.tar.gz
 
-  author_app_wiki_reader:
-    name: author (wiki_reader)
+  author_app_wiki_reader_main:
+    name: author (wiki_reader, main)
+    runs_on: linux-medium
+    environment: production
+    env:
+      AGENT: claude-code
+      PRD: dataset/prds/wiki_reader/prd/mvp.txt
+      SCENARIO: skills_available_unmentioned
+    steps:
+      - uses: eas/checkout
+
+      - name: extract main's skill content
+        run: |
+          git fetch origin main
+          mkdir -p /tmp/plugins-main
+          git archive origin/main plugins/expo | tar -x -C /tmp/plugins-main
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: author app (Claude Code, main branch skill checkout)
+        run: |
+          export SKILL_PLUGIN_DIR="/tmp/plugins-main/plugins/expo"
+          bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
+
+      - name: Package authored app
+        if: ${{ always() }}
+        run: |
+          tar \
+            --exclude 'eval-harness/agent-workspace/*/node_modules' \
+            --exclude 'eval-harness/agent-workspace/*/.expo' \
+            --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+            -czf authored-app-wiki_reader-main.tar.gz -C eval-harness agent-workspace eval-out
+
+      - name: Upload authored app
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: authored-app-wiki_reader-main
+          path: authored-app-wiki_reader-main.tar.gz
+
+  author_app_wiki_reader_pr:
+    name: author (wiki_reader, PR)
     runs_on: linux-medium
     environment: production
     env:
@@ -142,23 +293,36 @@ jobs:
             --exclude 'eval-harness/agent-workspace/*/node_modules' \
             --exclude 'eval-harness/agent-workspace/*/.expo' \
             --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
-            -czf authored-app-wiki_reader.tar.gz -C eval-harness agent-workspace eval-out
+            -czf authored-app-wiki_reader-pr.tar.gz -C eval-harness agent-workspace eval-out
 
       - name: Upload authored app
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
           type: other
-          name: authored-app-wiki_reader
-          path: authored-app-wiki_reader.tar.gz
+          name: authored-app-wiki_reader-pr
+          path: authored-app-wiki_reader-pr.tar.gz
 
-  eval_skill_notes:
-    name: skill eval (notes)
-    needs: [author_app_notes]
+  # --- Skill-eval analysis, once per author job above -----------------------
+  # Each job exposes 5 outputs (report, expected, detected, recall, precision)
+  # instead of just `report`: the final `comment` job is a `type:
+  # github-comment` job whose payload is template-only (no shell step to parse
+  # a composite string), so a clean side-by-side table with a single shared
+  # "Expected skills" column requires the fields to already be split at the
+  # source. `report` is kept too, for parity with the pre-comparison format
+  # and for quick debugging from the job output list.
+
+  eval_skill_notes_main:
+    name: skill eval (notes, main)
+    needs: [author_app_notes_main]
     runs_on: linux-medium
     environment: production
     outputs:
       report: ${{ steps.run.outputs.report }}
+      expected: ${{ steps.run.outputs.expected }}
+      detected: ${{ steps.run.outputs.detected }}
+      recall: ${{ steps.run.outputs.recall }}
+      precision: ${{ steps.run.outputs.precision }}
     steps:
       - uses: eas/checkout
 
@@ -171,39 +335,51 @@ jobs:
         uses: eas/download_artifact
         id: download_author
         with:
-          name: authored-app-notes
+          name: authored-app-notes-main
 
       - name: Analyze authored app for skill eval
         id: run
         run: |
           AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
           SCENARIO='skills_available_unmentioned' \
-          OUT_DIR=skill-eval-report-notes \
+          OUT_DIR=skill-eval-report-notes-main \
           PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
           CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
           bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
-          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          expected=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('skill_id')))" 2>/dev/null || echo "?")
+          detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
+          recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
+          precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
           set-output report "${summary:-no report}"
+          set-output expected "${expected:-?}"
+          set-output detected "${detected:-?}"
+          set-output recall "${recall:-?}"
+          set-output precision "${precision:-?}"
 
       - name: Package skill-eval report
         if: ${{ always() }}
-        run: tar -czf skill-eval-report-notes.tar.gz skill-eval-report-notes
+        run: tar -czf skill-eval-report-notes-main.tar.gz skill-eval-report-notes-main
 
       - name: Upload skill-eval report
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
           type: other
-          name: skill-eval-report-notes
-          path: skill-eval-report-notes.tar.gz
+          name: skill-eval-report-notes-main
+          path: skill-eval-report-notes-main.tar.gz
 
-  eval_skill_hot_chocolate:
-    name: skill eval (hot_chocolate)
-    needs: [author_app_hot_chocolate]
+  eval_skill_notes_pr:
+    name: skill eval (notes, PR)
+    needs: [author_app_notes_pr]
     runs_on: linux-medium
     environment: production
     outputs:
       report: ${{ steps.run.outputs.report }}
+      expected: ${{ steps.run.outputs.expected }}
+      detected: ${{ steps.run.outputs.detected }}
+      recall: ${{ steps.run.outputs.recall }}
+      precision: ${{ steps.run.outputs.precision }}
     steps:
       - uses: eas/checkout
 
@@ -216,39 +392,51 @@ jobs:
         uses: eas/download_artifact
         id: download_author
         with:
-          name: authored-app-hot_chocolate
+          name: authored-app-notes-pr
 
       - name: Analyze authored app for skill eval
         id: run
         run: |
           AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
           SCENARIO='skills_available_unmentioned' \
-          OUT_DIR=skill-eval-report-hot_chocolate \
+          OUT_DIR=skill-eval-report-notes-pr \
           PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
           CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
           bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
-          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          expected=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('skill_id')))" 2>/dev/null || echo "?")
+          detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
+          recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
+          precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
           set-output report "${summary:-no report}"
+          set-output expected "${expected:-?}"
+          set-output detected "${detected:-?}"
+          set-output recall "${recall:-?}"
+          set-output precision "${precision:-?}"
 
       - name: Package skill-eval report
         if: ${{ always() }}
-        run: tar -czf skill-eval-report-hot_chocolate.tar.gz skill-eval-report-hot_chocolate
+        run: tar -czf skill-eval-report-notes-pr.tar.gz skill-eval-report-notes-pr
 
       - name: Upload skill-eval report
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
           type: other
-          name: skill-eval-report-hot_chocolate
-          path: skill-eval-report-hot_chocolate.tar.gz
+          name: skill-eval-report-notes-pr
+          path: skill-eval-report-notes-pr.tar.gz
 
-  eval_skill_wiki_reader:
-    name: skill eval (wiki_reader)
-    needs: [author_app_wiki_reader]
+  eval_skill_hot_chocolate_main:
+    name: skill eval (hot_chocolate, main)
+    needs: [author_app_hot_chocolate_main]
     runs_on: linux-medium
     environment: production
     outputs:
       report: ${{ steps.run.outputs.report }}
+      expected: ${{ steps.run.outputs.expected }}
+      detected: ${{ steps.run.outputs.detected }}
+      recall: ${{ steps.run.outputs.recall }}
+      precision: ${{ steps.run.outputs.precision }}
     steps:
       - uses: eas/checkout
 
@@ -261,48 +449,240 @@ jobs:
         uses: eas/download_artifact
         id: download_author
         with:
-          name: authored-app-wiki_reader
+          name: authored-app-hot_chocolate-main
 
       - name: Analyze authored app for skill eval
         id: run
         run: |
           AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
           SCENARIO='skills_available_unmentioned' \
-          OUT_DIR=skill-eval-report-wiki_reader \
+          OUT_DIR=skill-eval-report-hot_chocolate-main \
           PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
           CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
           bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
-          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          expected=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('skill_id')))" 2>/dev/null || echo "?")
+          detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
+          recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
+          precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
           set-output report "${summary:-no report}"
+          set-output expected "${expected:-?}"
+          set-output detected "${detected:-?}"
+          set-output recall "${recall:-?}"
+          set-output precision "${precision:-?}"
 
       - name: Package skill-eval report
         if: ${{ always() }}
-        run: tar -czf skill-eval-report-wiki_reader.tar.gz skill-eval-report-wiki_reader
+        run: tar -czf skill-eval-report-hot_chocolate-main.tar.gz skill-eval-report-hot_chocolate-main
 
       - name: Upload skill-eval report
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
           type: other
-          name: skill-eval-report-wiki_reader
-          path: skill-eval-report-wiki_reader.tar.gz
+          name: skill-eval-report-hot_chocolate-main
+          path: skill-eval-report-hot_chocolate-main.tar.gz
 
-  # One combined comment covering all 3 PRDs. `after:` (not `needs:`) so this
-  # still posts even if one of the eval jobs failed -- this is advisory only,
-  # it should never look like the PR is silently missing feedback.
+  eval_skill_hot_chocolate_pr:
+    name: skill eval (hot_chocolate, PR)
+    needs: [author_app_hot_chocolate_pr]
+    runs_on: linux-medium
+    environment: production
+    outputs:
+      report: ${{ steps.run.outputs.report }}
+      expected: ${{ steps.run.outputs.expected }}
+      detected: ${{ steps.run.outputs.detected }}
+      recall: ${{ steps.run.outputs.recall }}
+      precision: ${{ steps.run.outputs.precision }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: Download authored app
+        uses: eas/download_artifact
+        id: download_author
+        with:
+          name: authored-app-hot_chocolate-pr
+
+      - name: Analyze authored app for skill eval
+        id: run
+        run: |
+          AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
+          SCENARIO='skills_available_unmentioned' \
+          OUT_DIR=skill-eval-report-hot_chocolate-pr \
+          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          expected=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('skill_id')))" 2>/dev/null || echo "?")
+          detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
+          recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
+          precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
+          set-output report "${summary:-no report}"
+          set-output expected "${expected:-?}"
+          set-output detected "${detected:-?}"
+          set-output recall "${recall:-?}"
+          set-output precision "${precision:-?}"
+
+      - name: Package skill-eval report
+        if: ${{ always() }}
+        run: tar -czf skill-eval-report-hot_chocolate-pr.tar.gz skill-eval-report-hot_chocolate-pr
+
+      - name: Upload skill-eval report
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: skill-eval-report-hot_chocolate-pr
+          path: skill-eval-report-hot_chocolate-pr.tar.gz
+
+  eval_skill_wiki_reader_main:
+    name: skill eval (wiki_reader, main)
+    needs: [author_app_wiki_reader_main]
+    runs_on: linux-medium
+    environment: production
+    outputs:
+      report: ${{ steps.run.outputs.report }}
+      expected: ${{ steps.run.outputs.expected }}
+      detected: ${{ steps.run.outputs.detected }}
+      recall: ${{ steps.run.outputs.recall }}
+      precision: ${{ steps.run.outputs.precision }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: Download authored app
+        uses: eas/download_artifact
+        id: download_author
+        with:
+          name: authored-app-wiki_reader-main
+
+      - name: Analyze authored app for skill eval
+        id: run
+        run: |
+          AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
+          SCENARIO='skills_available_unmentioned' \
+          OUT_DIR=skill-eval-report-wiki_reader-main \
+          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          expected=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('skill_id')))" 2>/dev/null || echo "?")
+          detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
+          recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
+          precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
+          set-output report "${summary:-no report}"
+          set-output expected "${expected:-?}"
+          set-output detected "${detected:-?}"
+          set-output recall "${recall:-?}"
+          set-output precision "${precision:-?}"
+
+      - name: Package skill-eval report
+        if: ${{ always() }}
+        run: tar -czf skill-eval-report-wiki_reader-main.tar.gz skill-eval-report-wiki_reader-main
+
+      - name: Upload skill-eval report
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: skill-eval-report-wiki_reader-main
+          path: skill-eval-report-wiki_reader-main.tar.gz
+
+  eval_skill_wiki_reader_pr:
+    name: skill eval (wiki_reader, PR)
+    needs: [author_app_wiki_reader_pr]
+    runs_on: linux-medium
+    environment: production
+    outputs:
+      report: ${{ steps.run.outputs.report }}
+      expected: ${{ steps.run.outputs.expected }}
+      detected: ${{ steps.run.outputs.detected }}
+      recall: ${{ steps.run.outputs.recall }}
+      precision: ${{ steps.run.outputs.precision }}
+    steps:
+      - uses: eas/checkout
+
+      - name: fetch eval-harness
+        run: |
+          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init eval-harness
+
+      - name: Download authored app
+        uses: eas/download_artifact
+        id: download_author
+        with:
+          name: authored-app-wiki_reader-pr
+
+      - name: Analyze authored app for skill eval
+        id: run
+        run: |
+          AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
+          SCENARIO='skills_available_unmentioned' \
+          OUT_DIR=skill-eval-report-wiki_reader-pr \
+          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
+          expected=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('skill_id')))" 2>/dev/null || echo "?")
+          detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
+          recall=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_recall')))" 2>/dev/null || echo "?")
+          precision=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-pr/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('trigger_precision')))" 2>/dev/null || echo "?")
+          set-output report "${summary:-no report}"
+          set-output expected "${expected:-?}"
+          set-output detected "${detected:-?}"
+          set-output recall "${recall:-?}"
+          set-output precision "${precision:-?}"
+
+      - name: Package skill-eval report
+        if: ${{ always() }}
+        run: tar -czf skill-eval-report-wiki_reader-pr.tar.gz skill-eval-report-wiki_reader-pr
+
+      - name: Upload skill-eval report
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: skill-eval-report-wiki_reader-pr
+          path: skill-eval-report-wiki_reader-pr.tar.gz
+
+  # One combined comment covering all 3 PRDs, main vs. PR side by side.
+  # `after:` (not `needs:`) so this still posts even if one of the eval jobs
+  # failed -- this is advisory only, it should never look like the PR is
+  # silently missing feedback. "Expected skills" is pulled from the `pr`
+  # variant's output for each PRD (both variants score against the same
+  # ground truth, so either would do).
   comment:
     name: comment
-    after: [eval_skill_notes, eval_skill_hot_chocolate, eval_skill_wiki_reader]
+    after:
+      [
+        eval_skill_notes_main,
+        eval_skill_notes_pr,
+        eval_skill_hot_chocolate_main,
+        eval_skill_hot_chocolate_pr,
+        eval_skill_wiki_reader_main,
+        eval_skill_wiki_reader_pr,
+      ]
     type: github-comment
     params:
       payload: |
         <!-- expo-skill-eval -->
         ## Expo skill eval
 
-        | App | Result |
-        |---|---|
-        | notes | ${{ after.eval_skill_notes.outputs.report }} |
-        | hot_chocolate | ${{ after.eval_skill_hot_chocolate.outputs.report }} |
-        | wiki_reader | ${{ after.eval_skill_wiki_reader.outputs.report }} |
+        Each app is authored twice: once against **main**'s current skill content, once against **this PR**'s. Same ground truth, so you can see whether this PR improves or regresses skill-trigger recall/precision.
+
+        | App | Expected skills | main: detected (recall / precision) | This PR: detected (recall / precision) |
+        |---|---|---|---|
+        | notes | ${{ after.eval_skill_notes_pr.outputs.expected }} | ${{ after.eval_skill_notes_main.outputs.detected }} (${{ after.eval_skill_notes_main.outputs.recall }} / ${{ after.eval_skill_notes_main.outputs.precision }}) | ${{ after.eval_skill_notes_pr.outputs.detected }} (${{ after.eval_skill_notes_pr.outputs.recall }} / ${{ after.eval_skill_notes_pr.outputs.precision }}) |
+        | hot_chocolate | ${{ after.eval_skill_hot_chocolate_pr.outputs.expected }} | ${{ after.eval_skill_hot_chocolate_main.outputs.detected }} (${{ after.eval_skill_hot_chocolate_main.outputs.recall }} / ${{ after.eval_skill_hot_chocolate_main.outputs.precision }}) | ${{ after.eval_skill_hot_chocolate_pr.outputs.detected }} (${{ after.eval_skill_hot_chocolate_pr.outputs.recall }} / ${{ after.eval_skill_hot_chocolate_pr.outputs.precision }}) |
+        | wiki_reader | ${{ after.eval_skill_wiki_reader_pr.outputs.expected }} | ${{ after.eval_skill_wiki_reader_main.outputs.detected }} (${{ after.eval_skill_wiki_reader_main.outputs.recall }} / ${{ after.eval_skill_wiki_reader_main.outputs.precision }}) | ${{ after.eval_skill_wiki_reader_pr.outputs.detected }} (${{ after.eval_skill_wiki_reader_pr.outputs.recall }} / ${{ after.eval_skill_wiki_reader_pr.outputs.precision }}) |
 
         📎 Full reports (metrics.json, report.html) + authored app source: [workflow artifacts](${{ workflow.url }})
