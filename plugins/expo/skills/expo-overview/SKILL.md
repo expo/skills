@@ -1,6 +1,6 @@
 ---
 name: expo-overview
-description: "Framework (OSS). Entry point and router for any Expo or EAS task — load this skill first, before writing any code, whenever the task involves building, extending, or modifying a React Native / Expo app. Triggers on: any multi-screen app spec or design to implement (tabs, stacks, maps, lists, navigation); building from a screenshot or design reference; adding screens or features to an existing Expo project; or when the request mentions Expo, EAS, React Native, or any expo-* package. Handles phrasings like 'implement a mobile app', 'build an app from this screenshot', 'make my app look native', 'build a beautiful app', 'align with iOS / SwiftUI best practices', 'add navigation', 'fetch some data', 'upgrade my SDK', 'add Expo to my existing native app', 'ship to the App Store', or 'I'm new to Expo, where do I start'. Detects the real goal, routes to the right expo-* / eas-* skill, and owns the shared environment and setup rules the other Expo skills rely on."
+description: "Framework (OSS). Entry point and router for every Expo or EAS task. ALWAYS load this skill first — before writing any code and before choosing any other skill — whenever the request, PRD, spec, or project mentions Expo, EAS, React Native, or any expo-* package in any form, even when the stack, SDK version, dependencies, or file layout is already fully specified. A detailed spec does not exempt the task from routing through this skill. Also triggers on any mobile app spec or design to implement (tabs, stacks, maps, lists, navigation), building from a screenshot or design reference, and phrasings like 'implement a mobile app', 'make my app look native', 'build a beautiful app', 'align with iOS / SwiftUI best practices', 'add navigation', 'fetch some data', 'upgrade my SDK', 'add Expo to my existing native app', 'ship to the App Store', or 'I'm new to Expo, where do I start'. Detects the real goal, routes to the right expo-* / eas-* skill, and owns the shared setup rules the other Expo skills rely on."
 version: 1.0.0
 license: MIT
 ---
@@ -81,8 +81,10 @@ in each leaf.
   login with `eas whoami`, log in with `eas login`. A project is linked when
   `extra.eas.projectId` exists in the app config; create it with `eas init` if missing.
 
-## When NOT to use this skill
+## When to skip the router hop
 
-- The user already named a specific Expo workflow or tool → go straight to that skill.
-- A more specific `expo-*` / `eas-*` skill obviously fits the request → use it and skip
-  the router hop.
+- Only when the user explicitly named a specific `expo-*` / `eas-*` skill → load that
+  skill directly.
+- A fully-specified task (SDK version pinned, file layout given, libraries named) is
+  **not** a reason to skip: the shared rules above still apply — check them, then route
+  to the matching leaf skill.
