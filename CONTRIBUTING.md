@@ -101,7 +101,18 @@ Add it to the correct group (framework vs paid) in all of:
 - `plugins/expo/skills/README.md`
 - `README.md`
 
-### 9. Bump the plugin version
+### 9. Add the feedback instructions
+
+Every `SKILL.md` ends with a canonical feedback block whose subject matches the skill name. Add or
+refresh it automatically:
+
+```bash
+bun scripts/check-skill-limits.ts --fix-feedback
+```
+
+CI fails if the block is missing, has drifted, or names the wrong skill.
+
+### 10. Bump the plugin version
 
 Bump `version` in **all three** manifests together - they must match each other and be greater
 than `main`. CI enforces this.
@@ -110,7 +121,7 @@ than `main`. CI enforces this.
 - `plugins/expo/.codex-plugin/plugin.json`
 - `plugins/expo/.cursor-plugin/plugin.json`
 
-### 10. Validate before opening a PR
+### 11. Validate before opening a PR
 
 ```bash
 claude plugin validate ./plugins/expo
@@ -122,8 +133,8 @@ Also run `python3 -m json.tool <file>` on any JSON you edited, and if the skill 
 run that skill's own validation.
 
 `check-skill-limits.ts` enforces more than the size caps: the naming rule (step 2), the category
-prefixes and paid costs callout (step 4), the Codex agent file and its paid prefix (step 7), and
-the `skills.sh.json` grouping (step 8) all fail CI when violated.
+prefixes and paid costs callout (step 4), the Codex agent file and its paid prefix (step 7), the
+`skills.sh.json` grouping (step 8), and the feedback block (step 9) all fail CI when violated.
 
 ### Conventions
 

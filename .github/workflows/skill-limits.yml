@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   check:
-    name: check skill description and body limits
+    name: check skill requirements
     runs-on: ubuntu-latest
 
     steps:

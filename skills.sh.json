@@ -20,6 +20,7 @@
         "expo-examples",
         "expo-app-clip",
         "expo-upgrade",
+        "expo-submit-feedback",
         "expo-skill-feedback"
       ]
     },
