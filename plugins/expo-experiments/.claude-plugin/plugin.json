@@ -1,6 +1,6 @@
 {
   "name": "expo-experiments",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "Experimental Expo skills for APIs that are not finalized. Skills here may change or be retired, and graduate to the expo plugin when stable.",
   "author": {
     "name": "Expo Team",
