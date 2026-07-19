@@ -14,6 +14,11 @@
       "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo apps."
     },
     {
+      "name": "expo-experiments",
+      "source": "./plugins/expo-experiments",
+      "description": "Experimental Expo skills for APIs that are not finalized. Skills graduate to the expo plugin when stable."
+    },
+    {
       "name": "expo-app-design",
       "source": "./plugins/expo",
       "description": "[Deprecated] Use the \"expo\" plugin instead. Build robust, productivity apps with Expo."
