@@ -19,7 +19,9 @@ If you are not deliberately using an experimental Expo API, install the main `ex
 
 ## Skills Included
 
-None yet. Skills land here through their own pull requests.
+| Skill | Use it for |
+| --- | --- |
+| `expo-migrate-module` | Migrating a Swift Expo module from the Modules API 1.0 definition DSL to the 2.0 macro API. |
 
 ## License
 
