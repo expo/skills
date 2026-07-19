@@ -22,7 +22,7 @@ Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `F
 | `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold from. |
 | `expo-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
 | `expo-upgrade` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
-| `expo-submit-feedback` | Submitting specific, actionable feedback when an Expo skill is wrong, outdated, or incomplete. |
+| `expo-submit-feedback` | Submitting actionable skill feedback and controlling opt-in usage telemetry. |
 
 ## Services & paid distribution
 

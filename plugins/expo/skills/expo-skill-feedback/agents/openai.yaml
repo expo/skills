@@ -1,4 +1,0 @@
-interface:
-  display_name: "Expo Skills Telemetry"
-  short_description: "Control opt-in Expo skills usage telemetry"
-  default_prompt: "Use $expo-skill-feedback to enable, disable, or check Expo skills telemetry."

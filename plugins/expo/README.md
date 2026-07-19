@@ -79,7 +79,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-examples** - Adapt or scaffold from the `expo/examples` repo of `with-*` integrations
 - **expo-app-clip** - Add an iOS App Clip target (AASA, associated domains, Smart App Banners; needs an Apple Developer account)
 - **expo-upgrade** - Upgrade Expo SDK versions and fix dependency issues
-- **expo-submit-feedback** - Submit specific, actionable feedback about an Expo skill
+- **expo-submit-feedback** - Submit actionable skill feedback and control opt-in usage telemetry
 
 ### Services & paid distribution
 
