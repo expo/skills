@@ -4,16 +4,16 @@ The Expo Modules API 2.0 design and implementation evolve across the macros plug
 
 ## Find the actual declarations
 
-Locate `ExpoModulesMacros.swift` in the target repository or installed dependencies:
+Locate `ExpoModulesMacros.swift` in the target repository or installed dependencies (use your search tool, or portable shell commands - do not assume `rg` is installed):
 
 ```bash
-rg --files | rg 'ExpoModulesMacros\.swift$'
+find . -name 'ExpoModulesMacros.swift' -not -path '*/node_modules/.cache/*'
 ```
 
 Inspect the declarations that the user's source can import:
 
 ```bash
-rg -n 'public macro (ExpoModule|JS|Event|SharedObject|Record|Union|ViewProps|ExpoView)' <path-to-ExpoModulesMacros.swift>
+grep -nE 'public macro (ExpoModule|JS|Event|SharedObject|Record|Union|ViewProps|ExpoView)' <path-to-ExpoModulesMacros.swift>
 ```
 
 A declaration proves only that Swift recognizes the attribute. Also inspect the corresponding macro implementation and core runtime hooks.
@@ -23,7 +23,7 @@ A declaration proves only that Swift recognizes the attribute. Also inspect the 
 Search the actual core source for the feature being migrated:
 
 ```bash
-rg -n '_decorateModule|_decorateSharedObject|_constructSharedObject|_jsName|EventEmitter|emitSync|StaticProperty|AnyViewProps|PropsDiff|_updateViewProps|didCreate|__expo_onStartListeningToEvent' <expo-modules-core>
+grep -rnE '_decorateModule|_decorateSharedObject|_constructSharedObject|_jsName|EventEmitter|emitSync|StaticProperty|AnyViewProps|PropsDiff|_updateViewProps|didCreate|__expo_onStartListeningToEvent' <expo-modules-core>
 ```
 
 Use compile errors and symbol call sites to confirm signatures. The macros plugin and core can drift independently; a successful macro expansion does not prove the generated code compiles or is called at runtime.
