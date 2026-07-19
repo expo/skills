@@ -6,6 +6,7 @@
       "title": "Framework (open source)",
       "description": "Free, open-source Expo SDK and React Native skills: UI, navigation, styling, data fetching, native modules, DOM, examples, and SDK upgrades.",
       "skills": [
+        "expo-overview",
         "expo-project-structure",
         "expo-router",
         "expo-native-ui",

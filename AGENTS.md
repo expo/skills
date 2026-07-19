@@ -200,8 +200,9 @@ Follow the full guide in `CONTRIBUTING.md`. In short:
 2. Create `plugins/expo/skills/<skill-name>/SKILL.md` with the category-prefixed description (`Framework (OSS).` or `EAS service (paid).`); paid skills open with a costs/plan-limits callout.
 3. Add focused reference files under `references/` when the skill needs more detail than belongs in the main `SKILL.md`, scripts under `scripts/` only for reusable logic, and `agents/openai.yaml` for Codex triggering.
 4. Register the skill in every catalog: `skills.sh.json`, `plugins/expo/README.md`, `plugins/expo/skills/README.md`, and the root `README.md`.
-5. Bump the version in all three plugin manifests together (they must match and be greater than main; CI-enforced).
-6. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
+5. Add a one-line entry for the skill to the `expo-overview` Skill Map (`plugins/expo/skills/expo-overview/SKILL.md`) so the router can dispatch to it. This is enforced by the `check` workflow (`bun scripts/check-overview-routing.ts`).
+6. Bump the version in all three plugin manifests together (they must match and be greater than main; CI-enforced).
+7. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
 
 ## Testing Plugins
 

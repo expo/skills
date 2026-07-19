@@ -44,6 +44,7 @@ jobs:
     environment: production
     env:
       AGENT: claude-code
+      AGENT_MODEL: sonnet[1m]  # [1m] keeps skill descriptions in the model's menu
       PRD: dataset/prds/notes/prd/mvp.txt
       SCENARIO: skills_available_unmentioned
     steps:
@@ -82,6 +83,7 @@ jobs:
     environment: production
     env:
       AGENT: claude-code
+      AGENT_MODEL: sonnet[1m]  # see notes job
       PRD: dataset/prds/hot_chocolate/prd/mvp.txt
       SCENARIO: skills_available_unmentioned
     steps:
@@ -120,6 +122,7 @@ jobs:
     environment: production
     env:
       AGENT: claude-code
+      AGENT_MODEL: sonnet[1m]  # see notes job
       PRD: dataset/prds/wiki_reader/prd/mvp.txt
       SCENARIO: skills_available_unmentioned
     steps:

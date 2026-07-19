@@ -2,6 +2,14 @@
 
 Every skill in this directory is a sibling folder containing a `SKILL.md`. Skills are discovered **one level deep** - `skills/<skill-name>/SKILL.md` - so this index groups them for humans; the filesystem stays flat. Each skill's frontmatter `description` is prefixed with its category so agents can see the free vs paid boundary in the always-loaded metadata.
 
+## Start Here
+
+Load this first for any Expo/EAS task, then route to the specific skill below.
+
+| Skill | Use it for |
+| --- | --- |
+| `expo-overview` | Router and shared setup rules; the entry point when a request is vague or the user hasn't named a specific Expo tool. |
+
 ## Framework (open source)
 
 Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `Framework (OSS).`.
