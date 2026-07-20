@@ -1,42 +1,22 @@
 # Trusted producer for the shared skill-eval "main" baseline cache that
-# skill-eval-ci.yml's PR-triggered jobs read from. See
-# BASELINE_RESULT_CACHE_AND_PROMOTION.md for the full design.
+# skill-eval-ci.yml's PR-triggered jobs read from. Runs on every push to
+# main touching plugins/expo/skills/**.
 #
-# Runs on every push to main that touches plugins/expo/skills/**. For each
-# reference PRD (notes, hot_chocolate, wiki_reader): compute the fingerprint
-# for main's current skill content (same script skill-eval-ci.yml's PR-side
-# jobs use, so the two always agree on a cache key), try an exact-match
-# restore, and only if that misses, author + evaluate fresh and populate the
-# cache. A hit means main's relevant inputs (skill content, harness pin,
-# PRD/scenario, agent) haven't changed since the last push that did touch
-# them -- e.g. a push that only changed an unrelated skill -- so this run
-# does effectively nothing for that PRD.
+# Per PRD: compute the fingerprint for main's current content (same script
+# skill-eval-ci.yml uses), try an exact-match restore, and only on a miss,
+# author + evaluate fresh and populate the cache. A hit means nothing this
+# push changed is relevant to that PRD.
 #
-# Security: only this trusted push-triggered workflow ever writes to the
-# shared cache (skill-eval-ci.yml's `pull_request` jobs are restore-only).
-# `concurrency.cancel_in_progress` means a fast follow-up push cancels an
-# in-flight run for main rather than letting two runs race to populate the
-# same cache entry -- the newer push's evaluation is always the one that
-# ends up cached.
+# Only this workflow ever calls eas/save_cache -- skill-eval-ci.yml's
+# pull_request jobs are restore-only. concurrency.cancel_in_progress means a
+# fast follow-up push cancels an in-flight run for main rather than letting
+# two runs race to populate the same cache entry.
 #
-# v1 scope: this workflow always computes fresh on a miss. It does NOT try
-# to promote an already-computed PR candidate result without recomputing --
-# that needs a way to look up an artifact from a *different, earlier*
-# workflow run (the PR run that produced it), which is unconfirmed on EAS
-# Workflows (eas/upload_artifact + eas/download_artifact are documented for
-# same-run, cross-job use only). Recomputing on every miss is the correctness
-# fallback the design doc calls out explicitly ("promotion is an
-# optimization; recalculation is always the correctness fallback") -- it's
-# still a real win, because it means a fresh authoring run happens once per
-# merge instead of once per PR review of that merge.
-#
-# Known fingerprint gap: neither this workflow nor skill-eval-ci.yml pins an
-# exact model snapshot. author-app.sh defaults AGENT_MODEL to the rolling
-# alias "sonnet" when unset (as it is here), and the fingerprint script
-# records whatever AGENT_MODEL resolves to -- so it captures an explicit
-# override, but cannot detect Anthropic repointing "sonnet" itself to a new
-# underlying snapshot. Pin AGENT_MODEL to a dated snapshot id if that
-# silent-drift risk becomes a real problem.
+# v1 scope: always recomputes fresh on a miss rather than promoting an
+# already-computed PR candidate -- that needs reading an artifact from a
+# different, earlier workflow run, which isn't a confirmed EAS Workflows
+# capability. Recomputing once per merge (instead of once per PR reviewing
+# that merge) is still the real win.
 name: skill-eval-main-baseline
 
 on:
@@ -45,11 +25,6 @@ on:
       - main
     paths:
       - plugins/expo/skills/**
-  # Any workflow can also be triggered regardless of `on` via
-  # `eas workflow:run`; this makes that possible from the GitHub/EAS
-  # dashboard too, useful for exercising this producer without waiting for a
-  # qualifying push (e.g. to confirm the eas/restore_cache miss/hit paths
-  # before this ships for real).
   workflow_dispatch: {}
 
 concurrency:
@@ -69,26 +44,11 @@ jobs:
     steps:
       - uses: eas/checkout
 
-      - name: fetch eval-harness
-        run: |
-          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
-          git submodule update --init eval-harness
-
       - name: compute main fingerprint
         id: fingerprint
         run: |
-          python3 scripts/calculate-eval-fingerprint.py \
-            --skill-dir "$(pwd)/plugins/expo" \
-            --harness-dir eval-harness \
-            --prd "eval-harness/${PRD}" \
-            --prd-skills eval-harness/dataset/prd_skills.json \
-            --prd-id "${PRD_ID}" \
-            --scenario "${SCENARIO}" \
-            --agent "${AGENT}" \
-            --model "${AGENT_MODEL:-sonnet}" \
-            > fingerprint-notes-main.json
-          FP=$(python3 -c "import json; print(json.load(open('fingerprint-notes-main.json'))['fingerprint'])")
-          set-output fingerprint "$FP"
+          bash scripts/fingerprint-main-content.sh checkout > fingerprint-notes-main.json
+          set-output fingerprint "$(python3 -c "import json; print(json.load(open('fingerprint-notes-main.json'))['fingerprint'])")"
 
       - name: restore cached main baseline
         uses: eas/restore_cache
@@ -98,35 +58,15 @@ jobs:
 
       - name: check cache hit
         id: check_cache
-        run: |
-          if python3 scripts/validate-result-bundle.py verify \
-              --bundle-dir cached-baseline-notes-main \
-              --expect-fingerprint "${{ steps.fingerprint.outputs.fingerprint }}"; then
-            set-output cache_hit true
-          else
-            set-output cache_hit false
-          fi
+        run: set-output cache_hit "$(bash scripts/check-cache-hit.sh cached-baseline-notes-main "${{ steps.fingerprint.outputs.fingerprint }}")"
 
-      - name: author app (Claude Code, main branch skill checkout)
+      - name: author and evaluate if needed
         if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
-        run: |
-          export SKILL_PLUGIN_DIR="$(pwd)/plugins/expo"
-          bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
+        run: bash scripts/author-and-evaluate-baseline.sh "$(pwd)/plugins/expo" cached-baseline-notes-main skills_available_unmentioned
 
-      - name: evaluate authored app
-        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
-        run: |
-          AUTHORED_ARTIFACT="$(pwd)/eval-harness" \
-          SCENARIO="${SCENARIO}" \
-          OUT_DIR=cached-baseline-notes-main \
-          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
-          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
-
-      # `should_save` folds the cache-miss check and the trusted-branch check
-      # into one bash-computed output, so downstream steps only ever need a
-      # single `== 'true'` comparison in `${{ }}` -- compound operators
-      # inside expressions aren't a confirmed-supported grammar, bash `&&` is.
+      # should_save folds the cache-miss check and the trusted-branch check
+      # into one bash-computed output, so save_cache only needs a single
+      # `== 'true'` comparison.
       - name: write baseline manifest
         id: manifest
         if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
@@ -144,11 +84,6 @@ jobs:
             set-output should_save false
           fi
 
-      # Only this trusted push-to-main workflow saves the shared cache --
-      # skill-eval-ci.yml's PR jobs are restore-only. The ref check is
-      # belt-and-suspenders on top of the `push: branches: [main]` trigger,
-      # matching Expo's own documented pattern for designated cache-writer
-      # jobs.
       - name: save main baseline to cache
         if: ${{ steps.manifest.outputs.should_save == 'true' }}
         uses: eas/save_cache
@@ -176,26 +111,11 @@ jobs:
     steps:
       - uses: eas/checkout
 
-      - name: fetch eval-harness
-        run: |
-          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
-          git submodule update --init eval-harness
-
       - name: compute main fingerprint
         id: fingerprint
         run: |
-          python3 scripts/calculate-eval-fingerprint.py \
-            --skill-dir "$(pwd)/plugins/expo" \
-            --harness-dir eval-harness \
-            --prd "eval-harness/${PRD}" \
-            --prd-skills eval-harness/dataset/prd_skills.json \
-            --prd-id "${PRD_ID}" \
-            --scenario "${SCENARIO}" \
-            --agent "${AGENT}" \
-            --model "${AGENT_MODEL:-sonnet}" \
-            > fingerprint-hot_chocolate-main.json
-          FP=$(python3 -c "import json; print(json.load(open('fingerprint-hot_chocolate-main.json'))['fingerprint'])")
-          set-output fingerprint "$FP"
+          bash scripts/fingerprint-main-content.sh checkout > fingerprint-hot_chocolate-main.json
+          set-output fingerprint "$(python3 -c "import json; print(json.load(open('fingerprint-hot_chocolate-main.json'))['fingerprint'])")"
 
       - name: restore cached main baseline
         uses: eas/restore_cache
@@ -205,30 +125,11 @@ jobs:
 
       - name: check cache hit
         id: check_cache
-        run: |
-          if python3 scripts/validate-result-bundle.py verify \
-              --bundle-dir cached-baseline-hot_chocolate-main \
-              --expect-fingerprint "${{ steps.fingerprint.outputs.fingerprint }}"; then
-            set-output cache_hit true
-          else
-            set-output cache_hit false
-          fi
+        run: set-output cache_hit "$(bash scripts/check-cache-hit.sh cached-baseline-hot_chocolate-main "${{ steps.fingerprint.outputs.fingerprint }}")"
 
-      - name: author app (Claude Code, main branch skill checkout)
+      - name: author and evaluate if needed
         if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
-        run: |
-          export SKILL_PLUGIN_DIR="$(pwd)/plugins/expo"
-          bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
-
-      - name: evaluate authored app
-        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
-        run: |
-          AUTHORED_ARTIFACT="$(pwd)/eval-harness" \
-          SCENARIO="${SCENARIO}" \
-          OUT_DIR=cached-baseline-hot_chocolate-main \
-          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
-          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+        run: bash scripts/author-and-evaluate-baseline.sh "$(pwd)/plugins/expo" cached-baseline-hot_chocolate-main skills_available_unmentioned
 
       - name: write baseline manifest
         id: manifest
@@ -274,26 +175,11 @@ jobs:
     steps:
       - uses: eas/checkout
 
-      - name: fetch eval-harness
-        run: |
-          git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
-          git submodule update --init eval-harness
-
       - name: compute main fingerprint
         id: fingerprint
         run: |
-          python3 scripts/calculate-eval-fingerprint.py \
-            --skill-dir "$(pwd)/plugins/expo" \
-            --harness-dir eval-harness \
-            --prd "eval-harness/${PRD}" \
-            --prd-skills eval-harness/dataset/prd_skills.json \
-            --prd-id "${PRD_ID}" \
-            --scenario "${SCENARIO}" \
-            --agent "${AGENT}" \
-            --model "${AGENT_MODEL:-sonnet}" \
-            > fingerprint-wiki_reader-main.json
-          FP=$(python3 -c "import json; print(json.load(open('fingerprint-wiki_reader-main.json'))['fingerprint'])")
-          set-output fingerprint "$FP"
+          bash scripts/fingerprint-main-content.sh checkout > fingerprint-wiki_reader-main.json
+          set-output fingerprint "$(python3 -c "import json; print(json.load(open('fingerprint-wiki_reader-main.json'))['fingerprint'])")"
 
       - name: restore cached main baseline
         uses: eas/restore_cache
@@ -303,30 +189,11 @@ jobs:
 
       - name: check cache hit
         id: check_cache
-        run: |
-          if python3 scripts/validate-result-bundle.py verify \
-              --bundle-dir cached-baseline-wiki_reader-main \
-              --expect-fingerprint "${{ steps.fingerprint.outputs.fingerprint }}"; then
-            set-output cache_hit true
-          else
-            set-output cache_hit false
-          fi
+        run: set-output cache_hit "$(bash scripts/check-cache-hit.sh cached-baseline-wiki_reader-main "${{ steps.fingerprint.outputs.fingerprint }}")"
 
-      - name: author app (Claude Code, main branch skill checkout)
+      - name: author and evaluate if needed
         if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
-        run: |
-          export SKILL_PLUGIN_DIR="$(pwd)/plugins/expo"
-          bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
-
-      - name: evaluate authored app
-        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
-        run: |
-          AUTHORED_ARTIFACT="$(pwd)/eval-harness" \
-          SCENARIO="${SCENARIO}" \
-          OUT_DIR=cached-baseline-wiki_reader-main \
-          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
-          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+        run: bash scripts/author-and-evaluate-baseline.sh "$(pwd)/plugins/expo" cached-baseline-wiki_reader-main skills_available_unmentioned
 
       - name: write baseline manifest
         id: manifest
