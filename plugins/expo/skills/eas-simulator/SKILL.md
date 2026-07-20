@@ -54,7 +54,7 @@ npx --yes eas-cli@latest simulator:availability --json
 ```
 
 If it's **not** available, don't call `simulator:start` (it will fail). Instead, hand off gracefully so you keep making progress without this skill:
-- Tell the user EAS Simulator isn't enabled on their account yet (the command prints how to request access).
+- Tell the user EAS Simulator isn't available on their account yet — it's coming soon.
 - Fall back to their normal local path for the actual goal — `expo run:ios` / Xcode / Android Studio for a local sim/emulator, an EAS Build, or whatever else fits. Don't dead-end on the cloud sim; the request was almost never "use EAS Simulator specifically."
 
 (If `simulator:availability` isn't recognized, the CLI is too old — upgrade, or treat a `not enabled for this account` error from `simulator:start` the same way: stop and fall back.)
