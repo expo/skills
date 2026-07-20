@@ -26,7 +26,15 @@
 #
 # Known cost tradeoff: this doubles Claude Code authoring runs (6 instead of
 # 3 per CI run) to get a genuine before/after comparison instead of an
-# after-only snapshot.
+# after-only snapshot. The "main" side of that cost is avoidable whenever
+# main's skill content hasn't changed since it was last evaluated: each
+# author_app_<prd>_main job computes a fingerprint (see
+# scripts/calculate-eval-fingerprint.py and BASELINE_RESULT_CACHE_AND_PROMOTION.md)
+# and tries an exact-match eas/restore_cache before authoring anything. On a
+# hit, authoring and re-analysis are skipped entirely and the cached
+# metrics.json is reused for the comment. The cache is only ever written by
+# the trusted push-to-main workflow (.eas/workflows/skill-eval-main-baseline.yml)
+# -- this PR-triggered workflow only ever reads it, never writes it.
 #
 # No tier/routing yet (every triggered PR runs all 3 PRDs unconditionally),
 # and only the skill-eval side runs for now -- no native iOS build/evaluator.
@@ -58,6 +66,11 @@ on:
       - main
     paths:
       - plugins/expo/skills/**
+  # Any workflow can also be triggered regardless of `on` via
+  # `eas workflow:run`; this makes that possible from the GitHub/EAS
+  # dashboard too, useful for exercising the cache path without waiting for
+  # a real qualifying PR.
+  workflow_dispatch: {}
 
 jobs:
   # --- Author + skill-eval, once per reference PRD, twice per PRD ----------
@@ -70,7 +83,11 @@ jobs:
     env:
       AGENT: claude-code
       PRD: dataset/prds/notes/prd/mvp.txt
+      PRD_ID: notes
       SCENARIO: skills_available_unmentioned
+    outputs:
+      cache_hit: ${{ steps.check_cache.outputs.cache_hit }}
+      fingerprint: ${{ steps.fingerprint.outputs.fingerprint }}
     steps:
       - uses: eas/checkout
 
@@ -85,22 +102,73 @@ jobs:
           git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
           git submodule update --init eval-harness
 
+      # Compute main's fingerprint before deciding whether to re-author.
+      # See BASELINE_RESULT_CACHE_AND_PROMOTION.md -- this must be the same
+      # script the trusted main-baseline workflow uses to write the cache, or
+      # the two will never agree on a key.
+      - name: compute main fingerprint
+        id: fingerprint
+        run: |
+          python3 scripts/calculate-eval-fingerprint.py \
+            --skill-dir /tmp/plugins-main/plugins/expo \
+            --harness-dir eval-harness \
+            --prd "eval-harness/${PRD}" \
+            --prd-skills eval-harness/dataset/prd_skills.json \
+            --prd-id "${PRD_ID}" \
+            --scenario "${SCENARIO}" \
+            --agent "${AGENT}" \
+            --model "${AGENT_MODEL:-sonnet}" \
+            > fingerprint-notes-main.json
+          FP=$(python3 -c "import json; print(json.load(open('fingerprint-notes-main.json'))['fingerprint'])")
+          set-output fingerprint "$FP"
+
+      - name: restore cached main baseline
+        uses: eas/restore_cache
+        with:
+          key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
+          path: cached-baseline-notes-main
+
+      # eas/restore_cache has no cache-hit output, so detect a hit by asking
+      # whether what it restored is actually a valid, matching bundle (never
+      # trust a bare directory-exists check -- a partial or stale restore
+      # must fall through to recompute, not be treated as a hit).
+      - name: check cache hit
+        id: check_cache
+        run: |
+          if python3 scripts/validate-result-bundle.py verify \
+              --bundle-dir cached-baseline-notes-main \
+              --expect-fingerprint "${{ steps.fingerprint.outputs.fingerprint }}"; then
+            set-output cache_hit true
+          else
+            set-output cache_hit false
+          fi
+
       - name: author app (Claude Code, main branch skill checkout)
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
         run: |
           export SKILL_PLUGIN_DIR="/tmp/plugins-main/plugins/expo"
           bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
 
+      # `always()` alone (no compound `&&`) is the only confirmed-safe
+      # expression form here -- gate the actual skip-on-cache-hit logic in
+      # plain bash instead of combining operators inside `${{ }}`.
       - name: Package authored app
+        id: package
         if: ${{ always() }}
         run: |
-          tar \
-            --exclude 'eval-harness/agent-workspace/*/node_modules' \
-            --exclude 'eval-harness/agent-workspace/*/.expo' \
-            --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
-            -czf authored-app-notes-main.tar.gz -C eval-harness agent-workspace eval-out
+          if [ "${{ steps.check_cache.outputs.cache_hit }}" = "true" ]; then
+            set-output packaged false
+          else
+            tar \
+              --exclude 'eval-harness/agent-workspace/*/node_modules' \
+              --exclude 'eval-harness/agent-workspace/*/.expo' \
+              --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+              -czf authored-app-notes-main.tar.gz -C eval-harness agent-workspace eval-out
+            set-output packaged true
+          fi
 
       - name: Upload authored app
-        if: ${{ always() }}
+        if: ${{ steps.package.outputs.packaged == 'true' }}
         uses: eas/upload_artifact
         with:
           type: other
@@ -152,7 +220,11 @@ jobs:
     env:
       AGENT: claude-code
       PRD: dataset/prds/hot_chocolate/prd/mvp.txt
+      PRD_ID: hot_chocolate
       SCENARIO: skills_available_unmentioned
+    outputs:
+      cache_hit: ${{ steps.check_cache.outputs.cache_hit }}
+      fingerprint: ${{ steps.fingerprint.outputs.fingerprint }}
     steps:
       - uses: eas/checkout
 
@@ -167,22 +239,62 @@ jobs:
           git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
           git submodule update --init eval-harness
 
+      - name: compute main fingerprint
+        id: fingerprint
+        run: |
+          python3 scripts/calculate-eval-fingerprint.py \
+            --skill-dir /tmp/plugins-main/plugins/expo \
+            --harness-dir eval-harness \
+            --prd "eval-harness/${PRD}" \
+            --prd-skills eval-harness/dataset/prd_skills.json \
+            --prd-id "${PRD_ID}" \
+            --scenario "${SCENARIO}" \
+            --agent "${AGENT}" \
+            --model "${AGENT_MODEL:-sonnet}" \
+            > fingerprint-hot_chocolate-main.json
+          FP=$(python3 -c "import json; print(json.load(open('fingerprint-hot_chocolate-main.json'))['fingerprint'])")
+          set-output fingerprint "$FP"
+
+      - name: restore cached main baseline
+        uses: eas/restore_cache
+        with:
+          key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
+          path: cached-baseline-hot_chocolate-main
+
+      - name: check cache hit
+        id: check_cache
+        run: |
+          if python3 scripts/validate-result-bundle.py verify \
+              --bundle-dir cached-baseline-hot_chocolate-main \
+              --expect-fingerprint "${{ steps.fingerprint.outputs.fingerprint }}"; then
+            set-output cache_hit true
+          else
+            set-output cache_hit false
+          fi
+
       - name: author app (Claude Code, main branch skill checkout)
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
         run: |
           export SKILL_PLUGIN_DIR="/tmp/plugins-main/plugins/expo"
           bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
 
       - name: Package authored app
+        id: package
         if: ${{ always() }}
         run: |
-          tar \
-            --exclude 'eval-harness/agent-workspace/*/node_modules' \
-            --exclude 'eval-harness/agent-workspace/*/.expo' \
-            --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
-            -czf authored-app-hot_chocolate-main.tar.gz -C eval-harness agent-workspace eval-out
+          if [ "${{ steps.check_cache.outputs.cache_hit }}" = "true" ]; then
+            set-output packaged false
+          else
+            tar \
+              --exclude 'eval-harness/agent-workspace/*/node_modules' \
+              --exclude 'eval-harness/agent-workspace/*/.expo' \
+              --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+              -czf authored-app-hot_chocolate-main.tar.gz -C eval-harness agent-workspace eval-out
+            set-output packaged true
+          fi
 
       - name: Upload authored app
-        if: ${{ always() }}
+        if: ${{ steps.package.outputs.packaged == 'true' }}
         uses: eas/upload_artifact
         with:
           type: other
@@ -234,7 +346,11 @@ jobs:
     env:
       AGENT: claude-code
       PRD: dataset/prds/wiki_reader/prd/mvp.txt
+      PRD_ID: wiki_reader
       SCENARIO: skills_available_unmentioned
+    outputs:
+      cache_hit: ${{ steps.check_cache.outputs.cache_hit }}
+      fingerprint: ${{ steps.fingerprint.outputs.fingerprint }}
     steps:
       - uses: eas/checkout
 
@@ -249,22 +365,62 @@ jobs:
           git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
           git submodule update --init eval-harness
 
+      - name: compute main fingerprint
+        id: fingerprint
+        run: |
+          python3 scripts/calculate-eval-fingerprint.py \
+            --skill-dir /tmp/plugins-main/plugins/expo \
+            --harness-dir eval-harness \
+            --prd "eval-harness/${PRD}" \
+            --prd-skills eval-harness/dataset/prd_skills.json \
+            --prd-id "${PRD_ID}" \
+            --scenario "${SCENARIO}" \
+            --agent "${AGENT}" \
+            --model "${AGENT_MODEL:-sonnet}" \
+            > fingerprint-wiki_reader-main.json
+          FP=$(python3 -c "import json; print(json.load(open('fingerprint-wiki_reader-main.json'))['fingerprint'])")
+          set-output fingerprint "$FP"
+
+      - name: restore cached main baseline
+        uses: eas/restore_cache
+        with:
+          key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
+          path: cached-baseline-wiki_reader-main
+
+      - name: check cache hit
+        id: check_cache
+        run: |
+          if python3 scripts/validate-result-bundle.py verify \
+              --bundle-dir cached-baseline-wiki_reader-main \
+              --expect-fingerprint "${{ steps.fingerprint.outputs.fingerprint }}"; then
+            set-output cache_hit true
+          else
+            set-output cache_hit false
+          fi
+
       - name: author app (Claude Code, main branch skill checkout)
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
         run: |
           export SKILL_PLUGIN_DIR="/tmp/plugins-main/plugins/expo"
           bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
 
       - name: Package authored app
+        id: package
         if: ${{ always() }}
         run: |
-          tar \
-            --exclude 'eval-harness/agent-workspace/*/node_modules' \
-            --exclude 'eval-harness/agent-workspace/*/.expo' \
-            --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
-            -czf authored-app-wiki_reader-main.tar.gz -C eval-harness agent-workspace eval-out
+          if [ "${{ steps.check_cache.outputs.cache_hit }}" = "true" ]; then
+            set-output packaged false
+          else
+            tar \
+              --exclude 'eval-harness/agent-workspace/*/node_modules' \
+              --exclude 'eval-harness/agent-workspace/*/.expo' \
+              --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+              -czf authored-app-wiki_reader-main.tar.gz -C eval-harness agent-workspace eval-out
+            set-output packaged true
+          fi
 
       - name: Upload authored app
-        if: ${{ always() }}
+        if: ${{ steps.package.outputs.packaged == 'true' }}
         uses: eas/upload_artifact
         with:
           type: other
@@ -341,7 +497,19 @@ jobs:
           git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
           git submodule update --init eval-harness
 
+      # Restored under the same key the author job just checked. A second
+      # restore is required here -- each job is a fresh workspace, cache
+      # state does not carry over between jobs the way an in-run artifact
+      # does.
+      - name: restore cached main baseline
+        if: ${{ needs.author_app_notes_main.outputs.cache_hit == 'true' }}
+        uses: eas/restore_cache
+        with:
+          key: skill-eval-baseline-v1-${{ needs.author_app_notes_main.outputs.fingerprint }}
+          path: cached-baseline-notes-main
+
       - name: Download authored app
+        if: ${{ needs.author_app_notes_main.outputs.cache_hit == 'false' }}
         uses: eas/download_artifact
         id: download_author
         with:
@@ -350,12 +518,16 @@ jobs:
       - name: Analyze authored app for skill eval
         id: run
         run: |
-          AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
-          SCENARIO='skills_available_unmentioned' \
-          OUT_DIR=skill-eval-report-notes-main \
-          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
-          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          if [ "${{ needs.author_app_notes_main.outputs.cache_hit }}" = "true" ]; then
+            cp -r cached-baseline-notes-main skill-eval-report-notes-main
+          else
+            AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
+            SCENARIO='skills_available_unmentioned' \
+            OUT_DIR=skill-eval-report-notes-main \
+            PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+            CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+            bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          fi
           summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
           expected=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('skill_id')))" 2>/dev/null || echo "?")
           detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-notes-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
@@ -479,7 +651,15 @@ jobs:
           git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
           git submodule update --init eval-harness
 
+      - name: restore cached main baseline
+        if: ${{ needs.author_app_hot_chocolate_main.outputs.cache_hit == 'true' }}
+        uses: eas/restore_cache
+        with:
+          key: skill-eval-baseline-v1-${{ needs.author_app_hot_chocolate_main.outputs.fingerprint }}
+          path: cached-baseline-hot_chocolate-main
+
       - name: Download authored app
+        if: ${{ needs.author_app_hot_chocolate_main.outputs.cache_hit == 'false' }}
         uses: eas/download_artifact
         id: download_author
         with:
@@ -488,12 +668,16 @@ jobs:
       - name: Analyze authored app for skill eval
         id: run
         run: |
-          AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
-          SCENARIO='skills_available_unmentioned' \
-          OUT_DIR=skill-eval-report-hot_chocolate-main \
-          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
-          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          if [ "${{ needs.author_app_hot_chocolate_main.outputs.cache_hit }}" = "true" ]; then
+            cp -r cached-baseline-hot_chocolate-main skill-eval-report-hot_chocolate-main
+          else
+            AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
+            SCENARIO='skills_available_unmentioned' \
+            OUT_DIR=skill-eval-report-hot_chocolate-main \
+            PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+            CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+            bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          fi
           summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
           expected=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('skill_id')))" 2>/dev/null || echo "?")
           detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-hot_chocolate-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
@@ -617,7 +801,15 @@ jobs:
           git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
           git submodule update --init eval-harness
 
+      - name: restore cached main baseline
+        if: ${{ needs.author_app_wiki_reader_main.outputs.cache_hit == 'true' }}
+        uses: eas/restore_cache
+        with:
+          key: skill-eval-baseline-v1-${{ needs.author_app_wiki_reader_main.outputs.fingerprint }}
+          path: cached-baseline-wiki_reader-main
+
       - name: Download authored app
+        if: ${{ needs.author_app_wiki_reader_main.outputs.cache_hit == 'false' }}
         uses: eas/download_artifact
         id: download_author
         with:
@@ -626,12 +818,16 @@ jobs:
       - name: Analyze authored app for skill eval
         id: run
         run: |
-          AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
-          SCENARIO='skills_available_unmentioned' \
-          OUT_DIR=skill-eval-report-wiki_reader-main \
-          PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-          CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
-          bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          if [ "${{ needs.author_app_wiki_reader_main.outputs.cache_hit }}" = "true" ]; then
+            cp -r cached-baseline-wiki_reader-main skill-eval-report-wiki_reader-main
+          else
+            AUTHORED_ARTIFACT='${{ steps.download_author.outputs.artifact_path }}' \
+            SCENARIO='skills_available_unmentioned' \
+            OUT_DIR=skill-eval-report-wiki_reader-main \
+            PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+            CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+            bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+          fi
           summary=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print('expected=' + str(r.get('skill_id')) + ' detected=' + (','.join(r.get('detected_skills') or []) or 'none') + ' recall=' + str(r.get('trigger_recall')) + ' precision=' + str(r.get('trigger_precision')))" 2>/dev/null || echo "no summary")
           expected=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print(str(r.get('skill_id')))" 2>/dev/null || echo "?")
           detected=$(python3 -c "import json; d=json.load(open('skill-eval-report-wiki_reader-main/metrics.json')); r=(d.get('runs') or [{}])[0]; print((','.join(r.get('detected_skills') or []) or 'none'))" 2>/dev/null || echo "?")
