@@ -32,6 +32,7 @@ Prints a single JSON object to stdout.
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -47,13 +48,30 @@ def hash_directory(directory: Path) -> str:
     """Content hash of a directory tree: sort files by relative path, hash
     each file's bytes, then hash the ordered "path\\0filehash" list. Stable
     across checkouts/clones -- no reliance on mtimes or permissions -- and
-    intentionally excludes VCS metadata."""
-    files = sorted(
-        p for p in directory.rglob("*") if p.is_file() and ".git" not in p.parts
-    )
+    intentionally excludes VCS metadata.
+
+    Walks with followlinks=False and skips every symlink outright (file or
+    directory): this content is `main`'s already-merged skill tree, so a
+    git-tracked symlink here would otherwise let a merged change read an
+    arbitrary file elsewhere on the runner disk into the fingerprint, or --
+    for a directory symlink pointing back at an ancestor -- send the walk
+    into an infinite loop."""
+    files = []
+    for root, dirnames, filenames in os.walk(directory, followlinks=False):
+        root_path = Path(root)
+        dirnames[:] = [
+            d for d in dirnames if d != ".git" and not (root_path / d).is_symlink()
+        ]
+        for filename in filenames:
+            file_path = root_path / filename
+            if file_path.is_symlink():
+                continue
+            if file_path.is_file():
+                files.append(file_path)
+
     lines = [
         f"{p.relative_to(directory).as_posix()}\0{sha256_hex(p.read_bytes())}"
-        for p in files
+        for p in sorted(files)
     ]
     return sha256_hex("\n".join(lines).encode("utf-8"))
 
