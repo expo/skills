@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Turn Expo skills usage telemetry on or off, or check its status.
+// Turn Expo plugin usage telemetry on or off, or check its status.
 //
 // Telemetry is OFF by default (opt-in) — nothing is sent until you enable it here or
 // via EXPO_SKILLS_TELEMETRY=1. Usage:

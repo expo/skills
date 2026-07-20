@@ -3,7 +3,7 @@
 //
 // Invoked two ways, both cross-platform (plain `node`, no shell wrapper, so it runs the
 // same on macOS / Linux / Windows):
-//   1. From Claude Code hooks (../../../hooks/hooks.json) as
+//   1. From Claude Code hooks (../hooks/hooks.json) as
 //      `node skill-event.cjs --skill auto --initiator <ai|user> --plugin-root <dir> --detach --quiet`.
 //      The foreground process reads the hook payload from stdin, resolves which skill ran,
 //      runs the cheap local gates, then — for `--detach` — re-launches a DETACHED copy of
@@ -81,8 +81,8 @@ function skillFromHook(hookInput) {
 }
 
 function pluginRootFor(args) {
-  // Self-derive from this script's location: <root>/skills/expo-skill-feedback/scripts.
-  return args.pluginRoot || path.resolve(__dirname, "..", "..", "..");
+  // Self-derive from this script's location: <root>/scripts.
+  return args.pluginRoot || path.resolve(__dirname, "..");
 }
 
 // Only emit for skills that belong to THIS plugin (so we never track other plugins'

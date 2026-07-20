@@ -113,7 +113,7 @@ Free, open-source Expo SDK and React Native skills.
 | `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold a new project from. |
 | `expo-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
 | `expo-upgrade` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
-| `expo-submit-feedback` | Submit actionable skill feedback and control the separate opt-in usage telemetry. |
+| `expo-skill-feedback` | Submit actionable skill feedback and control the separate opt-in usage telemetry. |
 
 ### Services & paid distribution
 
@@ -164,7 +164,7 @@ Expo documentation, Expo CLI, and EAS CLI are the source of truth. These skills 
 - **Turn off:** ask it to disable telemetry, or set `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`. CI never sends.
 - **Feedback:** every skill includes instructions to submit specific, actionable feedback with `submit-expo-feedback`; this is independent of automatic usage telemetry.
 
-Submission details and telemetry controls live in `expo-submit-feedback`.
+Submission details and telemetry controls live in `expo-skill-feedback`.
 
 ## License
 
