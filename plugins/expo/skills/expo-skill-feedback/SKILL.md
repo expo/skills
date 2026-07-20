@@ -48,11 +48,8 @@ Environment equivalents are `EXPO_SKILLS_TELEMETRY=1` to enable and
 `EXPO_SKILLS_TELEMETRY=0` or `DO_NOT_TRACK=1` to disable. CI never sends telemetry.
 
 ## Submitting Feedback
-
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
-
 ```bash
 npx --yes submit-expo-feedback@latest --category skills --subject "expo-skill-feedback" "<actionable feedback>"
 ```
-
 Only submit when you have something specific and actionable to report. Include as much relevant context as possible.

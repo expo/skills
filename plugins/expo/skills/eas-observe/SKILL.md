@@ -32,11 +32,8 @@ The three reference files in `./references/` cover the three things people typic
 - Configuration: https://docs.expo.dev/eas/observe/configuration/
 
 ## Submitting Feedback
-
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
-
 ```bash
 npx --yes submit-expo-feedback@latest --category skills --subject "eas-observe" "<actionable feedback>"
 ```
-
 Only submit when you have something specific and actionable to report. Include as much relevant context as possible.

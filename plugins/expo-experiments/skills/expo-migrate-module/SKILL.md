@@ -103,3 +103,10 @@ Report:
 - which members intentionally remain in the 1.0 DSL and why
 - any compatibility-sensitive choices, especially event names, record requiredness, constants, and queues
 - the commands run and any verification not completed
+
+## Submitting Feedback
+If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+```bash
+npx --yes submit-expo-feedback@latest --category skills --subject "expo-migrate-module" "<actionable feedback>"
+```
+Only submit when you have something specific and actionable to report. Include as much relevant context as possible.

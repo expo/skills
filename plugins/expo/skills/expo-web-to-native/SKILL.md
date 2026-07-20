@@ -83,11 +83,8 @@ Pass on parity of **content and behavior** — not pixels: a nativized screen sh
 - [Expo — From Web to Native with React](https://expo.dev/blog/from-web-to-native-with-react) — the canonical guide this skill operationalizes.
 
 ## Submitting Feedback
-
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
-
 ```bash
 npx --yes submit-expo-feedback@latest --category skills --subject "expo-web-to-native" "<actionable feedback>"
 ```
-
 Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
