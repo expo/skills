@@ -1,10 +1,10 @@
 # Expo Skills Index
 
-Every skill in this directory is a sibling folder containing a `SKILL.md`. Skills are discovered **one level deep** - `skills/<skill-name>/SKILL.md` - so this index groups them for humans; the filesystem stays flat. Each skill's frontmatter `description` is prefixed with its category so agents can see the free vs paid boundary in the always-loaded metadata.
+Every skill in this directory is a sibling folder containing a `SKILL.md`. Skills are discovered **one level deep** - `skills/<skill-name>/SKILL.md` - so this index groups them for humans; the filesystem stays flat. Each skill's frontmatter `description` is prefixed with its category so agents can see the free vs paid boundary in the always-loaded metadata, except the cross-cutting `expo-skill-feedback` skill.
 
 ## Framework (open source)
 
-Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `Framework (OSS).`.
+Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `Framework (OSS).`, except `expo-skill-feedback`, which accepts feedback across Expo surfaces.
 
 | Skill | Use it for |
 | --- | --- |
@@ -22,7 +22,7 @@ Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `F
 | `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold from. |
 | `expo-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
 | `expo-upgrade` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
-| `expo-skill-feedback` | Submitting actionable skill feedback and controlling opt-in usage telemetry. |
+| `expo-skill-feedback` | Sharing what worked or fell short across Expo, its skills, docs, CLIs, or MCP, and controlling opt-in usage telemetry. |
 
 ## Services & paid distribution
 
@@ -40,7 +40,7 @@ Skills whose core purpose uses paid Expo Application Services (EAS). Description
 ## Adding a skill
 
 1. Create `skills/<skill-name>/SKILL.md` (one level deep - do not nest under a category folder, or it will not be discovered).
-2. Prefix the frontmatter `description` with the category label (`Framework (OSS).` or `EAS service (paid).`).
+2. Prefix the frontmatter `description` with the category label (`Framework (OSS).` or `EAS service (paid).`); `expo-skill-feedback` is the sole cross-cutting exception.
 3. For a services skill, open the body with a costs/plan-limits callout right after the H1.
 4. Add the skill to the table above, to `skills.sh.json`, and to the root and plugin `README.md` lists.
 5. Bump the version in all three plugin manifests (see `CONTRIBUTING.md`).

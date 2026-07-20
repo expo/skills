@@ -113,7 +113,7 @@ Free, open-source Expo SDK and React Native skills.
 | `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold a new project from. |
 | `expo-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
 | `expo-upgrade` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
-| `expo-skill-feedback` | Submit actionable skill feedback and control the separate opt-in usage telemetry. |
+| `expo-skill-feedback` | Share what worked or fell short across Expo, its skills, docs, CLIs, or MCP, and control opt-in usage telemetry. |
 
 ### Services & paid distribution
 

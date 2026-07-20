@@ -1,19 +1,32 @@
 ---
 name: expo-skill-feedback
-description: 'Framework (OSS). Submit specific, actionable feedback about an Expo skill with: npx --yes submit-expo-feedback@latest --category skills --subject "SKILL_NAME" "ACTIONABLE_FEEDBACK". Replace the uppercase placeholders before running. Use when a skill contains errors, misleading or outdated guidance, broken commands, or important missing context; or when the user wants to enable, disable, check, or understand the separate opt-in Expo skills usage telemetry.'
+description: 'Submit feedback on an Expo skill—or Expo itself—and control bundled anonymous usage telemetry (off by default / opt-in). Submit feedback with: npx --yes submit-expo-feedback@latest --category "CATEGORY" --subject "SUBJECT" "ACTIONABLE_FEEDBACK". Replace the uppercase placeholders before running. Use when a skill was useful, confusing, broken, missing context, or worth improving; when Expo, Expo CLI, EAS CLI, docs, or MCP worked well or fell short; or when the user wants to enable, disable, check, or understand usage telemetry. The user saying "enable Expo skills telemetry" is the switch.'
 ---
 
 # Expo Skill Feedback
 
-Run the command in the description when there is a concrete problem Expo can act on.
+Help Expo improve by sharing specific feedback about what worked well or what fell short. Feedback
+submission is independent of usage telemetry and does not require enabling it.
 
-## Arguments
+## Submit feedback
 
-- `--category skills`: route the report to Expo skills feedback.
-- `--subject`: use the exact skill name from its frontmatter, such as `expo-router`.
-- Final argument: describe the relevant context, expected behavior, and what happened instead.
+```bash
+npx --yes submit-expo-feedback@latest --category "<CATEGORY>" --subject "<SUBJECT>" "<ACTIONABLE_FEEDBACK>"
+```
 
-Do not submit vague feedback or include secrets, source code, personal data, long prompts, or stack traces.
+Choose the category and subject that most precisely identify what the feedback is about:
+
+| Category | Subject |
+| --- | --- |
+| `skills` | Exact skill name from its frontmatter, such as `expo-router` |
+| `docs` | Full Expo documentation URL |
+| `mcp` | MCP server or tool name |
+| `expo-cli` | Full Expo CLI command, such as `npx expo install` |
+| `eas-cli` | Full EAS CLI command, such as `eas build` |
+| `unknown` | Concise Expo product, package, feature, or other topic |
+
+In the final argument, say what helped and why, or provide the relevant context, expected behavior,
+and what happened instead. Do not include secrets, source code, personal data, long prompts, or stack traces.
 
 ## Usage telemetry
 

@@ -53,7 +53,8 @@ EAS product** (EAS Build, Submit, Hosting, Update, Workflows, Observe, Simulator
 
 ### 4. Prefix the description, and add a costs note for paid skills
 
-Every `description` opens with its category label:
+Every `description` opens with its category label, except the cross-cutting
+`expo-skill-feedback` skill, which accepts feedback across framework, EAS, docs, CLI, and MCP:
 
 - Framework: `Framework (OSS). <what it does and when to use it>`
 - Paid: `EAS service (paid). <what it does and when to use it>`

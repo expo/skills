@@ -10,6 +10,7 @@ const PAID_PREFIX = "EAS service (paid).";
 const PAID_CALLOUT = "**EAS service - costs apply.**";
 const PAID_PRICING_LINK = "expo.dev/pricing";
 const PAID_CODEX_PREFIX = "Paid EAS service.";
+const CATEGORY_PREFIX_EXEMPT_SKILLS = new Set(["expo-skill-feedback"]);
 const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
 const FEEDBACK_HEADING = "## Submitting Feedback";
 
@@ -109,9 +110,10 @@ for (const path of skills) {
   if (!body.trimEnd().endsWith(feedbackBlock(name)))
     errors.push(`${rel}: missing canonical feedback block; run "bun scripts/check-skill-limits.ts --fix-feedback"`);
 
-  // category prefix on the always-loaded description
+  // Category prefix on the always-loaded description. The cross-cutting feedback skill
+  // spans framework, EAS, docs, CLI, and MCP feedback, so it has no category label.
   const expectedPrefix = isPaid ? PAID_PREFIX : FRAMEWORK_PREFIX;
-  if (!description.startsWith(expectedPrefix))
+  if (!CATEGORY_PREFIX_EXEMPT_SKILLS.has(name) && !description.startsWith(expectedPrefix))
     errors.push(`${rel}: description must start with "${expectedPrefix}"`);
 
   // paid skills disclose costs up front (dash style varies: em dash or hyphen)

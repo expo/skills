@@ -1,4 +1,4 @@
 interface:
   display_name: "Expo Skill Feedback"
-  short_description: "Submit skill feedback or control usage telemetry"
-  default_prompt: "Use $expo-skill-feedback to report a specific skill problem or control Expo skills telemetry."
+  short_description: "Help Expo improve with feedback and usage telemetry"
+  default_prompt: "Use $expo-skill-feedback to help Expo improve by submitting feedback or controlling Expo skills telemetry."
