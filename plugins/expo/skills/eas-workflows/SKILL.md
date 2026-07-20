@@ -41,7 +41,7 @@ Do not rely on memorized values; these resources evolve as new features are adde
 
 ## Workflow File Location
 
-Workflows live in `.eas/workflows/*.yml` (or `.yaml`).
+Workflows live in `.eas/workflows/*.yml` (or `.yaml`). Each file must be 16 KiB or smaller.
 
 ## Top-Level Structure
 
