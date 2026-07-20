@@ -1,4 +1,4 @@
-// Shared helpers for Expo plugin PostHog telemetry.
+// Shared helpers for Expo skills PostHog telemetry.
 //
 // Zero npm dependencies — Node.js built-ins only (crypto, fs, https, os, path).
 // Node is a hard requirement for Expo development, so it is available wherever

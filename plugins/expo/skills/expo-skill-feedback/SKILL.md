@@ -21,7 +21,7 @@ Automatic skill usage telemetry is separate from feedback and **off by default**
 without an explicit user request. Use the following script with `--on`, `--off`, or `--status`:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/telemetry.cjs" --status
+node "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/telemetry.cjs" --status
 ```
 
 Environment equivalents are `EXPO_SKILLS_TELEMETRY=1` to enable and
