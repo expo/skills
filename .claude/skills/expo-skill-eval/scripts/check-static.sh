@@ -59,6 +59,35 @@ IFS=',' read -ra PLATFORM_LIST <<<"$PLATFORMS"
 for p in "${PLATFORM_LIST[@]}"; do
   EXPORT_ARGS+=(--platform "$p")
 done
-run_gate export env CI=1 bunx expo "${EXPORT_ARGS[@]}"
+
+# Run export; on failure, auto-install any unresolved native packages and retry once.
+run_export() {
+  rm -rf "$LOG_DIR/export"
+  env CI=1 bunx expo "${EXPORT_ARGS[@]}" >"$LOG_DIR/export.log" 2>&1
+}
+
+EXPORT_EXIT=0
+run_export || EXPORT_EXIT=$?
+
+if [[ $EXPORT_EXIT -ne 0 ]]; then
+  # Extract npm package names from "Unable to resolve module <pkg>" lines.
+  MISSING=$(grep -oE "Unable to resolve module [^[:space:]]+" "$LOG_DIR/export.log" \
+    | sed 's/Unable to resolve module //' | sed 's|/.*||' | sort -u || true)
+  if [[ -n "$MISSING" ]]; then
+    echo "        [auto-install] missing packages: $MISSING"
+    # shellcheck disable=SC2086
+    bunx expo install $MISSING >/dev/null 2>&1 || true
+    EXPORT_EXIT=0
+    run_export || EXPORT_EXIT=$?  # one retry
+  fi
+fi
+
+if [[ $EXPORT_EXIT -eq 0 ]]; then
+  echo "[PASS] export"
+else
+  echo "[FAIL] export (log: $PROJECT_PATH/$LOG_DIR/export.log)"
+  tail -5 "$LOG_DIR/export.log" | sed 's/^/        /'
+  FAILED=1
+fi
 
 exit "$FAILED"
