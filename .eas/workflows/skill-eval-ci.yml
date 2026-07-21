@@ -54,7 +54,7 @@ jobs:
       - name: author and evaluate
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-notes-main /tmp/plugins-main/plugins/expo skill-eval-report-notes-main "${SCENARIO}" skill-eval-report-notes-main.tar.gz")"
+          eval "$(bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-notes-main /tmp/plugins-main/plugins/expo skill-eval-report-notes-main "${SCENARIO}" skill-eval-report-notes-main.tar.gz)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -98,7 +98,7 @@ jobs:
       - name: author and evaluate
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-notes-pr "${SCENARIO}" skill-eval-report-notes-pr.tar.gz")"
+          eval "$(bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-notes-pr "${SCENARIO}" skill-eval-report-notes-pr.tar.gz)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -159,7 +159,7 @@ jobs:
       - name: author and evaluate
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-hot_chocolate-main /tmp/plugins-main/plugins/expo skill-eval-report-hot_chocolate-main "${SCENARIO}" skill-eval-report-hot_chocolate-main.tar.gz")"
+          eval "$(bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-hot_chocolate-main /tmp/plugins-main/plugins/expo skill-eval-report-hot_chocolate-main "${SCENARIO}" skill-eval-report-hot_chocolate-main.tar.gz)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -203,7 +203,7 @@ jobs:
       - name: author and evaluate
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-hot_chocolate-pr "${SCENARIO}" skill-eval-report-hot_chocolate-pr.tar.gz")"
+          eval "$(bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-hot_chocolate-pr "${SCENARIO}" skill-eval-report-hot_chocolate-pr.tar.gz)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -264,7 +264,7 @@ jobs:
       - name: author and evaluate
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-wiki_reader-main /tmp/plugins-main/plugins/expo skill-eval-report-wiki_reader-main "${SCENARIO}" skill-eval-report-wiki_reader-main.tar.gz")"
+          eval "$(bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-wiki_reader-main /tmp/plugins-main/plugins/expo skill-eval-report-wiki_reader-main "${SCENARIO}" skill-eval-report-wiki_reader-main.tar.gz)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -308,7 +308,7 @@ jobs:
       - name: author and evaluate
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-wiki_reader-pr "${SCENARIO}" skill-eval-report-wiki_reader-pr.tar.gz")"
+          eval "$(bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-wiki_reader-pr "${SCENARIO}" skill-eval-report-wiki_reader-pr.tar.gz)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
