@@ -4,11 +4,12 @@
 # the same job workspace it just authored in. Combines what were 2 separate
 # YAML steps into one, for skill-eval-main-baseline.yml.
 #
-# Unlike author-and-package.sh (used by skill-eval-ci.yml's PR-facing
-# jobs), this does NOT tolerate an author-app.sh failure: if authoring
-# fails, this script fails, and every downstream step (manifest write,
-# cache save, artifact upload) correctly gets skipped rather than caching a
-# failed or incomplete baseline.
+# Unlike author-and-evaluate.sh (used by skill-eval-ci.yml, which tolerates
+# a failure so the PR comment still shows something), this does NOT
+# tolerate an author-app.sh failure: if authoring fails, this script fails,
+# and every downstream step (manifest write, cache save, artifact upload)
+# correctly gets skipped rather than caching a failed or incomplete
+# baseline.
 #
 # Usage: author-and-evaluate-baseline.sh <plugin-dir> <out-dir> <scenario>
 set -euo pipefail
