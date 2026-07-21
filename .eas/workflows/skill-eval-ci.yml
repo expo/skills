@@ -41,20 +41,21 @@ jobs:
           bash scripts/ci.sh fingerprint_main_content extract > fp-notes-main.json
           set-output fingerprint "$(python3 -c "import json; print(json.load(open('fp-notes-main.json'))['fingerprint'])")"
 
-      - name: restore cache
+      - name: restore
         uses: eas/restore_cache
         with:
           key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
           path: cached-baseline-notes-main
 
-      - name: check cache
+      - name: check
         id: check_cache
         run: set-output cache_hit "$(bash scripts/ci.sh check_cache_hit cached-baseline-notes-main "${{ steps.fingerprint.outputs.fingerprint }}")"
 
-      - name: author and evaluate
+      - name: run
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-notes-main /tmp/plugins-main/plugins/expo skill-eval-report-notes-main "${SCENARIO}" skill-eval-report-notes-main.tar.gz)"
+          bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-notes-main /tmp/plugins-main/plugins/expo skill-eval-report-notes-main "${SCENARIO}" skill-eval-report-notes-main.tar.gz
+          eval "$(python3 scripts/ci.py print-outputs skill-eval-report-notes-main/metrics.json)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -65,7 +66,7 @@ jobs:
           set-output syntax_ok "$syntax_ok"
           set-output bundle_ok "$bundle_ok"
 
-      - name: upload report
+      - name: upload
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
@@ -95,10 +96,11 @@ jobs:
     steps:
       - uses: eas/checkout
 
-      - name: author and evaluate
+      - name: run
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-notes-pr "${SCENARIO}" skill-eval-report-notes-pr.tar.gz)"
+          bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-notes-pr "${SCENARIO}" skill-eval-report-notes-pr.tar.gz
+          eval "$(python3 scripts/ci.py print-outputs skill-eval-report-notes-pr/metrics.json)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -110,7 +112,7 @@ jobs:
           set-output bundle_ok "$bundle_ok"
           set-output failing "$failing"
 
-      - name: upload report
+      - name: upload
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
@@ -146,20 +148,21 @@ jobs:
           bash scripts/ci.sh fingerprint_main_content extract > fp-hot_chocolate-main.json
           set-output fingerprint "$(python3 -c "import json; print(json.load(open('fp-hot_chocolate-main.json'))['fingerprint'])")"
 
-      - name: restore cache
+      - name: restore
         uses: eas/restore_cache
         with:
           key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
           path: cached-baseline-hot_chocolate-main
 
-      - name: check cache
+      - name: check
         id: check_cache
         run: set-output cache_hit "$(bash scripts/ci.sh check_cache_hit cached-baseline-hot_chocolate-main "${{ steps.fingerprint.outputs.fingerprint }}")"
 
-      - name: author and evaluate
+      - name: run
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-hot_chocolate-main /tmp/plugins-main/plugins/expo skill-eval-report-hot_chocolate-main "${SCENARIO}" skill-eval-report-hot_chocolate-main.tar.gz)"
+          bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-hot_chocolate-main /tmp/plugins-main/plugins/expo skill-eval-report-hot_chocolate-main "${SCENARIO}" skill-eval-report-hot_chocolate-main.tar.gz
+          eval "$(python3 scripts/ci.py print-outputs skill-eval-report-hot_chocolate-main/metrics.json)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -170,7 +173,7 @@ jobs:
           set-output syntax_ok "$syntax_ok"
           set-output bundle_ok "$bundle_ok"
 
-      - name: upload report
+      - name: upload
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
@@ -200,10 +203,11 @@ jobs:
     steps:
       - uses: eas/checkout
 
-      - name: author and evaluate
+      - name: run
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-hot_chocolate-pr "${SCENARIO}" skill-eval-report-hot_chocolate-pr.tar.gz)"
+          bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-hot_chocolate-pr "${SCENARIO}" skill-eval-report-hot_chocolate-pr.tar.gz
+          eval "$(python3 scripts/ci.py print-outputs skill-eval-report-hot_chocolate-pr/metrics.json)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -215,7 +219,7 @@ jobs:
           set-output bundle_ok "$bundle_ok"
           set-output failing "$failing"
 
-      - name: upload report
+      - name: upload
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
@@ -251,20 +255,21 @@ jobs:
           bash scripts/ci.sh fingerprint_main_content extract > fp-wiki_reader-main.json
           set-output fingerprint "$(python3 -c "import json; print(json.load(open('fp-wiki_reader-main.json'))['fingerprint'])")"
 
-      - name: restore cache
+      - name: restore
         uses: eas/restore_cache
         with:
           key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
           path: cached-baseline-wiki_reader-main
 
-      - name: check cache
+      - name: check
         id: check_cache
         run: set-output cache_hit "$(bash scripts/ci.sh check_cache_hit cached-baseline-wiki_reader-main "${{ steps.fingerprint.outputs.fingerprint }}")"
 
-      - name: author and evaluate
+      - name: run
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-wiki_reader-main /tmp/plugins-main/plugins/expo skill-eval-report-wiki_reader-main "${SCENARIO}" skill-eval-report-wiki_reader-main.tar.gz)"
+          bash scripts/ci.sh author_and_evaluate "${{ steps.check_cache.outputs.cache_hit }}" cached-baseline-wiki_reader-main /tmp/plugins-main/plugins/expo skill-eval-report-wiki_reader-main "${SCENARIO}" skill-eval-report-wiki_reader-main.tar.gz
+          eval "$(python3 scripts/ci.py print-outputs skill-eval-report-wiki_reader-main/metrics.json)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -275,7 +280,7 @@ jobs:
           set-output syntax_ok "$syntax_ok"
           set-output bundle_ok "$bundle_ok"
 
-      - name: upload report
+      - name: upload
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
@@ -305,10 +310,11 @@ jobs:
     steps:
       - uses: eas/checkout
 
-      - name: author and evaluate
+      - name: run
         id: run
         run: |
-          eval "$(bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-wiki_reader-pr "${SCENARIO}" skill-eval-report-wiki_reader-pr.tar.gz)"
+          bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-wiki_reader-pr "${SCENARIO}" skill-eval-report-wiki_reader-pr.tar.gz
+          eval "$(python3 scripts/ci.py print-outputs skill-eval-report-wiki_reader-pr/metrics.json)"
           set-output report "$report"
           set-output expected "$expected"
           set-output detected "$detected"
@@ -320,7 +326,7 @@ jobs:
           set-output bundle_ok "$bundle_ok"
           set-output failing "$failing"
 
-      - name: upload report
+      - name: upload
         if: ${{ always() }}
         uses: eas/upload_artifact
         with:
@@ -328,10 +334,7 @@ jobs:
           name: skill-eval-report-wiki_reader-pr
           path: skill-eval-report-wiki_reader-pr.tar.gz
 
-  # One combined comment covering all 3 PRDs, main vs. PR side by side.
-  # `after:` (not `needs:`) so this still posts even if some jobs failed.
-  # "Expected skills" is pulled from the `pr` variant's output for each PRD
-  # (both variants score against the same ground truth, so either would do).
+  # after: (not needs:) posts even if some jobs failed.
   comment:
     name: comment
     after:
@@ -349,8 +352,6 @@ jobs:
         <!-- expo-skill-eval -->
         ## Expo skill eval
 
-        Authored against **main** and **this PR**, same ground truth.
-
         ### Triggers
 
         | App | Expected | main (recall/precision) | PR (recall/precision) |
@@ -361,7 +362,7 @@ jobs:
 
         ### Code quality
 
-        Lexical/structural: passed/total. Syntax/bundle: ✅❌❔➖. Failing: PR only.
+        Lexical/structural: passed/total. Failing: PR only.
 
         | App | Side | Lexical | Structural | Syntax | Bundle | Failing |
         |---|---|---|---|---|---|---|

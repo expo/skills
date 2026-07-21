@@ -41,7 +41,14 @@ fingerprint_main_content() {
       # fetch is against THIS repo (origin) and needs eas/checkout's own
       # working credentials, not the EVAL_HARNESS_ACCESS_TOKEN rewrite
       # installed for the unrelated, private eval-harness submodule fetch.
-      git fetch origin main
+      #
+      # Redirected to stderr: this function's stdout is redirected straight
+      # into a JSON file by the caller (`fingerprint_main_content ... >
+      # fp-*.json`), so anything these setup commands print on stdout (git's
+      # own progress/status messages, e.g. "Submodule path '...' checked
+      # out '<sha>'") would otherwise corrupt that file -- only ci.py
+      # fingerprint's own final JSON print may reach real stdout.
+      git fetch origin main >&2
       mkdir -p /tmp/plugins-main
       git archive origin/main plugins/expo | tar -x -C /tmp/plugins-main
       skill_dir="/tmp/plugins-main/plugins/expo"
@@ -52,7 +59,7 @@ fingerprint_main_content() {
       exit 2
     fi
 
-    fetch_eval_harness
+    fetch_eval_harness >&2
 
     python3 scripts/ci.py fingerprint \
       --skill-dir "$skill_dir" \
@@ -88,8 +95,21 @@ check_cache_hit() {
 # directly in this job's own workspace (no tar/artifact round-trip --
 # eval-skill-use.sh's --authored-artifact accepts a plain directory, so
 # authoring and evaluating in the same job needs no packaging step at all).
-# Then prints the parsed fields as shell assignments for the caller to
-# `eval` before set-output-ing each one.
+#
+# Deliberately does NOT print machine-readable output or capture its own
+# stdout -- author-app.sh (Claude Code) and eval-skill-use.sh print a lot of
+# their own progress output to stdout, which is fine to let through directly
+# to the job log, but would corrupt anything that tried to `$(...)`-capture
+# this whole function (bash would try to `eval` git/npm/Claude Code's own
+# log lines as commands -- exactly the bug this replaced: a prior version
+# called `ci.py print-outputs` as this function's own last line, and the
+# caller wrapped the *entire* function in `eval "$(...)"`, which choked the
+# first time a captured line happened to look like a shell word, e.g. git's
+# own "Submodule path '...' checked out '<sha>'" message). The caller must
+# call this function bare (uncaptured), then separately and only
+# `eval "$(python3 scripts/ci.py print-outputs "$OUT_DIR/metrics.json")"` --
+# that command is small, self-contained, and guaranteed to print nothing
+# but the intended key='value' lines.
 #
 # Tolerates an author-app.sh or eval-skill-use.sh failure (no `set -e`) so
 # the PR comment still shows *something* (ci.py print-outputs' own "no
@@ -127,7 +147,6 @@ author_and_evaluate() {
   fi
 
   tar -czf "$tarball" "$out_dir" 2>/dev/null || true
-  python3 scripts/ci.py print-outputs "$out_dir/metrics.json"
 }
 
 # Runs author-app.sh then eval-skill-use.sh directly into OUT_DIR -- no
