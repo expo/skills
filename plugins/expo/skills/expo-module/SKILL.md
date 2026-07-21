@@ -1,6 +1,6 @@
 ---
 name: expo-module
-description: Framework (OSS). Guide for creating and writing Expo native modules and views using the Expo Modules API (Swift, Kotlin, TypeScript). Covers module definition DSL, native views, shared objects, config plugins, lifecycle hooks, autolinking, and type system. Use when building or modifying native modules for Expo.
+description: Framework (OSS). Guide for creating and writing Expo native modules and views using the Expo Modules API (Swift, Kotlin, TypeScript). Covers module definition DSL, native views, shared objects, config plugins, lifecycle hooks, autolinking, and type system. Use when building or modifying native modules for Expo. Not for migrating an existing Swift module from the definition DSL to the Expo Modules API 2.0 macros; use expo-migrate-module (from the expo-experiments plugin) for that.
 version: 1.0.0
 license: MIT
 ---
@@ -17,6 +17,8 @@ Complete reference for building native modules and views using the Expo Modules 
 - Building config plugins that modify native project files
 - Adding Android, Apple, or web support to an existing Expo module
 - Editing `expo-module.config.json`, config plugins, or lifecycle hooks
+
+To migrate an existing Swift module from the definition DSL to the Expo Modules API 2.0 macros (`@ExpoModule`, `@JS`, `@Event`), use the `expo-migrate-module` skill (from the `expo-experiments` plugin) instead.
 
 ## References
 

@@ -36,11 +36,15 @@ function parseSkill(path: string): { name: string; description: string; body: st
   return { name, description, body, bodyLines: body.split("\n").length };
 }
 
-function loadCatalogGroups(): Map<string, "framework" | "paid"> {
-  const groups = new Map<string, "framework" | "paid">();
+function loadCatalogGroups(): Map<string, "framework" | "paid" | "experimental"> {
+  const groups = new Map<string, "framework" | "paid" | "experimental">();
   const catalog = JSON.parse(readFileSync("skills.sh.json", "utf8"));
   for (const grouping of catalog.groupings ?? []) {
-    const kind = grouping.title.startsWith("Framework") ? "framework" : "paid";
+    const kind = grouping.title.startsWith("Framework")
+      ? "framework"
+      : grouping.title.startsWith("Experimental")
+        ? "experimental"
+        : "paid";
     for (const skill of grouping.skills ?? []) groups.set(skill, kind);
   }
   return groups;
@@ -90,16 +94,17 @@ for (const path of skills) {
       errors.push(`${rel}: paid skill's openai.yaml short_description must start with "${PAID_CODEX_PREFIX}"`);
   }
 
-  // catalog sync with skills.sh.json groups
+  // catalog sync with skills.sh.json groups; the experimental group accepts either
+  // prefix - the description label still enforces the free vs paid boundary
   const group = catalogGroups.get(dirName);
   if (!group) errors.push(`${rel}: skill is not listed in skills.sh.json`);
-  else if (group !== (isPaid ? "paid" : "framework"))
+  else if (group !== "experimental" && group !== (isPaid ? "paid" : "framework"))
     errors.push(`${rel}: skills.sh.json lists this skill in the ${group} group, but the ${isPaid ? "eas-" : "expo-"} prefix requires the ${isPaid ? "paid" : "framework"} group`);
 }
 
 for (const [skill] of catalogGroups) {
   if (!seenDirs.has(skill))
-    errors.push(`skills.sh.json: lists "${skill}" but plugins/expo/skills/${skill}/SKILL.md does not exist`);
+    errors.push(`skills.sh.json: lists "${skill}" but no plugins/*/skills/${skill}/SKILL.md exists`);
 }
 
 if (errors.length === 0) {

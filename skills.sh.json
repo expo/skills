@@ -34,6 +34,13 @@
         "eas-update-insights",
         "eas-simulator"
       ]
+    },
+    {
+      "title": "Experimental",
+      "description": "Skills for Expo APIs that are not finalized. Content may change or be retired; skills graduate to the groups above when the underlying API stabilizes.",
+      "skills": [
+        "expo-migrate-module"
+      ]
     }
   ]
 }

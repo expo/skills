@@ -22,13 +22,21 @@ EAS-specific notes:
 - **`press`, not `tap`.** The tap verb is `press` — `tap` is not a verb.
 - **`snapshot -i` is slow on iOS** — tens of seconds is normal; wait for it.
 - **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts — avoids a large upload).
-- **Proven in this skill's flows:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`. Others (`gesture`/`scroll`/`logs`/`record`/`network`/`perf`/`metro`) are real in the CLI but not exercised here — confirm via `<verb> --help` before relying on them.
+- **Exercised against a live session:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`, `scroll`, `gesture` (needs a preset, e.g. `gesture swipe left`), `logs`, `record` (`start`/`stop <path>`), `network`, `perf`. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
 
 ## argent (alternative)
 
 `npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).
 
-**argent sessions cannot install apps today.** `--type argent` provisions only an argent daemon on the VM — there is no agent-device daemon, so agent-device install commands don't apply. Use argent to drive an app that is already on the sim (e.g. start with `--type agent-device` to install, then switch; or use an EAS build with `install-from-source` via an agent-device session first).
+**Installing apps in an argent session.** `--type argent` provisions only an argent daemon on the VM — there is no agent-device daemon, so agent-device install verbs don't apply. Install a local build with argent's own `reinstall-app` (tar-upload):
+
+```bash
+argent run reinstall-app --udid <udid> --bundleId <bundle-id> --appPath ./MyApp.app
+```
+
+Whenever the tools client is routed to a remote tool-server, it tars the local bundle and streams it up automatically — no extra flag. "Remote" covers both `argent link` and the env-var MCP config (`ARGENT_TOOLS_URL`), so this works in sandboxed shells too. It's a registry tool, so the MCP server exposes it identically — same call by CLI or MCP. Works for iOS `.app` (a directory), Android `.apk`, and Vega `.vpkg`; the client prints an upload line on stderr.
+
+Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `argent --version`. On older versions `reinstall-app` resolves `--appPath` on the VM only, so a local path fails; drive an app already on the sim instead.
 
 **Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 
@@ -65,3 +73,4 @@ MCP config file location: `.cursor/mcp.json` (Cursor), `.claude/mcp.json` (Claud
 
 **Known issues:**
 - `argent init --help` launches an interactive wizard regardless of the flag — use `--yes` to skip it, or read the package source for non-interactive flags.
+- Re-running `argent link` against an already-linked URL **without `--yes`** reports "Already linked. No changes." and keeps the old token — every call then fails with `401 Unauthorized`. Always pass `--yes` (as above) so a rotated token is actually written.

@@ -127,6 +127,14 @@ Skills whose core purpose uses paid Expo Application Services (EAS).
 | `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
 | `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator on EAS cloud - from the CLI or an agent, with a live browser preview (iOS only). |
 
+### Experimental
+
+Skills for Expo APIs that are not finalized. Content may change or be retired; skills graduate to the groups above when the underlying API stabilizes. These ship in the separate `expo-experiments` plugin (install it alongside `expo`), or individually via the skills CLI.
+
+| Skill | Use it for |
+| --- | --- |
+| `expo-migrate-module` | Migrating a Swift Expo module from the Modules API 1.0 definition DSL to the 2.0 macro API. |
+
 ## Expo MCP Server
 
 Skills teach an agent how Expo work gets done. The [Expo MCP server](https://docs.expo.dev/eas/ai/mcp/) gives it live access to actually do that work: read the latest Expo docs on demand, install compatible dependencies with `npx expo install`, trigger and monitor EAS builds and workflows, pull crash data from TestFlight, and screenshot a running app in the simulator.
