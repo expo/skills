@@ -1,9 +1,8 @@
-# Skill eval for PRs touching plugins/expo/skills/**. Advisory, never
-# blocks merge. Authors+evaluates 3 PRDs against main and this PR for
-# before/after comparison. "_main" jobs cache via fingerprint +
-# restore_cache; only skill-eval-main-baseline.yml writes that cache. Logic
-# lives in scripts/*, not inline: EAS caps files at 16 KiB (see
-# plugins/expo/skills/eas-workflows/SKILL.md) with no matrix support.
+# Skill eval for PRs touching plugins/expo/skills/**. Advisory, never blocks
+# merge. Authors+evaluates 3 PRDs vs main and this PR. "_main" jobs cache via
+# fingerprint+restore_cache; only skill-eval-main-baseline.yml writes that
+# cache. Logic in scripts/*: EAS caps files at 16 KiB, see
+# plugins/expo/skills/eas-workflows/SKILL.md.
 name: skill-eval-ci
 
 on:
@@ -93,6 +92,7 @@ jobs:
       structural: ${{ steps.run.outputs.structural }}
       syntax_ok: ${{ steps.run.outputs.syntax_ok }}
       bundle_ok: ${{ steps.run.outputs.bundle_ok }}
+      failing: ${{ steps.run.outputs.failing }}
     steps:
       - uses: eas/checkout
 
@@ -109,6 +109,7 @@ jobs:
           set-output structural "$structural"
           set-output syntax_ok "$syntax_ok"
           set-output bundle_ok "$bundle_ok"
+          set-output failing "$failing"
 
       - name: upload report
         if: ${{ always() }}
@@ -196,6 +197,7 @@ jobs:
       structural: ${{ steps.run.outputs.structural }}
       syntax_ok: ${{ steps.run.outputs.syntax_ok }}
       bundle_ok: ${{ steps.run.outputs.bundle_ok }}
+      failing: ${{ steps.run.outputs.failing }}
     steps:
       - uses: eas/checkout
 
@@ -212,6 +214,7 @@ jobs:
           set-output structural "$structural"
           set-output syntax_ok "$syntax_ok"
           set-output bundle_ok "$bundle_ok"
+          set-output failing "$failing"
 
       - name: upload report
         if: ${{ always() }}
@@ -299,6 +302,7 @@ jobs:
       structural: ${{ steps.run.outputs.structural }}
       syntax_ok: ${{ steps.run.outputs.syntax_ok }}
       bundle_ok: ${{ steps.run.outputs.bundle_ok }}
+      failing: ${{ steps.run.outputs.failing }}
     steps:
       - uses: eas/checkout
 
@@ -315,6 +319,7 @@ jobs:
           set-output structural "$structural"
           set-output syntax_ok "$syntax_ok"
           set-output bundle_ok "$bundle_ok"
+          set-output failing "$failing"
 
       - name: upload report
         if: ${{ always() }}
@@ -345,11 +350,11 @@ jobs:
         <!-- expo-skill-eval -->
         ## Expo skill eval
 
-        Authored against **main** and **this PR**, same ground truth, for before/after comparison.
+        Authored against **main** and **this PR**, same ground truth.
 
         ### Triggers
 
-        | App | Expected | main detected (recall/precision) | PR detected (recall/precision) |
+        | App | Expected | main (recall/precision) | PR (recall/precision) |
         |---|---|---|---|
         | notes | ${{ after.se_notes_pr.outputs.expected }} | ${{ after.se_notes_main.outputs.detected }} (${{ after.se_notes_main.outputs.recall }} / ${{ after.se_notes_main.outputs.precision }}) | ${{ after.se_notes_pr.outputs.detected }} (${{ after.se_notes_pr.outputs.recall }} / ${{ after.se_notes_pr.outputs.precision }}) |
         | hot_chocolate | ${{ after.se_hot_chocolate_pr.outputs.expected }} | ${{ after.se_hot_chocolate_main.outputs.detected }} (${{ after.se_hot_chocolate_main.outputs.recall }} / ${{ after.se_hot_chocolate_main.outputs.precision }}) | ${{ after.se_hot_chocolate_pr.outputs.detected }} (${{ after.se_hot_chocolate_pr.outputs.recall }} / ${{ after.se_hot_chocolate_pr.outputs.precision }}) |
@@ -357,15 +362,15 @@ jobs:
 
         ### Code quality
 
-        Lexical/structural: passed/total. Syntax/bundle: ✅ pass ❌ fail ❔ unknown ➖ not run.
+        Lexical/structural: passed/total. Syntax/bundle: ✅❌❔➖. Failing: PR only.
 
-        | App | Side | Lexical | Structural | Syntax | Bundle |
-        |---|---|---|---|---|---|
-        | notes | main | ${{ after.se_notes_main.outputs.lexical }} | ${{ after.se_notes_main.outputs.structural }} | ${{ after.se_notes_main.outputs.syntax_ok }} | ${{ after.se_notes_main.outputs.bundle_ok }} |
-        | notes | PR | ${{ after.se_notes_pr.outputs.lexical }} | ${{ after.se_notes_pr.outputs.structural }} | ${{ after.se_notes_pr.outputs.syntax_ok }} | ${{ after.se_notes_pr.outputs.bundle_ok }} |
-        | hot_chocolate | main | ${{ after.se_hot_chocolate_main.outputs.lexical }} | ${{ after.se_hot_chocolate_main.outputs.structural }} | ${{ after.se_hot_chocolate_main.outputs.syntax_ok }} | ${{ after.se_hot_chocolate_main.outputs.bundle_ok }} |
-        | hot_chocolate | PR | ${{ after.se_hot_chocolate_pr.outputs.lexical }} | ${{ after.se_hot_chocolate_pr.outputs.structural }} | ${{ after.se_hot_chocolate_pr.outputs.syntax_ok }} | ${{ after.se_hot_chocolate_pr.outputs.bundle_ok }} |
-        | wiki_reader | main | ${{ after.se_wiki_reader_main.outputs.lexical }} | ${{ after.se_wiki_reader_main.outputs.structural }} | ${{ after.se_wiki_reader_main.outputs.syntax_ok }} | ${{ after.se_wiki_reader_main.outputs.bundle_ok }} |
-        | wiki_reader | PR | ${{ after.se_wiki_reader_pr.outputs.lexical }} | ${{ after.se_wiki_reader_pr.outputs.structural }} | ${{ after.se_wiki_reader_pr.outputs.syntax_ok }} | ${{ after.se_wiki_reader_pr.outputs.bundle_ok }} |
+        | App | Side | Lexical | Structural | Syntax | Bundle | Failing |
+        |---|---|---|---|---|---|---|
+        | notes | main | ${{ after.se_notes_main.outputs.lexical }} | ${{ after.se_notes_main.outputs.structural }} | ${{ after.se_notes_main.outputs.syntax_ok }} | ${{ after.se_notes_main.outputs.bundle_ok }} | — |
+        | notes | PR | ${{ after.se_notes_pr.outputs.lexical }} | ${{ after.se_notes_pr.outputs.structural }} | ${{ after.se_notes_pr.outputs.syntax_ok }} | ${{ after.se_notes_pr.outputs.bundle_ok }} | ${{ after.se_notes_pr.outputs.failing }} |
+        | hot_chocolate | main | ${{ after.se_hot_chocolate_main.outputs.lexical }} | ${{ after.se_hot_chocolate_main.outputs.structural }} | ${{ after.se_hot_chocolate_main.outputs.syntax_ok }} | ${{ after.se_hot_chocolate_main.outputs.bundle_ok }} | — |
+        | hot_chocolate | PR | ${{ after.se_hot_chocolate_pr.outputs.lexical }} | ${{ after.se_hot_chocolate_pr.outputs.structural }} | ${{ after.se_hot_chocolate_pr.outputs.syntax_ok }} | ${{ after.se_hot_chocolate_pr.outputs.bundle_ok }} | ${{ after.se_hot_chocolate_pr.outputs.failing }} |
+        | wiki_reader | main | ${{ after.se_wiki_reader_main.outputs.lexical }} | ${{ after.se_wiki_reader_main.outputs.structural }} | ${{ after.se_wiki_reader_main.outputs.syntax_ok }} | ${{ after.se_wiki_reader_main.outputs.bundle_ok }} | — |
+        | wiki_reader | PR | ${{ after.se_wiki_reader_pr.outputs.lexical }} | ${{ after.se_wiki_reader_pr.outputs.structural }} | ${{ after.se_wiki_reader_pr.outputs.syntax_ok }} | ${{ after.se_wiki_reader_pr.outputs.bundle_ok }} | ${{ after.se_wiki_reader_pr.outputs.failing }} |
 
-        📎 [Full reports](${{ workflow.url }})
+        📎 [Reports](${{ workflow.url }})

@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 """Read a skill-eval metrics.json and print shell variable assignments for
 `report`/`expected`/`detected`/`recall`/`precision`/`lexical`/`structural`/
-`syntax_ok`/`bundle_ok` -- the 9 fields skill-eval-ci.yml's per-PRD "Analyze"
-steps turn into job outputs via `set-output`.
+`syntax_ok`/`bundle_ok`/`failing` -- the fields skill-eval-ci.yml's
+per-PRD "Analyze" steps turn into job outputs via `set-output`.
+
+`failing` is a comma-joined list of check ids with status "failed"
+in the top-level `static_checks` array -- deliberately excludes checks with
+status "not_applicable" (no `passed` verdict at all because the relevant
+skill wasn't engaged), which is a different thing from a genuine failure
+and must not be reported as one.
 
 Extracted out of skill-eval-ci.yml because 6 near-identical copies of this
 parsing logic (one per PRD x main/pr) as inline `python3 -c "..."` one-liners
@@ -59,10 +65,15 @@ def main() -> None:
 
         syntax_ok = build_health_symbol(data.get("build_health", {}).get("syntax"))
         bundle_ok = build_health_symbol(data.get("build_health", {}).get("bundle"))
+
+        failing = ",".join(
+            c["id"] for c in data.get("static_checks", []) if c.get("status") == "failed"
+        ) or "none"
     except Exception:
         report = "no report"
         expected = detected = recall = precision = "?"
         lexical = structural = syntax_ok = bundle_ok = "?"
+        failing = "?"
 
     fields = {
         "report": report,
@@ -74,6 +85,7 @@ def main() -> None:
         "structural": structural,
         "syntax_ok": syntax_ok,
         "bundle_ok": bundle_ok,
+        "failing": failing,
     }
 
     for key, value in fields.items():
