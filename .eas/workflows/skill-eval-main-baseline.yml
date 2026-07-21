@@ -1,0 +1,228 @@
+# Trusted producer for the shared skill-eval "main" baseline cache that
+# skill-eval-ci.yml's PR-triggered jobs read from. Runs on every push to
+# main touching plugins/expo/skills/**.
+#
+# Per PRD: compute the fingerprint for main's current content (same script
+# skill-eval-ci.yml uses), try an exact-match restore, and only on a miss,
+# author + evaluate fresh and populate the cache. A hit means nothing this
+# push changed is relevant to that PRD.
+#
+# Only this workflow ever calls eas/save_cache -- skill-eval-ci.yml's
+# pull_request jobs are restore-only. concurrency.cancel_in_progress means a
+# fast follow-up push cancels an in-flight run for main rather than letting
+# two runs race to populate the same cache entry.
+#
+# v1 scope: always recomputes fresh on a miss rather than promoting an
+# already-computed PR candidate -- that needs reading an artifact from a
+# different, earlier workflow run, which isn't a confirmed EAS Workflows
+# capability. Recomputing once per merge (instead of once per PR reviewing
+# that merge) is still the real win.
+name: skill-eval-main-baseline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - plugins/expo/skills/**
+  workflow_dispatch: {}
+
+concurrency:
+  cancel_in_progress: true
+  group: ${{ workflow.filename }}-${{ github.ref }}
+
+jobs:
+  baseline_notes:
+    name: baseline (notes)
+    runs_on: linux-medium
+    environment: production
+    env:
+      AGENT: claude-code
+      PRD: dataset/prds/notes/prd/mvp.txt
+      PRD_ID: notes
+      SCENARIO: skills_available_unmentioned
+    steps:
+      - uses: eas/checkout
+
+      - name: compute main fingerprint
+        id: fingerprint
+        run: |
+          bash scripts/ci.sh fingerprint_main_content checkout > fingerprint-notes-main.json
+          set-output fingerprint "$(python3 -c "import json; print(json.load(open('fingerprint-notes-main.json'))['fingerprint'])")"
+
+      - name: restore cached main baseline
+        uses: eas/restore_cache
+        with:
+          key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
+          path: cached-baseline-notes-main
+
+      - name: check cache hit
+        id: check_cache
+        run: set-output cache_hit "$(bash scripts/ci.sh check_cache_hit cached-baseline-notes-main "${{ steps.fingerprint.outputs.fingerprint }}")"
+
+      - name: author and evaluate if needed
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
+        run: bash scripts/ci.sh author_and_evaluate_baseline "$(pwd)/plugins/expo" cached-baseline-notes-main skills_available_unmentioned
+
+      # should_save folds the cache-miss check and the trusted-branch check
+      # into one bash-computed output, so save_cache only needs a single
+      # `== 'true'` comparison.
+      - name: write baseline manifest
+        id: manifest
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
+        run: |
+          python3 scripts/ci.py bundle write \
+            --bundle-dir cached-baseline-notes-main \
+            --fingerprint-json fingerprint-notes-main.json \
+            --status success --kind baseline \
+            --source-repo "${{ github.repository }}" \
+            --source-commit "${{ github.sha }}" \
+            --workflow-run-id "${{ workflow.id }}"
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            set-output should_save true
+          else
+            set-output should_save false
+          fi
+
+      - name: save main baseline to cache
+        if: ${{ steps.manifest.outputs.should_save == 'true' }}
+        uses: eas/save_cache
+        with:
+          key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
+          path: cached-baseline-notes-main
+
+      - name: upload baseline artifact for audit
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: skill-eval-baseline-notes
+          path: cached-baseline-notes-main
+
+  baseline_hot_chocolate:
+    name: baseline (hot_chocolate)
+    runs_on: linux-medium
+    environment: production
+    env:
+      AGENT: claude-code
+      PRD: dataset/prds/hot_chocolate/prd/mvp.txt
+      PRD_ID: hot_chocolate
+      SCENARIO: skills_available_unmentioned
+    steps:
+      - uses: eas/checkout
+
+      - name: compute main fingerprint
+        id: fingerprint
+        run: |
+          bash scripts/ci.sh fingerprint_main_content checkout > fingerprint-hot_chocolate-main.json
+          set-output fingerprint "$(python3 -c "import json; print(json.load(open('fingerprint-hot_chocolate-main.json'))['fingerprint'])")"
+
+      - name: restore cached main baseline
+        uses: eas/restore_cache
+        with:
+          key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
+          path: cached-baseline-hot_chocolate-main
+
+      - name: check cache hit
+        id: check_cache
+        run: set-output cache_hit "$(bash scripts/ci.sh check_cache_hit cached-baseline-hot_chocolate-main "${{ steps.fingerprint.outputs.fingerprint }}")"
+
+      - name: author and evaluate if needed
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
+        run: bash scripts/ci.sh author_and_evaluate_baseline "$(pwd)/plugins/expo" cached-baseline-hot_chocolate-main skills_available_unmentioned
+
+      - name: write baseline manifest
+        id: manifest
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
+        run: |
+          python3 scripts/ci.py bundle write \
+            --bundle-dir cached-baseline-hot_chocolate-main \
+            --fingerprint-json fingerprint-hot_chocolate-main.json \
+            --status success --kind baseline \
+            --source-repo "${{ github.repository }}" \
+            --source-commit "${{ github.sha }}" \
+            --workflow-run-id "${{ workflow.id }}"
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            set-output should_save true
+          else
+            set-output should_save false
+          fi
+
+      - name: save main baseline to cache
+        if: ${{ steps.manifest.outputs.should_save == 'true' }}
+        uses: eas/save_cache
+        with:
+          key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
+          path: cached-baseline-hot_chocolate-main
+
+      - name: upload baseline artifact for audit
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: skill-eval-baseline-hot_chocolate
+          path: cached-baseline-hot_chocolate-main
+
+  baseline_wiki_reader:
+    name: baseline (wiki_reader)
+    runs_on: linux-medium
+    environment: production
+    env:
+      AGENT: claude-code
+      PRD: dataset/prds/wiki_reader/prd/mvp.txt
+      PRD_ID: wiki_reader
+      SCENARIO: skills_available_unmentioned
+    steps:
+      - uses: eas/checkout
+
+      - name: compute main fingerprint
+        id: fingerprint
+        run: |
+          bash scripts/ci.sh fingerprint_main_content checkout > fingerprint-wiki_reader-main.json
+          set-output fingerprint "$(python3 -c "import json; print(json.load(open('fingerprint-wiki_reader-main.json'))['fingerprint'])")"
+
+      - name: restore cached main baseline
+        uses: eas/restore_cache
+        with:
+          key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
+          path: cached-baseline-wiki_reader-main
+
+      - name: check cache hit
+        id: check_cache
+        run: set-output cache_hit "$(bash scripts/ci.sh check_cache_hit cached-baseline-wiki_reader-main "${{ steps.fingerprint.outputs.fingerprint }}")"
+
+      - name: author and evaluate if needed
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
+        run: bash scripts/ci.sh author_and_evaluate_baseline "$(pwd)/plugins/expo" cached-baseline-wiki_reader-main skills_available_unmentioned
+
+      - name: write baseline manifest
+        id: manifest
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
+        run: |
+          python3 scripts/ci.py bundle write \
+            --bundle-dir cached-baseline-wiki_reader-main \
+            --fingerprint-json fingerprint-wiki_reader-main.json \
+            --status success --kind baseline \
+            --source-repo "${{ github.repository }}" \
+            --source-commit "${{ github.sha }}" \
+            --workflow-run-id "${{ workflow.id }}"
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            set-output should_save true
+          else
+            set-output should_save false
+          fi
+
+      - name: save main baseline to cache
+        if: ${{ steps.manifest.outputs.should_save == 'true' }}
+        uses: eas/save_cache
+        with:
+          key: skill-eval-baseline-v1-${{ steps.fingerprint.outputs.fingerprint }}
+          path: cached-baseline-wiki_reader-main
+
+      - name: upload baseline artifact for audit
+        if: ${{ steps.check_cache.outputs.cache_hit == 'false' }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: skill-eval-baseline-wiki_reader
+          path: cached-baseline-wiki_reader-main
