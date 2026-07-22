@@ -94,7 +94,7 @@ Frontmatter fields:
 
 Skill guidelines:
 
-- Name skills `expo-*` (open-source framework) or `eas-*` (paid EAS service), and prefix the description with `Framework (OSS).` or `EAS service (paid).` to match. Paid skills open the body with a costs/plan-limits callout. See `CONTRIBUTING.md` for the full rules.
+- Name skills `expo-*` (open-source framework) or `eas-*` (paid EAS service), and prefix the description with `Framework (OSS).` or `EAS service (paid).` to match. The cross-cutting `expo-skill-feedback` skill is exempt because it accepts framework, EAS, docs, CLI, and MCP feedback. Paid skills open the body with a costs/plan-limits callout. See `CONTRIBUTING.md` for the full rules.
 - Keep the `SKILL.md` body under 500 lines and the `description` under 1024 characters - both are CI-enforced by `scripts/check-skill-limits.ts`.
 - Move detailed material to `references/` and load it only when the skill needs it.
 - Put reusable validation or fetching logic in `scripts/` instead of pasting large command blocks into the skill.
@@ -197,11 +197,12 @@ When changing Claude Code marketplace aliases, preserve backward compatibility u
 Follow the full guide in `CONTRIBUTING.md`. In short:
 
 1. Pick the name per the naming rule: `expo-*` for open-source framework skills, `eas-*` for paid EAS service skills.
-2. Create `plugins/expo/skills/<skill-name>/SKILL.md` with the category-prefixed description (`Framework (OSS).` or `EAS service (paid).`); paid skills open with a costs/plan-limits callout.
+2. Create `plugins/expo/skills/<skill-name>/SKILL.md` with the category-prefixed description (`Framework (OSS).` or `EAS service (paid).`); `expo-skill-feedback` is the sole cross-cutting exception. Paid skills open with a costs/plan-limits callout.
 3. Add focused reference files under `references/` when the skill needs more detail than belongs in the main `SKILL.md`, scripts under `scripts/` only for reusable logic, and `agents/openai.yaml` for Codex triggering.
-4. Register the skill in every catalog: `skills.sh.json`, `plugins/expo/README.md`, `plugins/expo/skills/README.md`, and the root `README.md`.
-5. Bump the version in all three plugin manifests together (they must match and be greater than main; CI-enforced).
-6. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
+4. Add the canonical feedback block with `bun scripts/check-skill-limits.ts --fix-feedback`; CI verifies that its subject matches the skill name.
+5. Register the skill in every catalog: `skills.sh.json`, `plugins/expo/README.md`, `plugins/expo/skills/README.md`, and the root `README.md`.
+6. Bump the version in all three plugin manifests together (they must match and be greater than main; CI-enforced).
+7. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
 
 ## Testing Plugins
 
@@ -266,6 +267,6 @@ codex plugin marketplace add expo/skills --ref main
 
 ## Usage Telemetry & Feedback
 
-Telemetry is anonymous, **opt-in, and off by default** — nothing is sent until the user enables it with `node plugins/expo/skills/expo-skill-feedback/scripts/telemetry.cjs --on` or `EXPO_SKILLS_TELEMETRY=1` (`--off` / `=0` / `DO_NOT_TRACK=1` disable; CI never sends). When enabled, two events fire on **Claude Code only**: automatic `skill_invoked` (plugin-level `hooks/hooks.json`) and explicit `skill_feedback` (the `expo-skill-feedback` skill). The gate is `telemetryActive()` in `telemetry_common.cjs`.
+Telemetry is anonymous, **opt-in, and off by default** — nothing is sent until the user enables it with `node plugins/expo/skills/expo-skill-feedback/scripts/telemetry.cjs --on` or `EXPO_SKILLS_TELEMETRY=1` (`--off` / `=0` / `DO_NOT_TRACK=1` disable; CI never sends). When enabled, the plugin-level hook sends automatic `skill_invoked` events on **Claude Code only**. The gate is `telemetryActive()` in `telemetry_common.cjs`.
 
-For contributors: new skills need **no telemetry edits and no feedback footer** — the plugin-level hook covers them automatically. Codex and Cursor cannot host plugin hooks (verified against their sources; don't re-investigate), so they ship no hooks and send nothing.
+For contributors: new skills need no telemetry edits. They do need the canonical feedback footer; run `bun scripts/check-skill-limits.ts --fix-feedback`, and CI will enforce it. Codex and Cursor cannot host plugin hooks (verified against their sources; don't re-investigate), so they ship no automatic telemetry hooks.

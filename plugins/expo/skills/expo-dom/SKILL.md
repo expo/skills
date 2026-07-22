@@ -415,3 +415,10 @@ On web, the `dom` prop is ignored since no webview is needed.
 - Test on all platforms — web rendering may differ slightly from native webviews
 - Large DOM components may impact performance — profile if needed
 - The webview has its own JavaScript context — cannot directly share state with native
+
+## Submitting Feedback
+If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+```bash
+npx --yes submit-expo-feedback@latest --category skills --subject "expo-dom" "<actionable feedback>"
+```
+Only submit when you have something specific and actionable to report. Include as much relevant context as possible.

@@ -179,3 +179,10 @@ Use CSS `boxShadow` style prop. NEVER use legacy React Native shadow or elevatio
 ```
 
 'inset' shadows are supported.
+
+## Submitting Feedback
+If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+```bash
+npx --yes submit-expo-feedback@latest --category skills --subject "expo-native-ui" "<actionable feedback>"
+```
+Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
