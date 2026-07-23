@@ -75,6 +75,7 @@ These steps only apply when `ios/` and/or `android/` directories exist in the pr
 ## Housekeeping
 
 - Review release notes for the target SDK version at https://expo.dev/changelog
+- Update versioned docs links in agent instruction files (`AGENTS.md`). The default template links to `https://docs.expo.dev/versions/v<version>/`. Search for `docs.expo.dev/versions/` and bump each link to the new SDK version.
 - If using Expo SDK 54 or later, ensure react-native-worklets is installed — this is required for react-native-reanimated to work.
 - Enable React Compiler in SDK 54+ by adding `"experiments": { "reactCompiler": true }` to app.json — it's stable and recommended
 - Delete sdkVersion from `app.json` to let Expo manage it automatically
@@ -106,6 +107,7 @@ Check if package.json has excluded packages:
 ```
 
 Exclusions are often workarounds that may no longer be needed after upgrading. Review each one.
+
 ## Removing patches
 
 Check if there are any outdated patches in the `patches/` directory. Remove them if they are no longer needed.
@@ -132,3 +134,10 @@ Since SDK 55, users can opt-in to use Hermes engine v1 for improved runtime perf
 ## New Architecture
 
 The new architecture is enabled by default, the app.json field `"newArchEnabled": true` is no longer needed as it's the default. Expo Go only supports the new architecture as of SDK +53.
+
+## Submitting Feedback
+If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+```bash
+npx --yes submit-expo-feedback@latest --category skills --subject "expo-upgrade" "<actionable feedback>"
+```
+Only submit when you have something specific and actionable to report. Include as much relevant context as possible.

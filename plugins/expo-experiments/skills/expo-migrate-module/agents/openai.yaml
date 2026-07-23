@@ -1,0 +1,4 @@
+interface:
+  display_name: "Migrate Expo Module"
+  short_description: "Migrate Swift Expo modules from 1.0 DSL to 2.0"
+  default_prompt: "Use $expo-migrate-module to migrate this Expo module's Swift implementation from the 1.0 definition DSL to the 2.0 macro API without changing its JavaScript contract."

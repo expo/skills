@@ -447,3 +447,10 @@ User: "Where should I put my API key?"
 
 User: "How do I load data for a page in Expo Router?"
 -> See references/expo-router-loaders.md for route-level loaders (web, SDK 55+). For native, use React Query or fetch.
+
+## Submitting Feedback
+If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+```bash
+npx --yes submit-expo-feedback@latest --category skills --subject "expo-data-fetching" "<actionable feedback>"
+```
+Only submit when you have something specific and actionable to report. Include as much relevant context as possible.

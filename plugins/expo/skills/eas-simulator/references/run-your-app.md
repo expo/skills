@@ -68,7 +68,7 @@ The `install` here **uploads** the (~90MB) `.app` to the remote daemon over the 
 
 ```bash
 npx --yes eas-cli@latest build:list --platform ios --profile <your-sim-profile> --status finished --json | \
-  head -20   # look for a sim build whose fingerprint matches current source
+  head -20   # <your-sim-profile> = the profile you find/create in step 1; look for one whose fingerprint matches current source
 ```
 
 If one matches, skip straight to step 3 with its artifact URL.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const MAX_DESCRIPTION = 1024;
@@ -10,6 +10,18 @@ const PAID_PREFIX = "EAS service (paid).";
 const PAID_CALLOUT = "**EAS service - costs apply.**";
 const PAID_PRICING_LINK = "expo.dev/pricing";
 const PAID_CODEX_PREFIX = "Paid EAS service.";
+const CATEGORY_PREFIX_EXEMPT_SKILLS = new Set(["expo-skill-feedback"]);
+const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
+const FEEDBACK_HEADING = "## Submitting Feedback";
+
+function feedbackBlock(skillName: string): string {
+  return `${FEEDBACK_HEADING}
+If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+\`\`\`bash
+npx --yes submit-expo-feedback@latest --category skills --subject "${skillName}" "<actionable feedback>"
+\`\`\`
+Only submit when you have something specific and actionable to report. Include as much relevant context as possible.`;
+}
 
 function findSkillFiles(dir: string): string[] {
   const results: string[] = [];
@@ -36,17 +48,39 @@ function parseSkill(path: string): { name: string; description: string; body: st
   return { name, description, body, bodyLines: body.split("\n").length };
 }
 
-function loadCatalogGroups(): Map<string, "framework" | "paid"> {
-  const groups = new Map<string, "framework" | "paid">();
+function syncFeedbackBlock(path: string, skillName: string): void {
+  const content = readFileSync(path, "utf8");
+  const block = feedbackBlock(skillName);
+  const feedbackSection = /\n## Submitting Feedback\n[\s\S]*?(?=\n## |\s*$)/;
+  const withoutOldBlock = content.replace(feedbackSection, "").trimEnd();
+  const updated = `${withoutOldBlock}\n\n${block}\n`;
+
+  if (updated !== content) writeFileSync(path, updated);
+}
+
+function loadCatalogGroups(): Map<string, "framework" | "paid" | "experimental"> {
+  const groups = new Map<string, "framework" | "paid" | "experimental">();
   const catalog = JSON.parse(readFileSync("skills.sh.json", "utf8"));
   for (const grouping of catalog.groupings ?? []) {
-    const kind = grouping.title.startsWith("Framework") ? "framework" : "paid";
+    const kind = grouping.title.startsWith("Framework")
+      ? "framework"
+      : grouping.title.startsWith("Experimental")
+        ? "experimental"
+        : "paid";
     for (const skill of grouping.skills ?? []) groups.set(skill, kind);
   }
   return groups;
 }
 
 const skills = findSkillFiles("plugins");
+
+if (FIX_FEEDBACK) {
+  for (const path of skills) {
+    const { name } = parseSkill(path);
+    if (name) syncFeedbackBlock(path, name);
+  }
+}
+
 const catalogGroups = loadCatalogGroups();
 const seenDirs = new Set<string>();
 const errors: string[] = [];
@@ -69,9 +103,14 @@ for (const path of skills) {
   if (name !== dirName)
     errors.push(`${rel}: frontmatter name "${name}" does not match directory "${dirName}"`);
 
-  // category prefix on the always-loaded description
+  // Every installed skill carries the same actionable feedback instructions with its own name.
+  if (!body.trimEnd().endsWith(feedbackBlock(name)))
+    errors.push(`${rel}: missing canonical feedback block; run "bun scripts/check-skill-limits.ts --fix-feedback"`);
+
+  // Category prefix on the always-loaded description. The cross-cutting feedback skill
+  // spans framework, EAS, docs, CLI, and MCP feedback, so it has no category label.
   const expectedPrefix = isPaid ? PAID_PREFIX : FRAMEWORK_PREFIX;
-  if (!description.startsWith(expectedPrefix))
+  if (!CATEGORY_PREFIX_EXEMPT_SKILLS.has(name) && !description.startsWith(expectedPrefix))
     errors.push(`${rel}: description must start with "${expectedPrefix}"`);
 
   // paid skills disclose costs up front (dash style varies: em dash or hyphen)
@@ -90,20 +129,21 @@ for (const path of skills) {
       errors.push(`${rel}: paid skill's openai.yaml short_description must start with "${PAID_CODEX_PREFIX}"`);
   }
 
-  // catalog sync with skills.sh.json groups
+  // catalog sync with skills.sh.json groups; the experimental group accepts either
+  // prefix - the description label still enforces the free vs paid boundary
   const group = catalogGroups.get(dirName);
   if (!group) errors.push(`${rel}: skill is not listed in skills.sh.json`);
-  else if (group !== (isPaid ? "paid" : "framework"))
+  else if (group !== "experimental" && group !== (isPaid ? "paid" : "framework"))
     errors.push(`${rel}: skills.sh.json lists this skill in the ${group} group, but the ${isPaid ? "eas-" : "expo-"} prefix requires the ${isPaid ? "paid" : "framework"} group`);
 }
 
 for (const [skill] of catalogGroups) {
   if (!seenDirs.has(skill))
-    errors.push(`skills.sh.json: lists "${skill}" but plugins/expo/skills/${skill}/SKILL.md does not exist`);
+    errors.push(`skills.sh.json: lists "${skill}" but no plugins/*/skills/${skill}/SKILL.md exists`);
 }
 
 if (errors.length === 0) {
-  console.log("✓ All skills pass limits, naming, category labels, paid callouts, Codex metadata, and catalog sync.");
+  console.log("✓ All skills pass limits, naming, feedback, category labels, paid callouts, Codex metadata, and catalog sync.");
   process.exit(0);
 } else {
   console.log("✗ Skill check violations:\n");

@@ -99,6 +99,7 @@ Free, open-source Expo SDK and React Native skills.
 
 | Skill | Use it for |
 | --- | --- |
+| `expo-project-structure` | Folder structure for a new Expo app: `src/` layout, routes-only `app/`, screens, server code, platform-specific files. |
 | `expo-router` | Expo Router navigation: file-based routes, links, native stacks, modals, sheets, native tabs, and headers. |
 | `expo-native-ui` | Native-feeling screen styling, semantic colors, controls, icons, media, animations, and visual effects. |
 | `expo-ui` | `@expo/ui` native components: universal cross-platform first, with SwiftUI and Jetpack Compose for platform-specific needs. |
@@ -112,6 +113,7 @@ Free, open-source Expo SDK and React Native skills.
 | `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold a new project from. |
 | `expo-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
 | `expo-upgrade` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
+| `expo-skill-feedback` | Share what worked or fell short across Expo, its skills, docs, CLIs, or MCP, and control opt-in usage telemetry. |
 
 ### Services & paid distribution
 
@@ -125,6 +127,14 @@ Skills whose core purpose uses paid Expo Application Services (EAS).
 | `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. |
 | `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
 | `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator on EAS cloud - from the CLI or an agent, with a live browser preview (iOS only). |
+
+### Experimental
+
+Skills for Expo APIs that are not finalized. Content may change or be retired; skills graduate to the groups above when the underlying API stabilizes. These ship in the separate `expo-experiments` plugin (install it alongside `expo`), or individually via the skills CLI.
+
+| Skill | Use it for |
+| --- | --- |
+| `expo-migrate-module` | Migrating a Swift Expo module from the Modules API 1.0 definition DSL to the 2.0 macro API. |
 
 ## Expo MCP Server
 
@@ -148,13 +158,13 @@ Expo documentation, Expo CLI, and EAS CLI are the source of truth. These skills 
 
 ## Usage telemetry & feedback
 
-**Off by default — these skills send nothing unless you turn telemetry on.** When enabled (Claude Code only), they send anonymous usage events: the skill name, platform, and a hash of a random local install id. Never code, prompts, file paths, or personal data.
+**Automatic usage telemetry is off by default.** When enabled (Claude Code only), it sends anonymous usage events: the skill name, platform, and a hash of a random local install id. Never code, prompts, file paths, or personal data.
 
 - **Turn on:** ask your agent to **"enable Expo skills telemetry"**, or set `EXPO_SKILLS_TELEMETRY=1`.
 - **Turn off:** ask it to disable telemetry, or set `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`. CI never sends.
-- **Feedback:** with telemetry on, the `expo-skill-feedback` skill sends a quick anonymous rating + note about a skill.
+- **Feedback:** every skill includes instructions to submit specific, actionable feedback with `submit-expo-feedback`; this is independent of automatic usage telemetry.
 
-Details live in the `expo-skill-feedback` skill.
+Submission details and telemetry controls live in `expo-skill-feedback`.
 
 ## License
 

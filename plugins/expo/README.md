@@ -8,6 +8,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ### Framework (open source)
 
+- Recommends a starting folder structure for new projects
 - Provides UI guidelines following Apple Human Interface Guidelines
 - Covers Expo Router navigation patterns (stacks, tabs, modals, sheets)
 - Explains native iOS controls, SF Symbols, animations, and visual effects
@@ -19,6 +20,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Points at the `expo/examples` repo for canonical third-party integrations
 - Walks through Expo SDK upgrades, deprecated-package migration, cache clearing, and dependency fixes
 - Wires Expo projects into the Codex app Run button and action terminal
+- Shares specific feedback about what worked or fell short across Expo, its skills, docs, CLIs, or MCP
 
 ### Services & paid distribution
 
@@ -46,6 +48,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Migrating from deprecated packages (expo-av to expo-audio/expo-video)
 - Adding an iOS App Clip (needs an Apple Developer account)
 - Adding a Codex app Run button for `expo start` and optional iOS/Android/Web/dev-client action buttons
+- Sharing what worked or fell short across Expo, its skills, docs, CLIs, or MCP
 
 ### Services & paid distribution
 
@@ -62,6 +65,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ### Framework (open source)
 
+- **expo-project-structure** - Recommended folder structure for new Expo projects
 - **expo-router** - Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, and headers
 - **expo-native-ui** - Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, animations, and visual effects
 - **expo-ui** - Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
@@ -75,6 +79,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-examples** - Adapt or scaffold from the `expo/examples` repo of `with-*` integrations
 - **expo-app-clip** - Add an iOS App Clip target (AASA, associated domains, Smart App Banners; needs an Apple Developer account)
 - **expo-upgrade** - Upgrade Expo SDK versions and fix dependency issues
+- **expo-skill-feedback** - Share feedback across Expo surfaces and control opt-in usage telemetry
 
 ### Services & paid distribution
 
@@ -87,7 +92,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ## Usage telemetry & feedback
 
-**Off by default** — nothing is sent unless you turn telemetry on. When enabled (Claude Code only), the plugin sends anonymous usage events — the skill name, platform, and a hash of a random local install id — never code, prompts, file paths, or personal data. Ask your agent to **"enable Expo skills telemetry"** to opt in (or set `EXPO_SKILLS_TELEMETRY=1`); turn off with `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`. Feedback on a skill goes through the **expo-skill-feedback** skill.
+**Automatic usage telemetry is off by default.** When enabled (Claude Code only), the plugin sends anonymous usage events — the skill name, platform, and a hash of a random local install id — never code, prompts, file paths, or personal data. Ask your agent to **"enable Expo skills telemetry"** to opt in (or set `EXPO_SKILLS_TELEMETRY=1`); turn off with `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`. Every skill includes a `submit-expo-feedback` command for specific, actionable feedback; feedback submission is independent of automatic usage telemetry.
 
 ## License
 
