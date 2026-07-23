@@ -13,9 +13,9 @@ If a single team owns both layers, is comfortable with React Native tooling and 
 
 ## What you produce
 
-| Platform | Artifact                                                                                                                                                                                            | Default location                                              |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Android  | `{group}:{libraryName}:{version}` AAR                                                                                                                                                               | Local Maven (`~/.m2`) by default; remote Maven also supported |
+| Platform | Artifact                                                                                                                                                                                                                | Default location                                              |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Android  | `{group}:{libraryName}:{version}` AAR                                                                                                                                                                                   | Local Maven (`~/.m2`) by default; remote Maven also supported |
 | iOS      | Set of `.xcframework`s — see [the iOS section below](#ios) for how `ios.buildReactNativeFromSource` (default `false` on SDK 56+) controls whether you get 5 frameworks or 2 — or a single Swift Package via `--package` | `./artifacts`                                                 |
 
 The JavaScript bundle is **embedded inside the artifact** in release builds, so the native app does not need Metro at runtime in production.
@@ -48,6 +48,15 @@ npx expo install expo-brownfield
 ```
 
 The plugin self-registers in `app.json` with defaults derived from your app config.
+
+### Check what the host app already ships
+
+Before picking Expo modules, audit the host app's dependencies. The artifact's libraries meet the host's at build time, and version clashes surface as duplicate-class errors or forced upgrades.
+
+- **Jetpack Compose** — `@expo/ui` re-declares recent Compose and Material3 versions, and is pulled transitively by `expo-router`. A host pinned to older Compose gets force-upgraded. Exclude it with `expo.autolinking.android.exclude` if the RN screens don't need it.
+- **OkHttp, Kotlin stdlib, Material Components** — arrive as ordinary Maven dependencies of the artifact; Gradle resolves the highest version, which can bump the host's copies.
+
+When a shared library must stay at the host's version, exclude the Expo module that brings it, or (with fused publishing, below) mark the group as host-provided.
 
 ### Configure the plugin (optional)
 
@@ -162,6 +171,37 @@ npx expo-brownfield build:android --task publishReleasePublicationToCompanyRepos
 npx expo-brownfield tasks:android   # list available publish tasks and repositories
 ```
 
+#### Fused publishing (single fat AAR)
+
+> **Version note:** requires minimum SDK 56. Earlier versions only support the per-module publishing above.
+
+The default publish flow emits one Maven coordinate per autolinked Expo module. For remote distribution, `--fused` collapses everything into one fat AAR per build variant:
+
+```sh
+npx expo-brownfield build:android --fused --repo MavenLocal
+```
+
+This publishes two coordinates — `{group}:{libraryName}-fused-release` and `{group}:{libraryName}-fused-debug`, which the host wires per build type:
+
+```kotlin
+dependencies {
+  releaseImplementation("com.example:mybrownfield-fused-release:1.0.0")
+  debugImplementation("com.example:mybrownfield-fused-debug:1.0.0")
+}
+```
+
+The debug AAR contains debug-compiled modules (dev menu, Metro reload); the release AAR embeds the JS bundle. Published metadata pins the matching React Native variant, so a debug host consuming only the release AAR still resolves release RN correctly.
+
+Not everything is fused: the React Native runtime, Kotlin stdlib, host-common libraries (Material, Guava, OkHttp, Fresco), `androidx.*`, and detected KMP umbrella modules stay external and are declared as ordinary POM dependencies. Gradle properties tune the behavior for unusual dependency graphs:
+
+| Property                              | Effect                                                                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `brownfield.fused.skip`               | Gradle project names to leave out of the AAR (pair with `strip-packages`).                                                           |
+| `brownfield.fused.strip-packages`     | Package prefixes to remove from `ExpoModulesPackageList` — avoids `NoClassDefFoundError` for skipped modules.                        |
+| `brownfield.fused.androidx-fuse`      | Extra `androidx.*` groups to fuse instead of keeping external.                                                                       |
+| `brownfield.fused.exclude-transitive` | Extra groups to keep external (still declared in the POM).                                                                           |
+| `brownfield.fused.host-provided`      | Groups the host already ships (e.g. Glide, Compose): excluded from the AAR **and** from the POM, so the host's version is untouched. |
+
 ### iOS
 
 ```sh
@@ -179,7 +219,10 @@ To force source builds on SDK 56+, add `expo-build-properties` to `app.json`:
 {
   "expo": {
     "plugins": [
-      ["expo-build-properties", { "ios": { "buildReactNativeFromSource": true } }],
+      [
+        "expo-build-properties",
+        { "ios": { "buildReactNativeFromSource": true } }
+      ],
       "expo-brownfield"
     ]
   }
@@ -257,6 +300,12 @@ dependencyResolutionManagement {
 > **Note:** `mavenLocal()` must be added under `dependencyResolutionManagement`, not the deprecated top-level `allprojects { repositories { ... } }` block.
 
 If the artifact is published to a remote Maven, declare that repository in the same `dependencyResolutionManagement` block instead — credentials follow Gradle's standard `maven { url = uri(...); credentials { username = ...; password = ... } }` form.
+
+#### Host app requirements
+
+- **`minSdk` 24 or higher** — React Native's floor. Hosts below it fail at manifest merge with `uses-sdk:minSdkVersion XX cannot be smaller than version 24`.
+- **Permissions merge in from the Expo modules** (e.g. storage permissions from media modules). Hosts that enforce a permission allowlist can strip unwanted entries in their manifest with `tools:node="remove"` or reconcile attribute conflicts with `tools:replace`.
+- **Native libraries ship for every ABI enabled at publish time.** Left unfiltered, this can multiply the host APK size. Constrain ABIs when publishing (`reactNativeArchitectures=arm64-v8a` in the Expo project's `gradle.properties`) or filter in the host with `ndk.abiFilters` / APK splits.
 
 #### Show a React Native screen
 
