@@ -34,7 +34,6 @@ Skills whose core purpose uses paid Expo Application Services (EAS). Description
 | `eas-workflows` | EAS Workflow YAML files and CI/CD automation. | EAS build/compute minutes |
 | `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. | EAS Observe usage |
 | `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. | EAS Update usage |
-| `eas-simulator` | Remote iOS/Android simulators on EAS cloud, driven from the CLI or an agent, with browser preview. | EAS Simulator usage |
 
 ## Adding a skill
 

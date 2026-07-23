@@ -125,7 +125,6 @@ Skills whose core purpose uses paid Expo Application Services (EAS).
 | `eas-workflows` | EAS Workflow YAML files and CI/CD automation. |
 | `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. |
 | `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
-| `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator on EAS cloud - from the CLI or an agent, with a live browser preview (iOS only). |
 
 ### Experimental
 
@@ -134,6 +133,7 @@ Skills for Expo APIs that are not finalized. Content may change or be retired; s
 | Skill | Use it for |
 | --- | --- |
 | `expo-migrate-module` | Migrating a Swift Expo module from the Modules API 1.0 definition DSL to the 2.0 macro API. |
+| `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator on EAS cloud - from the CLI or an agent, with a live browser preview (iOS only). |
 
 ## Expo MCP Server
 

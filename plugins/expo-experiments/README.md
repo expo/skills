@@ -22,6 +22,7 @@ If you are not deliberately using an experimental Expo API, install the main `ex
 | Skill | Use it for |
 | --- | --- |
 | `expo-migrate-module` | Migrating a Swift Expo module from the Modules API 1.0 definition DSL to the 2.0 macro API. |
+| `eas-simulator` | Run and drive your app on a remote iOS/Android simulator on EAS cloud, from the CLI or an agent, with a live browser preview (iOS only). |
 
 ## License
 

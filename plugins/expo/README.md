@@ -85,7 +85,6 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **eas-workflows** - EAS workflow YAML files for CI/CD pipelines
 - **eas-observe** - EAS Observe setup and launch, route, event, and version metrics
 - **eas-update-insights** - Check EAS Update health, crash rates, adoption, and payload size
-- **eas-simulator** - Run and drive your app on a remote iOS/Android simulator on EAS cloud, from the CLI or an AI agent
 
 ## Usage telemetry & feedback
 
