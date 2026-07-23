@@ -120,8 +120,16 @@ check_cache_hit() {
 #
 # Usage: author_and_evaluate <cache_hit> <cached-dir> <plugin-dir> <out-dir> <scenario> <tarball>
 #   cached-dir: only used when cache_hit is "true"; pass "-" otherwise.
-#   tarball: also packages OUT_DIR into this path, so the caller doesn't
-#     need a separate "Package skill-eval report" step.
+#   tarball: packages OUT_DIR (the report) into this path, so the caller
+#     doesn't need a separate "Package skill-eval report" step. On a cache
+#     miss, also folds in eval-harness/agent-workspace and eval-harness/eval-out
+#     (which holds the agent trace telemetry, e.g. bundle/telemetry/traces/
+#     claude-code-authoring.json) -- the only record of what was actually
+#     authored, since this design has no separate authored-app artifact or
+#     cross-job handoff to preserve it otherwise. Included unconditionally on
+#     a miss (regardless of whether authoring/eval succeeded) so a failed or
+#     partial run is still inspectable, not just successful ones. Skipped on
+#     a hit -- nothing new was authored in this job to save.
 author_and_evaluate() {
   local cache_hit="$1"
   local cached_dir="$2"
@@ -132,21 +140,30 @@ author_and_evaluate() {
 
   if [ "$cache_hit" = "true" ]; then
     cp -r "$cached_dir" "$out_dir"
-  else
-    fetch_eval_harness
-
-    export SKILL_PLUGIN_DIR="$plugin_dir"
-    bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
-
-    AUTHORED_ARTIFACT="$(pwd)/eval-harness" \
-    SCENARIO="$scenario" \
-    OUT_DIR="$out_dir" \
-    PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-    CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
-    bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+    tar -czf "$tarball" "$out_dir" 2>/dev/null || true
+    return
   fi
 
-  tar -czf "$tarball" "$out_dir" 2>/dev/null || true
+  fetch_eval_harness
+
+  export SKILL_PLUGIN_DIR="$plugin_dir"
+  bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
+
+  AUTHORED_ARTIFACT="$(pwd)/eval-harness" \
+  SCENARIO="$scenario" \
+  OUT_DIR="$out_dir" \
+  PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+  CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
+  bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+
+  local tar_targets=("$out_dir")
+  [ -d eval-harness/agent-workspace ] && tar_targets+=(eval-harness/agent-workspace)
+  [ -d eval-harness/eval-out ] && tar_targets+=(eval-harness/eval-out)
+  tar -czf "$tarball" \
+    --exclude 'eval-harness/agent-workspace/*/node_modules' \
+    --exclude 'eval-harness/agent-workspace/*/.expo' \
+    --exclude 'eval-harness/agent-workspace/*/.mcp.json' \
+    "${tar_targets[@]}" 2>/dev/null || true
 }
 
 # Runs author-app.sh then eval-skill-use.sh directly into OUT_DIR -- no
