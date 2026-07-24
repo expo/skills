@@ -20,7 +20,7 @@ The frontmatter `description` carries the trigger phrases. In short: use this to
 
 ## Cloud vs local: decide this first
 
-- **Non-macOS** (Linux / CI / cloud sandbox like Cursor Cloud, detect via `uname -s` ≠ `Darwin`): the only way to get a sim — **just proceed.**
+- **Non-macOS** (Linux / CI / cloud sandbox like Cursor Cloud, detect via `uname -s` ≠ `Darwin`): the only way to get a sim — **proceed, once you've confirmed access** (see *Check availability first* below).
 - **macOS:** local sims exist and a cloud session costs money + latency, so **ask first** ("a remote cloud sim — to share a live preview, offload, or test an iOS version you lack — or just run locally?") unless the user explicitly said cloud/remote/shareable.
 - Always honor an explicit choice; for "run it locally" hand off to `expo run:ios` / Xcode.
 
@@ -42,6 +42,22 @@ fi
 - **`.env.eas-simulator`** is written/managed by eas-cli (not this skill): it holds the session id (`EAS_SIMULATOR_SESSION_ID`) + the daemon URL/**token**, so `get`/`stop`/`exec` default to that session (usually **omit `--id`**; pass `--id <id>` to target another). It carries a **token → keep it gitignored** (eas-cli marks it "do not commit" but may not add the ignore rule, and a fresh app's `.gitignore` won't cover it — add `.env.eas-simulator` if missing).
 - `--max-duration-minutes` is paid-plan only; otherwise a default applies.
 - **The command blocks assume a POSIX shell** (bash/zsh) — `printf`, `lsof`, `$(seq …)` loops won't run in cmd/PowerShell. On Windows, run them in WSL or Git Bash, or translate as you go (the `eas-cli`/`agent-device` invocations themselves are cross-platform).
+
+## Check availability first
+
+EAS Simulator is a **limited-access** EAS feature that is still rolling out, so it isn't enabled on every account. Confirm access **before** starting a session — this is a read-only check: no session, no billing.
+
+```bash
+npx --yes eas-cli@latest simulator:availability --json
+# → {"available": true, ...}  enabled → continue to the core loop
+# → {"available": false, ...} not enabled → do NOT start a session
+```
+
+If it's **not** available, don't call `simulator:start` (it will fail). Instead, hand off gracefully so you keep making progress without this skill:
+- Tell the user EAS Simulator isn't available on their account yet — it's coming soon.
+- Fall back to their normal local path for the actual goal — `expo run:ios` / Xcode / Android Studio for a local sim/emulator, an EAS Build, or whatever else fits. Don't dead-end on the cloud sim; the request was almost never "use EAS Simulator specifically."
+
+(If `simulator:availability` isn't recognized, the CLI is too old — upgrade, or treat a `not enabled for this account` error from `simulator:start` the same way: stop and fall back.)
 
 ## The core loop (always the same)
 
