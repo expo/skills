@@ -129,7 +129,7 @@ Quick decision — **default to C; A and B are explicit-only:**
 | `apps --platform ios` | List user-installed apps (the blank sim shows none); add `--all` to include system apps |
 | `install <appId> <path> --platform ios` | Install a local `.app` (uploads it) |
 | `install-from-source <url> --platform ios` | Install from a URL — the VM downloads it (use for EAS artifacts) |
-| `open <appId\|deep-link> --platform ios` | Launch an app (bundle id) or follow an app **deep link** (`exp+slug://…`). **Not** for the `webPreviewUrl` — that's a browser preview for the user, never the device. |
+| `open <appId\|deep-link> --platform ios` | Launch an app (bundle id) or follow an app **deep link** (`exp+slug://…`). A first-time deep link raises a system **"Open in '<app>'?"** dialog — `press 'label="Open"'` to hand it off (expect it, don't waste a snapshot discovering it). **Not** for the `webPreviewUrl` — that's a browser preview for the user, never the device. |
 | `snapshot -i` | Interactive accessibility tree → `@e1`-style refs |
 | `press <ref\|selector>` | Tap (e.g. `press @e2` or `press 'label="Open"'`) — **the tap verb is `press`, not `tap`** |
 | `fill <ref> "text"` | Type into a field |
