@@ -12,6 +12,7 @@ This repository contains official Expo AI agent skills. The primary distribution
     marketplace.json        # Codex marketplace catalog
 .cursor-plugin/
   marketplace.json          # Cursor marketplace catalog
+kimi.plugin.json             # Kimi Code manifest for repository URL installs
 plugins/
   expo/
     .claude-plugin/
@@ -20,6 +21,7 @@ plugins/
       plugin.json           # Codex plugin manifest
     .cursor-plugin/
       plugin.json           # Cursor plugin manifest
+    kimi.plugin.json         # Kimi Code manifest for direct local installs
     .mcp.json               # Claude Code and Codex MCP server configuration
     mcp.json                # Cursor MCP server configuration
     skills/
@@ -201,7 +203,7 @@ Follow the full guide in `CONTRIBUTING.md`. In short:
 3. Add focused reference files under `references/` when the skill needs more detail than belongs in the main `SKILL.md`, scripts under `scripts/` only for reusable logic, and `agents/openai.yaml` for Codex triggering.
 4. Add the canonical feedback block with `bun scripts/check-skill-limits.ts --fix-feedback`; CI verifies that its subject matches the skill name.
 5. Register the skill in every catalog: `skills.sh.json`, `plugins/expo/README.md`, `plugins/expo/skills/README.md`, and the root `README.md`.
-6. Bump the version in all three plugin manifests together (they must match and be greater than main; CI-enforced).
+6. Bump the version in all five plugin manifests together (they must match and be greater than main; CI-enforced).
 7. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
 
 ## Testing Plugins
@@ -224,6 +226,8 @@ python3 -m json.tool .cursor-plugin/marketplace.json >/dev/null
 python3 -m json.tool plugins/expo/.claude-plugin/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/.codex-plugin/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/.cursor-plugin/plugin.json >/dev/null
+python3 -m json.tool kimi.plugin.json >/dev/null
+python3 -m json.tool plugins/expo/kimi.plugin.json >/dev/null
 python3 -m json.tool plugins/expo/.mcp.json >/dev/null
 python3 -m json.tool plugins/expo/mcp.json >/dev/null
 ```

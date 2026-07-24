@@ -115,12 +115,19 @@ CI fails if the block is missing, has drifted, or names the wrong skill.
 
 ### 10. Bump the plugin version
 
-Bump `version` in **all three** manifests together - they must match each other and be greater
+Bump `version` in **all five** manifests together - they must match each other and be greater
 than `main`. CI enforces this.
 
+- `kimi.plugin.json`
 - `plugins/expo/.claude-plugin/plugin.json`
 - `plugins/expo/.codex-plugin/plugin.json`
 - `plugins/expo/.cursor-plugin/plugin.json`
+- `plugins/expo/kimi.plugin.json`
+
+Kimi Code needs the repository-root manifest for GitHub URL installs because it downloads the
+whole repository and does not select a nested plugin directory. The second Kimi manifest keeps
+`plugins/expo` directly installable from a local absolute path. Keep their metadata and MCP
+configuration identical; only their relative `skills` paths differ.
 
 ### 11. Validate before opening a PR
 
