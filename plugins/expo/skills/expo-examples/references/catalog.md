@@ -46,7 +46,7 @@ Most are single-screen integrations; a few differ:
 - `with-react-router` — React Router (web)
 
 ## Styling & UI
-- `with-tailwindcss` — Tailwind / NativeWind (see also `expo-tailwind-setup` skill)
+- `with-tailwindcss` — Tailwind / Nativewind (see also `expo-tailwind-setup` skill)
 - `with-styled-components` — styled-components
 - `with-shadcn` — shadcn-style components
 - `with-moti` — Moti animations

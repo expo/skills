@@ -12,7 +12,7 @@ Modes:
 |-------|------|-----------|-------|
 | expo-router | expo-go | ios, android | Navigation/routing target: routes, links, native stacks, modals, sheets, headers. Native tabs sections may need a dev build — verify per case. |
 | expo-native-ui | expo-go | ios, android | Core target for visual evals. RN primitives + styling/controls/media/animations all work in Expo Go. |
-| expo-tailwind-setup | expo-go | ios, android, web | NativeWind v5 / react-native-css are JS-level; works in Expo Go. Good web candidate too. |
+| expo-tailwind-setup | expo-go | ios, android, web | Nativewind v5 / react-native-css are JS-level; works in Expo Go. Good web candidate too. |
 | expo-data-fetching | expo-go | ios, android | Fetch/React Query/SWR are pure JS. Mock or use stable public endpoints so evals are deterministic. |
 | expo-dom | expo-go | ios, android, web | DOM components run in a webview on native (Expo Go, SDK 52+) and as-is on web. Allow extra settle time for the webview to paint. |
 | eas-hosting | static-only + HTTP | — | No screenshot: while Metro runs, `curl` the route and save the response as an output file for grading. |

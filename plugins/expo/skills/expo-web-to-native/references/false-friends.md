@@ -29,7 +29,7 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 
 | Web | Native | Gotcha |
 |---|---|---|
-| `className` / CSS files | `StyleSheet.create` or NativeWind | Plain RN has no className. For Tailwind muscle memory use NativeWind (`expo-tailwind-setup`). |
+| `className` / CSS files | `StyleSheet.create` or Nativewind | Plain RN has no className. For Tailwind muscle memory use Nativewind (`expo-tailwind-setup`). |
 | CSS cascade & inheritance | none | Styles don't inherit (except a few `Text` props like `color`/`fontSize` to nested `Text`). Style each node. |
 | `display: flex` opt-in, default `row` | flex always on, default **`column`** | Biggest layout surprise: flex is the only layout model and the main axis is vertical by default. |
 | `px`, `rem`, `%` | unitless numbers (dp) | `padding: 16` = density-independent pixels. `%` works in some props; no `rem`/`em`/`vh`. |
