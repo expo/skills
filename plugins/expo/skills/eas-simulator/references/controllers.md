@@ -38,7 +38,7 @@ Whenever the tools client is routed to a remote tool-server, it tars the local b
 
 Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `argent --version`. On older versions `reinstall-app` resolves `--appPath` on the VM only, so a local path fails; drive an app already on the sim instead.
 
-**System dialogs on argent (e.g. the first-time deep-link "Open in '<app>'?").** argent's UI queries (`describe` / `await-ui-element`) can only see system dialogs / native modals when the AX backend is `ax-service`; the default `native-devtools` backend can't — a screenshot shows the dialog, but element lookups time out. Force-boot the device (`boot-device --force`, sometimes more than once) until `describe` reports `Source: ax-service`, then locate and tap the "Open" button. There's no single press-with-timeout — you wait for the element, then tap it. Use argent's own command help for the exact tools and flags.
+**System dialogs on argent (e.g. the first-time deep-link "Open in '<app>'?").** argent's UI queries (`describe` / `await-ui-element`) may not see system dialogs / native modals — a screenshot shows the dialog, but element lookups time out. When that happens, argent surfaces a hint with the fix (today that's a `boot-device --force` to switch its AX backend); follow the hint, then locate and tap "Open". There's no single press-with-timeout — you wait for the element, then tap it. Use argent's own command help for the exact tools and flags.
 
 **Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 
