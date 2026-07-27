@@ -38,6 +38,17 @@ Whenever the tools client is routed to a remote tool-server, it tars the local b
 
 Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `argent --version`. On older versions `reinstall-app` resolves `--appPath` on the VM only, so a local path fails; drive an app already on the sim instead.
 
+**System dialogs (e.g. the first-time deep-link "Open in '<app>'?") on argent.** argent's `describe` / `await-ui-element` **can't see system dialogs / native modals until the device is force-booted** — before that, `await-ui-element` for the "Open" button times out even though the dialog is visible in a screenshot. And there's no press-with-timeout like agent-device's `--timeout`: `await-ui-element --timeoutMs <ms>` only *waits*, then you `gesture-tap` the button yourself. Verified sequence for a first-time deep link (dialog becomes visible ~180ms after force-boot; `gesture-tap` ~1s):
+
+```bash
+argent run boot-device --force            # REQUIRED first — makes system dialogs visible to describe/await-ui-element
+argent run reinstall-app --udid <udid> --bundleId <bundle-id> --appPath ./MyApp.app
+argent run launch-app --udid <udid> --bundleId <bundle-id>
+argent run open-url '<scheme>://<path>'   # first deep link → system "Open in '<app>'?" dialog
+argent run await-ui-element ... "Open" --timeoutMs 120000   # bound the wait (default 5000)
+argent run gesture-tap ...                # tap the Open button's center to hand off
+```
+
 **Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 
 ```bash
