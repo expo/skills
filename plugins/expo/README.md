@@ -67,7 +67,8 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 - **expo-project-structure** - Recommended folder structure for new Expo projects
 - **expo-router** - Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, and headers
-- **expo-native-ui** - Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, animations, and visual effects
+- **expo-native-ui** - Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, visual effects, and design foundations
+- **expo-motion** - Motion craft: whether to animate at all, duration and easing budgets, springs, gestures with real physics, haptics, and animation performance
 - **expo-ui** - Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **expo-data-fetching** - Network requests, API calls, caching, and offline support
 - **expo-tailwind-setup** - Set up Tailwind CSS v4 in Expo with NativeWind v5

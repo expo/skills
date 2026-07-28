@@ -11,7 +11,8 @@ Modes:
 | Skill | Mode | Platforms | Notes |
 |-------|------|-----------|-------|
 | expo-router | expo-go | ios, android | Navigation/routing target: routes, links, native stacks, modals, sheets, headers. Native tabs sections may need a dev build — verify per case. |
-| expo-native-ui | expo-go | ios, android | Core target for visual evals. RN primitives + styling/controls/media/animations all work in Expo Go. |
+| expo-native-ui | expo-go | ios, android | Core target for visual evals. RN primitives + styling/controls/media all work in Expo Go. Animation moved out to `expo-motion` in plugin 1.9.0. |
+| expo-motion | expo-go | ios, android | Reanimated + Gesture Handler are JS-level and ship in Expo Go. **Screenshots cannot grade this skill's main output** — easing, dropped frames, and velocity-based dismissal are invisible in a still, so prefer video (see the caveat below) or grade the code. Worklets Bundle Mode is the one part needing `dev-build`: static feature flags don't exist in Expo Go. |
 | expo-tailwind-setup | expo-go | ios, android, web | NativeWind v5 / react-native-css are JS-level; works in Expo Go. Good web candidate too. |
 | expo-data-fetching | expo-go | ios, android | Fetch/React Query/SWR are pure JS. Mock or use stable public endpoints so evals are deterministic. |
 | expo-dom | expo-go | ios, android, web | DOM components run in a webview on native (Expo Go, SDK 52+) and as-is on web. Allow extra settle time for the webview to paint. |
@@ -31,4 +32,6 @@ Entries marked "verify" haven't been validated against a real run yet — confir
 
 ## Image-prompt (clone-this) candidates
 
-Image prompts (`reference_image` — build an app to match a target screenshot, graded by `reference_match` + `references/design-rubric.md`) are most informative for the **visual** skills — `expo-router`, `expo-ui`, `expo-tailwind-setup`, `expo-dom` — where reproducing a specific UI is the point. Pair them with "Runtime + screenshots" so the harness captures the generated app to compare against the target. They add nothing for `n/a` skills (no app UI).
+Image prompts (`reference_image` — build an app to match a target screenshot, graded by `reference_match` + `references/design-rubric.md`) are most informative for the **visual** skills — `expo-native-ui`, `expo-router`, `expo-ui`, `expo-tailwind-setup`, `expo-dom` — where reproducing a specific UI is the point. Pair them with "Runtime + screenshots" so the harness captures the generated app to compare against the target. They add nothing for `n/a` skills (no app UI).
+
+**Motion and gesture cases can't be graded from a screenshot.** An image prompt scores the *static* result only — it cannot see easing, a dropped frame, or whether a swipe carries velocity. For `expo-motion` cases, grade the generated code against the skill's rules (correct `withDecay` options, a velocity threshold alongside the distance one, no layout-property animation, `scheduleOnRN` not `runOnJS`), and capture video rather than a still if a device is in the loop (`xcrun simctl io booted recordVideo`). Drive gestures at both slow and fast speeds — the fast flick is what a distance-only implementation gets wrong.

@@ -28,12 +28,11 @@ Disclosed reference for [`expo-web-to-native`](../SKILL.md), step 4. `false-frie
 
 ## Feel — beyond the components
 
-The table gets the right *components*; "native" also lives in *motion and touch* - and a web port arrives with almost none, so you must add it. The tooling is in `expo-router` (navigation/transitions) and `expo-native-ui` (motion/effects); reach for it, don't hand-roll:
+The table gets the right *components*; "native" also lives in *motion and touch* - and a web port arrives with almost none, so you must add it. **The motion playbook is the `expo-motion` skill** — it owns whether something should animate at all, duration and easing budgets, gesture physics, haptics, and reduced motion. Read it rather than hand-rolling; navigation transitions come from `expo-router`.
 
-- **Transitions for free** - use Expo Router's native-stack so push/pop, modals, and sheets animate with real platform physics; shared-element zoom via `expo-router` `zoom-transitions.md`.
-- **Motion** - Reanimated (`withSpring`/`withTiming`; `entering`/`exiting` for list items) + `react-native-gesture-handler` for swipes/drags → `expo-native-ui` `animations.md`.
-- **Touch** — `expo-haptics` on commits, selection changes, and pull-to-refresh — choreography, not just a toast buzz.
-- **Native rhythm** — large-title collapse on scroll, momentum / inverted scroll, a keyboard that pushes content (`KeyboardAvoidingView`).
-- **Respect reduced motion** — gate non-essential animation on Reanimated's `useReducedMotion()`.
+Two things a web port gets wrong often enough to call out here:
+
+- **Transitions are free** - use Expo Router's native-stack so push/pop, modals, and sheets animate with real platform physics; shared-element zoom via `expo-router` `zoom-transitions.md`. Never hand-animate a route change.
+- **Native rhythm** — large-title collapse on scroll, momentum / inverted scroll, a keyboard that pushes content. These are props, not animations you write.
 
 **Feel can't be screenshotted.** A janky transition or wrong easing passes a still-image parity check and still betrays the app — for screens with motion, verify with a short recording (iOS `xcrun simctl io booted recordVideo feel.mov`; Android `adb shell screenrecord`; or a device-agent flow), not just a screenshot.

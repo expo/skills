@@ -1,7 +1,7 @@
 ---
 name: expo-native-ui
-description: Framework (OSS). Build beautiful, native-feeling Expo screens. Covers Apple HIG styling, semantic colors, native controls, SF Symbols, media, animations, visual effects, gradients, storage, and responsive layout. For routing and navigation, use the expo-router skill.
-version: 1.1.1
+description: Framework (OSS). Build beautiful, native-feeling Expo screens. Covers Apple HIG styling, semantic colors, native controls, SF Symbols, media, visual effects, gradients, storage, design foundations, and responsive layout. For animation, gestures, and motion performance, use the expo-motion skill. For routing and navigation, use the expo-router skill.
+version: 1.2.0
 license: MIT
 ---
 
@@ -9,14 +9,18 @@ license: MIT
 
 For routes, links, stacks, tabs, modals, sheets, and headers, use the `expo-router` skill.
 
+For animation, gestures, haptics, and motion performance, use the `expo-motion` skill. It owns the
+animate-or-not decision, duration and easing budgets, gesture physics, and worklet threading — reach for it
+before writing any animation.
+
 ## References
 
 Consult these resources as needed:
 
 ```
 references/
-  animations.md          Reanimated: entering, exiting, layout, scroll-driven, gestures
   controls.md            Native iOS: Switch, Slider, SegmentedControl, DateTimePicker, Picker
+  design.md              Feedback, wayfinding, typography, materials and depth, accessibility, restraint
   gradients.md           CSS gradients via experimental_backgroundImage (New Arch only)
   icons.md               SF Symbols via expo-image (sf: source), names, animations, weights
   media.md               Camera, audio, video, and file saving
@@ -77,6 +81,9 @@ Expo Go supports a huge range of features out of the box:
 - `expo-glass-effect` for liquid glass backdrops
 - `Color` from `expo-router` for native semantic colors, not raw `PlatformColor` (type-safe, auto-adapts to light/dark)
 - In SDK 56+, never import from `@react-navigation/*` directly — use `expo-router/react-navigation` instead (covers `@react-navigation/native`, `/core`, `/elements`, `/routers`)
+- `react-native-reanimated` not React Native's `Animated` API
+- `react-native-gesture-handler` not `PanResponder`
+- `scheduleOnRN` / `scheduleOnUI` from `react-native-worklets`, not the deprecated `runOnJS` / `runOnUI`
 
 ## Responsiveness
 
@@ -88,7 +95,7 @@ Expo Go supports a huge range of features out of the box:
 
 ## Behavior
 
-- Use expo-haptics conditionally on iOS to make more delightful experiences
+- Use expo-haptics on commits, selection changes, and pull-to-refresh, fired on the same frame as the visual change — not on every interaction, which trains users to ignore them
 - Use views with built-in haptics like `<Switch />` from React Native and `@react-native-community/datetimepicker`
 - When a route belongs to a Stack, its first child should almost always be a ScrollView with `contentInsetAdjustmentBehavior="automatic"` set
 - When adding a `ScrollView` to the page it should almost always be the first component inside the route component
@@ -98,7 +105,7 @@ Expo Go supports a huge range of features out of the box:
 
 # Styling
 
-Follow Apple Human Interface Guidelines.
+Follow Apple Human Interface Guidelines. See `references/design.md` for the foundations behind them — feedback, wayfinding, typography, materials, and accessibility.
 
 ## General Styling Rules
 
@@ -107,7 +114,7 @@ Follow Apple Human Interface Guidelines.
 - Always account for safe area, either with stack headers, tabs, or ScrollView/FlatList `contentInsetAdjustmentBehavior="automatic"`
 - Ensure both top and bottom safe area insets are accounted for
 - Inline styles not StyleSheet.create unless reusing styles is faster
-- Add entering and exiting animations for state changes
+- Add entering and exiting animations where content would otherwise appear or vanish abruptly, and the user does not see that change many times a day — check the `expo-motion` skill's frequency gate before adding any
 - Use `{ borderCurve: 'continuous' }` for rounded corners unless creating a capsule shape
 - ALWAYS use a navigation stack title instead of a custom text element on the page
 - When padding a ScrollView, use `contentContainerStyle` padding and gap instead of padding on the ScrollView itself (reduces clipping)
@@ -162,7 +169,7 @@ import { colors } from "@/theme/colors";
 ```
 
 - iOS re-resolves these colors automatically when the system theme changes. On Android, call `useColorScheme()` inside any component that renders them so it re-renders when the theme flips (required when React Compiler memoizes the component).
-- Don't pass `Color` / `PlatformColor` values into Reanimated styles — use static colors there (see `references/animations.md`).
+- Don't pass `Color` / `PlatformColor` values into Reanimated styles — use static colors there (see the `expo-motion` skill).
 - `Platform.select({...})!` returns `string | OpaqueColorValue`. Most React Native style props accept `ColorValue` (`string | OpaqueColorValue`) so this works fine. But some third-party props only accept `string` (e.g. `tintColor` on `expo-image`). Cast when needed: `colors.label as string`.
 
 ## Text Styling

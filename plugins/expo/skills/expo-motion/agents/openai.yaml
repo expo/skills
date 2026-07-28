@@ -1,0 +1,4 @@
+interface:
+  display_name: "Expo Motion"
+  short_description: "Motion craft for Expo apps: whether to animate at all, duration and easing budgets, springs, gestures with real physics, haptics, worklet threading, and animation performance"
+  default_prompt: "Use $expo-motion to decide whether something should animate and at what duration and easing, reach for the native presentation instead of hand-rolling sheets and menus, add gestures with velocity handoff and rubber-banding, keep animation off the layout path, and review motion that feels sluggish or janky."
