@@ -1,7 +1,7 @@
 ---
 name: expo-router
-description: Framework (OSS). Navigation and routing for Expo Router. Covers file-based routes, groups and dynamic routes, folder organization, Link with previews and context menus, native Stack, page titles, modals and form sheets, NativeTabs, headers and toolbars, and header search bars.
-version: 1.0.1
+description: Framework (OSS). Navigation and routing for Expo Router. Covers file-based routes, groups and dynamic routes, folder organization, Link with previews and context menus, native Stack, page titles, modals and form sheets, NativeTabs, headers and toolbars, header search bars, and deep linking setup - custom URL schemes, iOS universal links, Android app links, and +native-intent URL rewriting.
+version: 1.1.0
 license: MIT
 ---
 
@@ -21,6 +21,7 @@ references/
   form-sheet.md          Form sheets in expo-router: configuration, footers and background interaction.
   search.md              Search bar with headers, useSearch hook, filtering patterns
   zoom-transitions.md    Apple Zoom: fluid zoom transitions with Link.AppleZoom (iOS 18+)
+  linking.md             Deep linking: custom schemes, iOS universal links, Android app links, +native-intent, testing
 ```
 
 ## Code Style
@@ -37,6 +38,13 @@ See `./references/route-structure.md` for detailed route conventions.
 - Routes belong in the `app` directory.
 - Never co-locate components, types, or utilities in the app directory. This is an anti-pattern.
 - Ensure the app always has a route that matches "/", it may be inside a group route.
+
+## Deep Linking
+
+See `./references/linking.md` before configuring schemes, universal links, or app links.
+
+- Every route is deep-linkable automatically; never write a React Navigation `linking` config or `NavigationContainer`.
+- `scheme`, `associatedDomains`, and `intentFilters` are native config: rebuild the dev build after changes, and never test them in Expo Go.
 
 ## Library Preferences
 

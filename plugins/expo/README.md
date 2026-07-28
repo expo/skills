@@ -66,7 +66,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 ### Framework (open source)
 
 - **expo-project-structure** - Recommended folder structure for new Expo projects
-- **expo-router** - Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, and headers
+- **expo-router** - Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, headers, and deep linking
 - **expo-native-ui** - Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, animations, and visual effects
 - **expo-ui** - Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **expo-data-fetching** - Network requests, API calls, caching, and offline support
