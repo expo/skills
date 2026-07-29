@@ -30,6 +30,14 @@ const pluginManifests: PluginManifest[] = [
     label: "Cursor",
     path: "plugins/expo/.cursor-plugin/plugin.json",
   },
+  {
+    label: "Kimi (repository root)",
+    path: "kimi.plugin.json",
+  },
+  {
+    label: "Kimi (plugin directory)",
+    path: "plugins/expo/kimi.plugin.json",
+  },
 ];
 
 const versionedPluginPaths = [
@@ -37,12 +45,17 @@ const versionedPluginPaths = [
   "plugins/expo/.claude-plugin/plugin.json",
   "plugins/expo/.codex-plugin/plugin.json",
   "plugins/expo/.cursor-plugin/plugin.json",
+  "kimi.plugin.json",
+  "plugins/expo/kimi.plugin.json",
   "plugins/expo/.mcp.json",
   "plugins/expo/mcp.json",
 ];
 
 function runGit(args: string[]) {
-  return execFileSync("git", args, { encoding: "utf8" }).trim();
+  return execFileSync("git", args, {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
 }
 
 function getChangedFiles() {
@@ -134,12 +147,12 @@ const rows: VersionRow[] = pluginManifests.map((manifest) => ({
 
 const errors: string[] = [];
 const currentVersions = new Set(rows.map((row) => row.currentVersion));
-const baseVersions = new Set(rows.map((row) => row.baseVersion));
+const baseVersions = new Set(
+  rows.flatMap((row) => (row.baseVersion === undefined ? [] : [row.baseVersion]))
+);
 
 for (const row of rows) {
-  if (row.baseVersion === undefined) {
-    errors.push(`${row.label} manifest is missing or has no version on main (${row.path}).`);
-  } else if (!isSemver(row.baseVersion)) {
+  if (row.baseVersion !== undefined && !isSemver(row.baseVersion)) {
     errors.push(`${row.label} has an invalid semver version on main: ${formatVersion(row.baseVersion)}`);
   }
 
@@ -151,15 +164,18 @@ for (const row of rows) {
 }
 
 if (baseVersions.size !== 1) {
-  errors.push("The Claude, Codex, and Cursor plugin versions on main are not in sync.");
+  errors.push("The plugin versions on main are not in sync.");
 }
 
 if (currentVersions.size !== 1) {
-  errors.push("The Claude, Codex, and Cursor plugin versions in this PR must match.");
+  errors.push("All plugin manifest versions in this PR must match.");
 }
 
 if (errors.length === 0) {
   for (const row of rows) {
+    if (row.baseVersion === undefined) {
+      continue;
+    }
     if (semver.order(row.currentVersion as string, row.baseVersion as string) <= 0) {
       errors.push(`${row.label} version must be greater than main (${formatVersion(row.baseVersion)}).`);
     }
@@ -172,7 +188,7 @@ const markdown = [
   "",
   errors.length === 0
     ? "Passed. Versioned Expo plugin files changed and all plugin manifests were bumped together."
-    : "Failed. Versioned Expo plugin files changed, so the Claude, Codex, and Cursor plugin manifests must all be bumped together.",
+    : "Failed. Versioned Expo plugin files changed, so all plugin manifests must be bumped together.",
   "",
   formatVersionRows(rows),
   "",

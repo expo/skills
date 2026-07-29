@@ -1,0 +1,40 @@
+{
+  "name": "expo",
+  "version": "1.8.6",
+  "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo and React Native apps.",
+  "author": {
+    "name": "Expo Team",
+    "email": "support@expo.dev"
+  },
+  "homepage": "https://docs.expo.dev/skills/",
+  "license": "MIT",
+  "keywords": [
+    "expo",
+    "react-native",
+    "expo-router",
+    "eas",
+    "mobile",
+    "ios",
+    "android",
+    "deployment",
+    "upgrades",
+    "native-modules",
+    "app-clips",
+    "brownfield",
+    "eas-update",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": {
+    "expo": {
+      "url": "https://mcp.expo.dev/mcp"
+    }
+  },
+  "interface": {
+    "displayName": "Expo",
+    "shortDescription": "Build, deploy, upgrade, and debug Expo and React Native apps",
+    "longDescription": "Official Expo-authored skills for building Expo Router UI, authoring API routes, configuring data fetching and styling, writing Expo native modules, adding App Clips, integrating Expo into brownfield native apps, inspecting EAS Update health, creating dev clients, upgrading Expo SDKs, using Expo MCP, and deploying Expo apps with EAS workflows, builds, hosting, TestFlight, App Store, and Play Store guidance.",
+    "developerName": "Expo",
+    "websiteURL": "https://expo.dev/"
+  }
+}

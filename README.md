@@ -22,11 +22,11 @@ Skills give AI agents focused Expo knowledge: when to use Expo APIs, how to stru
 
 ## Installation
 
-For Claude Code or Codex, install the plugin so updates are handled by the official plugin marketplace. For Cursor, OpenCode, and other AI coding agents, use the skills CLI.
+For Claude Code or Codex, install the plugin so updates are handled by the official plugin marketplace. Kimi Code can install the Expo plugin directly from this GitHub repository. For Cursor, OpenCode, and other AI coding agents, use the skills CLI.
 
 | Path | Best for |
 | --- | --- |
-| Plugin install | Claude Code or Codex, with updates handled by their official plugin marketplaces. |
+| Plugin install | Claude Code or Codex via their official plugin marketplaces, or Kimi Code directly from GitHub. |
 | Skills CLI | Cursor, OpenCode, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, Kiro CLI, and other AI coding agents. |
 
 ### Skills CLI
@@ -61,9 +61,15 @@ codex plugin add expo@openai-curated
 
 You can also open `/plugins` in Codex and install `expo` from the OpenAI-curated marketplace.
 
+### Kimi Code
+
+```text
+/plugins install https://github.com/expo/skills
+```
+
 ## Updating
 
-Claude Code and Codex plugin installs are updated through their official plugin marketplaces.
+Claude Code and Codex plugin installs are updated through their official plugin marketplaces. To update a Kimi Code install, run the same `/plugins install https://github.com/expo/skills` command again, then `/reload`.
 
 For skills CLI installs, update installed skills with:
 
@@ -140,17 +146,17 @@ Skills for Expo APIs that are not finalized. Content may change or be retired; s
 
 Skills teach an agent how Expo work gets done. The [Expo MCP server](https://docs.expo.dev/eas/ai/mcp/) gives it live access to actually do that work: read the latest Expo docs on demand, install compatible dependencies with `npx expo install`, trigger and monitor EAS builds and workflows, pull crash data from TestFlight, and screenshot a running app in the simulator.
 
-The `expo` plugin bundles this MCP configuration, so Claude Code and Codex plugin installs wire it up automatically. For other agents, or to add it on its own, follow the [Expo MCP setup guide](https://docs.expo.dev/eas/ai/mcp/).
+The `expo` plugin bundles this MCP configuration, so Claude Code, Codex, and Kimi Code plugin installs wire it up automatically. For other agents, or to add it on its own, follow the [Expo MCP setup guide](https://docs.expo.dev/eas/ai/mcp/).
 
 ## FAQ
 
 ### Which AI coding agents are supported?
 
-Use `npx skills@latest add expo/skills --skill '*'` for Cursor, OpenCode, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, Kiro CLI, and similar AI coding tools.
+Use the Expo plugin for Claude Code, Codex, or Kimi Code. Use `npx skills@latest add expo/skills --skill '*'` for Cursor, OpenCode, GitHub Copilot, Windsurf, Gemini, Cline, AMP, Factory Droid, Antigravity, Kiro CLI, and similar AI coding tools.
 
 ### Should I install the skills or the plugin?
 
-Use the plugin for Claude Code or Codex; it stays updated through the plugin marketplace. Use `npx skills@latest add expo/skills --skill '*'` for Cursor, OpenCode, and other AI coding agents.
+Use the plugin for Claude Code or Codex through their marketplaces, or install it directly from GitHub in Kimi Code. Use `npx skills@latest add expo/skills --skill '*'` for Cursor, OpenCode, and other AI coding agents.
 
 ### What is the source of truth?
 
