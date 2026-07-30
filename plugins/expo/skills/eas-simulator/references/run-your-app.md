@@ -16,7 +16,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator
 # --name is required practice: it labels the session in simulator:list/get and on expo.dev.
 # Describe what the run is for, in the user's terms — see "Always name the session" in SKILL.md.
 npx --yes eas-cli@latest simulator:start --platform ios --type agent-device --non-interactive \
-  --name "checkout flow screenshots"
+  --name "Checkout flow screenshots"
 ```
 
 `start`'s own poll is unreliable, so confirm liveness with a bounded loop (boot is ~90s–15min). `get`/`exec`/`stop` default to the session in `.env.eas-simulator`, so you can omit `--id`:
