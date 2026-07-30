@@ -87,7 +87,7 @@ When the user already has an app, **add only what the example introduces; never 
 
 ## Related skills
 
-- Tailwind / Nativewind styling → `expo-tailwind-setup`
+- Tailwind / Nativewind styling → `expo-tailwind`
 - Native UI components (@expo/ui package) → `expo-ui`
 - Styling and native-feeling screens → `expo-native-ui`
 - Navigation and routing → `expo-router`

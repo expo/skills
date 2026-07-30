@@ -70,7 +70,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-native-ui** - Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, animations, and visual effects
 - **expo-ui** - Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **expo-data-fetching** - Network requests, API calls, caching, and offline support
-- **expo-tailwind-setup** - Set up Tailwind CSS v4 in Expo with Nativewind v5
+- **expo-tailwind** - Tailwind CSS v4 in Expo with Nativewind v5: setup and className styling
 - **expo-dom** - Run web code in a webview on native using DOM components
 - **expo-web-to-native** - Migrate an existing web/React app to a native iOS/Android app with Expo
 - **expo-module** - Write Expo native modules and views (Swift, Kotlin, TypeScript, config plugins)

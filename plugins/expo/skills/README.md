@@ -13,7 +13,7 @@ Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `F
 | `expo-native-ui` | Native-feeling screen styling, semantic colors, controls, icons, media, animations, and visual effects. |
 | `expo-ui` | `@expo/ui` native components: universal cross-platform first, plus SwiftUI and Jetpack Compose. |
 | `expo-data-fetching` | API calls, React Query, SWR, caching, offline support, and Expo Router data loaders. |
-| `expo-tailwind-setup` | Tailwind CSS v4, `react-native-css`, and NativeWind v5 setup. |
+| `expo-tailwind` | Tailwind CSS v4, `react-native-css`, and Nativewind v5 setup and styling. |
 | `expo-dom` | Expo DOM components for gradually using web code in native apps. |
 | `expo-web-to-native` | Migrating an existing web/React app (Next.js, Vite, CRA) to a native iOS/Android app with Expo. |
 | `expo-module` | Expo native modules and views with Swift, Kotlin, TypeScript, config plugins, and autolinking. |
