@@ -1,0 +1,4 @@
+interface:
+  display_name: "Expo Tailwind"
+  short_description: "Tailwind CSS v4, react-native-css, and Nativewind v5 in Expo"
+  default_prompt: "Use $expo-tailwind to install, configure, and use Tailwind CSS v4 with Expo, Nativewind v5, react-native-css, Metro, PostCSS, global CSS, TypeScript types, theme variables, and className styling."
