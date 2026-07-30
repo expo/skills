@@ -534,7 +534,14 @@ Pin `lightningcss` to `1.30.1` via `overrides` (npm/bun), `resolutions` (yarn), 
 
 ### TypeScript errors on className
 
-Ensure `nativewind-env.d.ts` exists with `/// <reference types="react-native-css/types" />` and is not named after a sibling file, folder, or `node_modules` package.
+Ensure `nativewind-env.d.ts` exists with
+
+```ts
+/// <reference types="react-native-css/types" />
+
+declare module '*.css'
+```
+ and is not named after a sibling file, folder, or `node_modules` package.
 
 ## Submitting Feedback
 
