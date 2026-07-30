@@ -104,7 +104,8 @@ Write what the session is *for*, in a few plain words:
 
 Rules:
 - Derive it from the user's request, not from the mode or the tooling. `Mode C session`, `agent-device ios`, and `test` say nothing.
-- Keep it short (a few words) and specific. Include a ticket or PR number when there is one.
+- **Length: aim for 3–6 words, under ~50 characters.** A list is scanned, not read — a name that wraps in the terminal or gets clipped in a table column defeats the point. The API accepts up to **255 characters** and rejects an empty/whitespace-only name, but treat 255 as a hard ceiling you never approach, not a target. One noun phrase, no sentences.
+- Be specific within that budget. Include a ticket or PR number when there is one.
 - No timestamps, ids, or the platform — expo.dev already shows those.
 - If the user names it, use their name as-is.
 - Sessions are per-run, so name each new one for that run. Don't reuse an old name for different work.
