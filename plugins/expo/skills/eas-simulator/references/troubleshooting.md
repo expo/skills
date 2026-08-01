@@ -5,6 +5,7 @@ Concrete errors seen while validating this flow, and the fix.
 | Symptom | Cause | Fix |
 |---|---|---|
 | `Command simulator:start not found` | `eas-cli` too old (commands are hidden but present from ≥ 20.3.0) | Run via `npx --yes eas-cli@latest …`, or upgrade `eas-cli`. |
+| `simulator:start` rejects `--name` (e.g. `Nonexistent flag: --name`) | `eas-cli` too old — `--name` was added after `simulator:start` itself | Run via `npx --yes eas-cli@latest …`, or upgrade `eas-cli`. If you can't upgrade, retry once **without** `--name`; the session starts unnamed. |
 | `An Expo user account is required` / `whoami` shows logged-out | No browser login on a cloud/CI/headless box, or `EXPO_TOKEN` unset/invalid | Set **`EXPO_TOKEN`** (expo.dev → Account → Access Tokens) in the env; verify `npx --yes eas-cli@latest whoami`. (Interactive machines can `eas login`.) |
 | `simulator:start`/`build`: no linked project / missing `projectId` | A fresh `create-expo-app` isn't linked to EAS | `npx --yes eas-cli@latest init` to create/link it (writes `extra.eas.projectId`). |
 | `prebuild`/`eas build` prompts for or fails on a missing **iOS bundle identifier** | A fresh app often has no `ios.bundleIdentifier` | Set it in app config (e.g. `dev.<owner>.<slug>`); confirm via `npx expo config --json` (may live in `app.config.js`). |

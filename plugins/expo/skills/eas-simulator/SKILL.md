@@ -111,6 +111,8 @@ Rules:
 - If the user names it, use their name as-is.
 - Sessions are per-run, so name each new one for that run. Don't reuse an old name for different work.
 
+`--name` is newer than `simulator:start` itself, so an older installed `eas-cli` can reject it. If that happens, run via `npx --yes eas-cli@latest` or upgrade; as a last resort, retry once without `--name` (the session starts unnamed). See [references/troubleshooting.md](./references/troubleshooting.md).
+
 ## Commands at a glance
 
 | Command | Purpose |
