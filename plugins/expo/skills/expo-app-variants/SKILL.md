@@ -223,6 +223,8 @@ Do not leave both `env` and `environment` setting `APP_VARIANT` in the same prof
 
 Locally, `eas env:pull --environment development` writes `.env.local` (override with `--path`), so `expo start`, `expo run`, and `expo prebuild` all read the variable with nothing inline. Pull again when switching variants, so `.env.local` always matches the variant being worked on.
 
+**The pull replaces `.env.local` rather than merging into it.** Before the first pull, read any existing file and account for every key in it: a key that no EAS environment holds is gone afterwards, and the only trace is a `Reused local values for following secrets:` line, which covers secrets alone. A local-only debug flag is the usual casualty, and losing it is silent — the app just takes its default branch on the next run. Store such keys in the environment so every later pull returns them, or add them back by hand once the pull is done.
+
 Publishing an update reads the same environment. **On SDK 55 or later, `eas update` requires `--environment`; with an environment set, it reads only the EAS environment variables and ignores local `.env` files.** Later steps refer back to this rule.
 
 ```sh

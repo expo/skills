@@ -256,6 +256,8 @@ eas env:pull --environment development
 
 `eas env:pull` writes `.env.local` by default; `--path` changes that. Keep generated `.env` files gitignored, per the EAS docs — most Expo templates already ignore `.env*.local`. To work on another variant, pull that variant's environment and restart the dev server. Regenerate with `npx expo prebuild --clean` only when the local native project itself should switch identity — see `runtime-and-environments.md`.
 
+The pull **replaces** the file. Read an existing `.env.local` first and account for every key: keys that live only in that file are gone afterwards. The remedy is to store them in the environment with `eas env:set`, so the pull returns them every time.
+
 ### Publishing updates
 
 ```sh
