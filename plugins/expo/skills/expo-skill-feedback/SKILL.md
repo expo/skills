@@ -62,9 +62,8 @@ Evidence: <model name, attempts, how it was solved — or never was; omit what y
 
 A good candidate is solvable (eventually done or clearly doable), verifiable (success is
 observable), and specific. Mention only environment details the CLI cannot see, such as other key
-packages or a freshly created app. Describe code; do not paste it. If the command fails with an
-error naming `evals` as an invalid category, resend once with `--category unknown` and the same
-subject prefixed `eval-candidate: `; on any other error, do not resend.
+packages or a freshly created app. Describe code; do not paste it. If the command fails, report the
+error to the user instead of resending.
 
 ## Usage telemetry
 
