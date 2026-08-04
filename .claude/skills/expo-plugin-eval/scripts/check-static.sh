@@ -1,0 +1,1 @@
+../../expo-skill-eval/scripts/check-static.sh
