@@ -27,18 +27,12 @@
 
 ## Diagnosing with `expo config`
 
-`npx expo config --json` is the single most useful check. It resolves `app.json` through
-`app.config.ts` exactly as Expo will, under whatever `APP_VARIANT` is set. Run the per-variant loop
-from the Verify section of `SKILL.md` — one distinct identity per variant means Step 1 is correct.
+`npx expo config --json` is the single most useful check. It resolves `app.json` through `app.config.ts` exactly as Expo will, under whatever `APP_VARIANT` is set. Run the per-variant loop from the Verify section of `SKILL.md` — one distinct identity per variant means Step 1 is correct.
 
-To catch a dropped spread, diff the resolved config before and after adding `app.config.ts`. Any key that
-disappears was lost to a missing spread.
+To catch a dropped spread, diff the resolved config before and after adding `app.config.ts`. Any key that disappears was lost to a missing spread.
 
 ## When a variant already shipped
 
-Changing a production bundle identifier on an app that is already in the stores creates a **new** app, not
-an update. Existing users do not migrate.
+Changing a production bundle identifier on an app that is already in the stores creates a **new** app, not an update. Existing users do not migrate.
 
-So set the production identifier to the one already published, and give the new suffixes to dev and
-preview. That is what `getAppId()` returning the bare `APP_ID_PREFIX` for `production` does — production
-keeps the identity it already had.
+So set the production identifier to the one already published, and give the new suffixes to dev and preview. That is what `getAppId()` returning the bare `APP_ID_PREFIX` for `production` does — production keeps the identity it already had.
