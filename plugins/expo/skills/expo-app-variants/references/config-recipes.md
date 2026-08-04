@@ -77,6 +77,19 @@ function getName(base: string) {
   }
 }
 
+// Only needed when the project sets a `scheme`. Without this, every variant
+// registers the same one and the OS picks a winner.
+function getScheme(base: string) {
+  switch (process.env.APP_VARIANT) {
+    case "production":
+      return base;
+    case "preview":
+      return `${base}.preview`;
+    default:
+      return `${base}.dev`;
+  }
+}
+
 function getIcon() {
   switch (process.env.APP_VARIANT) {
     case "production":
@@ -94,6 +107,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   slug: config.slug ?? "my-app",
   name: getName(config.name ?? "MyApp"),
+  scheme: getScheme(typeof config.scheme === "string" ? config.scheme : "my-app"),
   icon: icon ?? config.icon,
   ios: {
     ...config.ios,
@@ -122,6 +136,8 @@ Notes:
 - `icon ?? config.icon` keeps the type as `string`. Assigning `undefined` directly would widen it.
 - One `APP_ID_PREFIX` assumes iOS and Android share an identifier. When the project's `ios.bundleIdentifier` and `android.package` differ, use two constants and keep each platform's existing value — never unify them.
 - When one platform has no identifier at all, delete that platform's block from the recipe. An `app.json` with `ios.bundleIdentifier` and no `android.package` keeps only the `ios` block, and `...config` carries Android through untouched. Leaving `package: getAppId()` in place would invent an Android identity.
+- `config.scheme` is typed `string | string[]`, hence the `typeof` guard. Drop the `scheme` line for a project whose config sets no scheme.
+- Since SDK 54, `ios.icon` also accepts an Icon Composer `.icon` bundle — a directory with `icon.json` and `Assets/`. That form is valid for `ios.icon` alone, so a project using one needs its own `getIosIcon()` returning `.icon` paths, and the shared `icon` constant covers the remaining fields. Copying the bundle and changing `fill` in `icon.json` gives each variant a distinct icon with no image editing.
 - If `expo-dev-client` is already listed in `app.json` `plugins`, remove it there rather than adding a second entry here. With two entries the plugin is applied twice, with conflicting options.
 - The `expo-dev-client` plugin entry assumes the package is installed. Remove the entry if the project does not use a dev client — prebuild fails when a listed plugin cannot be resolved.
 - `APP_VARIANT` stays a config-time variable on purpose. App code should read the environment's values (`EXPO_PUBLIC_*` variables), not the variant name. See `troubleshooting.md` if the user wants to show the variant inside the app.
@@ -197,6 +213,8 @@ export default config;
 ```
 
 A plain object export is fine here. It only becomes a problem when an `app.json` exists, because Expo then ignores the static file. `getIcon()` returns a real path in every branch, since there is no `app.json` icon to fall through to.
+
+A `scheme` belongs in the same shape when the project has one. Take `getScheme()` from Recipe 1 and call it with the literal base, since nothing is passed in here: `scheme: getScheme("my-app")`.
 
 An exported function also works and gives access to `ConfigContext` for `projectRoot` and friends: `export default (_: ConfigContext): ExpoConfig => config;`
 
