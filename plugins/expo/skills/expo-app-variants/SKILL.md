@@ -49,7 +49,7 @@ Do not open with a questionnaire, and do not propose a rewrite of something that
 | Config style | `app.json`, `app.config.ts`, `app.config.js` | Extend the dynamic config, or add one |
 | Native directories | Are `ios/` or `android/` committed to git? | Whether the CNG gate below stops the recipe |
 | Identity already varying | Does the config branch on any env var for `bundleIdentifier` / `package`? | Whether this is a new setup or a gap-fill |
-| Current identity | `ios.bundleIdentifier`, `android.package` | The prefix(es) to reuse — never invent one, and never unify the platforms if they differ |
+| Current identity | `ios.bundleIdentifier`, `android.package` | The prefix(es) to reuse — never invent one, and never unify the platforms if they differ. A platform with no identifier stays out of the config |
 | Variant variable name | The env var the config already reads | Reuse it; do not rename to `APP_VARIANT` |
 | Existing profiles | `eas.json` → `build` keys, and their `env` / `environment` / `channel` | Which profiles to extend |
 | Variables on EAS | `eas env:list --environment <env>` | Whether EAS environments are already in use |
@@ -173,6 +173,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 `ConfigContext.config` is a `Partial<ExpoConfig>`, so `name` and `slug` arrive as `string | undefined` while the `ExpoConfig` return type requires both. Under the `strict: true` that Expo templates ship with, omitting the `slug` fallback is a type error. `app.json` supplies the real values at runtime.
 
 `APP_ID_PREFIX` assumes iOS and Android share one identifier, the common case. When the detected `ios.bundleIdentifier` and `android.package` differ, keep two constants — one per platform — and derive each platform's variant identifiers from its own. Never unify existing identifiers: for a shipped app, that changes its published identity on one platform.
+
+When only one platform has an identifier, vary that platform and leave the other out of the config entirely. An `app.json` with `ios.bundleIdentifier` and no `android.package` is the common shape, and setting `android.package` from the helper would give that project an identity it never had — an invented one, which the rule above forbids. Drop the `android` block instead, so `...config` carries Android through untouched. Varying a single platform is a complete setup, not a partial one.
 
 When there is no `app.json`, drop the `ConfigContext` parameter and the spreads, and return the whole config directly. See [`./references/config-recipes.md`](./references/config-recipes.md) for that form.
 
@@ -322,6 +324,8 @@ Once the user has the per-variant files or keys, wire them the same way as every
 
 ## Verify
 
+Print the fields the project actually varies. The filter below covers both platforms; drop `.android.package` for an iOS-only project, so a `null` never has to be read as a pass.
+
 ```sh
 npx expo config --json | jq '.name, .ios.bundleIdentifier, .android.package'   # default → dev identity
 for v in development preview production; do   # the project's variant list
@@ -331,7 +335,7 @@ done
 
 Inline variables are fine for these one-off checks — they override `.env.local` for that single command. The daily workflow keeps the variant in `.env.local` or in EAS environments, never inline.
 
-One distinct identity per variant means Step 1 works. Confirm the default run shows the dev identity and that nothing from the previous config went missing.
+One distinct identity per variant, on every platform the project varies, means Step 1 works. Confirm the default run shows the dev identity and that nothing from the previous config went missing.
 
 With EAS environments, also confirm the variables exist on the servers — `APP_VARIANT` must appear in every environment that `eas.json` references:
 
