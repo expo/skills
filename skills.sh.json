@@ -17,6 +17,7 @@
         "expo-module",
         "expo-brownfield",
         "expo-dev-client",
+        "expo-app-variants",
         "expo-examples",
         "expo-app-clip",
         "expo-upgrade",
