@@ -214,12 +214,12 @@ Remember that only `development`, `preview`, and `production` are built-in EAS e
 ### Create the variables
 
 ```sh
-eas env:create --name APP_VARIANT --value development --environment development --visibility plaintext
-eas env:create --name APP_VARIANT --value preview     --environment preview     --visibility plaintext
-eas env:create --name APP_VARIANT --value production  --environment production  --visibility plaintext
+eas env:set --name APP_VARIANT --value development --environment development --visibility plaintext
+eas env:set --name APP_VARIANT --value preview     --environment preview     --visibility plaintext
+eas env:set --name APP_VARIANT --value production  --environment production  --visibility plaintext
 ```
 
-`--visibility plaintext` is right for a variant name. Use `sensitive` or `secret` for keys. Add `--force` to overwrite an existing variable.
+`--visibility plaintext` is right for a variant name. Use `sensitive` or `secret` for keys. `env:set` creates or updates, so re-running it changes an existing value.
 
 ### `eas.json`
 

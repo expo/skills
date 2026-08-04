@@ -38,7 +38,7 @@ Changing identity requires a custom build, local or on EAS Build. `expo start` c
 
 ## Ground rule: ask before any command that writes to EAS
 
-Read-only commands run freely: `eas env:list`, `npx expo config`. Every command that creates or changes state on the EAS servers — `eas env:create`, `eas update:configure`, `eas build`, `eas update` — needs the user's explicit OK first, every time. State in one sentence what the command will do, then ask. Editing local files (`app.config.ts`, `eas.json`, `package.json`) follows the normal flow and does not need this extra confirmation.
+Read-only commands run freely: `eas env:list`, `npx expo config`. Every command that creates or changes state on the EAS servers — `eas env:set`, `eas update:configure`, `eas build`, `eas update` — needs the user's explicit OK first, every time. State in one sentence what the command will do, then ask. Editing local files (`app.config.ts`, `eas.json`, `package.json`) follows the normal flow and does not need this extra confirmation.
 
 ## Step 0: detect, then ask
 
@@ -123,7 +123,7 @@ Ask the user — with the environment's structured question tool if one exists (
 
    Variants work the same either way, so do not argue if the user prefers the single dynamic config. If they accept, move only the stable values into `app.json`; anything computed at config time, variant-dependent or not, stays in `app.config.ts`. Adding `app.json` means `app.config.ts` must export a **function** from then on.
 
-If the user declines to answer, proceed with EAS environments and the three suggested variants, and leave the config layout as it is. The ground rule still applies — `eas env:create` waits for an explicit OK. Say which defaults were used, so the variant list is visible and easy to correct.
+If the user declines to answer, proceed with EAS environments and the three suggested variants, and leave the config layout as it is. The ground rule still applies — `eas env:set` waits for an explicit OK. Say which defaults were used, so the variant list is visible and easy to correct.
 
 ## Step 1: a config that reads `APP_VARIANT`
 
@@ -199,12 +199,12 @@ Two constraints to state when someone wants a different set:
 
 ## Step 2 (recommended): `APP_VARIANT` as an EAS environment variable
 
-**Apply this step as one unit** — `eas env:create` writes to the EAS servers, so the ground rule applies. `environment` keys without the variables are worse than nothing: every EAS build then evaluates the config with `APP_VARIANT` unset and silently gets the development identity, production included. Create the variables first, then point the profiles at their environments.
+**Apply this step as one unit** — `eas env:set` writes to the EAS servers, so the ground rule applies. `environment` keys without the variables are worse than nothing: every EAS build then evaluates the config with `APP_VARIANT` unset and silently gets the development identity, production included. Create the variables first, then point the profiles at their environments.
 
 Create the variable once per environment, then have each build profile name its environment instead of spelling out variables:
 
 ```sh
-eas env:create --name APP_VARIANT --value development --environment development --visibility plaintext
+eas env:set --name APP_VARIANT --value development --environment development --visibility plaintext
 # repeat per variant: --value is the variant name, --environment its mapped environment
 # (the same name in the default 1:1 setup — see "Naming variants" for custom mappings)
 ```
