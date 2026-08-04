@@ -42,13 +42,13 @@ Expo turns hard real-world tasks into agent evals: anything Expo an agent can at
 EAS, tooling — qualifies, whether or not a skill was involved. The most valuable signal is a task an
 AI agent could not complete cleanly: repeated failed attempts, wrong or hallucinated APIs, a build
 or screen that never worked, or the user stepping in to fix it manually. When that happens — or the
-user says a model failed at an Expo task — confirm with the user, then submit with
+user says a model failed at an Expo task — confirm with the user, then submit from the project root
+(the CLI attaches the SDK and package versions, agent harness, and platform automatically) with
 `--category evals`, `--subject` naming the Expo area or capability the task involves, and this
 structure in the final argument:
 
 ```text
 Task: <what was asked, self-contained>.
-Environment: <SDK version, key packages, new or existing app>.
 Expected: <observable success criteria>.
 Actual: <what the agent did instead>.
 Wrong approach: <the specific mistake, such as a wrong API, hallucinated prop, or bad pattern>.
@@ -56,7 +56,8 @@ Evidence: <model name, number of attempts, and how it was eventually solved — 
 ```
 
 A good candidate is solvable (eventually done or clearly doable), verifiable (success is
-observable), and specific. Describe code; do not paste it. If the installed CLI rejects
+observable), and specific. Mention only environment details the CLI cannot see, such as other key
+packages or a freshly created app. Describe code; do not paste it. If the installed CLI rejects
 `--category evals`, resend with `--category unknown --subject "eval-candidate: <AREA>"`.
 
 ## Usage telemetry
