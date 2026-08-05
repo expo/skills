@@ -1,15 +1,13 @@
-# Skill eval for PRs touching plugins/expo/skills/**. Advisory, never blocks
-# merge. Authors+evaluates 3 PRDs vs main and this PR. "_main" jobs cache via
+# Skill eval for PRs labeled "eval". Advisory, never blocks merge.
+# Authors+evaluates 3 PRDs vs main and this PR. "_main" jobs cache via
 # fingerprint+restore_cache; only skill-eval-main-baseline.yml writes that
 # cache. Logic in scripts/*: EAS caps workflow files at 16 KiB.
 name: skill-eval-ci
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - plugins/expo/skills/**
+  pull_request_labeled:
+    labels:
+      - eval
   workflow_dispatch: {}
 
 jobs:
