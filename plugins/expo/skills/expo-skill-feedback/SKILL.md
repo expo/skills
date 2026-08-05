@@ -31,6 +31,7 @@ When including them, choose the values that most precisely identify what the fee
 | `expo-cli` | Full Expo CLI command, such as `npx expo install` |
 | `eas-cli` | Full EAS CLI command, such as `eas build` |
 | `evals` | Expo package or command the failed task involves, else a capability phrase, such as `expo-router` or `eas build` |
+| `simulator` | EAS Simulator feature or workflow involved |
 | `unknown` | Concise Expo product, package, feature, or other topic |
 
 In the final argument, say what helped and why, or provide the relevant context, expected behavior,
@@ -62,9 +63,8 @@ Evidence: <model name, attempts, how it was solved — or never was; omit what y
 
 A good candidate is solvable (eventually done or clearly doable), verifiable (success is
 observable), and specific. Mention only environment details the CLI cannot see, such as other key
-packages or a freshly created app. Describe code; do not paste it. If the command fails with an
-error naming `evals` as an invalid category, resend once with `--category unknown` and the same
-subject prefixed `eval-candidate: `; on any other error, do not resend.
+packages or a freshly created app. Describe code; do not paste it. If the command fails, report the
+error to the user instead of resending.
 
 ## Usage telemetry
 
