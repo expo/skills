@@ -31,6 +31,7 @@ When including them, choose the values that most precisely identify what the fee
 | `expo-cli` | Full Expo CLI command, such as `npx expo install` |
 | `eas-cli` | Full EAS CLI command, such as `eas build` |
 | `evals` | Expo package or command the failed task involves, else a capability phrase, such as `expo-router` or `eas build` |
+| `simulator` | EAS Simulator feature or workflow involved |
 | `unknown` | Concise Expo product, package, feature, or other topic |
 
 In the final argument, say what helped and why, or provide the relevant context, expected behavior,
