@@ -44,6 +44,10 @@ Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `arge
 
 **Recording video on argent (`screen-recording-start`/`stop`).** The gotcha to know: argent **trims static stretches by default**, which drops the very frames you're measuring — turn that off when you care about cadence or timing (see argent's help for the flag). Recordings also carry a burned-in "Argent" watermark that can't be disabled on a hosted session — fine for diagnosis, mind it before sharing publicly. The stop call returns a video already downloaded locally; extract frames with `ffmpeg` (may need installing) to inspect motion frame by frame. The capture samples at ~30fps, so it shows visible jank but can't prove or disprove sub-frame hitches on 60/120Hz content.
 
+**Screenshot resolution and token cost.** Screenshots cost context tokens once the agent reads them, so resolution is a real tradeoff. **argent's `screenshot` has two independent levers.** `scale` sets the image resolution and defaults **low** (too coarse to judge layout), so pass a larger scale when you need to **read** the UI. `includeImageInContext:false` keeps an image **out of the agent's context entirely** (zero token cost) — use that for a baseline you'll only **diff** later, and keep *that* one at full resolution so the pixel diff stays accurate. So: scale down images you actually read; drop unread ones with `includeImageInContext`, don't just shrink them. Exact flags and the current default: argent's help.
+
+**agent-device** screenshots are full-resolution with no scale knob — a PNG you read from disk, crisp but token-heavier for its size. Match the capture to the question rather than always grabbing full-res.
+
 **Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 
 ```bash
