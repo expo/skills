@@ -141,14 +141,16 @@ LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 xcodebuild \
   -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-debug build
 DEVAPP=ios/build-debug/Build/Products/Debug-iphonesimulator/<App>.app
 
-# 2. Start Metro with tunnel v2 — exactly ONE instance. First check :8081:
-#    `curl -sf localhost:8081/status` answers AND it's your Metro → reuse it, skip this step.
-#    Port taken but NOT yours → `PIDS=$(lsof -ti:8081); [ -n "$PIDS" ] && kill $PIDS` BEFORE starting
-#    (relaunching onto an occupied 8081 is the "port already in use" clash). A bare `&` won't survive across agent
-#    shell calls — use a long-lived/background run or a separate terminal. tunnel v2 (durable-object,
-#    not ngrok) works from robot/cloud agents where plain --tunnel is blocked.
-EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port 8081
-#    → note the deep link exp+<slug>://<host>.on.expo.app; the manifest URL is https://<host>.on.expo.app
+# 2. Start Metro with tunnel v2 on its OWN port — don't force :8081 or kill anything to reclaim it.
+#    Each `expo start --tunnel` gets its own unique tunnel URL, so a second Metro never has to fight
+#    for the first one's port. Pick a free high port with `--port <N>` (e.g. 8082). Only reuse a
+#    running Metro if YOU started it this session — there's no command to prove ownership, so when
+#    unsure just start a new one on another port; never kill someone else's server. A bare `&` won't
+#    survive across agent shell calls — use a long-lived/background run or a separate terminal. tunnel
+#    v2 (durable-object, not ngrok) works from robot/cloud agents where plain --tunnel is blocked.
+EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port <N>
+#    → capture the tunnel/manifest URL + deep link it prints (format like https://<host>.on.expo.app).
+#      The port is NOT in the URL, so read it from stdout — `--port` only identifies the local process.
 
 # 3. Start a session, install the dev build, then connect it to Metro.
 #    RELIABLE path = "open the dev client, then Enter URL manually". The deep-link + system "Open in
@@ -166,7 +168,7 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest open dev.example
 #    b) point it at your remote Metro via "Enter URL manually":
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest press 'label="Enter URL manually"'
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest snapshot -i          # get the text-field ref
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest fill @<field> "https://<host>.on.expo.app"
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest fill @<field> "<manifest URL Metro printed in step 2>"   # e.g. https://<host>.on.expo.app
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest press 'label="Connect"'
 
 #    c) first-run dev menu → Reload to fetch the bundle (first build+transfer over the tunnel ~40-60s):
