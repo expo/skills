@@ -56,7 +56,7 @@ Do not open with a questionnaire, and do not propose a rewrite of something that
 | Dev client installed | `expo-dev-client` in `package.json` | Whether Step 3 applies, and whether a profile with `developmentClient: true` can build |
 | EAS Update in use | `expo-updates` in `package.json`, `updates.url` in the config | Whether Step 5 applies at all |
 | Icons in use | `icon`, `ios.icon`, `android.adaptiveIcon` | Which icon fields `getIcon()` must override, and whether `ios.icon` is a flat image or a `.icon` bundle |
-| Custom scheme | `scheme` in the app config | Whether Step 3 also derives a scheme per variant |
+| Custom scheme | `scheme` in the app config | Whether to offer Step 3's per-variant scheme |
 
 If `eas env:list` fails or is not authenticated, note it and continue. Do not stall and do not prompt the user to log in.
 
@@ -113,9 +113,10 @@ Ask the user — with the environment's structured question tool if one exists (
 
 3. **Which extras?** Multi-select, and offer each item only where it applies:
    - Per-variant icons — always offer.
+   - Per-variant URL scheme (Step 3) — offer only when the config sets a `scheme`. One line on the cost: each variant's scheme must be registered wherever the base scheme is, OAuth redirect allow-lists most of all.
    - EAS Update channel alignment (Step 5) — offer only when the project uses EAS Update **and** question 1 chose EAS environments. On the repo track there is no `environment` key to align, so do not offer it. Pre-select it when the profiles already set `channel`.
 
-   Step 3 is not an extra to ask about: apply the guard whenever `expo-dev-client` is installed, and derive a per-variant `scheme` whenever the config sets one.
+   Step 3's guard is not an extra to ask about: apply it whenever `expo-dev-client` is installed.
 
 4. **Add a static `app.json` too?** Ask this only when the project has a dynamic config and no `app.json`. Variants work fine without one, so this is an offer, not a fix. The prompt options, one line each:
    - *Add `app.json` as a base layer (Recommended)* — Expo tooling can write generated values into it automatically.
@@ -286,7 +287,7 @@ One sentence for the user is enough: it makes the development build the only app
 
 Skip the guard when `expo-dev-client` is not installed.
 
-**The project's own `scheme`.** When the config sets one, derive it per variant in the same switch shape as the identifier, with `getScheme()` from [`./references/config-recipes.md`](./references/config-recipes.md). Otherwise every variant registers the same `myapp://` and the OS resolves it to whichever install it prefers. The guard above covers only `exp+<slug>`, so the two are separate: a gated `addGeneratedScheme` still leaves one `scheme` pointing at three apps. A project whose config sets no `scheme` needs nothing here.
+**The project's own `scheme`.** When the config sets one, offer a per-variant scheme through the extras question — unlike the guard, do not apply it unasked. Shared, every variant registers the same `myapp://` and the OS resolves it to whichever install it prefers; the guard above covers only `exp+<slug>`, so a gated `addGeneratedScheme` still leaves one `scheme` pointing at three apps. Derived, each variant's scheme must be registered wherever the base scheme is — OAuth redirect allow-lists are the usual case, and a missed registration breaks sign-in on that variant. That external cost is why this is the user's call. If they accept, derive the scheme in the same switch shape as the identifier, with `getScheme()` from [`./references/config-recipes.md`](./references/config-recipes.md). A project whose config sets no `scheme` needs nothing here.
 
 ## Step 4: per-variant icons
 
