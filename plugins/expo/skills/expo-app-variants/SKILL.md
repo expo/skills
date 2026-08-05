@@ -56,7 +56,7 @@ Do not open with a questionnaire, and do not propose a rewrite of something that
 | Dev client installed | `expo-dev-client` in `package.json` | Whether Step 3 applies, and whether a profile with `developmentClient: true` can build |
 | EAS Update in use | `expo-updates` in `package.json`, `updates.url` in the config | Whether Step 5 applies at all |
 | Icons in use | `icon`, `ios.icon`, `android.adaptiveIcon` | Which icon fields `getIcon()` must override, and whether `ios.icon` is a flat image or a `.icon` bundle |
-| Custom scheme | `scheme` in the app config | Whether Step 3 also derives a scheme per variant |
+| Custom scheme | `scheme` in the app config, and whether anything opens a link into the app | Whether to offer a per-variant scheme in question 3 |
 
 If `eas env:list` fails or is not authenticated, note it and continue. Do not stall and do not prompt the user to log in.
 
@@ -75,7 +75,7 @@ Then report what exists in one or two lines, and offer only the missing pieces:
 | --- | --- |
 | Identity varies per variant | Core setup is done — say so |
 | No `addGeneratedScheme` guard | Step 3, if `expo-dev-client` is installed |
-| One `scheme` shared by every variant | Step 3's `getScheme()`, if the config sets a `scheme` |
+| One `scheme` shared by every variant | Offer Step 3's `getScheme()` as an option, if the config sets a `scheme`. Not a gap to close on its own |
 | Same icon for every variant | Step 4 |
 | Profiles set `env` but no `channel` | Step 5, if the project uses EAS Update |
 | Profiles have `channel` but no `APP_VARIANT` source | Ask question 1, then apply Step 2 in full |
@@ -113,9 +113,10 @@ Ask the user — with the environment's structured question tool if one exists (
 
 3. **Which extras?** Multi-select, and offer each item only where it applies:
    - Per-variant icons — always offer.
+   - A `scheme` per variant (Step 3) — offer only when the app config sets a `scheme`. One line each: *Yes, one scheme per variant* keeps `myapp://` links pointing at the intended build; *Keep one shared scheme* leaves the deep-link setup as it is. Pre-select neither, and leave it unselected when nothing in the project opens a link.
    - EAS Update channel alignment (Step 5) — offer only when the project uses EAS Update **and** question 1 chose EAS environments. On the repo track there is no `environment` key to align, so do not offer it. Pre-select it when the profiles already set `channel`.
 
-   Step 3 is not an extra to ask about: apply the guard whenever `expo-dev-client` is installed, and derive a per-variant `scheme` whenever the config sets one.
+   The dev-client guard in Step 3 is not an extra to ask about — apply it whenever `expo-dev-client` is installed.
 
 4. **Add a static `app.json` too?** Ask this only when the project has a dynamic config and no `app.json`. Variants work fine without one, so this is an offer, not a fix. The prompt options, one line each:
    - *Add `app.json` as a base layer (Recommended)* — Expo tooling can write generated values into it automatically.
@@ -286,7 +287,11 @@ One sentence for the user is enough: it makes the development build the only app
 
 Skip the guard when `expo-dev-client` is not installed.
 
-**The project's own `scheme`.** When the config sets one, derive it per variant in the same switch shape as the identifier, with `getScheme()` from [`./references/config-recipes.md`](./references/config-recipes.md). Otherwise every variant registers the same `myapp://` and the OS resolves it to whichever install it prefers. The guard above covers only `exp+<slug>`, so the two are separate: a gated `addGeneratedScheme` still leaves one `scheme` pointing at three apps. A project whose config sets no `scheme` needs nothing here.
+**The project's own `scheme`, if the user asked for it in question 3.** The guard above covers only `exp+<slug>`, so the two are separate: a gated `addGeneratedScheme` still leaves one `scheme` registered by every variant, with the OS resolving `myapp://` to whichever install it prefers.
+
+Whether that matters is the user's call, which is why question 3 asks rather than assumes. Splitting the scheme fixes the collision and costs maintenance: every OAuth redirect URI, universal-link entry, and third-party dashboard that knows the scheme needs one entry per variant. A project that opens no links pays that for nothing, so a shared scheme is a legitimate choice, not a defect to fix.
+
+When they do want it, derive it in the same switch shape as the identifier, with `getScheme()` from [`./references/config-recipes.md`](./references/config-recipes.md). Leave the config alone otherwise.
 
 ## Step 4: per-variant icons
 
