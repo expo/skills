@@ -38,7 +38,7 @@ Changing identity requires a custom build, local or on EAS Build. `expo start` c
 
 ## Ground rule: ask before any command that writes to EAS
 
-Read-only commands run freely: `eas env:list`, `npx expo config`. Every command that creates or changes state on the EAS servers — `eas env:create`, `eas update:configure`, `eas build`, `eas update` — needs the user's explicit OK first, every time. State in one sentence what the command will do, then ask. Editing local files (`app.config.ts`, `eas.json`, `package.json`) follows the normal flow and does not need this extra confirmation.
+Read-only commands run freely: `eas env:list`, `npx expo config`. Every command that creates or changes state on the EAS servers — `eas env:set`, `eas update:configure`, `eas build`, `eas update` — needs the user's explicit OK first, every time. State in one sentence what the command will do, then ask. Editing local files (`app.config.ts`, `eas.json`, `package.json`) follows the normal flow and does not need this extra confirmation.
 
 ## Step 0: detect, then ask
 
@@ -49,13 +49,14 @@ Do not open with a questionnaire, and do not propose a rewrite of something that
 | Config style | `app.json`, `app.config.ts`, `app.config.js` | Extend the dynamic config, or add one |
 | Native directories | Are `ios/` or `android/` committed to git? | Whether the CNG gate below stops the recipe |
 | Identity already varying | Does the config branch on any env var for `bundleIdentifier` / `package`? | Whether this is a new setup or a gap-fill |
-| Current identity | `ios.bundleIdentifier`, `android.package` | The prefix(es) to reuse — never invent one, and never unify the platforms if they differ |
+| Current identity | `ios.bundleIdentifier`, `android.package` | The prefix(es) to reuse — never invent one, and never unify the platforms if they differ. A platform with no identifier stays out of the config |
 | Variant variable name | The env var the config already reads | Reuse it; do not rename to `APP_VARIANT` |
 | Existing profiles | `eas.json` → `build` keys, and their `env` / `environment` / `channel` | Which profiles to extend |
 | Variables on EAS | `eas env:list --environment <env>` | Whether EAS environments are already in use |
 | Dev client installed | `expo-dev-client` in `package.json` | Whether Step 3 applies, and whether a profile with `developmentClient: true` can build |
 | EAS Update in use | `expo-updates` in `package.json`, `updates.url` in the config | Whether Step 5 applies at all |
-| Icons in use | `icon`, `ios.icon`, `android.adaptiveIcon` | Which icon fields `getIcon()` must override |
+| Icons in use | `icon`, `ios.icon`, `android.adaptiveIcon` | Which icon fields `getIcon()` must override, and whether `ios.icon` is a flat image or a `.icon` bundle |
+| Custom scheme | `scheme` in the app config | Whether Step 3 also derives a scheme per variant |
 
 If `eas env:list` fails or is not authenticated, note it and continue. Do not stall and do not prompt the user to log in.
 
@@ -74,6 +75,7 @@ Then report what exists in one or two lines, and offer only the missing pieces:
 | --- | --- |
 | Identity varies per variant | Core setup is done — say so |
 | No `addGeneratedScheme` guard | Step 3, if `expo-dev-client` is installed |
+| One `scheme` shared by every variant | Step 3's `getScheme()`, if the config sets a `scheme` |
 | Same icon for every variant | Step 4 |
 | Profiles set `env` but no `channel` | Step 5, if the project uses EAS Update |
 | Profiles have `channel` but no `APP_VARIANT` source | Ask question 1, then apply Step 2 in full |
@@ -113,7 +115,7 @@ Ask the user — with the environment's structured question tool if one exists (
    - Per-variant icons — always offer.
    - EAS Update channel alignment (Step 5) — offer only when the project uses EAS Update **and** question 1 chose EAS environments. On the repo track there is no `environment` key to align, so do not offer it. Pre-select it when the profiles already set `channel`.
 
-   The scheme guard (Step 3) is not an extra to ask about — apply it whenever `expo-dev-client` is installed.
+   Step 3 is not an extra to ask about: apply the guard whenever `expo-dev-client` is installed, and derive a per-variant `scheme` whenever the config sets one.
 
 4. **Add a static `app.json` too?** Ask this only when the project has a dynamic config and no `app.json`. Variants work fine without one, so this is an offer, not a fix. The prompt options, one line each:
    - *Add `app.json` as a base layer (Recommended)* — Expo tooling can write generated values into it automatically.
@@ -123,7 +125,7 @@ Ask the user — with the environment's structured question tool if one exists (
 
    Variants work the same either way, so do not argue if the user prefers the single dynamic config. If they accept, move only the stable values into `app.json`; anything computed at config time, variant-dependent or not, stays in `app.config.ts`. Adding `app.json` means `app.config.ts` must export a **function** from then on.
 
-If the user declines to answer, proceed with EAS environments and the three suggested variants, and leave the config layout as it is. The ground rule still applies — `eas env:create` waits for an explicit OK. Say which defaults were used, so the variant list is visible and easy to correct.
+If the user declines to answer, proceed with EAS environments and the three suggested variants, and leave the config layout as it is. The ground rule still applies — `eas env:set` waits for an explicit OK. Say which defaults were used, so the variant list is visible and easy to correct.
 
 ## Step 1: a config that reads `APP_VARIANT`
 
@@ -174,6 +176,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 
 `APP_ID_PREFIX` assumes iOS and Android share one identifier, the common case. When the detected `ios.bundleIdentifier` and `android.package` differ, keep two constants — one per platform — and derive each platform's variant identifiers from its own. Never unify existing identifiers: for a shipped app, that changes its published identity on one platform.
 
+When only one platform has an identifier, vary that platform and leave the other out of the config entirely. An `app.json` with `ios.bundleIdentifier` and no `android.package` is the common shape, and setting `android.package` from the helper would give that project an identity it never had — an invented one, which the rule above forbids. Drop the `android` block instead, so `...config` carries Android through untouched. Varying a single platform is a complete setup, not a partial one.
+
 When there is no `app.json`, drop the `ConfigContext` parameter and the spreads, and return the whole config directly. See [`./references/config-recipes.md`](./references/config-recipes.md) for that form.
 
 Spread `...config` at every level you touch. Forgetting it at the top drops everything in `app.json`; setting `bundleIdentifier` without spreading `config.ios` keeps the new ID but loses the rest of `ios`.
@@ -199,12 +203,12 @@ Two constraints to state when someone wants a different set:
 
 ## Step 2 (recommended): `APP_VARIANT` as an EAS environment variable
 
-**Apply this step as one unit** — `eas env:create` writes to the EAS servers, so the ground rule applies. `environment` keys without the variables are worse than nothing: every EAS build then evaluates the config with `APP_VARIANT` unset and silently gets the development identity, production included. Create the variables first, then point the profiles at their environments.
+**Apply this step as one unit** — `eas env:set` writes to the EAS servers, so the ground rule applies. `environment` keys without the variables are worse than nothing: every EAS build then evaluates the config with `APP_VARIANT` unset and silently gets the development identity, production included. Create the variables first, then point the profiles at their environments.
 
 Create the variable once per environment, then have each build profile name its environment instead of spelling out variables:
 
 ```sh
-eas env:create --name APP_VARIANT --value development --environment development --visibility plaintext
+eas env:set --name APP_VARIANT --value development --environment development --visibility plaintext
 # repeat per variant: --value is the variant name, --environment its mapped environment
 # (the same name in the default 1:1 setup — see "Naming variants" for custom mappings)
 ```
@@ -222,6 +226,8 @@ Set `environment` explicitly on **every** build profile, including simulator pro
 Do not leave both `env` and `environment` setting `APP_VARIANT` in the same profile. Pick one. `developmentClient: true` belongs only in projects with `expo-dev-client` installed — without it, interactive builds prompt to install the package and non-interactive (CI) builds fail.
 
 Locally, `eas env:pull --environment development` writes `.env.local` (override with `--path`), so `expo start`, `expo run`, and `expo prebuild` all read the variable with nothing inline. Pull again when switching variants, so `.env.local` always matches the variant being worked on.
+
+**The pull replaces `.env.local` rather than merging into it.** Before the first pull, read any existing file and account for every key in it: a key that no EAS environment holds is gone afterwards, and the only trace is a `Reused local values for following secrets:` line, which covers secrets alone. A local-only debug flag is the usual casualty, and losing it is silent — the app just takes its default branch on the next run. Store such keys in the environment so every later pull returns them, or add them back by hand once the pull is done.
 
 Publishing an update reads the same environment. **On SDK 55 or later, `eas update` requires `--environment`; with an environment set, it reads only the EAS environment variables and ignores local `.env` files.** Later steps refer back to this rule.
 
@@ -262,9 +268,11 @@ One boundary: the SDK 55 `eas update` rule from the recommended Step 2 still app
 
 **Moving to EAS environments later** means creating the variables and swapping `env` for `environment`. Moving back means writing the values into `eas.json` and `.env.local` again. `app.config.ts` is untouched either way.
 
-## Step 3: the dev-client scheme guard
+## Step 3: one URL scheme per variant
 
-When `expo-dev-client` is installed, add this. Do not ask first, and do not explain it at length:
+Two schemes reach an installed variant, and each needs its own treatment.
+
+**The dev-server link.** When `expo-dev-client` is installed, add this. Do not ask first, and do not explain it at length:
 
 ```ts
 plugins: [
@@ -276,7 +284,9 @@ One sentence for the user is enough: it makes the development build the only app
 
 "Do not ask" applies to a new setup, where the config is being written anyway. On an existing setup, the guard is offered through the Step 0 gap list like every other gap.
 
-Skip this step when `expo-dev-client` is not installed.
+Skip the guard when `expo-dev-client` is not installed.
+
+**The project's own `scheme`.** When the config sets one, derive it per variant in the same switch shape as the identifier, with `getScheme()` from [`./references/config-recipes.md`](./references/config-recipes.md). Otherwise every variant registers the same `myapp://` and the OS resolves it to whichever install it prefers. The guard above covers only `exp+<slug>`, so the two are separate: a gated `addGeneratedScheme` still leaves one `scheme` pointing at three apps. A project whose config sets no `scheme` needs nothing here.
 
 ## Step 4: per-variant icons
 
@@ -285,6 +295,8 @@ Add a `getIcon()` helper in the same switch shape, returning `undefined` for pro
 `ios.icon` and `android.adaptiveIcon.foregroundImage` take precedence over the top-level `icon`, so override those along with `icon` and `android.icon`, each with `icon ?? config.<field>` to keep the type as `string`. Full helper in [`./references/config-recipes.md`](./references/config-recipes.md).
 
 You cannot draw the images. Tell the user which files to add — the same icon with a different background color is enough.
+
+**Icon Composer bundles are the exception, and the agent can finish them alone.** Since SDK 54, `ios.icon` also accepts a `.icon` bundle: a directory holding `icon.json` and an `Assets/` folder. Copy the directory once per variant and change the background `fill` in each copy's `icon.json`, which needs no image editing. A `.icon` directory is valid for `ios.icon` only, so that project needs a `getIosIcon()` returning bundle paths, separate from any flat image the other icon fields take. Detect which form applies from the `ios.icon` value in Step 0: a path ending in `.icon` is a bundle, a path ending in `.png` is a flat image.
 
 ## Step 5: match EAS Update channels
 
@@ -320,6 +332,8 @@ Once the user has the per-variant files or keys, wire them the same way as every
 
 ## Verify
 
+Print the fields the project actually varies. The filter below covers both platforms; drop `.android.package` for an iOS-only project, so a `null` never has to be read as a pass.
+
 ```sh
 npx expo config --json | jq '.name, .ios.bundleIdentifier, .android.package'   # default → dev identity
 for v in development preview production; do   # the project's variant list
@@ -329,7 +343,7 @@ done
 
 Inline variables are fine for these one-off checks — they override `.env.local` for that single command. The daily workflow keeps the variant in `.env.local` or in EAS environments, never inline.
 
-One distinct identity per variant means Step 1 works. Confirm the default run shows the dev identity and that nothing from the previous config went missing.
+One distinct identity per variant, on every platform the project varies, means Step 1 works. Confirm the default run shows the dev identity and that nothing from the previous config went missing.
 
 With EAS environments, also confirm the variables exist on the servers — `APP_VARIANT` must appear in every environment that `eas.json` references:
 
