@@ -28,6 +28,8 @@ EAS-specific notes:
 
 `npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).
 
+**Invoking argent — run its tools directly.** Drive argent by running its tools directly — `argent run <tool> --udid <udid> …` (with `argent link` or the env-var config below) — where flags work (the examples here use this path); or via its MCP server, which passes structured params. Heads-up (flagged elsewhere, not reproduced in our own runs): routing an `argent run` call through `npx --yes eas-cli@latest simulator:exec` can **strip the `--flag` arguments**, so the tool runs with no options and fails confusingly. If you must go through `simulator:exec`, wrap it in `sh -c` and pass one `--args` JSON blob instead of flags: `npx --yes eas-cli@latest simulator:exec sh -c 'argent run <tool> --args "{\"udid\":\"<udid>\", …}"'`. argent's gesture tools take **normalized 0.0–1.0** coordinates, not pixels — check its help for the exact input shape.
+
 **Installing apps in an argent session.** `--type argent` provisions only an argent daemon on the VM — there is no agent-device daemon, so agent-device install verbs don't apply. Install a local build with argent's own `reinstall-app` (tar-upload):
 
 ```bash
