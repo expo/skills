@@ -19,6 +19,7 @@ Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `F
 | `expo-module` | Expo native modules and views with Swift, Kotlin, TypeScript, config plugins, and autolinking. |
 | `expo-brownfield` | Adding Expo or React Native to an existing iOS or Android app. |
 | `expo-dev-client` | Development clients (local builds are free; EAS Build/TestFlight is a paid step). |
+| `expo-app-variants` | App variants (development, preview, production) that install side by side, each with its own identifier, name, icon, and update channel. |
 | `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold from. |
 | `expo-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
 | `expo-upgrade` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |

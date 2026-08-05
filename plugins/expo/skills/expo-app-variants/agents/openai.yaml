@@ -1,0 +1,4 @@
+interface:
+  display_name: "Expo App Variants"
+  short_description: "Install app variants (for example dev, preview, and production) side by side on one device"
+  default_prompt: "Use $expo-app-variants to add a dynamic app.config.ts that switches identity on APP_VARIANT, wire the variable into eas.json (with or without EAS environment variables), and keep each variant's icon, scheme, and update channel aligned."
