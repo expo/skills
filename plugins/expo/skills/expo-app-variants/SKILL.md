@@ -1,6 +1,6 @@
 ---
 name: expo-app-variants
-description: Framework (OSS). Set up Expo app variants so several builds of one project (for example development, preview, and production) install side by side on one device, each with its own bundle identifier and name. Bonus steps give each variant its own icon and a matching EAS Update channel. Use when the user mentions app variants or APP_VARIANT, wants development and production installed at the same time, wants a staging, QA, or client-demo build next to production, or reports that installing one build replaces another or that the QR code opens the wrong app.
+description: Framework (OSS). Set up Expo app variants so several builds of one project (for example development, preview, and production) install side by side on one device, each with its own bundle identifier and name. Use when the user mentions app variants or APP_VARIANT, wants development and production installed at the same time, wants a staging, QA, or client-demo build next to production, or reports that installing one build replaces another or that the QR code opens the wrong app.
 version: 1.0.0
 license: MIT
 ---
