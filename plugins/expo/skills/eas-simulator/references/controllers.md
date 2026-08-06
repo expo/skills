@@ -28,6 +28,8 @@ EAS-specific notes:
 
 `npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).
 
+**Invoking argent — run its tools directly.** Drive argent by running its tools directly — `argent run <tool> --udid <udid> …` (with `argent link` or the env-var config below) — where flags work (the examples here use this path); or via its MCP server, which passes structured params. Heads-up (flagged elsewhere, not reproduced in our own runs): routing an `argent run` call through `npx --yes eas-cli@latest simulator:exec` can **strip the `--flag` arguments**, so the tool runs with no options and fails confusingly. If you must go through `simulator:exec`, wrap it in `sh -c` and pass one `--args` JSON blob instead of flags: `npx --yes eas-cli@latest simulator:exec sh -c 'argent run <tool> --args "{\"udid\":\"<udid>\", …}"'`. argent's gesture tools take **normalized 0.0–1.0** coordinates, not pixels — check its help for the exact input shape.
+
 **Installing apps in an argent session.** `--type argent` provisions only an argent daemon on the VM — there is no agent-device daemon, so agent-device install verbs don't apply. Install a local build with argent's own `reinstall-app` (tar-upload):
 
 ```bash
@@ -39,6 +41,12 @@ Whenever the tools client is routed to a remote tool-server, it tars the local b
 Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `argent --version`. On older versions `reinstall-app` resolves `--appPath` on the VM only, so a local path fails; drive an app already on the sim instead.
 
 **System dialogs on argent (e.g. the first-time deep-link "Open in '<app>'?").** argent's UI queries (`describe` / `await-ui-element`) may not see system dialogs / native modals — a screenshot shows the dialog, but element lookups time out. When that happens, argent surfaces a hint with the fix (today that's a `boot-device --force` to switch its AX backend); follow the hint, then locate and tap "Open". There's no single press-with-timeout — you wait for the element, then tap it. Use argent's own command help for the exact tools and flags.
+
+**Recording video on argent (`screen-recording-start`/`stop`).** The gotcha to know: argent **trims static stretches by default**, which drops the very frames you're measuring — turn that off when you care about cadence or timing (see argent's help for the flag). Recordings also carry a burned-in "Argent" watermark that can't be disabled on a hosted session — fine for diagnosis, mind it before sharing publicly. The stop call returns a video already downloaded locally; extract frames with `ffmpeg` (may need installing) to inspect motion frame by frame. The capture samples at ~30fps, so it shows visible jank but can't prove or disprove sub-frame hitches on 60/120Hz content.
+
+**Screenshot resolution and token cost.** Screenshots cost context tokens once the agent reads them, so resolution is a real tradeoff. **argent's `screenshot` has two independent levers.** `scale` sets the image resolution and defaults **low** (too coarse to judge layout), so pass a larger scale when you need to **read** the UI. `includeImageInContext:false` keeps an image **out of the agent's context entirely** (zero token cost) — use that for a baseline you'll only **diff** later, and keep *that* one at full resolution so the pixel diff stays accurate. So: scale down images you actually read; drop unread ones with `includeImageInContext`, don't just shrink them. Exact flags and the current default: argent's help.
+
+**agent-device** screenshots are full-resolution with no scale knob — a PNG you read from disk, crisp but token-heavier for its size. Match the capture to the question rather than always grabbing full-res.
 
 **Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 

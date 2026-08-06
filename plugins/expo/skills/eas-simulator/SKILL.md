@@ -3,7 +3,7 @@ name: eas-simulator
 description: "EAS service (paid). Run and control a user's app on a remote iOS/Android simulator hosted on EAS cloud. Read before running any `eas simulator:*` commands - it has the current syntax for this experimental API. Use whenever the user needs a simulator they can't run locally - 'run my app on a cloud simulator', 'use eas simulator to run/install/screenshot my app', 'I'm on Linux/Cursor and need an iOS device', 'no sim on this box / headless CI', 'let an agent click through my app and screenshot it', 'test my dev build on a remote sim with live reload', 'stream a sim to my browser' - even when they don't say 'EAS Simulator' or 'cloud'. On a host WITHOUT a local simulator (Linux, CI, cloud sandbox) it's the default; on macOS, do NOT auto-trigger for a plain 'run on the simulator' - use it only for a cloud/remote/shareable sim, an iOS version they lack, or an agent-driven session. NOT for local sims (expo run:ios, Xcode, Android Studio), EAS Build/Update, web preview, or physical devices."
 version: 1.0.0
 license: MIT
-allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(npx expo *), Bash(eas *), Bash(expo *), Bash(xcodebuild*), Bash(pod*), Bash(argent *)"
+allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(npx expo *), Bash(eas *), Bash(expo *), Bash(xcodebuild*), Bash(pod*), Bash(argent *), Bash(ffmpeg*)"
 ---
 
 # EAS Simulator
@@ -66,7 +66,8 @@ A session is: **start → (install your app) → drive → stop.** `eas-cli` own
 ```bash
 # 1. Start a session (boots the remote sim + agent-device daemon; writes .env.eas-simulator).
 printf '# managed by eas-cli\n' > .env.eas-simulator   # clear any stale session first
-npx --yes eas-cli@latest simulator:start --platform ios --type agent-device --non-interactive
+npx --yes eas-cli@latest simulator:start --platform ios --type agent-device --non-interactive \
+  --name "Checkout flow screenshots"   # always name it — see 'Always name the session'
 #    Then confirm it's live: simulator:get --json → status IN_PROGRESS (bounded poll in run-your-app.md).
 
 # 2. Drive it through `exec` (loads the session env, then runs the command you give it).
@@ -89,14 +90,37 @@ To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (an 
 
 `start` also prints a job-run URL.
 
+## Always name the session
+
+Pass `--name "<description>"` on every `simulator:start`. The name appears in `simulator:list`, `simulator:get`, and on the **Simulator sessions** page on expo.dev, where it replaces the generic title on each row. Unnamed, every row reads "Simulator session" over a random id — a wall of identical entries nobody can navigate. Write the name for a **human scanning that list days later**, not for yourself during this run.
+
+Write what the session is *for*, in a few plain words:
+
+```bash
+--name "Checkout flow screenshots"     # what you did
+--name "Dev build — dark mode fix"     # what you were testing
+--name "Login repro for issue 412"     # why it exists
+```
+
+Rules:
+- Derive it from the user's request, not from the mode or the tooling. `Mode C session`, `agent-device ios`, and `test` say nothing.
+- **Length: aim for 3–6 words, ~40 characters, and treat 50 as the practical limit.** It renders as a single-line title in a narrow table column, so a long name clips. The API accepts up to **255 characters** and rejects an empty/whitespace-only name, but 255 is a ceiling you never approach, not a target. One noun phrase, no sentences.
+- Be specific within that budget. Include a ticket or PR number when there is one.
+- **Sentence case:** capitalize the first word only, and leave identifiers in their real casing (`Dev build for expo-router v4`, `Repro for EXPO-1234`). It's a row title, so no Title Case, no all-lowercase, and no trailing period.
+- **Don't repeat what the table already shows.** Every row already displays the session id, platform, start time, duration, and who created it — so no ids, no `iOS`, no dates, no your-own-name. Spend the whole budget on what those columns can't say: the purpose.
+- If the user names it, use their name as-is.
+- Sessions are per-run, so name each new one for that run. Don't reuse an old name for different work.
+
+`--name` is newer than `simulator:start` itself, so an older installed `eas-cli` can reject it. If that happens, run via `npx --yes eas-cli@latest` or upgrade; as a last resort, retry once without `--name` (the session starts unnamed). See [references/troubleshooting.md](./references/troubleshooting.md).
+
 ## Commands at a glance
 
 | Command | Purpose |
 |---|---|
-| `npx --yes eas-cli@latest simulator:start --platform ios\|android [--type agent-device\|argent\|serve-sim] [--package-version X] [--max-duration-minutes N] [--non-interactive] [--json]` | Create a session; boot the sim + controller; write `.env.eas-simulator`; print `webPreviewUrl` + job-run URL. **`--json` suppresses the `.env.eas-simulator` write** — omit it for the `exec` flow, or set the env yourself from `remoteConfig`. |
+| `npx --yes eas-cli@latest simulator:start --platform ios\|android --name "<description>" [--type agent-device\|argent\|serve-sim] [--package-version X] [--max-duration-minutes N] [--non-interactive] [--json]` | Create a session; boot the sim + controller; write `.env.eas-simulator`; print `webPreviewUrl` + job-run URL. **Always pass `--name`** (see *Always name the session*). **`--json` suppresses the `.env.eas-simulator` write** — omit it for the `exec` flow, or set the env yourself from `remoteConfig`. |
 | `npx --yes eas-cli@latest simulator:exec <cmd> [args…]` | Load `.env.eas-simulator`, then run `<cmd>` with that env. The bridge to the controller. |
-| `npx --yes eas-cli@latest simulator:get [--id] [--json]` | Session status + connection details. **Use this to confirm readiness** (see *Operating principles*). |
-| `npx --yes eas-cli@latest simulator:list [--status …] [--type …] [--platform …]` | List an app's sessions |
+| `npx --yes eas-cli@latest simulator:get [--id] [--json]` | Session status + connection details, including the session `--name`. **Use this to confirm readiness** (see *Operating principles*). |
+| `npx --yes eas-cli@latest simulator:list [--status …] [--type …] [--platform …]` | List an app's sessions by name — this is what the `--name` you pass to `start` is for |
 | `npx --yes eas-cli@latest simulator:stop [--id]` | Stop a session (idempotent) |
 
 ## Running the user's app — pick a mode
@@ -134,7 +158,10 @@ Quick decision — **default to C; A and B are explicit-only:**
 | `press <ref\|selector>` | Tap (e.g. `press @e2` or `press 'label="Open"'`) — **the tap verb is `press`, not `tap`** |
 | `fill <ref> "text"` | Type into a field |
 | `screenshot <path>` | Capture the screen to a local PNG (downloaded from the daemon) — requires an app to be open (`open` first) |
+| `record start` / `record stop <path>` | Record the screen to a video — use this for **motion** (animations, gestures, transitions, timing), which a single screenshot can't capture |
 | `metro prepare` / `metro reload` | Point a dev client at Metro / reload (Mode C) |
+
+**Screenshots vs. video.** Default to `screenshot` for static state, but for anything that *moves* — an animation, a transition, a gesture, a timing/jank question — **record a video and inspect the frames** instead; a still can't prove motion. Both controllers record (agent-device `record start`/`stop`, argent `screen-recording-start`/`stop`). Recordings sample at ~30fps — enough to see visible jank, not to prove sub-frame 60/120Hz hitches. For **timing** specifically, argent drops static frames by default (turn `trimStatic` off) — that plus other per-controller gotchas are in [references/controllers.md](./references/controllers.md).
 
 For the full verb set and the `argent` controller alternative, see [references/controllers.md](./references/controllers.md).
 
@@ -145,10 +172,10 @@ The non-obvious mental model worth internalizing. Specific error→fix lookups (
 1. **Establish ground truth, then reset — don't patch-loop.** Never assume an existing session or Metro is yours or healthy. Before driving, confirm:
    - **cwd** — you're in the intended Expo project dir (a misdirected `start`/`exec` sessions the *wrong app* + drops a stray `.env.eas-simulator`; `pwd` / check `app.json`).
    - **session live** — `IN_PROGRESS` via `simulator:get --json` (a stopped session keeps its id + `remoteConfig`, so the dotenv alone isn't proof).
-   - **one Metro on `:8081`** — reuse if it's yours, else free the port before starting (run-your-app.md).
+   - **Metro on its own port** — reuse only if you started it this session; else start one on a free port (`--port <N>`, e.g. 8082), don't kill another server to reclaim `:8081` (run-your-app.md).
    - **build fits intent** — a **release build can't live-reload**; if live edits are wanted and a release build is installed, **install the dev build, don't reconnect**.
 
-   If current code isn't rendering after your **first** connect, stop poking live state: **reset to baseline** (stop session → clear dotenv → kill Metro) and redo the mode **once**; a second failure → stop and report. Never restart Metro in place, reconnect more than once, rebuild the native client to fix a JS/connection problem, or surface a preview URL while state is unknown. (A daemon drop — `ERR_NGROK_3200` / `Remote daemon is unavailable` — is the same: reset, don't retry.)
+   If current code isn't rendering after your **first** connect, stop poking live state: **reset to baseline** (stop session → clear dotenv → kill your Metro) and redo the mode **once**; a second failure → stop and report. Never restart Metro in place, reconnect more than once, rebuild the native client to fix a JS/connection problem, or surface a preview URL while state is unknown. (A daemon drop — `ERR_NGROK_3200` / `Remote daemon is unavailable` — is the same: reset, don't retry.)
 2. **`exec` is a wrapper, not a driver.** `simulator:exec` loads `.env.eas-simulator` and spawns the command you pass; the device verbs come from the controller (`npx agent-device@latest`). There is no `simulator:tap`.
 3. **Act immediately; don't park an idle session.** Sessions are short-lived — install and drive right after `start`. Leaving one idle drops the tunnel/daemon (→ reset, per #1).
 4. **Stop on every exit path (billing) and reset the dotenv.** `--non-interactive` doesn't auto-stop, and a forgotten session bills until stopped. Don't `start` again to "retry" a slow boot — that orphans a second billed session.
@@ -178,3 +205,4 @@ If you encounter errors, misleading or outdated information in this skill, repor
 npx --yes submit-expo-feedback@latest --category skills --subject "eas-simulator" "<actionable feedback>"
 ```
 Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
+If an AI agent repeatedly failed or the user had to take over an Expo task, load the expo-skill-feedback skill and follow its eval-candidate flow instead of reusing the command above.
