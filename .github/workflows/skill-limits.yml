@@ -29,3 +29,6 @@ jobs:
 
       - name: Check skill limits
         run: bun scripts/check-skill-limits.ts
+
+      - name: Check Agent Plugins schemas
+        run: bun scripts/check-agent-plugin-schemas.ts

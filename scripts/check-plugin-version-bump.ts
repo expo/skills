@@ -13,6 +13,8 @@ type PluginManifest = {
 type VersionRow = PluginManifest & {
   baseVersion: unknown;
   currentVersion: unknown;
+  // A manifest that does not exist on the base ref has no version to compare against.
+  isNew: boolean;
 };
 
 const baseRef = process.argv[2] ?? "origin/main";
@@ -23,26 +25,27 @@ const pluginManifests: PluginManifest[] = [
     path: "plugins/expo/.claude-plugin/plugin.json",
   },
   {
-    label: "Codex",
-    path: "plugins/expo/.codex-plugin/plugin.json",
-  },
-  {
-    label: "Cursor",
-    path: "plugins/expo/.cursor-plugin/plugin.json",
+    label: "Agent Plugins",
+    path: "plugins/expo/plugin.json",
   },
 ];
+
+const manifestLabels = pluginManifests.map((manifest) => manifest.label).join(" and ");
 
 const versionedPluginPaths = [
   "plugins/expo/skills/",
   "plugins/expo/.claude-plugin/plugin.json",
-  "plugins/expo/.codex-plugin/plugin.json",
-  "plugins/expo/.cursor-plugin/plugin.json",
+  "plugins/expo/plugin.json",
   "plugins/expo/.mcp.json",
   "plugins/expo/mcp.json",
 ];
 
-function runGit(args: string[]) {
-  return execFileSync("git", args, { encoding: "utf8" }).trim();
+function runGit(args: string[], quiet = false) {
+  return execFileSync("git", args, {
+    encoding: "utf8",
+    // A manifest that is new in this PR makes `git show` fail loudly; that case is expected.
+    stdio: quiet ? ["ignore", "pipe", "ignore"] : "pipe",
+  }).trim();
 }
 
 function getChangedFiles() {
@@ -60,7 +63,7 @@ function readJson(path: string) {
 
 function readBaseJson(path: string) {
   try {
-    return JSON.parse(runGit(["show", `${baseRef}:${path}`]));
+    return JSON.parse(runGit(["show", `${baseRef}:${path}`], /*quiet*/ true));
   } catch {
     return null;
   }
@@ -126,21 +129,29 @@ if (versionedChanges.length === 0) {
   );
 }
 
-const rows: VersionRow[] = pluginManifests.map((manifest) => ({
-  ...manifest,
-  baseVersion: readBaseJson(manifest.path)?.version,
-  currentVersion: readJson(manifest.path)?.version,
-}));
+const rows: VersionRow[] = pluginManifests.map((manifest) => {
+  const base = readBaseJson(manifest.path);
+  return {
+    ...manifest,
+    baseVersion: base?.version,
+    currentVersion: readJson(manifest.path)?.version,
+    isNew: base === null,
+  };
+});
+
+const existingRows = rows.filter((row) => !row.isNew);
 
 const errors: string[] = [];
 const currentVersions = new Set(rows.map((row) => row.currentVersion));
-const baseVersions = new Set(rows.map((row) => row.baseVersion));
+const baseVersions = new Set(existingRows.map((row) => row.baseVersion));
 
 for (const row of rows) {
-  if (row.baseVersion === undefined) {
-    errors.push(`${row.label} manifest is missing or has no version on main (${row.path}).`);
-  } else if (!isSemver(row.baseVersion)) {
-    errors.push(`${row.label} has an invalid semver version on main: ${formatVersion(row.baseVersion)}`);
+  if (!row.isNew) {
+    if (row.baseVersion === undefined) {
+      errors.push(`${row.label} manifest has no version on main (${row.path}).`);
+    } else if (!isSemver(row.baseVersion)) {
+      errors.push(`${row.label} has an invalid semver version on main: ${formatVersion(row.baseVersion)}`);
+    }
   }
 
   if (row.currentVersion === undefined) {
@@ -150,16 +161,18 @@ for (const row of rows) {
   }
 }
 
-if (baseVersions.size !== 1) {
-  errors.push("The Claude, Codex, and Cursor plugin versions on main are not in sync.");
+if (existingRows.length === 0) {
+  errors.push("No plugin manifest exists on main, so there is no version to compare against.");
+} else if (baseVersions.size !== 1) {
+  errors.push(`The ${manifestLabels} plugin versions on main are not in sync.`);
 }
 
 if (currentVersions.size !== 1) {
-  errors.push("The Claude, Codex, and Cursor plugin versions in this PR must match.");
+  errors.push(`The ${manifestLabels} plugin versions in this PR must match.`);
 }
 
 if (errors.length === 0) {
-  for (const row of rows) {
+  for (const row of existingRows) {
     if (semver.order(row.currentVersion as string, row.baseVersion as string) <= 0) {
       errors.push(`${row.label} version must be greater than main (${formatVersion(row.baseVersion)}).`);
     }
@@ -172,7 +185,7 @@ const markdown = [
   "",
   errors.length === 0
     ? "Passed. Versioned Expo plugin files changed and all plugin manifests were bumped together."
-    : "Failed. Versioned Expo plugin files changed, so the Claude, Codex, and Cursor plugin manifests must all be bumped together.",
+    : `Failed. Versioned Expo plugin files changed, so the ${manifestLabels} plugin manifests must be bumped together.`,
   "",
   formatVersionRows(rows),
   "",

@@ -10,3 +10,6 @@ node_modules/
 # Python
 __pycache__/
 *.pyc
+
+# Isolated Codex home used when testing marketplace registration
+.context/
