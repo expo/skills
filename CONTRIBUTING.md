@@ -115,18 +115,19 @@ CI fails if the block is missing, has drifted, or names the wrong skill.
 
 ### 10. Bump the plugin version
 
-Bump `version` in **all three** manifests together - they must match each other and be greater
+Bump `version` in **both** manifests together - they must match each other and be greater
 than `main`. CI enforces this.
 
-- `plugins/expo/.claude-plugin/plugin.json`
-- `plugins/expo/.codex-plugin/plugin.json`
-- `plugins/expo/.cursor-plugin/plugin.json`
+- `plugins/expo/plugin.json` - the [Agent Plugins](https://agent-plugins.org/) manifest, read by
+  Codex, Cursor, and other compatible clients
+- `plugins/expo/.claude-plugin/plugin.json` - the Claude Code manifest
 
 ### 11. Validate before opening a PR
 
 ```bash
 claude plugin validate ./plugins/expo
 bun scripts/check-skill-limits.ts
+bun scripts/check-agent-plugin-schemas.ts
 bun scripts/check-plugin-version-bump.ts origin/main
 ```
 
@@ -136,6 +137,10 @@ run that skill's own validation.
 `check-skill-limits.ts` enforces more than the size caps: the naming rule (step 2), the category
 prefixes and paid costs callout (step 4), the Codex agent file and its paid prefix (step 7), the
 `skills.sh.json` grouping (step 8), and the feedback block (step 9) all fail CI when violated.
+
+`check-agent-plugin-schemas.ts` validates each `plugin.json` and `mcp.json` against Agent Plugins
+1.0.0. That schema is closed, so an extra top-level field is an error - client-specific data belongs
+under a reverse-domain key in `extensions` (Codex uses `com.openai`).
 
 ### Conventions
 

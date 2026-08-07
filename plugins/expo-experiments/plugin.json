@@ -1,0 +1,15 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "expo-experiments",
+  "version": "0.2.0",
+  "description": "Experimental Expo skills for APIs that are not finalized. Skills here may change or be retired, and graduate to the expo plugin when stable.",
+  "author": {
+    "name": "Expo Team",
+    "email": "support@expo.dev",
+    "url": "https://expo.dev"
+  },
+  "homepage": "https://docs.expo.dev/skills/",
+  "repository": "https://github.com/expo/skills/tree/main/plugins/expo-experiments",
+  "license": "MIT",
+  "keywords": ["expo", "react-native", "experimental"]
+}
