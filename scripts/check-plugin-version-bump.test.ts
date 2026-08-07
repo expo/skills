@@ -21,7 +21,7 @@ const checkScript = "scripts/check-plugin-version-bump.ts";
 
 const manifests = [
   "plugins/expo/.claude-plugin/plugin.json",
-  "plugins/expo/.codex-plugin/plugin.json",
+  "plugins/expo/plugin.json",
   "plugins/expo/.cursor-plugin/plugin.json",
   "plugins/expo/.grok-plugin/plugin.json",
 ];

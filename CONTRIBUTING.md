@@ -115,19 +115,19 @@ CI fails if the block is missing, has drifted, or names the wrong skill.
 
 ### 10. Bump the plugin version
 
-Bump `version` in **all four** manifests together - they must match each other and be greater
+Bump `version` in **all four** manifests together. They must match each other and be greater
 than `main`. CI enforces this.
 
-- `plugins/expo/.claude-plugin/plugin.json`
-- `plugins/expo/.codex-plugin/plugin.json`
-- `plugins/expo/.cursor-plugin/plugin.json`
-- `plugins/expo/.grok-plugin/plugin.json`
+- `plugins/expo/plugin.json` - the [Agent Plugins](https://agent-plugins.org/) manifest. Codex and other compatible clients read it. Codex install metadata lives under `extensions["com.openai"]`.
+- `plugins/expo/.claude-plugin/plugin.json` - Claude Code
+- `plugins/expo/.cursor-plugin/plugin.json` - Cursor. It keeps the logo and display name, which the Agent Plugins schema does not have.
+- `plugins/expo/.grok-plugin/plugin.json` - Grok Build. Grok does not read a root Agent Plugins manifest.
 
 The check script writes all four for you, rejecting a version that is not valid semver or is not
 greater than the base ref:
 
 ```bash
-bun scripts/check-plugin-version-bump.ts --set-version 1.10.1
+bun scripts/check-plugin-version-bump.ts --set-version 1.14.0
 ```
 
 Run it with `--help` for the full usage, or `bun test scripts/check-plugin-version-bump.test.ts` to exercise
@@ -138,6 +138,7 @@ every case (the manifests are restored afterward).
 ```bash
 claude plugin validate ./plugins/expo
 bun scripts/check-skill-limits.ts
+bun scripts/check-agent-plugin-schemas.ts
 bun scripts/check-plugin-version-bump.ts origin/main
 ```
 
@@ -147,6 +148,10 @@ run that skill's own validation.
 `check-skill-limits.ts` enforces more than the size caps: the naming rule (step 2), the paid
 costs callout (step 4), the Codex agent file (step 7), the `skills.sh.json` grouping (step 8),
 and the feedback block (step 9) all fail CI when violated.
+
+`check-agent-plugin-schemas.ts` validates each root `plugin.json` and `mcp.json` against Agent Plugins
+1.0.0. That schema is closed, so an extra top-level field is an error. Client-specific data belongs
+under a reverse-domain key in `extensions` (Codex uses `com.openai`).
 
 ### Syncing `expo-animation`
 

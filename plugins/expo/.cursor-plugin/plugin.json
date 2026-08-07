@@ -1,7 +1,7 @@
 {
   "name": "Expo",
   "displayName": "Expo",
-  "version": "1.13.9",
+  "version": "1.14.0",
   "description": "Official Expo plugin. Everything your agent needs to build, verify, deploy, and monitor an app on Android, iOS, and web.",
   "author": {
     "name": "Expo Team",
@@ -23,5 +23,5 @@
   ],
   "logo": "./assets/expo.png",
   "skills": "./skills/",
-  "mcpServers": "./mcp.json"
+  "mcpServers": "./.mcp.json"
 }
