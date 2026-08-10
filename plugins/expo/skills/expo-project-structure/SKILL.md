@@ -1,114 +1,552 @@
----
-name: expo-project-structure
-description: Framework (OSS). Folder structure for a new Expo app. Use when scaffolding or laying out a new Expo project with Expo Router, or deciding where a file should live in one. For new projects only — never restructure an existing app to match.
-version: 1.0.0
-license: MIT
----
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>القرآن الكريم - قراءة مستمرة دون توقف</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --primary-color: #0f5132;
+            --accent-color: #d4af37;
+            --text-color: #2b2b2b;
+            --border-color: #e0e0e0;
+            --highlight-bg: #fff3cd;
+            --highlight-border: #d4af37;
+            --font-quran: 'Amiri', serif;
+            --font-ui: 'Tajawal', sans-serif;
+        }
 
-# Expo Project Structure
+        [data-theme="dark"] {
+            --bg-color: #12181b;
+            --card-bg: #1e262c;
+            --primary-color: #198754;
+            --accent-color: #f1c40f;
+            --text-color: #e4e6eb;
+            --border-color: #2d3748;
+            --highlight-bg: #3e3812;
+            --highlight-border: #f1c40f;
+        }
 
-A starting skeleton for a **new** Expo app — one with no committed folder structure yet.
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-ui);
+        }
 
-**Apply only to new projects.** If the app already has a layout, follow its existing conventions and leave files where they are — a default to start from, never a standard to enforce or migrate toward. When unsure whether a project is new, ask before moving anything.
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-The whole layout, assembled from the rules below:
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-```
-├── assets/
-├── scripts/
-├── src/
-│   ├── app/                       # Expo Router routes ONLY — every file is a route
-│   │   ├── api/                   #   server API routes, grouped here
-│   │   │   ├── user+api.ts
-│   │   │   └── settings+api.ts
-│   │   ├── _layout.tsx
-│   │   ├── _layout.web.tsx         #   platform-specific layout
-│   │   ├── index.tsx
-│   │   └── settings.tsx
-│   ├── components/                 # reusable UI: button, card, table…
-│   │   ├── table/                  #   complex component → folder + index.tsx
-│   │   │   ├── cell.tsx
-│   │   │   └── index.tsx
-│   │   ├── bar-chart.tsx
-│   │   ├── bar-chart.web.tsx        #   platform-specific variant
-│   │   └── button.tsx
-│   ├── screens/                    # screen bodies that route files render
-│   │   ├── home/
-│   │   │   ├── card.tsx            #   used only by Home — not shared
-│   │   │   └── index.tsx           #   rendered by src/app/index.tsx
-│   │   └── settings.tsx
-│   ├── server/                     # server-only helpers used by app/api
-│   │   ├── auth.ts
-│   │   └── db.ts
-│   ├── utils/                      # standalone helpers + colocated tests
-│   │   ├── format-date.ts
-│   │   └── format-date.test.ts
-│   ├── hooks/                      # reusable hooks: use-theme.ts…
-│   ├── constants.ts
-│   └── theme.ts
-├── app.json
-├── eas.json
-└── package.json
-```
+        header h1 {
+            font-family: var(--font-quran);
+            color: var(--accent-color);
+            font-size: 1.8rem;
+        }
 
-## `src/` and `src/app`
+        .controls {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
 
-Keep app code under `src/` to separate it from config files. Expo Router supports both `app/` and `src/app/` out of the box — to switch, move the folder and restart the bundler. The default template aliases `@/*` to `./src/*` in `tsconfig.json`.
+        select, button {
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            outline: none;
+            font-size: 0.9rem;
+        }
 
-`src/app` is **routes-only**: every file there becomes a route, so nothing else belongs in it. Everything below lives in sibling folders.
+        button {
+            background-color: var(--accent-color);
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            border: none;
+        }
 
-## components/ — reusable UI
+        button:hover {
+            opacity: 0.9;
+        }
 
-Generic, reused UI (button, card, table) with one named export each. Name files in **kebab-case** (`bar-chart.tsx`), matching the default `create-expo-app` template. When a component grows, give it its own folder with the root in `index.tsx` and **colocate** its private sub-components beside it — the import path (`@/components/table`) stays unchanged.
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            height: calc(100vh - 140px);
+        }
 
-## screens/ — screen bodies
+        .sidebar {
+            width: 320px;
+            background-color: var(--card-bg);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
 
-Because `app/` files must be routes, complex screen UI that isn't reused has no home there. Once a screen grows big enough to need breaking out to separate components, put it in `screens/` and let each route just render its screen:
+        .search-box {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-```tsx
-import { Home } from "@/screens/home";
+        .search-box input {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
 
-export default function HomeScreen() {
-  // route-specific concerns only — e.g. read url params here
-  return <Home />;
-}
-```
+        .surah-list {
+            overflow-y: auto;
+            flex: 1;
+        }
 
-**Colocate** a screen's private components inside its folder (`screens/home/components/`). A bonus: the same screen can render under multiple routes.
+        .surah-item {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: 0.2s;
+        }
 
-## server/ + app/api/ — separate server code
+        .surah-item:hover, .surah-item.active {
+            background-color: rgba(15, 81, 50, 0.1);
+            border-right: 4px solid var(--primary-color);
+        }
 
-Appending `+api` to a file in `app/` makes it a server **API route**. Server code is different from frontend code — it runs in a Node-like server environment (deployed with EAS Hosting or on [third-party services](https://docs.expo.dev/router/web/api-routes/#hosting-on-third-party-services)) and can read secret env vars (`process.env.X`, not just `EXPO_PUBLIC_*`). Keep it apart:
+        .surah-number {
+            background-color: var(--primary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
 
-- Group all routes under `app/api/` → `/api/user`, `/api/settings`. This colocates them and avoids collisions (e.g. a `/user` screen and a `/user` route).
-- Put shared server-only helpers in `src/server/`.
-- Consider ESLint rules that fence `+api` files and `server/` off from frontend-only checks.
+        .reader-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            scroll-behavior: smooth;
+        }
 
-## Platform-specific code
+        .bismillah {
+            font-family: var(--font-quran);
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
 
-Small differences: use `Platform.select` / `Platform.OS`. For larger ones, split into platform files instead of inline `if/else` — `bar-chart.tsx` + `bar-chart.web.tsx`, imported extension-free (`@/components/bar-chart`); Metro picks the right file per target.
+        .quran-container {
+            max-width: 900px;
+            width: 100%;
+            background-color: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            line-height: 2.6;
+        }
 
-- Props must be identical across variants.
-- A default file (no platform extension) is always required — make it a no-op if the component is single-platform.
-- Supported extensions: `.ios`, `.android`, `.native`, `.web`.
+        .ayah-span {
+            font-family: var(--font-quran);
+            font-size: 1.9rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background-color 0.3s, color 0.3s;
+            cursor: pointer;
+            display: inline;
+        }
 
-## Colocate styles and tests
+        .ayah-span:hover {
+            background-color: rgba(212, 175, 55, 0.2);
+        }
 
-- **Styles:** keep the `StyleSheet.create({ ... })` object at the bottom of the component file rather than in a separate `.styles` file.
-- **Tests:** put `format-date.test.ts` next to `format-date.ts` (preferred over a separate `__tests__/` folder) so tested files are obvious at a glance.
+        .ayah-span.active-ayah {
+            background-color: var(--highlight-bg);
+            border: 1px dashed var(--highlight-border);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
 
-## AI and config files
+        .ayah-number {
+            color: var(--accent-color);
+            font-size: 1.4rem;
+            margin: 0 0.4rem;
+            display: inline-block;
+        }
 
-Agent instructions live at the repo root — `AGENTS.md` / `CLAUDE.md`, with project skills under `.claude/`. Other config and assets stay outside `src/`: `app.json` / `app.config.ts`, `eas.json`, `package.json`, `assets/`, and `scripts/`.
+        .audio-player-bar {
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 0.8rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
 
----
+        .play-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
-Based on [Expo app folder structure best practices](https://expo.dev/blog/expo-app-folder-structure-best-practices) by Kadi Kraman. For `src/` precedence and alias mechanics, see the [Expo docs](https://docs.expo.dev/router/reference/src-directory/).
+        .play-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.6rem 1.5rem;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
-```bash
-npx --yes submit-expo-feedback@latest --category skills --subject "expo-project-structure" "<actionable feedback>"
-```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an AI agent repeatedly failed or the user had to take over an Expo task, load the expo-skill-feedback skill and follow its eval-candidate flow instead of reusing the command above.
+        @media (max-width: 768px) {
+            .container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; height: 200px; }
+            .audio-player-bar { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>القرآن الكريم - قراءة مستمرة دون توقف</h1>
+        <div class="controls">
+            <select id="reciterSelect">
+                <option value="ar.alafasy">مشاري العفاسي</option>
+                <option value="ar.abdulbasitmurattal">عبد الباسط عبد الصمد (مرتل)</option>
+                <option value="ar.minshawi">محمد صديق المنشاوي</option>
+                <option value="ar.husrimeshari">محمود خليل الحصري</option>
+                <option value="ar.mahermuaiqly">ماهر المعيقلي</option>
+                <option value="ar.shaatree">أبو بكر الشاطري</option>
+            </select>
+            <button id="themeToggle">الوضع الليلي 🌙</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="ابحث عن اسم السورة...">
+            </div>
+            <div class="surah-list" id="surahContainer">
+                <div style="padding:1rem; text-align:center;">جاري تحميل القائمة...</div>
+            </div>
+        </div>
+
+        <div class="reader-area" id="readerArea">
+            <div class="bismillah" id="bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
+            <div class="quran-container" id="quranContainer">
+                اختر سورة للبدء بالقراءة والمتابعة.
+            </div>
+        </div>
+    </div>
+
+    <div class="audio-player-bar">
+        <div class="play-controls">
+            <button id="mainPlayBtn" class="play-btn">
+                <span id="playIcon">▶</span> <span id="playText">تشغيل التلاوة</span>
+            </button>
+            <div id="currentAudioTitle">السورة الحالية: اختر سورة</div>
+        </div>
+        <audio id="audioPlayer" preload="auto"></audio>
+        <audio id="nextAudioPreloader" preload="auto" style="display:none;"></audio>
+    </div>
+
+    <script>
+        const surahContainer = document.getElementById('surahContainer');
+        const quranContainer = document.getElementById('quranContainer');
+        const bismillah = document.getElementById('bismillah');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const nextAudioPreloader = document.getElementById('nextAudioPreloader');
+        const currentAudioTitle = document.getElementById('currentAudioTitle');
+        const searchInput = document.getElementById('searchInput');
+        const reciterSelect = document.getElementById('reciterSelect');
+        const themeToggle = document.getElementById('themeToggle');
+        const mainPlayBtn = document.getElementById('mainPlayBtn');
+        const playIcon = document.getElementById('playIcon');
+        const playText = document.getElementById('playText');
+
+        let allSurahs = [];
+        let currentSurahAyahs = [];
+        let currentSurahNumber = 1;
+        let currentAyahIndex = 0;
+        let isPlaying = false;
+        let wakeLock = null;
+
+        // 1. Keep Screen & System Awake (Screen Wake Lock API)
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.log('Wake Lock Error:', err);
+            }
+        }
+
+        // Re-acquire wake lock if tab regains focus
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
+
+        // 2. Register Media Session API for background OS control
+        function updateMediaSession(surahName, ayahNumber) {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: `سورة ${surahName} - آية ${ayahNumber}`,
+                    artist: reciterSelect.options[reciterSelect.selectedIndex].text,
+                    album: 'القرآن الكريم'
+                });
+
+                navigator.mediaSession.setActionHandler('play', () => audioPlayer.play());
+                navigator.mediaSession.setActionHandler('pause', () => audioPlayer.pause());
+                navigator.mediaSession.setActionHandler('nexttrack', () => playAyah(currentAyahIndex + 1));
+                navigator.mediaSession.setActionHandler('previoustrack', () => playAyah(Math.max(0, currentAyahIndex - 1)));
+            }
+        }
+
+        // 3. Fetch Surah List
+        async function fetchSurahs() {
+            try {
+                const response = await fetch('https://api.alquran.cloud/v1/surah');
+                const data = await response.json();
+                allSurahs = data.data;
+                renderSurahs(allSurahs);
+                loadSurah(1, false);
+            } catch (error) {
+                surahContainer.innerHTML = '<div style="padding:1rem; color:red;">خطأ في تحميل السور.</div>';
+            }
+        }
+
+        // 4. Render Sidebar
+        function renderSurahs(surahs) {
+            surahContainer.innerHTML = '';
+            surahs.forEach(surah => {
+                const item = document.createElement('div');
+                item.className = `surah-item ${surah.number === currentSurahNumber ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div>
+                        <strong>${surah.name}</strong>
+                        <div style="font-size:0.8rem; color:#777;">آياتها ${surah.numberOfAyahs}</div>
+                    </div>
+                    <div class="surah-number">${surah.number}</div>
+                `;
+                item.onclick = () => {
+                    requestWakeLock();
+                    updateActiveSidebar(surah.number);
+                    loadSurah(surah.number, true);
+                };
+                surahContainer.appendChild(item);
+            });
+        }
+
+        function updateActiveSidebar(surahNumber) {
+            document.querySelectorAll('.surah-item').forEach((el, index) => {
+                if (allSurahs[index] && allSurahs[index].number === surahNumber) {
+                    el.classList.add('active');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
+
+        // 5. Load Surah Data
+        async function loadSurah(surahNumber, autoPlay = false) {
+            currentSurahNumber = surahNumber;
+            currentAyahIndex = 0;
+            const reciter = reciterSelect.value;
+            quranContainer.innerHTML = 'جاري تحميل السورة...';
+
+            try {
+                const response = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/${reciter}`);
+                const data = await response.json();
+                currentSurahAyahs = data.data.ayahs;
+
+                bismillah.style.display = (surahNumber === 9) ? 'none' : 'block';
+
+                quranContainer.innerHTML = '';
+                currentSurahAyahs.forEach((ayah, index) => {
+                    let text = ayah.text;
+                    if (ayah.numberInSurah === 1 && surahNumber !== 1 && surahNumber !== 9) {
+                        text = text.replace('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', '');
+                    }
+
+                    const ayahSpan = document.createElement('span');
+                    ayahSpan.className = 'ayah-span';
+                    ayahSpan.id = `ayah-${index}`;
+                    ayahSpan.innerHTML = `${text} <span class="ayah-number">﴿${toArabicNumerals(ayah.numberInSurah)}﴾</span> `;
+                    
+                    ayahSpan.onclick = () => {
+                        requestWakeLock();
+                        playAyah(index);
+                    };
+
+                    quranContainer.appendChild(ayahSpan);
+                });
+
+                currentAudioTitle.innerText = `السورة: ${data.data.name} | القارئ: ${reciterSelect.options[reciterSelect.selectedIndex].text}`;
+                updateActiveSidebar(surahNumber);
+
+                if (autoPlay) {
+                    playAyah(0);
+                }
+
+            } catch (error) {
+                quranContainer.innerHTML = 'حدث خطأ في جلب البيانات. جاري إعادة المحاولة تلقائياً...';
+                setTimeout(() => loadSurah(surahNumber, autoPlay), 2000);
+            }
+        }
+
+        // 6. Non-stop Ayah Player
+        function playAyah(index) {
+            // Infinite loop transition between Surahs
+            if (index >= currentSurahAyahs.length) {
+                let nextSurah = currentSurahNumber + 1;
+                if (nextSurah > 114) {
+                    nextSurah = 1; // Seamless return to Al-Fatiha
+                }
+                loadSurah(nextSurah, true);
+                return;
+            }
+
+            currentAyahIndex = index;
+            const ayah = currentSurahAyahs[index];
+            const currentSurahObj = allSurahs.find(s => s.number === currentSurahNumber);
+
+            // Active verse scroll & glow
+            document.querySelectorAll('.ayah-span').forEach(el => el.classList.remove('active-ayah'));
+            const currentElement = document.getElementById(`ayah-${index}`);
+            if (currentElement) {
+                currentElement.classList.add('active-ayah');
+                currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // Preload next audio file
+            if (index + 1 < currentSurahAyahs.length) {
+                nextAudioPreloader.src = currentSurahAyahs[index + 1].audio;
+            }
+
+            // Update lock screen metadata
+            if (currentSurahObj) {
+                updateMediaSession(currentSurahObj.name, ayah.numberInSurah);
+            }
+
+            // Continuous execution
+            audioPlayer.src = ayah.audio;
+            const playPromise = audioPlayer.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    isPlaying = true;
+                    updateBtnUI(true);
+                }).catch(() => {
+                    // Immediate auto-retry on background throttling
+                    setTimeout(() => audioPlayer.play(), 250);
+                });
+            }
+        }
+
+        // Auto transition to next verse
+        audioPlayer.onended = () => {
+            playAyah(currentAyahIndex + 1);
+        };
+
+        // Self-healing error handler: skip broken audio tracks without stopping
+        audioPlayer.onerror = () => {
+            setTimeout(() => playAyah(currentAyahIndex + 1), 500);
+        };
+
+        function toggleAudio() {
+            requestWakeLock();
+            if (isPlaying) {
+                audioPlayer.pause();
+                isPlaying = false;
+                updateBtnUI(false);
+            } else {
+                playAyah(currentAyahIndex);
+            }
+        }
+
+        function updateBtnUI(playing) {
+            if (playing) {
+                playIcon.innerText = '⏸';
+                playText.innerText = 'إيقاف مؤقت';
+                mainPlayBtn.style.backgroundColor = '#dc3545';
+            } else {
+                playIcon.innerText = '▶';
+                playText.innerText = 'تشغيل التلاوة';
+                mainPlayBtn.style.backgroundColor = 'var(--primary-color)';
+            }
+        }
+
+        mainPlayBtn.onclick = toggleAudio;
+
+        function toArabicNumerals(num) {
+            return num.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+        }
+
+        searchInput.oninput = (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = allSurahs.filter(s => s.name.includes(query) || s.number.toString() === query);
+            renderSurahs(filtered);
+        };
+
+        reciterSelect.onchange = () => {
+            loadSurah(currentSurahNumber, isPlaying);
+        };
+
+        themeToggle.onclick = () => {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.body.removeAttribute('data-theme');
+                themeToggle.innerText = 'الوضع الليلي 🌙';
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                themeToggle.innerText = 'الوضع النهاري ☀️';
+            }
+        };
+
+        fetchSurahs();
+    </script>
+</body>
+</html>
