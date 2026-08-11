@@ -11,6 +11,7 @@ Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `F
 | `expo-project-structure` | Folder structure for a new Expo app: `src/` layout, routes-only `app/`, screens, server code, platform-specific files. |
 | `expo-router` | Expo Router navigation: file-based routes, links, native stacks, modals, sheets, native tabs, and headers. |
 | `expo-native-ui` | Native-feeling screen styling, semantic colors, controls, icons, media, animations, and visual effects. |
+| `expo-design` | In-app design systems: a token theme (color, spacing, typography, radius, shadow, motion), reusable component conventions, and hardcoded-value audits. |
 | `expo-ui` | `@expo/ui` native components: universal cross-platform first, plus SwiftUI and Jetpack Compose. |
 | `expo-data-fetching` | API calls, React Query, SWR, caching, offline support, and Expo Router data loaders. |
 | `expo-tailwind-setup` | Tailwind CSS v4, `react-native-css`, and NativeWind v5 setup. |
