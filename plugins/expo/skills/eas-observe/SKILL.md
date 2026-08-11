@@ -26,6 +26,7 @@ The four reference files in `./references/` cover what people typically need thi
 
 - Get started: https://docs.expo.dev/eas/observe/get-started/
 - Dashboard guide: https://docs.expo.dev/eas/observe/dashboard/
+- Querying with EAS CLI: https://docs.expo.dev/eas/observe/eas-cli/
 - Metrics reference: https://docs.expo.dev/eas/observe/reference/metrics/
 - Expo Router integration: https://docs.expo.dev/eas/observe/integrations/expo-router/
 - React Navigation integration: https://docs.expo.dev/eas/observe/integrations/react-navigation/
@@ -39,9 +40,9 @@ The four reference files in `./references/` cover what people typically need thi
 
 Verified against `eas-cli` 21.2.0 and `expo-observe` 57.0.9. Trust this skill's references over the docs on these points, but re-check with `--help` and the installed package before relying on them:
 
-- The docs list four CLI commands. `observe:routes` and `observe:session` also ship, undocumented.
-- The docs' EAS Update page shows `eas observe:metrics update_download --order desc`. There is no `--order` flag; it is `--sort <slowest|fastest|newest|oldest>`.
+- All six CLI commands are on the [Querying with EAS CLI](https://docs.expo.dev/eas/observe/eas-cli/) page. Older doc builds list only four and omit `observe:routes` and `observe:session`.
 - Navigation metric aliases are `nav_cold_ttr`, `nav_warm_ttr`, and `nav_tti`. There are no bare `cold_ttr` / `warm_ttr` aliases in the CLI.
+- Sorting uses `--sort <slowest|fastest|newest|oldest>`. There is no `--order` flag.
 - `ObserveErrorBoundary`, `Observe.reportError`, and `configure({ errorHandlingEnabled })` are exported but undocumented. Observe still has no crash reporting; use Sentry or BugSnag for that.
 
 ## Submitting Feedback

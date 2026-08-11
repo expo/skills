@@ -2,6 +2,8 @@
 
 EAS Observe collects app performance telemetry and custom events from Expo apps and exposes them through six EAS CLI commands. Pass the `--help` flag to any command for the latest API — the flags below were verified against `eas-cli` 21.2.0.
 
+> Source: https://docs.expo.dev/eas/observe/eas-cli/ — the canonical CLI page. This reference adds table layouts, JSON output shapes, and pagination details that the docs page does not cover.
+
 ## Commands Overview
 
 | Command | Purpose |
@@ -13,7 +15,7 @@ EAS Observe collects app performance telemetry and custom events from Expo apps 
 | `eas observe:session` | Full timeline of metric and log events for one session |
 | `eas observe:versions` | App version hierarchy with build numbers, OTA update IDs, and event counts |
 
-> The published docs list only `metrics-summary`, `metrics`, `events`, and `versions`. `routes` and `session` ship in the CLI but are not documented yet; run `--help` to confirm them on your installed version.
+> Older published docs list only `metrics-summary`, `metrics`, `events`, and `versions`. All six are on the [Querying with EAS CLI](https://docs.expo.dev/eas/observe/eas-cli/) page; run `--help` to confirm them on your installed version.
 
 All six commands share these common flags:
 
