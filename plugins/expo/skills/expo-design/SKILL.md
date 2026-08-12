@@ -22,12 +22,13 @@ Consult these resources as needed:
 ```
 references/
   audit.md      Audit an existing app for design-system drift: grep checks,
-                scoring rubric, and templates for documenting or extending components
+                scoring rubric, incremental adoption plan, and templates for
+                documenting or extending components
 ```
 
 ## The Theme
 
-All design tokens live under `src/theme/`. Start small and split by token class as it grows:
+All design tokens live under `src/theme/`. In a project without a `src/` folder (the default `create-expo-app` template has `app/`, `components/`, and `constants/` at the root), use the equivalent top-level location - typically `theme/` or the existing `constants/` - and keep the same file layout. Start small and split by token class as it grows:
 
 ```
 src/theme/
@@ -50,7 +51,43 @@ Rules that make a theme worth having:
 
 ### Colors
 
-Use the semantic-color palette pattern from `expo-native-ui` ("Colors" section): `Color` from `expo-router` wrapped in `Platform.select`, centralized in `theme/colors.ts`. Semantic colors adapt to light/dark automatically - prefer them for backgrounds, labels, and separators.
+Build the palette from platform semantic colors: `Color` from `expo-router` wrapped in `Platform.select`, centralized in `theme/colors.ts`. Semantic colors resolve on-device and adapt to light/dark automatically - prefer them for backgrounds, labels, and separators. (`expo-native-ui` "Colors" covers the full palette and rationale; the minimal version is:)
+
+```tsx
+// theme/colors.ts
+import { Platform } from "react-native";
+import { Color } from "expo-router";
+
+export const colors = {
+  label: Platform.select({
+    ios: Color.ios.label,
+    android: Color.android.dynamic.onSurface,
+    default: "#000000",
+  })!,
+  secondaryLabel: Platform.select({
+    ios: Color.ios.secondaryLabel,
+    android: Color.android.dynamic.onSurfaceVariant,
+    default: "#3c3c43",
+  })!,
+  separator: Platform.select({
+    ios: Color.ios.separator,
+    android: Color.android.dynamic.outlineVariant,
+    default: "#c6c6c8",
+  })!,
+  systemBackground: Platform.select({
+    ios: Color.ios.systemBackground,
+    android: Color.android.dynamic.surface,
+    default: "#ffffff",
+  })!,
+  systemBlue: Platform.select({
+    ios: Color.ios.systemBlue,
+    android: Color.android.dynamic.primary,
+    default: "#007aff",
+  })!,
+  // Deliberately fixed: text on a tinted (accent) surface stays white in both modes.
+  onTint: "#ffffff",
+};
+```
 
 Add brand colors as explicit light/dark pairs only when the brand requires values the platform doesn't provide:
 
@@ -71,6 +108,12 @@ export function useBrandColors() {
 
 Keep the brand set tiny (accent, accentContrast, maybe a tint per feature). Everything else stays semantic.
 
+**Static-safe vs hook-only.** The two patterns above have different reach - keep the boundary explicit:
+
+- Semantic/platform colors (`colors` above) are **static-safe**: they resolve on-device, so plain token files like `theme/typography.ts` can import them at module scope.
+- Brand light/dark pairs are **hook-only**: `useBrandColors()` reads the color scheme at render time, so brand colors can only be applied inside components. A static token file cannot call the hook.
+- Never mix the two in one file. If a static style (a `type` ramp step, a `variants` object) needs the brand accent, either apply the brand color in the component at render time, or wrap the pair in a static dynamic color (`DynamicColorIOS` on iOS) so it becomes static-safe.
+
 ### Spacing
 
 One scale, based on a 4-point grid. Name steps by size, not by use:
@@ -90,6 +133,7 @@ export const spacing = {
 - Use `gap` with spacing tokens for layout rhythm (`expo-native-ui` prefers gap over margin).
 - Screen edge padding is `spacing.md` unless the design says otherwise - pick one and keep it.
 - If a layout needs a value between steps, use the nearest step. The grid is the point.
+- If the same in-between multiple of 4 keeps recurring (12 and 20 are common), add it to the scale as a named step instead of scattering literals. The audit whitelist must then include it too.
 
 ### Typography
 
@@ -108,6 +152,12 @@ export const type = {
   subhead: { fontSize: 15, fontWeight: "400", color: colors.secondaryLabel },
   caption: { fontSize: 12, fontWeight: "400", color: colors.secondaryLabel },
 } as const satisfies Record<string, TextStyle>;
+```
+
+If the project bundles static font files (one file per weight, loaded with `expo-font` or the config plugin), set weight via `fontFamily` names instead and omit `fontWeight` - otherwise iOS synthesizes the weight or falls back to the system font:
+
+```tsx
+headline: { fontSize: 17, fontFamily: "SFProRounded-Semibold", color: colors.label },
 ```
 
 Expose them through one component so screens never touch `fontSize`:
@@ -190,7 +240,7 @@ import { colors, spacing, radius } from "@/theme";
 import { ThemedText } from "./themed-text";
 
 const variants = {
-  primary: { backgroundColor: colors.systemBlue, color: "#ffffff" },
+  primary: { backgroundColor: colors.systemBlue, color: colors.onTint },
   secondary: { backgroundColor: colors.separator, color: colors.label },
 } as const;
 
@@ -284,7 +334,7 @@ If a screen fails the same check twice, the fix belongs in the theme or a compon
 
 ## Auditing an Existing App
 
-To measure drift in an app that already has screens - hardcoded hex values, arbitrary spacing, inconsistent component APIs - follow `./references/audit.md`. It contains grep-based checks, a scoring rubric, and templates for documenting existing components and proposing new ones.
+To measure drift in an app that already has screens - hardcoded hex values, arbitrary spacing, inconsistent component APIs - follow `./references/audit.md`. It contains grep-based checks, a scoring rubric, an incremental adoption order for fixing a drifted app, and templates for documenting existing components and proposing new ones.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
