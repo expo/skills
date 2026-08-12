@@ -12,6 +12,7 @@ Before any grep, identify and record:
 
 - **Source directories** - every directory holding app code (`src`, or e.g. `app components constants hooks`).
 - **Theme location** - the token directory or file (`src/theme`, `theme`, `constants`, or a single `theme.ts`). If none exists yet, note that as the first finding.
+- **The existing system, if any** - a styling library in `package.json` (NativeWind, Tamagui, Restyle, Unistyles, styled-components) per `SKILL.md` "Adopt Before You Build". Record which one. The checks below assume this skill's defaults - plain `StyleSheet`, `boxShadow` strings, one `src/theme` entry point. An app on a styling library fails several of them while being perfectly consistent in its own idiom. Audit such an app against its own system: its token names, its scale, its config file as the single entry point. Adapt or skip a check rather than reporting a false violation.
 
 Substitute them into the shell variables below; every check uses them.
 

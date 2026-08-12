@@ -1,6 +1,6 @@
 ---
 name: expo-design-system
-description: Framework (OSS). Build and maintain a design system inside an Expo app - a reusable theme of design tokens (color, spacing, typography, radius, shadow, motion), reusable component structure with variant/size/state prop conventions, and rules for when to extract a repeated view into a shared component. Use when creating or organizing theme files and design tokens (theme.ts / theme/), standardizing styles so screens (including AI-generated ones) look consistent and polished, building an in-app component library, or auditing an app for design-system drift (hardcoded colors, spacing, fonts). For platform styling specifics (semantic colors, HIG rules, native controls) use expo-native-ui; for Tailwind/CSS setup use expo-tailwind-setup; for folder layout of a new app use expo-project-structure.
+description: Framework (OSS). Build and maintain a design system inside an Expo app - a reusable theme of design tokens (color, spacing, typography, radius, shadow, motion), reusable component structure with variant/size/state prop conventions, and rules for when to extract a repeated view into a shared component. Use when creating or organizing theme files and design tokens (theme.ts / theme/), extending an existing theme or styling library (NativeWind, Tamagui, Restyle, Unistyles) in its own idiom, standardizing styles so screens (including AI-generated ones) look consistent and polished, building an in-app component library, or auditing an app for design-system drift (hardcoded colors, spacing, fonts). For platform styling specifics (semantic colors, HIG rules, native controls) use expo-native-ui; for Tailwind/CSS setup use expo-tailwind-setup; for folder layout of a new app use expo-project-structure.
 version: 1.0.0
 license: MIT
 ---
@@ -26,9 +26,20 @@ references/
                 documenting or extending components
 ```
 
+## Adopt Before You Build
+
+In an app that already has screens, the first move is detection, not construction. Before writing any token file:
+
+1. **Look for a declared system.** Check `package.json` for a styling library - NativeWind/Tailwind (use `expo-tailwind-setup`), Tamagui, Restyle, Unistyles, styled-components. Then look for a token file: `theme.ts`, `src/theme/`, `constants/theme.ts`, or `constants/Colors.ts` (the create-expo-app default).
+2. **If one exists, it is the source of truth.** Extend it in its own idiom - its names, its scale, its storage format. Audit drift against that system, not against the examples below.
+3. **If only de facto values exist** - the same greys and paddings repeated across screens, no theme file - there is no system yet. Those values are the input to the scales, not the authority: derive tokens from the most frequent ones, snapped to the 4-point grid (`references/audit.md` §5).
+4. **Never introduce a second system beside an existing one.** A fresh `src/theme/` next to a Tamagui config is design-system drift, not adoption.
+
+Only when nothing exists do the defaults below apply as written.
+
 ## The Theme
 
-All design tokens live under `src/theme/`. In a project without a `src/` folder (the default `create-expo-app` template has `app/`, `components/`, and `constants/` at the root), use the equivalent top-level location - typically `theme/` or the existing `constants/` - and keep the same file layout. Start small and split by token class as it grows:
+In an app without an existing system, all design tokens live under `src/theme/`. In a project without a `src/` folder (the default `create-expo-app` template has `app/`, `components/`, and `constants/` at the root), use the equivalent top-level location - typically `theme/` or the existing `constants/` - and keep the same file layout. Start small and split by token class as it grows:
 
 ```
 src/theme/
