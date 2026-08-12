@@ -1,6 +1,6 @@
 ---
 name: expo-design
-description: Framework (OSS). Build and maintain a design system inside an Expo app - a reusable theme of design tokens (color, spacing, typography, radius, shadow, motion), reusable component structure with variant/size/state prop conventions, and rules for when to extract a repeated view into a shared component. Use when creating or organizing theme.ts / theme/ files, adding design tokens, standardizing styles across screens, building an in-app component library, auditing for hardcoded style values, or making AI-generated screens look consistent and polished. For platform styling specifics (semantic colors, HIG rules, native controls) use expo-native-ui; for Tailwind/CSS setup use expo-tailwind-setup; for folder layout of a new app use expo-project-structure.
+description: Framework (OSS). Build and maintain a design system inside an Expo app - a reusable theme of design tokens (color, spacing, typography, radius, shadow, motion), reusable component structure with variant/size/state prop conventions, and rules for when to extract a repeated view into a shared component. Use when creating or organizing theme files and design tokens (theme.ts / theme/), standardizing styles so screens (including AI-generated ones) look consistent and polished, building an in-app component library, or auditing an app for design-system drift (hardcoded colors, spacing, fonts). For platform styling specifics (semantic colors, HIG rules, native controls) use expo-native-ui; for Tailwind/CSS setup use expo-tailwind-setup; for folder layout of a new app use expo-project-structure.
 version: 1.0.0
 license: MIT
 ---
@@ -330,7 +330,7 @@ After building or changing a screen, screenshot it and check it against these pr
 - **Repetition / unity** - do all corners, shadows, and accents match? If not, a value escaped the theme - move it in.
 - **Alignment** - do edges share axes? Fix with consistent screen edge padding.
 
-If a screen fails the same check twice, the fix belongs in the theme or a component - not in the screen.
+The pass is complete only when all four checks pass, or every failing value has moved into the theme or a component. If a screen fails the same check twice, the fix belongs in the theme or a component - not in the screen.
 
 ## Auditing an Existing App
 
