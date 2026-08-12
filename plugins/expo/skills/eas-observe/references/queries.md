@@ -1,6 +1,6 @@
 # EAS Observe CLI
 
-EAS Observe collects app performance telemetry and custom events from Expo apps and exposes them through six EAS CLI commands. Pass the `--help` flag to any command for the latest API — the flags below were verified against `eas-cli` 21.2.0.
+EAS Observe collects app performance telemetry and custom events from Expo apps and exposes them through six EAS CLI commands. Pass the `--help` flag to any command for the latest API — the flags below were verified against `eas-cli` 21.8.0.
 
 > Source: https://docs.expo.dev/eas/observe/eas-cli/ — the canonical CLI page. This reference adds table layouts, JSON output shapes, and pagination details that the docs page does not cover.
 
@@ -17,16 +17,19 @@ EAS Observe collects app performance telemetry and custom events from Expo apps 
 
 > Older published docs list only `metrics-summary`, `metrics`, `events`, and `versions`. All six are on the [Querying with EAS CLI](https://docs.expo.dev/eas/observe/eas-cli/) page; run `--help` to confirm them on your installed version.
 
-All six commands share these common flags:
+All six commands share these flags:
 
-- `--platform ios` or `--platform android` — filter by platform (default: both)
 - `--start <ISO date>` and `--end <ISO date>` — explicit time range
-- `--days <N>` — show data from the last N days (mutually exclusive with `--start`/`--end`)
+- `--days <N>` — show data from the last N days (mutually exclusive with `--start`/`--end`, minimum 1)
 - `--project-id <id>` — run against a specific project without needing a project directory. When passed, the command will not try to create a new EAS project where one is unneeded.
 - `--json` — machine-readable output (implies `--non-interactive`)
 - `--non-interactive` — fail instead of prompting
 
+`--platform ios` / `--platform android` (default: both) is on every command **except `observe:session`**, which is scoped to one session already.
+
 Default time range is the last 60 days when none of `--days`, `--start`, `--end` is given.
+
+**Plan gating.** Observe is a paid feature, and the server rejects queries the account's plan does not include (`EAS_OBSERVE_PLAN_UPGRADE_REQUIRED` or `EAS_OBSERVE_FEATURE_NOT_AVAILABLE_IN_FREE_TIER`). The CLI surfaces the server's upgrade message, which links to the account's billing page. Session timelines in particular are checked before the interactive picker runs. A plan-gate failure is not a bug in the command or its flags.
 
 ## Supported Metrics
 
@@ -53,6 +56,8 @@ Emitted only when a navigation integration is enabled (SDK 56+). Measured per ro
 
 **Which command takes which alias.** `observe:metrics` (positional argument) and `observe:metrics-summary --metric` accept **all nine** aliases — startup and navigation. `observe:routes --metric` accepts only the three navigation aliases. Use the `nav_` prefix everywhere; there are no bare `cold_ttr` / `warm_ttr` aliases.
 
+`observe:metrics` also accepts a full metric name in place of an alias, for example `eas observe:metrics expo.app_startup.tti`. `observe:routes` accepts full navigation names the same way. The `--metric` flags on `metrics-summary` and `routes` are strict oclif options, so they take aliases only.
+
 ## `eas observe:metrics-summary`
 
 Shows per-version statistical aggregates for one or more metrics, with separate tables per platform.
@@ -77,9 +82,11 @@ eas observe:metrics-summary --metric tti --stat median --stat p90 --stat eventCo
 eas observe:metrics-summary --metric tti --days 14 --platform ios
 ```
 
-**Stat flags:** `min`, `max`, `median` (alias `med`), `average` (alias `avg`), `p80`, `p90`, `p99`, `eventCount` (alias `count`).
+**Stat flags:** exactly `min`, `median`, `max`, `average`, `p80`, `p90`, `p99`, `eventCount`. This command takes **no aliases** — `med`, `avg`, and `count` are rejected here (they work only on `observe:routes`).
 
-**Default stats:** `median` + `eventCount` in the table; all stats in JSON.
+**Default stats:** `median` + `eventCount` in the table; all eight in JSON.
+
+This command has no `--limit`, `--after`, `--app-version`, or `--update-id`. It always aggregates every version in the time range.
 
 **Table layout:**
 - One table per metric (with merged value + event count cells, e.g. `0.45s (150)`)
@@ -294,11 +301,26 @@ eas observe:session --event-name tti --sort slowest --days 7
 ```
 
 **Session-specific flags:**
-- `[SESSIONID]` — positional. Omit it in interactive mode to choose from a list.
+- `[SESSIONID]` — positional. Omit it in interactive mode to choose from a list. **Required in non-interactive mode**, including under `--json`.
 - `--event-name <name>` — metric or log event used to build the candidate session list (for example `tti`, `cold_launch`, `login_pressed`). Prompts when omitted in interactive mode.
-- `--sort <slowest|fastest|newest|oldest>` — orders the candidate events. Prompts when omitted in interactive mode.
+- `--sort <slowest|fastest|newest|oldest>` — orders the candidate events. Prompts when omitted in interactive mode. No default, unlike `observe:metrics`.
+
+**The picker flags and the session ID are mutually exclusive.** `--event-name`, `--sort`, `--days`, `--start`, and `--end` describe how to *find* a session, so passing any of them together with a session ID throws. Query a known session with the ID alone.
 
 This command has no `--platform`, `--limit`, or `--after` flag. It takes the shared time-range, `--project-id`, `--json`, and `--non-interactive` flags.
+
+**JSON output shape:**
+```json
+{
+  "sessionId": "...",
+  "metadata": { "...": "..." },
+  "entries": [{ "...": "..." }],
+  "hasMoreMetricEvents": false,
+  "hasMoreLogEvents": false
+}
+```
+
+`entries` interleaves metric and log events for the session. The two `hasMore*` flags report truncation per event kind; there is no cursor to page with.
 
 ## `eas observe:versions`
 

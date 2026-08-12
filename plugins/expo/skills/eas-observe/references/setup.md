@@ -449,6 +449,8 @@ The value is normalized before it is sent: an `Error` contributes `name`, `messa
 | `errorHandlingEnabled` | boolean | `true` | Record unhandled JS errors as `exception` events. |
 | `integrations` | object | `undefined` | Opt in to `expo-router`, `react-navigation`, or a third-party integration. |
 
+**Network request monitoring is automatic and has no off switch.** `expo-observe` observes `URLSession` traffic on iOS and `OkHttpClient` traffic on Android from launch, and attaches a rollup of the launch window to the TTI event — including the **host** of the slowest request (see [`./metrics.md`](./metrics.md)). Observe's own uploads are excluded. No `configure()` option disables it as of `expo-observe` 57.0.9, so treat request hosts as data that leaves the device.
+
 **Sampling** is deterministic per installation: an installation is permanently in-sample or out-of-sample for a given rate, so the slice is stable across launches rather than a random subset of sessions. Out-of-sample installations drop pending metrics instead of accumulating them, so lowering the rate later does not retroactively send earlier sessions. Values outside `[0, 1]` are clamped. Sampling depends on `dispatchingEnabled`.
 
 **Manual flush.** Events dispatch automatically when the app backgrounds — on Android through a background worker once connectivity returns, on iOS when the app resigns active or is about to terminate. Call `await Observe.dispatchEvents()` to flush early, which is mainly useful while testing.
