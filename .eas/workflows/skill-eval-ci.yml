@@ -2,7 +2,16 @@
 # Authors+evaluates 3 PRDs vs main and this PR. "_main" jobs cache via
 # fingerprint+restore_cache; only skill-eval-main-baseline.yml writes that
 # cache. Logic in scripts/*: EAS caps workflow files at 16 KiB.
+# Authoring model: AGENT_MODEL in scripts/ci.sh, shared by both workflows.
 name: skill-eval-ci
+
+# Must match eval-harness's own .eas/workflows/*.yml. The default worker image
+# ships Bun 1.0.14 / Node 18, too old for the analyzer to write metrics.json.
+defaults:
+  image: sdk-57
+  tools:
+    bun: '1.3.14'
+    node: '22.20.0'
 
 on:
   pull_request_labeled:
@@ -35,9 +44,7 @@ jobs:
 
       - name: fingerprint
         id: fingerprint
-        run: |
-          bash scripts/ci.sh fingerprint_main_content extract > fp-notes-main.json
-          set-output fingerprint "$(python3 -c "import json; print(json.load(open('fp-notes-main.json'))['fingerprint'])")"
+        run: set-output fingerprint "$(bash scripts/ci.sh write_fingerprint extract fp-notes-main.json)"
 
       - name: restore
         uses: eas/restore_cache
@@ -142,9 +149,7 @@ jobs:
 
       - name: fingerprint
         id: fingerprint
-        run: |
-          bash scripts/ci.sh fingerprint_main_content extract > fp-hot_chocolate-main.json
-          set-output fingerprint "$(python3 -c "import json; print(json.load(open('fp-hot_chocolate-main.json'))['fingerprint'])")"
+        run: set-output fingerprint "$(bash scripts/ci.sh write_fingerprint extract fp-hot_chocolate-main.json)"
 
       - name: restore
         uses: eas/restore_cache
@@ -249,9 +254,7 @@ jobs:
 
       - name: fingerprint
         id: fingerprint
-        run: |
-          bash scripts/ci.sh fingerprint_main_content extract > fp-wiki_reader-main.json
-          set-output fingerprint "$(python3 -c "import json; print(json.load(open('fp-wiki_reader-main.json'))['fingerprint'])")"
+        run: set-output fingerprint "$(bash scripts/ci.sh write_fingerprint extract fp-wiki_reader-main.json)"
 
       - name: restore
         uses: eas/restore_cache

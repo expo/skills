@@ -9,6 +9,11 @@
 # functions that DO need strict-failure semantics wrap their own body in a
 # `(set -euo pipefail; ...)` subshell instead of relying on a global option.
 
+# Has to be the 1M variant. On 200k, Claude Code drops the skill descriptions
+# from its menu, so nothing triggers and every trigger score reads 0. Nobody
+# documents this, we hit it in CI. Shared here so both workflows stay in sync.
+export AGENT_MODEL="${AGENT_MODEL:-sonnet[1m]}"
+
 # Configures the (private, token-scoped) eval-harness submodule fetch and
 # initializes it. Called by every function below that needs eval-harness.
 fetch_eval_harness() {
@@ -16,6 +21,15 @@ fetch_eval_harness() {
     set -euo pipefail
     git config --global url."https://x-access-token:${EVAL_HARNESS_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/"
     git submodule update --init eval-harness
+  )
+}
+
+# Install dependencies for eval-harness
+install_harness_deps() {
+  (
+    set -euo pipefail
+    cd eval-harness
+    bun install --frozen-lockfile
   )
 }
 
@@ -28,8 +42,8 @@ fetch_eval_harness() {
 #   checkout: use $(pwd)/plugins/expo directly (skill-eval-main-baseline.yml,
 #             already checked out on main).
 #
-# Requires PRD, PRD_ID, SCENARIO, AGENT, AGENT_MODEL, EVAL_HARNESS_ACCESS_TOKEN
-# in env (already set as job env vars / repo secrets).
+# Requires PRD, PRD_ID, SCENARIO, AGENT, EVAL_HARNESS_ACCESS_TOKEN in env
+# (already set as job env vars / repo secrets); AGENT_MODEL is defaulted above.
 fingerprint_main_content() {
   (
     set -euo pipefail
@@ -69,7 +83,19 @@ fingerprint_main_content() {
       --prd-id "${PRD_ID}" \
       --scenario "${SCENARIO}" \
       --agent "${AGENT}" \
-      --model "${AGENT_MODEL:-sonnet}"
+      --model "${AGENT_MODEL}"
+  )
+}
+
+# Writes fingerprint_main_content's JSON to <json-path> and prints just the
+# hash, so each workflow step is one `set-output` line.
+#
+# Usage: write_fingerprint extract|checkout <json-path>
+write_fingerprint() {
+  (
+    set -euo pipefail
+    fingerprint_main_content "$1" > "$2"
+    python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['fingerprint'])" "$2"
   )
 }
 
@@ -134,6 +160,7 @@ author_and_evaluate() {
     cp -r "$cached_dir" "$out_dir"
   else
     fetch_eval_harness
+    install_harness_deps
 
     export SKILL_PLUGIN_DIR="$plugin_dir"
     bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
@@ -142,8 +169,13 @@ author_and_evaluate() {
     SCENARIO="$scenario" \
     OUT_DIR="$out_dir" \
     PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-    CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
     bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+  fi
+
+  # Warn only: this function swallows failures on purpose (see above), and
+  # ci.py print-outputs would fill the PR comment with "?" cells instead.
+  if [ ! -f "$out_dir/metrics.json" ]; then
+    echo "❌ skill-eval wrote no $out_dir/metrics.json -- this job's PR comment cells will all read '?'" >&2
   fi
 
   tar -czf "$tarball" "$out_dir" 2>/dev/null || true
@@ -166,6 +198,8 @@ author_and_evaluate_baseline() {
     local out_dir="$2"
     local scenario="$3"
 
+    install_harness_deps
+
     export SKILL_PLUGIN_DIR="$plugin_dir"
     bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
 
@@ -173,8 +207,12 @@ author_and_evaluate_baseline() {
     SCENARIO="$scenario" \
     OUT_DIR="$out_dir" \
     PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-    CASE_DIR="$(pwd)/eval-harness/eval_harness/evaluator/skill_invocation/skill_cases" \
     bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+
+    [ -f "$out_dir/metrics.json" ] || {
+      echo "❌ skill-eval wrote no $out_dir/metrics.json -- refusing to cache this baseline" >&2
+      exit 1
+    }
   )
 }
 
