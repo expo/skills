@@ -15,8 +15,6 @@ type VersionRow = PluginManifest & {
   currentVersion: unknown;
 };
 
-const baseRef = process.argv[2] ?? "origin/main";
-
 const pluginManifests: PluginManifest[] = [
   {
     label: "Claude",
@@ -40,6 +38,74 @@ const versionedPluginPaths = [
   "plugins/expo/.mcp.json",
   "plugins/expo/mcp.json",
 ];
+
+const USAGE = `Usage: bun scripts/check-plugin-version-bump.ts [base-ref] [options]
+
+Guards the rule that CI enforces: when any versioned Expo plugin file changes,
+the Claude, Codex, and Cursor plugin manifests must all be bumped together to
+the same version, and that version must be greater than the one on the base ref.
+
+Versioned paths:
+${versionedPluginPaths.map((path) => `  ${path}`).join("\n")}
+
+Manifests:
+${pluginManifests.map((manifest) => `  ${manifest.label.padEnd(7)}${manifest.path}`).join("\n")}
+
+Arguments:
+  base-ref              Git ref to compare against (default: origin/main).
+
+Options:
+  --set-version <ver>   Write <ver> as the version in all three manifests
+                        instead of running the check. Must be valid semver and
+                        greater than the version on the base ref.
+  -h, --help            Print this help and exit.
+
+Environment:
+  VERSION_CHECK_SUMMARY_PATH  When set, the check writes its Markdown report to
+                              this path as well as stdout.
+
+Examples:
+  bun scripts/check-plugin-version-bump.ts
+  bun scripts/check-plugin-version-bump.ts origin/main
+  bun scripts/check-plugin-version-bump.ts --set-version 1.9.10`;
+
+function parseArgs(argv: string[]) {
+  let baseRef: string | undefined;
+  let setVersion: string | undefined;
+  let help = false;
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index] as string;
+
+    if (arg === "-h" || arg === "--help") {
+      help = true;
+    } else if (arg === "--set-version") {
+      setVersion = argv[index + 1];
+      index += 1;
+      if (setVersion === undefined || setVersion.startsWith("-")) {
+        fail("--set-version requires a version argument, for example --set-version 1.9.10");
+      }
+    } else if (arg.startsWith("--set-version=")) {
+      setVersion = arg.slice("--set-version=".length);
+      if (setVersion === "") {
+        fail("--set-version requires a version argument, for example --set-version 1.9.10");
+      }
+    } else if (arg.startsWith("-")) {
+      fail(`Unknown option: ${arg}`);
+    } else if (baseRef === undefined) {
+      baseRef = arg;
+    } else {
+      fail(`Unexpected argument: ${arg}`);
+    }
+  }
+
+  return { baseRef: baseRef ?? "origin/main", setVersion, help };
+}
+
+function fail(message: string): never {
+  console.error(`${message}\n\n${USAGE}`);
+  process.exit(1);
+}
 
 function runGit(args: string[]) {
   return execFileSync("git", args, { encoding: "utf8" }).trim();
@@ -66,16 +132,12 @@ function readBaseJson(path: string) {
   }
 }
 
-function isSemver(version: unknown): version is string {
-  if (typeof version !== "string") {
-    return false;
-  }
+// https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+const SEMVER_PATTERN =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
-  try {
-    return semver.satisfies(version, version);
-  } catch {
-    return false;
-  }
+function isSemver(version: unknown): version is string {
+  return typeof version === "string" && SEMVER_PATTERN.test(version);
 }
 
 function hasVersionedPluginChange(path: string) {
@@ -110,6 +172,63 @@ function complete(success: boolean, markdown: string): never {
   writeSummary(markdown);
   console.log(markdown);
   process.exit(success ? 0 : 1);
+}
+
+function writeManifestVersion(path: string, currentVersion: string, nextVersion: string) {
+  const contents = readFileSync(path, "utf8");
+  const versionEntry = new RegExp(`("version"\\s*:\\s*)"${currentVersion.replaceAll(".", "\\.")}"`);
+
+  if (!versionEntry.test(contents)) {
+    fail(`Could not find the version entry in ${path}.`);
+  }
+
+  writeFileSync(path, contents.replace(versionEntry, `$1"${nextVersion}"`));
+}
+
+function setVersions(nextVersion: string): never {
+  if (!isSemver(nextVersion)) {
+    fail(`"${nextVersion}" is not a valid semver version, for example 1.9.10 or 2.0.0-beta.1.`);
+  }
+
+  const updates = pluginManifests.map((manifest) => {
+    const currentVersion = readJson(manifest.path)?.version;
+    if (!isSemver(currentVersion)) {
+      fail(`${manifest.label} manifest is missing a valid version (${manifest.path}).`);
+    }
+
+    const baseVersion = readBaseJson(manifest.path)?.version;
+    if (isSemver(baseVersion) && semver.order(nextVersion, baseVersion) <= 0) {
+      fail(
+        `${nextVersion} is not greater than ${baseVersion} on ${baseRef}, so the ${manifest.label} plugin check would fail.`
+      );
+    }
+
+    return { ...manifest, currentVersion };
+  });
+
+  for (const update of updates) {
+    if (update.currentVersion === nextVersion) {
+      console.log(`Unchanged ${update.label}: already ${nextVersion} (${update.path})`);
+      continue;
+    }
+
+    writeManifestVersion(update.path, update.currentVersion, nextVersion);
+    console.log(`Updated ${update.label}: ${update.currentVersion} → ${nextVersion} (${update.path})`);
+  }
+
+  console.log(`\nAll three plugin manifests are now at ${nextVersion}.`);
+  process.exit(0);
+}
+
+const { baseRef, setVersion, help } = parseArgs(process.argv.slice(2));
+
+if (help) {
+  console.log(USAGE);
+  process.exit(0);
+}
+
+if (setVersion !== undefined) {
+  setVersions(setVersion);
 }
 
 const changedFiles = getChangedFiles();

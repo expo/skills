@@ -122,6 +122,16 @@ than `main`. CI enforces this.
 - `plugins/expo/.codex-plugin/plugin.json`
 - `plugins/expo/.cursor-plugin/plugin.json`
 
+The check script writes all three for you, rejecting a version that is not valid semver or is not
+greater than the base ref:
+
+```bash
+bun scripts/check-plugin-version-bump.ts --set-version 1.10.1
+```
+
+Run it with `--help` for the full usage, or `bash scripts/test-plugin-version-bump.sh` to exercise
+every case (the manifests are restored afterward).
+
 ### 11. Validate before opening a PR
 
 ```bash
