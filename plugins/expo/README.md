@@ -10,6 +10,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 - Recommends a starting folder structure for new projects
 - Provides UI guidelines following Apple Human Interface Guidelines
+- Builds in-app design systems: token themes, reusable component conventions, and style audits
 - Covers Expo Router navigation patterns (stacks, tabs, modals, sheets)
 - Explains native iOS controls, SF Symbols, animations, and visual effects
 - Covers `@expo/ui` native components (universal, SwiftUI, and Jetpack Compose)
@@ -38,6 +39,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 - Building new Expo apps from scratch
 - Adding navigation, styling, or animations
+- Setting up a theme with design tokens, or standardizing styles across screens
 - Wiring up data fetching
 - Integrating web libraries via DOM components
 - Migrating an existing web/React app to native with Expo
@@ -68,6 +70,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-project-structure** - Recommended folder structure for new Expo projects
 - **expo-router** - Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, and headers
 - **expo-native-ui** - Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, animations, and visual effects
+- **expo-design-system** - Build a design system inside an app: token theme (color, spacing, typography, radius, shadow, motion), reusable component conventions, and design-system drift audits
 - **expo-ui** - Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **expo-data-fetching** - Network requests, API calls, caching, and offline support
 - **expo-tailwind-setup** - Set up Tailwind CSS v4 in Expo with NativeWind v5

@@ -9,6 +9,7 @@
         "expo-project-structure",
         "expo-router",
         "expo-native-ui",
+        "expo-design-system",
         "expo-ui",
         "expo-data-fetching",
         "expo-tailwind-setup",

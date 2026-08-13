@@ -6,6 +6,8 @@
 2. **App Created in Console** - Create your app listing before first submission
 3. **Service Account** - For automated submissions via EAS
 
+Once these are complete, the default `eas submit` works for a first-time submission and creates the app's first release on the internal testing track. Store listing, content rating, and pricing are only required before promoting a release to production.
+
 ## Service Account Setup
 
 ### 1. Create Service Account
