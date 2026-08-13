@@ -81,7 +81,7 @@ These steps only apply when `ios/` and/or `android/` directories exist in the pr
 - If using Expo SDK 54 or later, ensure react-native-worklets is installed — this is required for react-native-reanimated to work.
 - Enable React Compiler in SDK 54+ by adding `"experiments": { "reactCompiler": true }` to app.json — it's stable and recommended
 - Delete sdkVersion from `app.json` to let Expo manage it automatically
-- Remove implicit packages from `package.json`: `babel-preset-expo` and `expo-constants`. Remove `@babel/core` only when neither `react-native-worklets` nor `react-native-reanimated` is installed; Yarn installation can fail without it when either package is present.
+- Remove implicit packages from `package.json`: `@babel/core`, `babel-preset-expo`, `expo-constants`.
 - If the babel.config.js only contains 'babel-preset-expo', delete the file
 - If the metro.config.js only contains expo defaults, delete the file
 
