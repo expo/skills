@@ -61,11 +61,11 @@ TTI events summarize the HTTP requests made during launch, from the end of the n
 
 | Param | Unit | What it indicates |
 |---|---|---|
-| `expo.network.requests.count` | count | Requests started in the window. |
-| `expo.network.requests.failed` | count | Errored or non-2xx. The signal for a launch stalled on a request that never arrived. |
+| `expo.network.requests.count` | count | Requests that finished in the window. A request still in flight when the app became interactive is not counted anywhere in this table. |
+| `expo.network.requests.failed` | count | Errored, returned 4xx/5xx, never got a response, or broke partway through the body. Redirects are not failures. |
 | `expo.network.requests.bytesReceived` / `.bytesSent` | bytes | On-the-wire totals for the window. |
 | `expo.network.requests.totalDuration` | seconds | Sum of every request duration, failures included. Exceeds wall-clock when requests overlap; one timeout contributes the client's full timeout interval. |
-| `expo.network.requests.throughputBytesPerSecond` | bytes/sec | Received bytes over the time bytes were actually moving (union of transfer windows, measured from each first byte). Excludes DNS, connect, server think time, cache hits, and failures. Omitted when nothing was received. |
+| `expo.network.requests.throughputBytesPerSecond` | bytes/sec | Received bytes over the time bytes were actually moving (union of transfer windows, measured from each first byte). Excludes DNS, connect, server think time, cache hits, and failures. Requests the OS did not clearly identify as network loads are excluded too. Omitted when nothing was received. |
 | `expo.network.requests.slowest.duration` | seconds | The single longest **completed** request. Requests that never produced a response are excluded, since a timeout measures the client's own setting. |
 | `expo.network.requests.slowest.host` | string | Host of that request. |
 | `expo.network.requests.slowest.statusCode` | number | Explains an empty response: `bytesReceived` of 0 is routine on a 304, a problem on a 200. |
