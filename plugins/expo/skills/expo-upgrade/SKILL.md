@@ -27,6 +27,8 @@ npx expo install expo@next --fix  # install beta
 
 ## Step-by-Step Upgrade Process
 
+> If upgrading from SDK 55 or earlier, skip SDK 56 and upgrade directly to SDK 57. Don't use `expo@57.0.8` or below. SDK 55 with Hermes V1 enabled, SDK 56, and older SDK 57 releases contain a Hermes V1 memory regression that can drastically increase memory usage when using `react-native-worklets` or `react-native-reanimated`.
+
 1. Upgrade Expo and dependencies
 
 ```bash
