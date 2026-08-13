@@ -18,6 +18,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Helps set up Tailwind CSS v4 with NativeWind v5
 - Explains DOM components for running web code in native apps
 - Covers Expo native modules, iOS App Clips, and brownfield integration into existing native apps
+- Sets up app variants so development, preview, and production builds install side by side
 - Points at the `expo/examples` repo for canonical third-party integrations
 - Walks through Expo SDK upgrades, deprecated-package migration, cache clearing, and dependency fixes
 - Wires Expo projects into the Codex app Run button and action terminal
@@ -49,6 +50,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Upgrading to a new Expo SDK version and fixing dependency conflicts after an upgrade
 - Migrating from deprecated packages (expo-av to expo-audio/expo-video)
 - Adding an iOS App Clip (needs an Apple Developer account)
+- Installing development, preview, and production builds side by side with app variants
 - Adding a Codex app Run button for `expo start` and optional iOS/Android/Web/dev-client action buttons
 - Sharing what worked or fell short across Expo, its skills, docs, CLIs, or MCP
 
@@ -79,6 +81,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-module** - Write Expo native modules and views (Swift, Kotlin, TypeScript, config plugins)
 - **expo-brownfield** - Integrate Expo and React Native into existing native iOS or Android apps
 - **expo-dev-client** - Build and distribute Expo development clients (local builds free; EAS Build/TestFlight paid)
+- **expo-app-variants** - Install app variants (development, preview, production) side by side, each with its own identifier, name, and icon
 - **expo-examples** - Adapt or scaffold from the `expo/examples` repo of `with-*` integrations
 - **expo-app-clip** - Add an iOS App Clip target (AASA, associated domains, Smart App Banners; needs an Apple Developer account)
 - **expo-upgrade** - Upgrade Expo SDK versions and fix dependency issues
