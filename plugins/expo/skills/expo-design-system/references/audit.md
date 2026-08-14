@@ -51,7 +51,7 @@ grep -rEn 'shadow(Color|Offset|Opacity|Radius)|elevation:' $SRC --include='*.tsx
 ls src/theme.ts src/theme/index.ts theme.ts theme/index.ts constants/theme.ts 2>/dev/null
 ```
 
-For a Tailwind project (`expo-tailwind-setup`), also check for values that bypass `global.css` variables: arbitrary-value classes like `p-[13px]` or `text-[#5B21B6]`.
+For a Tailwind project, also check for values that bypass `global.css` variables: arbitrary-value classes like `p-[13px]` or `text-[#5B21B6]`.
 
 ```bash
 grep -rEn 'className="[^"]*\[[^"]*\]' $SRC --include='*.tsx'
