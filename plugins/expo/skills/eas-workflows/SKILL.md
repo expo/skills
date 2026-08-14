@@ -81,7 +81,7 @@ When generating or editing workflows:
 After generating or editing a workflow file, validate it with EAS CLI from the Expo project root:
 
 ```sh
-npx eas-cli@latest workflow:validate .eas/workflows/<workflow.yml> --non-interactive
+npx -y eas-cli@latest workflow:validate .eas/workflows/<workflow.yml> --non-interactive
 ```
 
 Run the command separately for each changed workflow file. It requires a logged-in EAS CLI session and a linked Expo project. Unlike schema-only validation, it also checks build profile references against the project's `eas.json` and performs EAS server-side validation. Fix every reported error and rerun the command until it prints `Workflow configuration YAML is valid.` Do not replace this command with a local YAML or JSON Schema validator.
