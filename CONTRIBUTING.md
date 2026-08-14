@@ -129,7 +129,7 @@ greater than the base ref:
 bun scripts/check-plugin-version-bump.ts --set-version 1.10.1
 ```
 
-Run it with `--help` for the full usage, or `bash scripts/test-plugin-version-bump.sh` to exercise
+Run it with `--help` for the full usage, or `bun scripts/test-plugin-version-bump.ts` to exercise
 every case (the manifests are restored afterward).
 
 ### 11. Validate before opening a PR
