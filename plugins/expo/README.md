@@ -17,7 +17,6 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Explains native iOS controls, SF Symbols, animations, and visual effects
 - Covers `@expo/ui` native components (universal, SwiftUI, and Jetpack Compose)
 - Covers data fetching patterns with React Query, offline support, and Expo Router loaders
-- Helps set up Tailwind CSS v4 with NativeWind v5
 - Explains DOM components for running web code in native apps
 - Covers Expo native modules, iOS App Clips, and brownfield integration into existing native apps
 - Points at the `expo/examples` repo for canonical third-party integrations
@@ -47,7 +46,6 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Wiring up data fetching
 - Integrating web libraries via DOM components
 - Migrating an existing web/React app to native with Expo
-- Configuring Tailwind CSS for React Native
 - Writing Expo native modules or integrating Expo into an existing native app
 - Adapting a third-party integration from `expo/examples`
 - Upgrading to a new Expo SDK version and fixing dependency conflicts after an upgrade
@@ -82,7 +80,6 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-design-system** - Build a design system inside an app: token theme (color, spacing, typography, radius, shadow, motion), reusable component conventions, and design-system drift audits
 - **expo-ui** - Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs
 - **expo-data-fetching** - Network requests, API calls, caching, and offline support
-- **expo-tailwind-setup** - Set up Tailwind CSS v4 in Expo with NativeWind v5
 - **expo-dom** - Run web code in a webview on native using DOM components
 - **expo-web-to-native** - Migrate an existing web/React app to a native iOS/Android app with Expo
 - **expo-module** - Write Expo native modules and views (Swift, Kotlin, TypeScript, config plugins)

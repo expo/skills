@@ -82,7 +82,6 @@ npx skills@latest update expo-router
 After installing, ask your agent Expo-specific questions like:
 
 - "Build a native-feeling Expo Router screen with tabs, modals, and animations."
-- "Set up Tailwind CSS v4 and NativeWind v5 in this Expo app."
 - "Create an EAS workflow that builds previews on pull requests."
 - "Help me upgrade this app to the latest Expo SDK."
 - "Check whether this EAS Update rollout is healthy."
@@ -114,7 +113,6 @@ Free, open-source Expo SDK and React Native skills.
 | `expo-design-system` | In-app design systems: a token theme (color, spacing, typography, radius, shadow, motion), reusable component conventions, and design-system drift audits. |
 | `expo-ui` | `@expo/ui` native components: universal cross-platform first, with SwiftUI and Jetpack Compose for platform-specific needs. |
 | `expo-data-fetching` | API calls, React Query, SWR, caching, offline support, and Expo Router data loaders. |
-| `expo-tailwind-setup` | Tailwind CSS v4, `react-native-css`, and NativeWind v5 setup. |
 | `expo-dom` | Expo DOM components for gradually using web code in native apps. |
 | `expo-web-to-native` | Migrating an existing web/React app (Next.js, Vite, CRA) to a native iOS/Android app with Expo. |
 | `expo-module` | Expo native modules and views with Swift, Kotlin, TypeScript, config plugins, and autolinking. |

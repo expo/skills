@@ -14,7 +14,6 @@
         "expo-design-system",
         "expo-ui",
         "expo-data-fetching",
-        "expo-tailwind-setup",
         "expo-dom",
         "expo-web-to-native",
         "expo-module",
