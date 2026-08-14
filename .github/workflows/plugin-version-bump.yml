@@ -30,6 +30,10 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Ensure that plugin version bump script is healthy
+        id: test-version-check
+        run: bun scripts/test-plugin-version-bump.ts
+
       - name: Check plugin version bump
         id: version-check
         continue-on-error: true
