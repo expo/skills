@@ -147,6 +147,12 @@ run that skill's own validation.
 prefixes and paid costs callout (step 4), the Codex agent file and its paid prefix (step 7), the
 `skills.sh.json` grouping (step 8), and the feedback block (step 9) all fail CI when violated.
 
+### Syncing `expo-animation`
+
+`expo-animation` mirrors `skills/animate-expo` from `emilkowalski/skills`. Pull upstream changes
+with `bun scripts/sync-animate-expo.ts`; use `--check` to detect drift without writing. The script
+preserves this repository's skill name, category metadata, collaboration notice, and feedback block.
+
 ### Conventions
 
 - MIT license for every skill; use `@expo.io` or `@expo.dev` author emails.

@@ -8,6 +8,7 @@
       "skills": [
         "expo-project-structure",
         "expo-router",
+        "expo-animation",
         "expo-native-ui",
         "expo-design-system",
         "expo-ui",
