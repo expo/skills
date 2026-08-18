@@ -1,8 +1,8 @@
 # Running your app on the remote sim — tested sequences
 
-The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026; the commands are experimental — if one fails, re-check `<cmd> --help`.)
+The remote sim boots blank. You install a **simulator-targeted runtime or build** onto the session, then open it. Pick a mode from `SKILL.md`. (Modes A/B/C were validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026; Mode G uses the current documented `expo-go` and controller command surfaces. The commands are experimental — if one fails, re-check `<cmd> --help`.)
 
-In all modes, the session is started the same way and driven through `npx --yes eas-cli@latest simulator:exec`. Replace `dev.example.app` with the app's iOS `bundleIdentifier` (from `app.json` → `ios.bundleIdentifier`), and run from the project directory.
+In all modes, the session is started the same way and driven through `npx --yes eas-cli@latest simulator:exec`. For modes A/B/C, replace `dev.example.app` with the app's iOS `bundleIdentifier` (from `app.json` → `ios.bundleIdentifier`). Run from the project directory.
 
 > These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app`, skip `pod install`, and note there's **no `webPreviewUrl`** (Android is agent-driven / screenshot-only).
 
@@ -32,6 +32,55 @@ done
 ```
 
 If you need the id explicitly, it's `EAS_SIMULATOR_SESSION_ID` in `.env.eas-simulator`. `start` also prints a `webPreviewUrl` (iOS-only browser preview — surface it per the SKILL.md "watch it live" rules) and a job-run URL. Once live, the session env is in `.env.eas-simulator`, so `simulator:exec` works.
+
+---
+
+## Mode G — Expo Go + tunnel (explicit-only)
+
+Use this mode **only when the user explicitly asks for Expo Go**. The default live-edit path remains Mode C with a development build. Expo Go is appropriate only when the app's native dependencies are bundled in Expo Go; if they are not, explain that limitation and recommend Mode C instead.
+
+Expo Go must match the project's Expo SDK. The installed `expo` package determines that SDK — do not use `latest` as the SDK argument, because the newest Expo Go may reject an older project. (`expo-go@latest` below updates the resolver CLI, not the selected SDK.) If app config has an explicit `sdkVersion`, it must agree with the installed `expo` major; fix a mismatch instead of guessing which one to install.
+
+Do the URL lookup and start Metro **before** starting the billed simulator session:
+
+```bash
+# 1. Resolve the project SDK from the installed expo package.
+EXPO_SDK="$(node -p "require('expo/package.json').version.split('.')[0]")"
+
+# 2. Resolve the matching iOS Simulator build. expo-go writes progress to stderr;
+#    the sed expression turns its final stdout line into a bare URL.
+EXPO_GO_URL="$(
+  npx --yes expo-go@latest url ios "$EXPO_SDK" |
+    sed -n 's/^Download Expo Go from //p'
+)"
+test -n "$EXPO_GO_URL"
+
+# 3. Start Expo CLI explicitly in Expo Go mode on its own port. Keep this process alive.
+EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --go --tunnel --port <N>
+# → capture the exp:// or exps:// project URL printed by Metro.
+```
+
+Once Metro is ready, start the shared session from the section above, then install and open Expo Go:
+
+```bash
+# 4. Let the remote VM download and install the matching Expo Go archive.
+npx --yes eas-cli@latest simulator:exec \
+  npx agent-device@latest install-from-source "$EXPO_GO_URL" --platform ios
+
+# 5. Open the Metro project through the Expo Go shell. This is the Expo project URL,
+#    never the EAS Simulator webPreviewUrl.
+npx --yes eas-cli@latest simulator:exec \
+  npx agent-device@latest open "Expo Go" "<exp:// or exps:// URL from Metro>" --platform ios
+
+# 6. Verify, then stop the billed session and Metro.
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest snapshot -i
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./expo-go.png
+npx --yes eas-cli@latest simulator:stop
+printf '# managed by eas-cli\n' > .env.eas-simulator
+# Stop Metro in its long-lived terminal (Ctrl+C).
+```
+
+For Android, change both platform arguments to `android`; `expo-go url` returns the matching `.apk`. For an **argent** session, do not use agent-device's URL installer — read the Expo Go branch in [controllers.md](./controllers.md), which downloads the artifact locally and uploads it with `reinstall-app`.
 
 ---
 

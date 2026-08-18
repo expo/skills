@@ -21,7 +21,7 @@ EAS-specific notes:
 
 - **`press`, not `tap`.** The tap verb is `press` — `tap` is not a verb.
 - **`snapshot -i` is slow on iOS** — tens of seconds is normal; wait for it.
-- **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts — avoids a large upload).
+- **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts or an Expo Go release URL — avoids a large upload).
 - **Exercised against a live session:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`, `scroll`, `gesture` (needs a preset, e.g. `gesture swipe left`), `logs`, `record` (`start`/`stop <path>`), `network`, `perf`. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
 
 ## argent (alternative)
@@ -39,6 +39,22 @@ argent run reinstall-app --udid <udid> --bundleId <bundle-id> --appPath ./MyApp.
 Whenever the tools client is routed to a remote tool-server, it tars the local bundle and streams it up automatically — no extra flag. "Remote" covers both `argent link` and the env-var MCP config (`ARGENT_TOOLS_URL`), so this works in sandboxed shells too. It's a registry tool, so the MCP server exposes it identically — same call by CLI or MCP. Works for iOS `.app` (a directory), Android `.apk`, and Vega `.vpkg`; the client prints an upload line on stderr.
 
 Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `argent --version`. On older versions `reinstall-app` resolves `--appPath` on the VM only, so a local path fails; drive an app already on the sim instead.
+
+**Expo Go in an argent session.** Use this only for explicit Mode G from `run-your-app.md`. Argent's `reinstall-app` accepts a local `appPath`, not a download URL, so download the SDK-matched binary locally before starting the billed session. `expo-go download` extracts the iOS archive into an `.app` and copies it to the current directory:
+
+```bash
+EXPO_SDK="$(node -p "require('expo/package.json').version.split('.')[0]")"
+EXPO_GO_TMP="$(mktemp -d)"
+( cd "$EXPO_GO_TMP" && npx --yes expo-go@latest download ios "$EXPO_SDK" )
+EXPO_GO_APP="$(find "$EXPO_GO_TMP" -maxdepth 1 -type d -name '*.app' -print -quit)"
+test -n "$EXPO_GO_APP"
+
+# After starting and linking the argent EAS Simulator session:
+argent run reinstall-app --udid <udid> --bundleId host.exp.Exponent --appPath "$EXPO_GO_APP"
+argent run open-url --udid <udid> --url "<exp:// or exps:// URL from Metro>"
+```
+
+For Android, run `expo-go download android "$EXPO_SDK"`, select the downloaded `.apk`, and use bundle id `host.exp.exponent`. The temporary directory can be discarded after the upload. Never pass the EAS Simulator `webPreviewUrl` to `open-url`; use the Expo project URL printed by `npx expo start --go --tunnel`.
 
 **System dialogs on argent (e.g. the first-time deep-link "Open in '<app>'?").** argent's UI queries (`describe` / `await-ui-element`) may not see system dialogs / native modals — a screenshot shows the dialog, but element lookups time out. When that happens, argent surfaces a hint with the fix (today that's a `boot-device --force` to switch its AX backend); follow the hint, then locate and tap "Open". There's no single press-with-timeout — you wait for the element, then tap it. Use argent's own command help for the exact tools and flags.
 
