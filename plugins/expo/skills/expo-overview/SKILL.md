@@ -1,6 +1,6 @@
 ---
 name: expo-overview
-description: "Framework (OSS). Entry point and router for every Expo or EAS task. ALWAYS load this skill first — before writing any code and before choosing any other skill — whenever the request, PRD, spec, or project mentions Expo, EAS, React Native, or any expo-* package in any form, even when the stack, SDK version, dependencies, or file layout is already fully specified. A detailed spec does not exempt the task from routing through this skill. Also triggers on any mobile app spec or design to implement (tabs, stacks, maps, lists, navigation), building from a screenshot or design reference, and phrasings like 'implement a mobile app', 'make my app look native', 'build a beautiful app', 'align with iOS / SwiftUI best practices', 'add navigation', 'fetch some data', 'upgrade my SDK', 'add Expo to my existing native app', 'ship to the App Store', or 'I'm new to Expo, where do I start'. Detects the real goal, routes to the right expo-* / eas-* skill, and owns the shared setup rules the other Expo skills rely on."
+description: "Framework (OSS). Entry point and router for every Expo or EAS task. Load this skill first — before writing code and before choosing another expo-* / eas-* skill — when the request, PRD, or spec mentions Expo, EAS, Expo Go, or an expo-* package, or the project has an `expo` dependency in `package.json`. Within that gate it also covers app specs and designs to implement (tabs, stacks, maps, lists, navigation, building from a screenshot), and phrasings like 'implement a mobile app', 'make my app look native', 'add navigation', 'fetch some data', 'upgrade my SDK', 'add Expo to my existing native app', 'ship to the App Store', or 'I'm new to Expo, where do I start'. A fully specified request (SDK pinned, libraries named, layout given) still routes through here — the shared setup rules still apply. Do NOT load it when neither signal is present: a bare React Native project with no `expo` dependency is not Expo work. Detects the real goal, routes to the right expo-* / eas-* skill, and owns the shared setup rules."
 version: 1.0.0
 license: MIT
 ---
@@ -12,11 +12,14 @@ license: MIT
 **Do not guess the skill from project files alone.** Many Expo goals look similar from
 the filesystem but need different skills.
 
-1. **Read the user's goal** — what outcome do they want, in plain terms?
-2. **Classify it** using the Skill Map below, translating casual phrasing to a goal.
-3. **Confirm intent** if ambiguous ("Sounds like you want to ship to the stores — that's
+1. **Confirm this is Expo work** — the request mentions Expo, or `package.json` has an
+   `expo` dependency. If neither holds, stop: this skill does not apply. A bare React
+   Native project with no `expo` dependency is not Expo work.
+2. **Read the user's goal** — what outcome do they want, in plain terms?
+3. **Classify it** using the Skill Map below, translating casual phrasing to a goal.
+4. **Confirm intent** if ambiguous ("Sounds like you want to ship to the stores — that's
    `eas-app-stores`. Right?"), then load that skill's `SKILL.md` and follow it.
-4. **Trust the leaf skill** — it has its own detection logic and steps. Don't improvise.
+5. **Trust the leaf skill** — it has its own detection logic and steps. Don't improvise.
 
 ## Skill Map (by goal)
 
@@ -62,9 +65,9 @@ Some everyday phrasings don't obviously map to a skill name — translate before
 - "Make it look native" → grouped controls / settings forms = `expo-ui`; screens, styling, animations = `expo-native-ui`; navigation = `expo-router`.
 - "Make the screens consistent" / "clean up the styling" / "set up a theme or design tokens" → `expo-design-system`.
 - "Ship it" / "get an .ipa or .apk" / "release to the stores" → `eas-app-stores` (build + submit, TestFlight, versions, store metadata).
-- "I'm new / where do I start" → scaffold first (see First Run), then route by goal.
+- "I'm new / where do I start" → scaffold first (see Shared setup rules), then route by goal.
 
-## First Run / shared rules
+## Shared setup rules
 
 These apply across every Expo skill, so handle them here once instead of repeating them
 in each leaf.
@@ -75,6 +78,12 @@ in each leaf.
 - **Detect the SDK version** before giving version-specific advice: read the `expo`
   version in `package.json` (and `app.json` / `app.config.{js,ts}`). Many APIs and
   defaults differ by SDK.
+- **Read the docs for that SDK, not `latest`.** Use the version-pinned URL, e.g.
+  `https://docs.expo.dev/versions/v56.0.0/sdk/ui/` on SDK 56 instead of
+  `https://docs.expo.dev/versions/latest/sdk/ui/` — the `latest` pages track the newest
+  SDK and can document APIs the project does not have yet.
+- **Moving to a newer SDK is its own task** — load `expo-upgrade` instead of bumping
+  versions by hand.
 - **Managed vs. bare/prebuild**: the presence of committed `ios/` and `android/`
   directories means native projects exist (prebuild or bare). Config-plugin and
   native-setup steps differ — note which one the project is in.
