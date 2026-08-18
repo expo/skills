@@ -22,6 +22,8 @@ Concrete errors seen while validating this flow, and the fix.
 | New session's id shows as the *previous* one; "Overwriting previous simulator session (id: …)" | The stale `.env.eas-simulator` had an old `EAS_SIMULATOR_SESSION_ID`; the warning line masks the new id | Reset the dotenv before `start`: `printf '# managed by eas-cli\n' > .env.eas-simulator`. |
 | No `.env.eas-simulator` written after `start` | `--json` suppresses the dotenv | Run `start` *without* `--json` for the `exec` flow; with `--json` you must read `remoteConfig` from stdout and set the env yourself. |
 | `pod install` fails: `Unicode Normalization not appropriate for ASCII-8BIT` | Ruby 4 + CocoaPods with a non-UTF-8 locale | Re-run with `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install`. |
+| (Mode G) Expo Go says the project is incompatible with this version | Expo Go was resolved with `latest`, or app config has an `sdkVersion` that disagrees with the installed `expo` package | Resolve the SDK from `require('expo/package.json').version`, then run `npx --yes expo-go@latest url <platform> <sdk-major>` and reinstall. If app config explicitly sets `sdkVersion`, make it match the installed `expo` major. |
+| (Mode G) Expo Go opens but a native module is missing/unsupported | The project needs native code that is not bundled in Expo Go | Don't patch around it or try another Expo Go version. Explain the limitation and recommend the default Mode C development build. |
 | (Mode C) Deep-link `open` lands on the dev-client launcher, not the app | Opening the deep link triggers a system "Open in '<app>'?" dialog; and the launcher only auto-discovers Metro on the LAN | `press 'label="Open"'` to dismiss the dialog, then "Enter URL manually" → `fill` the `https://<host>.on.expo.app` manifest URL → "Connect". |
 | (Mode C) App shows expo-router "Unmatched Route" | The connect URL was parsed as a route path | `press 'label="Go back"'` (or navigate to `/`). |
 | (Mode C) Dev client shows a `?` placeholder / blank after connect | Bundle not fetched yet | `press 'label="Reload"'` and wait ~40-60s for the first build+transfer over the tunnel. |
@@ -38,4 +40,4 @@ Concrete errors seen while validating this flow, and the fix.
 Set the user's expectations honestly — this is experimental:
 - **Boot is variable**: ~90s warm to ~15 min cold. Poll patiently.
 - **`snapshot` can be slow** on iOS (tens of seconds).
-- **First bundle load** over the tunnel (Mode C) is the slow part; subsequent Fast Refreshes are fast.
+- **First bundle load** over the tunnel (Mode C or explicit Mode G) is the slow part; subsequent Fast Refreshes are fast.
