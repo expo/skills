@@ -35,30 +35,30 @@ on:
     tags: ['v*']
 
 jobs:
-  build-ios:
+  build_ios:
     type: build
     params:
       platform: ios
       profile: production
 
-  build-android:
+  build_android:
     type: build
     params:
       platform: android
       profile: production
 
-  submit-ios:
+  submit_ios:
     type: submit
-    needs: [build-ios]
+    needs: [build_ios]
     params:
-      platform: ios
+      build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: production
 
-  submit-android:
+  submit_android:
     type: submit
-    needs: [build-android]
+    needs: [build_android]
     params:
-      platform: android
+      build_id: ${{ needs.build_android.outputs.build_id }}
       profile: production
 ```
 
