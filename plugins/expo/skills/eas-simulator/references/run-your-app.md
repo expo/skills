@@ -152,30 +152,44 @@ EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port <N>
 #    → capture the tunnel/manifest URL + deep link it prints (format like https://<host>.on.expo.app).
 #      The port is NOT in the URL, so read it from stdout — `--port` only identifies the local process.
 
-# 3. Start a session, install the dev build, then connect it to Metro.
-#    RELIABLE path = "open the dev client, then Enter URL manually". The deep-link + system "Open in
-#    '<app>'?" dialog is flaky: the dialog may not appear, and `press 'label="Open"'` can hang ~90s
-#    against a slow daemon. Don't make the loop depend on it.
-#    The button labels below ("Enter URL manually"/"Connect"/"Reload"/"Go back", and the system "Open")
-#    are expo-dev-client / iOS / expo-router UI — the same across ANY Expo app (not app-specific), but
-#    UI text that can shift across versions. Treat them as illustrative: if a label doesn't match,
-#    `snapshot -i` and press the current ref. The flow matters, not the exact strings.
+# 3. Start a session, install the dev build, then connect it — one `open` call.
+#    FAST path: `open <bundleId> <devClientURL>` deep-links straight into the bundle and skips the
+#    launcher UI. ASSEMBLE <devClientURL> yourself — the tunnel prints only the bare
+#    exp+<scheme>://<host>.on.expo.app (plus the https manifest URL), not the dev-client form. Build:
+#    exp+<scheme>://expo-development-client/?url=https://<host>.on.expo.app  (<scheme> = your app's
+#    scheme; <host> from step 2). It MUST be https — an http://<sub>.exp.direct URL fails from a
+#    hosted sim. The --launch-args pre-dismiss onboarding and the dev menu — nothing to tap away after.
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest install dev.example.app "$DEVAPP" --platform ios
 
-#    a) launch the dev client (it opens its launcher, which only auto-discovers LAN Metro — ours is remote):
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest open dev.example.app --platform ios
+#    a) open straight into the connected dev client — onboarding, dev menu, and floating gear all suppressed:
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest open dev.example.app "<devClientURL>" --platform ios --relaunch \
+  --launch-args "-EXDevMenuIsOnboardingFinished" --launch-args "1" \
+  --launch-args "-EXDevMenuShowsAtLaunch" --launch-args "0" \
+  --launch-args "-EXDevMenuShowFloatingActionButton" --launch-args "0"
 
-#    b) point it at your remote Metro via "Enter URL manually":
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest press 'label="Enter URL manually"'
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest snapshot -i          # get the text-field ref
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest fill @<field> "<manifest URL Metro printed in step 2>"   # e.g. https://<host>.on.expo.app
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest press 'label="Connect"'
+#    b) a deep-link open can raise the system "Open in '<app>'?" dialog — accept it (waits up to 2.5s, no-op if absent):
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert accept 2500 --platform ios
 
-#    c) first-run dev menu → Reload to fetch the bundle (first build+transfer over the tunnel ~40-60s):
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest press 'label="Reload"'
+#    c) the first bundle build+transfer over the tunnel is ~40-60s; wait, then screenshot to confirm the APP is up.
+#       If it shows the launcher instead, the deep link didn't take — use the manual fallback below.
 
-#    d) expo-router may show "Unmatched Route" (the connect URL was parsed as a path) → go to home:
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest press 'label="Go back"'
+#    FALLBACK (only if the open lands on the launcher, not the app): enter the URL by hand. The labels
+#    ("Enter URL manually"/"Connect"/"Reload"/"Go back") are expo-dev-client/expo-router UI, stable across
+#    Expo apps but they can shift across versions — if one doesn't match, `snapshot -i` and press the current ref.
+#      open dev.example.app --platform ios
+#      press 'label="Enter URL manually"'  →  snapshot -i  →  fill @<field> "<manifest URL>"  →  press 'label="Connect"'
+#      then press 'label="Reload"' (bundle), and press 'label="Go back"' if expo-router shows "Unmatched Route".
+
+#    ── Dev-menu launch flags (the --launch-args above; iOS UserDefaults `-Key Value`, verified in
+#       expo/expo packages/expo-dev-menu). By default the onboarding popup, auto-opened dev menu, and
+#       floating gear all show and clutter screenshots — these three suppress them:
+#         -EXDevMenuIsOnboardingFinished 1        skip the first-run onboarding popup (dev client AND Expo Go)
+#         -EXDevMenuShowsAtLaunch 0               don't auto-open the dev menu at launch (dev client)
+#         -EXDevMenuShowFloatingActionButton 0    hide the floating gear (defaults visible on both targets)
+#       Expo Go takes the same flags — launch the installed Expo Go shell instead of a build:
+#         open host.exp.Exponent "<exp:// or exp+... URL>" --platform ios --relaunch \
+#           --launch-args "-EXDevMenuIsOnboardingFinished" --launch-args "1" \
+#           --launch-args "-EXDevMenuShowFloatingActionButton" --launch-args "0"
 
 # 4. Edit a source file locally → Fast Refresh pushes it to the remote sim with NO reload. Screenshot to confirm.
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./live.png
@@ -186,5 +200,5 @@ npx --yes eas-cli@latest simulator:stop          # omit --id → stops the doten
 ```
 
 Notes:
-- The launcher's auto-discovery only scans the LAN, so a remote Metro must be entered via "Enter URL manually" — that's why this is the connect step.
-- **This "Enter URL manually" + public tunnel URL flow is the ONLY connect path.** If it fails, don't switch mechanisms or reconnect in a loop — reset to baseline and redo Mode C once (SKILL.md principle 1). (`agent-device`'s `metro prepare --proxy-base-url` bridge exists but is not part of this loop.)
+- `open <bundleId> <devClientURL>` is the connect step: the deep link points the dev client at the remote Metro directly, so you skip the launcher (whose auto-discovery only scans the LAN). Manual "Enter URL manually" entry is the fallback for when the deep link doesn't land.
+- If BOTH the direct open and the manual fallback fail, don't switch mechanisms or reconnect in a loop — reset to baseline and redo Mode C once (SKILL.md principle 1).
