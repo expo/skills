@@ -357,7 +357,7 @@ jobs:
     type: submit
     needs: [build]
     params:
-      platform: ios
+      build_id: ${{ needs.build.outputs.build_id }}
       profile: production
 ```
 
