@@ -40,6 +40,20 @@ Whenever the tools client is routed to a remote tool-server, it tars the local b
 
 Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `argent --version`. On older versions `reinstall-app` resolves `--appPath` on the VM only, so a local path fails; drive an app already on the sim instead.
 
+**Mode C (dev client) on argent — connect via deep link, not the launcher UI.** argent has `open-url`, which opens a scheme / deep link directly, so you can point a dev client at Metro without tapping through the launcher. Use the dev-client **custom scheme** (not `https://`, which can fall through to Safari):
+
+```bash
+# load the dev client from Metro via its deep link
+npx --yes eas-cli@latest simulator:exec sh -c 'argent run open-url --args "{\"udid\":\"<udid>\",\"url\":\"<scheme>://expo-development-client/?url=<metro-url>\"}"'
+# then attach to Metro's debugger / reload the bundle
+npx --yes eas-cli@latest simulator:exec sh -c 'argent run debugger-connect --args "{\"udid\":\"<udid>\"}"'
+```
+
+Where argent is weaker than agent-device Mode C — so it's **capable, not as fast**:
+- **No launch-args.** `launch-app` takes only `--bundleId`; argent can't pre-seed `-EXDevMenuIsOnboardingFinished` / `-EXDevMenuShowsAtLaunch` the way agent-device's `open --launch-args` does. If the onboarding popup or dev menu blocks the screen, tap through it by **normalized 0.0–1.0 coordinates** (`gesture-tap`, positions from `describe` / `native-describe-screen`) — there's no element/ref tap.
+- **No Metro bind on launch.** No `--metro-host` / `--bundle-url` seed; point the client at Metro with the `open-url` deep link above, then `debugger-connect` / `debugger-reload-metro`.
+- **Whole-string text entry:** use `keyboard --text "<string>"` — it types the entire string in one call. Never type character by character.
+
 **System dialogs on argent (e.g. the first-time deep-link "Open in '<app>'?").** argent's UI queries (`describe` / `await-ui-element`) may not see system dialogs / native modals — a screenshot shows the dialog, but element lookups time out. When that happens, argent surfaces a hint with the fix (today that's a `boot-device --force` to switch its AX backend); follow the hint, then locate and tap "Open". There's no single press-with-timeout — you wait for the element, then tap it. Use argent's own command help for the exact tools and flags.
 
 **Recording video on argent (`screen-recording-start`/`stop`).** The gotcha to know: argent **trims static stretches by default**, which drops the very frames you're measuring — turn that off when you care about cadence or timing (see argent's help for the flag). Recordings also carry a burned-in "Argent" watermark that can't be disabled on a hosted session — fine for diagnosis, mind it before sharing publicly. The stop call returns a video already downloaded locally; extract frames with `ffmpeg` (may need installing) to inspect motion frame by frame. The capture samples at ~30fps, so it shows visible jank but can't prove or disprove sub-frame hitches on 60/120Hz content.
