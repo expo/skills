@@ -33,9 +33,9 @@ done
 
 If you need the id explicitly, it's `EAS_SIMULATOR_SESSION_ID` in `.env.eas-simulator`. `start` also prints a `webPreviewUrl` (iOS-only browser preview — surface it per the SKILL.md "watch it live" rules) and a job-run URL. Once live, the session env is in `.env.eas-simulator`, so `simulator:exec` works.
 
-## Targeting a device — iPad, Apple TV, or several at once
+## Targeting a device — iPad, or several at once
 
-A session is **not** one iPhone. An iOS session exposes many Apple simulators — iPhones, iPads, Apple Vision Pro, Apple TV — plus the macOS host. Only **one iPhone is booted** at start; the rest boot on demand. List them:
+A session is **not** one iPhone. An iOS session exposes several Apple simulators — multiple iPhones and iPads. Only **one iPhone is booted** at start; the rest boot on demand. List them:
 
 ```bash
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest devices --json
@@ -50,7 +50,7 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest open dev.example
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./ipad.png   # iPad renders larger, e.g. 1032x1376
 ```
 
-- `--platform ios` covers **both** iPhone and iPad (iPadOS) — add `--device` to disambiguate. Apple TV is `tvos`; Apple Vision Pro reports as `ios`.
+- `--platform ios` covers **both** iPhone and iPad (iPadOS) — add `--device` to disambiguate.
 - **Several at once:** `open`/`boot` a second device by name and it stays booted alongside the first; pass `--device "<name>"` on each verb to say which device it hits.
 - `devices` reports each device's name, kind, and booted state, but **not** its iOS version.
 
