@@ -1,7 +1,7 @@
 {
   "name": "Expo",
   "displayName": "Expo",
-  "version": "1.12.1",
+  "version": "1.12.2",
   "description": "Official Expo plugin. Everything your agent needs to build, verify, deploy, and monitor an app on Android, iOS, and web.",
   "author": {
     "name": "Expo Team",
