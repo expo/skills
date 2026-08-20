@@ -141,24 +141,31 @@ LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 xcodebuild \
   -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-debug build
 DEVAPP=ios/build-debug/Build/Products/Debug-iphonesimulator/<App>.app
 
-# 2. Start Metro with tunnel v2 on its OWN port — don't force :8081 or kill anything to reclaim it.
-#    Each `expo start --tunnel` gets its own unique tunnel URL, so a second Metro never has to fight
-#    for the first one's port. Pick a free high port with `--port <N>` (e.g. 8082). Only reuse a
-#    running Metro if YOU started it this session — there's no command to prove ownership, so when
-#    unsure just start a new one on another port; never kill someone else's server. A bare `&` won't
-#    survive across agent shell calls — use a long-lived/background run or a separate terminal. tunnel
-#    v2 (durable-object, not ngrok) works from robot/cloud agents where plain --tunnel is blocked.
-EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port <N>
-#    → capture the tunnel/manifest URL + deep link it prints (format like https://<host>.on.expo.app).
-#      The port is NOT in the URL, so read it from stdout — `--port` only identifies the local process.
+# 2. Start Metro with a tunnel so the remote sim can reach it. The BACKEND constrains the port:
+#    • ws-tunnel ("tunnel v2", durable-object) — the ONLY tunnel that works for robot/EXPO_TOKEN/cloud
+#      agents (plain ngrok is blocked for them). HARD-LOCKED to port 8081: `--port 8082` fails with
+#      "WS-tunnel only supports tunneling over port 8081". The flag that forces it varies by CLI version —
+#      EXPO_UNSTABLE_TUNNEL_V2=1 (newer) or EXPO_FORCE_WEBCONTAINER_ENV=1 (some SDK 56 CLIs); if one is
+#      ignored try the other, and confirm from the Metro log which tunnel actually started.
+#    • ngrok (plain `--tunnel`, no flag) — allows ANY `--port`, but is blocked for robot/EXPO_TOKEN users.
+#    Pick: robot/cloud agent → ws-tunnel on 8081. Normal dev machine → either.
+#    If 8081 is held by ANOTHER project's Metro you didn't start, do NOT kill it — stop it only if it's
+#    yours, else (non-robot) fall back to ngrok on a free port. Reuse a Metro only if YOU started it this
+#    session. A bare `&` won't survive across agent shell calls — background it durably.
+EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port 8081        # ws-tunnel (try EXPO_FORCE_WEBCONTAINER_ENV=1 if ignored)
+#    fallback, non-robot only:  npx expo start --tunnel --port <free-port>   # ngrok, any port
+#    → capture the https manifest URL from stdout (ws-tunnel: https://<host>.on.expo.app; ngrok: https://<host>.exp.direct).
+#      Headless `-p` runs may not print it — read the Metro log, or ngrok's API: curl -s 127.0.0.1:4040/api/tunnels.
 
 # 3. Start a session, install the dev build, then connect it — one `open` call.
 #    FAST path: `open <bundleId> <devClientURL>` deep-links straight into the bundle and skips the
-#    launcher UI. ASSEMBLE <devClientURL> yourself — the tunnel prints only the bare
-#    exp+<scheme>://<host>.on.expo.app (plus the https manifest URL), not the dev-client form. Build:
-#    exp+<scheme>://expo-development-client/?url=https://<host>.on.expo.app  (<scheme> = your app's
-#    scheme; <host> from step 2). It MUST be https — an http://<sub>.exp.direct URL fails from a
-#    hosted sim. The --launch-args pre-dismiss onboarding and the dev menu — nothing to tap away after.
+#    launcher UI. ASSEMBLE <devClientURL> from the app's URL SCHEME — app.json `scheme` (e.g. "coinflip"),
+#    NOT the slug; verify via `npx expo config --json` (.scheme) or Info.plist CFBundleURLSchemes:
+#      <scheme>://expo-development-client/?url=https://<manifest-host>
+#      e.g. coinflip://expo-development-client/?url=https://abc123.on.expo.app
+#    (Only an app with NO custom scheme uses the auto form exp+<slug>://.) Using the slug when a custom
+#    scheme exists opens the launcher instead of the app, leaving onboarding to tap away. The url MUST be
+#    https. The --launch-args pre-dismiss onboarding + the dev menu — nothing to tap away after.
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest install dev.example.app "$DEVAPP" --platform ios
 
 #    a) open straight into the connected dev client — onboarding, dev menu, and floating gear all suppressed:
