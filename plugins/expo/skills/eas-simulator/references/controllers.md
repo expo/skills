@@ -45,6 +45,10 @@ Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `arge
 ```bash
 # load the dev client from Metro via its deep link
 npx --yes eas-cli@latest simulator:exec sh -c 'argent run open-url --args "{\"udid\":\"<udid>\",\"url\":\"<scheme>://expo-development-client/?url=<metro-url>\"}"'
+# open-url raises the "Open in '<app>'?" system dialog — argent has NO alert-accept, so screenshot to
+# locate "Open", then coordinate-tap it (its describe may not see the dialog — see "System dialogs" below)
+npx --yes eas-cli@latest simulator:exec sh -c 'argent run screenshot --args "{\"udid\":\"<udid>\"}"'
+npx --yes eas-cli@latest simulator:exec sh -c 'argent run gesture-tap --args "{\"udid\":\"<udid>\",\"x\":<0..1>,\"y\":<0..1>}"'
 # then attach to Metro's debugger / reload the bundle
 npx --yes eas-cli@latest simulator:exec sh -c 'argent run debugger-connect --args "{\"udid\":\"<udid>\"}"'
 ```
