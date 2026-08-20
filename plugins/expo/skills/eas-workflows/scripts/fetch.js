@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 const CACHE_DIRECTORY = resolve(import.meta.dirname, '.cache');
 const DEFAULT_TTL_SECONDS = 15 * 60; // 15 minutes
@@ -92,7 +93,10 @@ function parseMaxAge(cacheControl) {
   return match ? parseInt(match[1], 10) : null;
 }
 
-if (import.meta.main) {
+// import.meta.main is Bun-only until Node 24.2, so it is undefined on the Node
+// 20 and 22 LTS lines this script is documented to run on. Compare the module
+// URL instead, which works on every supported runtime.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const url = process.argv[2];
 
   if (!url || url === '--help' || url === '-h') {
