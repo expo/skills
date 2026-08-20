@@ -115,14 +115,15 @@ CI fails if the block is missing, has drifted, or names the wrong skill.
 
 ### 10. Bump the plugin version
 
-Bump `version` in **all three** manifests together - they must match each other and be greater
+Bump `version` in **all four** manifests together - they must match each other and be greater
 than `main`. CI enforces this.
 
 - `plugins/expo/.claude-plugin/plugin.json`
 - `plugins/expo/.codex-plugin/plugin.json`
 - `plugins/expo/.cursor-plugin/plugin.json`
+- `plugins/expo/.grok-plugin/plugin.json`
 
-The check script writes all three for you, rejecting a version that is not valid semver or is not
+The check script writes all four for you, rejecting a version that is not valid semver or is not
 greater than the base ref:
 
 ```bash

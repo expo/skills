@@ -3,7 +3,7 @@
 //
 // Usage: bun test scripts/check-plugin-version-bump.test.ts
 //
-// The --set-version cases write to the three plugin manifests. They are backed
+// The --set-version cases write to the plugin manifests. They are backed
 // up before the suite and restored before every test and after the run, so each
 // test starts from a pristine copy and any uncommitted edits you already had in
 // those files survive the run.
@@ -23,6 +23,7 @@ const manifests = [
   "plugins/expo/.claude-plugin/plugin.json",
   "plugins/expo/.codex-plugin/plugin.json",
   "plugins/expo/.cursor-plugin/plugin.json",
+  "plugins/expo/.grok-plugin/plugin.json",
 ];
 
 process.chdir(join(import.meta.dir, ".."));
@@ -190,11 +191,11 @@ describe("base-ref comparison", () => {
 });
 
 describe("--set-version", () => {
-  test("writes the version to all three manifests", () => {
+  test("writes the version to all plugin manifests", () => {
     const { exitCode, output } = runCheck("HEAD", "--set-version", nextVersion);
 
     expect(exitCode).toBe(0);
-    expect(output).toContain(`All three plugin manifests are now at ${nextVersion}`);
+    expect(output).toContain(`All ${manifests.length} plugin manifests are now at ${nextVersion}`);
 
     for (const manifest of manifests) {
       expect(versionOf(manifest)).toBe(nextVersion);
@@ -221,7 +222,7 @@ describe("--set-version", () => {
     const { exitCode, output } = runCheck("HEAD", `--set-version=${laterVersion}`);
 
     expect(exitCode).toBe(0);
-    expect(output).toContain(`All three plugin manifests are now at ${laterVersion}`);
+    expect(output).toContain(`All ${manifests.length} plugin manifests are now at ${laterVersion}`);
   });
 });
 

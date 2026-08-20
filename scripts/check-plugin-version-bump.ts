@@ -28,6 +28,10 @@ const pluginManifests: PluginManifest[] = [
     label: "Cursor",
     path: "plugins/expo/.cursor-plugin/plugin.json",
   },
+  {
+    label: "Grok",
+    path: "plugins/expo/.grok-plugin/plugin.json",
+  },
 ];
 
 const versionedPluginPaths = [
@@ -35,6 +39,7 @@ const versionedPluginPaths = [
   "plugins/expo/.claude-plugin/plugin.json",
   "plugins/expo/.codex-plugin/plugin.json",
   "plugins/expo/.cursor-plugin/plugin.json",
+  "plugins/expo/.grok-plugin/plugin.json",
   "plugins/expo/.mcp.json",
   "plugins/expo/mcp.json",
 ];
@@ -42,8 +47,8 @@ const versionedPluginPaths = [
 const USAGE = `Usage: bun scripts/check-plugin-version-bump.ts [base-ref] [options]
 
 Guards the rule that CI enforces: when any versioned Expo plugin file changes,
-the Claude, Codex, and Cursor plugin manifests must all be bumped together to
-the same version, and that version must be greater than the one on the base ref.
+the Claude, Codex, Cursor, and Grok plugin manifests must all be bumped together
+to the same version, and that version must be greater than the one on the base ref.
 
 Versioned paths:
 ${versionedPluginPaths.map((path) => `  ${path}`).join("\n")}
@@ -55,7 +60,7 @@ Arguments:
   base-ref              Git ref to compare against (default: origin/main).
 
 Options:
-  --set-version <ver>   Write <ver> as the version in all three manifests
+  --set-version <ver>   Write <ver> as the version in all plugin manifests
                         instead of running the check. Must be valid semver and
                         greater than the version on the base ref.
   -h, --help            Print this help and exit.
@@ -216,7 +221,7 @@ function setVersions(nextVersion: string): never {
     console.log(`Updated ${update.label}: ${update.currentVersion} → ${nextVersion} (${update.path})`);
   }
 
-  console.log(`\nAll three plugin manifests are now at ${nextVersion}.`);
+  console.log(`\nAll ${pluginManifests.length} plugin manifests are now at ${nextVersion}.`);
   process.exit(0);
 }
 
@@ -256,9 +261,7 @@ const currentVersions = new Set(rows.map((row) => row.currentVersion));
 const baseVersions = new Set(rows.map((row) => row.baseVersion));
 
 for (const row of rows) {
-  if (row.baseVersion === undefined) {
-    errors.push(`${row.label} manifest is missing or has no version on main (${row.path}).`);
-  } else if (!isSemver(row.baseVersion)) {
+  if (row.baseVersion !== undefined && !isSemver(row.baseVersion)) {
     errors.push(`${row.label} has an invalid semver version on main: ${formatVersion(row.baseVersion)}`);
   }
 
@@ -269,18 +272,22 @@ for (const row of rows) {
   }
 }
 
-if (baseVersions.size !== 1) {
-  errors.push("The Claude, Codex, and Cursor plugin versions on main are not in sync.");
+const presentBaseVersions = [...baseVersions].filter(isSemver);
+
+if (new Set(presentBaseVersions).size > 1) {
+  errors.push("The Claude, Codex, Cursor, and Grok plugin versions on main are not in sync.");
 }
 
 if (currentVersions.size !== 1) {
-  errors.push("The Claude, Codex, and Cursor plugin versions in this PR must match.");
+  errors.push("The Claude, Codex, Cursor, and Grok plugin versions in this PR must match.");
 }
 
 if (errors.length === 0) {
+  const sharedBase = presentBaseVersions[0];
   for (const row of rows) {
-    if (semver.order(row.currentVersion as string, row.baseVersion as string) <= 0) {
-      errors.push(`${row.label} version must be greater than main (${formatVersion(row.baseVersion)}).`);
+    const base = isSemver(row.baseVersion) ? row.baseVersion : sharedBase;
+    if (base === undefined || semver.order(row.currentVersion as string, base) <= 0) {
+      errors.push(`${row.label} version must be greater than main (${formatVersion(base)}).`);
     }
   }
 }
@@ -291,7 +298,7 @@ const markdown = [
   "",
   errors.length === 0
     ? "Passed. Versioned Expo plugin files changed and all plugin manifests were bumped together."
-    : "Failed. Versioned Expo plugin files changed, so the Claude, Codex, and Cursor plugin manifests must all be bumped together.",
+    : "Failed. Versioned Expo plugin files changed, so the Claude, Codex, Cursor, and Grok plugin manifests must all be bumped together.",
   "",
   formatVersionRows(rows),
   "",
