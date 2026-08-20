@@ -35,8 +35,8 @@ const ComposeList = Platform.OS === 'android' ? require('../components/ProductLi
 - Components are imported from `@expo/ui/jetpack-compose`, modifiers from `@expo/ui/jetpack-compose/modifiers`.
 - **Before writing any code, run the list-components script** to get the exact components and modifiers available in the installed version:
   ```bash
-  node <skill-root>/scripts/list-components.js <project-path>          # names only (compact)
-  node <skill-root>/scripts/list-components.js <project-path> --docs   # with one-line descriptions
+  node <skill-root>/scripts/list-components.cjs <project-path>          # names only (compact)
+  node <skill-root>/scripts/list-components.cjs <project-path> --docs   # with one-line descriptions
   ```
   (`<skill-root>` is the directory containing this `references/` folder.)
 - **Always read the `.d.ts` type files** to confirm prop shapes and signatures — read the relevant `{ComponentName}/index.d.ts` from the installed `@expo/ui/jetpack-compose` package in `node_modules`. This is the most reliable source of truth.

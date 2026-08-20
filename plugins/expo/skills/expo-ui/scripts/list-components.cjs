@@ -3,7 +3,7 @@
  * List available @expo/ui components and modifiers installed in a project.
  *
  * Usage:
- *   node list-components.js <project-path> [--docs]
+ *   node list-components.cjs <project-path> [--docs]
  *
  *   --docs  Include a one-line JSDoc description per modifier.
  *           Omit (default) for a compact names-only list that consumes fewer tokens.
@@ -20,7 +20,7 @@ const projectPath = process.argv[2];
 const withDocs = process.argv.includes('--docs');
 
 if (!projectPath) {
-  console.error('Usage: node list-components.js <project-path> [--docs]');
+  console.error('Usage: node list-components.cjs <project-path> [--docs]');
   process.exit(1);
 }
 

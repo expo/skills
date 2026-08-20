@@ -38,8 +38,8 @@ Or more simply, put the `Platform.OS` guard and the SwiftUI import in the same r
 - Components are imported from `@expo/ui/swift-ui`, modifiers from `@expo/ui/swift-ui/modifiers`.
 - **Before writing any code, run the list-components script** to get the exact components and modifiers available in the installed version:
   ```bash
-  node <skill-root>/scripts/list-components.js <project-path>          # names only (compact)
-  node <skill-root>/scripts/list-components.js <project-path> --docs   # with one-line descriptions
+  node <skill-root>/scripts/list-components.cjs <project-path>          # names only (compact)
+  node <skill-root>/scripts/list-components.cjs <project-path> --docs   # with one-line descriptions
   ```
   (`<skill-root>` is the directory containing this `references/` folder.)
 - **The installed package's TypeScript types (`.d.ts`) are the most reliable source of truth** for prop shapes and signatures — read the relevant `{Component}/index.d.ts` from the installed `@expo/ui/swift-ui` package in `node_modules`. Use the docs below as the human-readable reference.
