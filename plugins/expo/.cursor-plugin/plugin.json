@@ -1,8 +1,8 @@
 {
-  "name": "expo",
+  "name": "Expo",
   "displayName": "Expo",
-  "version": "1.11.1",
-  "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo and React Native apps.",
+  "version": "1.11.2",
+  "description": "Official Expo plugin. Everything your agent needs to build, verify, deploy, and monitor an app on Android, iOS, and web.",
   "author": {
     "name": "Expo Team",
     "email": "support@expo.dev"

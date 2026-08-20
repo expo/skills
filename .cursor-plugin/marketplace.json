@@ -10,9 +10,9 @@
   },
   "plugins": [
     {
-      "name": "expo",
+      "name": "Expo",
       "source": "./plugins/expo",
-      "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo apps."
+      "description": "Official Expo plugin. Everything your agent needs to build, verify, deploy, and monitor an app on Android, iOS, and web."
     },
     {
       "name": "expo-experiments",
