@@ -21,6 +21,7 @@
     "native-modules",
     "mcp"
   ],
+  "logo": "./assets/expo.png",
   "skills": "./skills/",
   "mcpServers": "./mcp.json"
 }
