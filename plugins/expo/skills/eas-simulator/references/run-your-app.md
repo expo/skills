@@ -156,8 +156,9 @@ DEVAPP=ios/build-debug/Build/Products/Debug-iphonesimulator/<App>.app
 EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port <your-free-port>   # any port; drop the flag for the ngrok path
 #    → capture the https manifest URL from stdout (v2: https://<host>.on.expo.app; ngrok: https://<host>.exp.direct).
 #      Headless `-p` runs may not print it — read the Metro log, or ngrok's API: curl -s 127.0.0.1:4040/api/tunnels.
-#      On an older CLI where the v2 flag is a no-op you'll fall to the legacy 8081-locked path — then either
-#      upgrade/log in for v2, use `--port 8081`, or use the ngrok path (non-robot).
+#      On an older CLI (e.g. expo 56) the v2 flag no-ops and you simply get the ngrok tunnel on your chosen
+#      port (verified: expo 56.0.3 → ngrok on :8083). You only hit the 8081 legacy lock if webcontainer is
+#      detected or EXPO_FORCE_WEBCONTAINER_ENV is set.
 
 # 3. Start a session, install the dev build, then connect it — one `open` call.
 #    FAST path: `open <bundleId> <devClientURL>` deep-links straight into the bundle and skips the
