@@ -141,28 +141,32 @@ LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 xcodebuild \
   -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-debug build
 DEVAPP=ios/build-debug/Build/Products/Debug-iphonesimulator/<App>.app
 
-# 2. Start Metro with a tunnel so the remote sim can reach it. The BACKEND constrains the port:
-#    • ws-tunnel ("tunnel v2", durable-object) — the ONLY tunnel that works for robot/EXPO_TOKEN/cloud
-#      agents (plain ngrok is blocked for them). HARD-LOCKED to port 8081: `--port 8082` fails with
-#      "WS-tunnel only supports tunneling over port 8081". The flag that forces it varies by CLI version —
-#      EXPO_UNSTABLE_TUNNEL_V2=1 (newer) or EXPO_FORCE_WEBCONTAINER_ENV=1 (some SDK 56 CLIs); if one is
-#      ignored try the other, and confirm from the Metro log which tunnel actually started.
-#    • ngrok (plain `--tunnel`, no flag) — allows ANY `--port`, but is blocked for robot/EXPO_TOKEN users.
-#    Pick: robot/cloud agent → ws-tunnel on 8081. Normal dev machine → either.
-#    If 8081 is held by ANOTHER project's Metro you didn't start, do NOT kill it — stop it only if it's
-#    yours, else (non-robot) fall back to ngrok on a free port. Reuse a Metro only if YOU started it this
-#    session. A bare `&` won't survive across agent shell calls — background it durably.
-EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port 8081        # ws-tunnel (try EXPO_FORCE_WEBCONTAINER_ENV=1 if ignored)
-#    fallback, non-robot only:  npx expo start --tunnel --port <free-port>   # ngrok, any port
-#    → capture the https manifest URL from stdout (ws-tunnel: https://<host>.on.expo.app; ngrok: https://<host>.exp.direct).
+# 2. Start Metro with a tunnel so the remote sim can reach it. Start on your OWN free port — each run gets
+#    its own tunnel URL, so never fight for or kill :8081 (that's #133's rule, and it holds). BOTH tunnel
+#    backends accept ANY --port:
+#    • ws-tunnel v2 (account-signed): EXPO_UNSTABLE_TUNNEL_V2=1 — mints a signed URL for your EAS account,
+#      returns an on.expo.app host, and is the path for robot/EXPO_TOKEN/cloud agents (plain ngrok is
+#      blocked for them). Needs to be logged in / an EAS-linked project; if the signed URL can't be made
+#      the CLI tells you to unset the flag and use ngrok.
+#    • ngrok (plain `--tunnel`, no flag): returns an <host>.exp.direct host; blocked for robot/EXPO_TOKEN users.
+#    The ONLY 8081 lock is the LEGACY ws-tunnel path, which you hit WITHOUT the v2 account URL — an older CLI
+#    where the flag is a no-op, or EXPO_FORCE_WEBCONTAINER_ENV=1. Do NOT set EXPO_FORCE_WEBCONTAINER_ENV to
+#    "fix" a port: it forces that legacy path and locks you to 8081 (the opposite of what you want).
+#    A bare `&` won't survive across agent shell calls — background it durably.
+EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port <your-free-port>   # any port; drop the flag for the ngrok path
+#    → capture the https manifest URL from stdout (v2: https://<host>.on.expo.app; ngrok: https://<host>.exp.direct).
 #      Headless `-p` runs may not print it — read the Metro log, or ngrok's API: curl -s 127.0.0.1:4040/api/tunnels.
+#      On an older CLI where the v2 flag is a no-op you'll fall to the legacy 8081-locked path — then either
+#      upgrade/log in for v2, use `--port 8081`, or use the ngrok path (non-robot).
 
 # 3. Start a session, install the dev build, then connect it — one `open` call.
 #    FAST path: `open <bundleId> <devClientURL>` deep-links straight into the bundle and skips the
 #    launcher UI. ASSEMBLE <devClientURL> from the app's URL SCHEME — app.json `scheme` (e.g. "coinflip"),
 #    NOT the slug; verify via `npx expo config --json` (.scheme) or Info.plist CFBundleURLSchemes:
-#      <scheme>://expo-development-client/?url=https://<manifest-host>
-#      e.g. coinflip://expo-development-client/?url=https://abc123.on.expo.app
+#      <scheme>://expo-development-client/?url=<URL-encoded manifest https URL>
+#      e.g. coinflip://expo-development-client/?url=https%3A%2F%2Fabc123.on.expo.app
+#    URL-encode the manifest URL — dev-client's constructDevClientUrl uses encodeURIComponent; a bare host
+#    works unencoded (as in our testing), but encode it if it carries a path or query.
 #    (Only an app with NO custom scheme uses the auto form exp+<slug>://.) Using the slug when a custom
 #    scheme exists opens the launcher instead of the app, leaving onboarding to tap away. The url MUST be
 #    https. The --launch-args pre-dismiss onboarding + the dev menu — nothing to tap away after.
