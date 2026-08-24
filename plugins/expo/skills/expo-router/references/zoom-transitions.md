@@ -1,33 +1,15 @@
 # Apple Zoom Transitions
 
-Fluid zoom transitions for navigating between screens. iOS 18+, Expo SDK 55+, Stack navigator only.
+Fluid zoom transitions between screens. iOS 18+, Expo SDK 55+, Stack navigator only — will not work with sheets or popovers.
+
+> Source: https://docs.expo.dev/router/advanced/zoom-transition/ — the canonical page (full API walkthrough: `withAppleZoom`, `alignmentRect`, `usePreventZoomTransitionDismissal`, `unstable_dismissalBoundsRect`; append `.md` for markdown). API reference: https://docs.expo.dev/versions/latest/sdk/router/ — swap `latest` for the project's SDK. This reference adds only what the docs do not cover: when zoom looks right and how to avoid gesture conflicts.
+
+## Minimal Example
+
+Wrap the source element in `Link.AppleZoom`; optionally mark the destination element with `Link.AppleZoomTarget`:
 
 ```tsx
-import { Link } from "expo-router";
-```
-
-## Basic Zoom
-
-Use `withAppleZoom` on `Link.Trigger` to zoom the entire trigger element into the destination screen:
-
-```tsx
-<Link href="/photo" asChild>
-  <Link.Trigger withAppleZoom>
-    <Pressable>
-      <Image
-        source={{ uri: "https://example.com/thumb.jpg" }}
-        style={{ width: 120, height: 120, borderRadius: 12 }}
-      />
-    </Pressable>
-  </Link.Trigger>
-</Link>
-```
-
-## Targeted Zoom with `Link.AppleZoom`
-
-Wrap only the element that should animate. Siblings outside `Link.AppleZoom` are not part of the transition:
-
-```tsx
+// Source screen
 <Link href="/photo" asChild>
   <Link.Trigger>
     <Pressable style={{ alignItems: "center" }}>
@@ -43,94 +25,20 @@ Wrap only the element that should animate. Siblings outside `Link.AppleZoom` are
 </Link>
 ```
 
-`Link.AppleZoom` accepts only a single child element.
-
-## Destination Target
-
-Use `Link.AppleZoomTarget` on the destination screen to align the zoom animation to a specific element:
-
 ```tsx
-// Destination screen (e.g., app/photo.tsx)
-import { Link } from "expo-router";
-
-export default function PhotoScreen() {
-  return (
-    <View style={{ flex: 1 }}>
-      <Link.AppleZoomTarget>
-        <Image
-          source={{ uri: "https://example.com/full.jpg" }}
-          style={{ width: "100%", aspectRatio: 4 / 3 }}
-        />
-      </Link.AppleZoomTarget>
-      <Text>Photo details below</Text>
-    </View>
-  );
-}
+// Destination screen (app/photo.tsx)
+<Link.AppleZoomTarget>
+  <Image
+    source={{ uri: "https://example.com/full.jpg" }}
+    style={{ width: "100%", aspectRatio: 4 / 3 }}
+  />
+</Link.AppleZoomTarget>
 ```
 
-Without a target, the zoom animates to fill the entire destination screen.
-
-## Custom Alignment Rectangle
-
-For manual control over where the zoom lands on the destination, use `alignmentRect` instead of `Link.AppleZoomTarget`:
-
-```tsx
-<Link.AppleZoom alignmentRect={{ x: 0, y: 0, width: 200, height: 300 }}>
-  <Image source={{ uri: "https://example.com/thumb.jpg" }} />
-</Link.AppleZoom>
-```
-
-Coordinates are in the destination screen's coordinate space. Prefer `Link.AppleZoomTarget` when possible — use `alignmentRect` only when the target element isn't available as a React component.
-
-## Controlling Dismissal
-
-Zoom screens support interactive dismissal gestures by default (pinch, swipe down when scrolled to top, swipe from leading edge). Use `usePreventZoomTransitionDismissal` on the destination screen to control this.
-
-### Disable all dismissal gestures
-
-```tsx
-import { usePreventZoomTransitionDismissal } from "expo-router";
-
-export default function PhotoScreen() {
-  usePreventZoomTransitionDismissal();
-  return <Image source={{ uri: "https://example.com/full.jpg" }} />;
-}
-```
-
-### Restrict dismissal to a specific area
-
-Use `unstable_dismissalBoundsRect` to prevent conflicts with scrollable content:
-
-```tsx
-usePreventZoomTransitionDismissal({
-  unstable_dismissalBoundsRect: {
-    minX: 0,
-    minY: 0,
-    maxX: 300,
-    maxY: 300,
-  },
-});
-```
-
-This is useful when the destination contains a zoomable scroll view — the system gives that scroll view precedence over the dismiss gesture.
-
-## Combining with Link.Preview
-
-Zoom transitions work alongside long-press previews:
-
-```tsx
-<Link href="/photo" asChild>
-  <Link.Trigger withAppleZoom>
-    <Pressable>
-      <Image
-        source={{ uri: "https://example.com/thumb.jpg" }}
-        style={{ width: 120, height: 120 }}
-      />
-    </Pressable>
-  </Link.Trigger>
-  <Link.Preview />
-</Link>
-```
+- `Link.AppleZoom` accepts only a single child; siblings outside it are not part of the transition.
+- Without `Link.AppleZoomTarget`, the zoom animates to fill the entire destination screen.
+- `<Link.Trigger withAppleZoom>` zooms the whole trigger element instead of a wrapped subtree.
+- Zoom works alongside `<Link.Preview />` long-press previews on the same Link.
 
 ## Best Practices
 
@@ -146,13 +54,7 @@ Zoom transitions work alongside long-press previews:
 - Hiding the navigation bar — known issues with header visibility during transitions
 
 **Tips:**
-- Always provide a close or back button — dismissal gestures are not discoverable
-- If the destination has a zoomable scroll view, use `unstable_dismissalBoundsRect` to avoid gesture conflicts
+- Always provide a close or back button — dismissal gestures (pinch, swipe down at top, swipe from leading edge) are not discoverable
+- If the destination has a zoomable scroll view, restrict dismissal with `usePreventZoomTransitionDismissal({ unstable_dismissalBoundsRect })` to avoid gesture conflicts — the system gives that scroll view precedence over the dismiss gesture
 - Source view doesn't need to match the tap target — only the `Link.AppleZoom` wrapped element animates
 - When source is unavailable (e.g., scrolled off screen), the transition zooms from the center of the screen
-
-## References
-
-- Expo Router Zoom Transitions: https://docs.expo.dev/router/advanced/zoom-transition/
-- Link.AppleZoom API: https://docs.expo.dev/versions/v55.0.0/sdk/router/#linkapplezoom
-- Apple UIKit Fluid Transitions: https://developer.apple.com/documentation/uikit/enhancing-your-app-with-fluid-transitions

@@ -1,158 +1,57 @@
 # Visual Effects
 
-## Backdrop Blur
+## Backdrop Blur (expo-blur)
 
-Use `expo-blur` for blur effects. Prefer systemMaterial tints as they adapt to dark mode.
+Prefer the `systemMaterial` tint family (`systemMaterial`, `systemThinMaterial`, `systemUltraThinMaterial`, `systemThickMaterial`, `systemChromeMaterial`) — these adapt to dark mode automatically, unlike the fixed `light`/`dark` tints. `intensity` ranges 0-100.
 
 ```tsx
 import { BlurView } from "expo-blur";
 
-<BlurView tint="systemMaterial" intensity={100} />;
-```
-
-### Tint Options
-
-```tsx
-// System materials (adapt to dark mode)
-<BlurView tint="systemMaterial" />
-<BlurView tint="systemThinMaterial" />
-<BlurView tint="systemUltraThinMaterial" />
-<BlurView tint="systemThickMaterial" />
-<BlurView tint="systemChromeMaterial" />
-
-// Basic tints
-<BlurView tint="light" />
-<BlurView tint="dark" />
-<BlurView tint="default" />
-
-// Prominent (more visible)
-<BlurView tint="prominent" />
-
-// Extra light/dark
-<BlurView tint="extraLight" />
-```
-
-### Intensity
-
-Control blur strength with `intensity` (0-100):
-
-```tsx
-<BlurView tint="systemMaterial" intensity={50} />  // Subtle
-<BlurView tint="systemMaterial" intensity={100} /> // Full
-```
-
-### Rounded Corners
-
-BlurView requires `overflow: 'hidden'` to clip rounded corners:
-
-```tsx
 <BlurView
   tint="systemMaterial"
   intensity={100}
-  style={{
-    borderRadius: 16,
-    overflow: 'hidden',
-  }}
-/>
+  style={{ borderRadius: 16, overflow: "hidden" }}
+/>;
 ```
 
-### Overlay Pattern
+BlurView requires `overflow: 'hidden'` to clip rounded corners — without it `borderRadius` has no visible effect.
 
-Common pattern for overlaying blur on content:
-
-```tsx
-<View style={{ position: 'relative' }}>
-  <Image source={{ uri: '...' }} style={{ width: '100%', height: 200 }} />
-  <BlurView
-    tint="systemUltraThinMaterial"
-    intensity={80}
-    style={{
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: 16,
-    }}
-  >
-    <Text style={{ color: 'white' }}>Caption</Text>
-  </BlurView>
-</View>
-```
-
-## Glass Effects (iOS 26+)
-
-Use `expo-glass-effect` for liquid glass backdrops on iOS 26+.
+## Liquid Glass (expo-glass-effect, iOS 26+)
 
 ```tsx
 import { GlassView } from "expo-glass-effect";
 
 <GlassView style={{ borderRadius: 16, padding: 16 }}>
   <Text>Content inside glass</Text>
-</GlassView>
+</GlassView>;
 ```
 
-### Interactive Glass
-
-Add `isInteractive` for buttons and pressable glass:
+Add `isInteractive` when the glass wraps a button or pressable. Canonical glass icon button (the camera example in `media.md` uses this):
 
 ```tsx
+import { Pressable } from "react-native";
+import { Image } from "expo-image";
 import { GlassView } from "expo-glass-effect";
-import { SymbolView } from "expo-symbols";
 import { colors } from "@/theme/colors";
 
-<GlassView isInteractive style={{ borderRadius: 50 }}>
-  <Pressable style={{ padding: 12 }} onPress={handlePress}>
-    <SymbolView name="plus" tintColor={colors.label} size={36} />
-  </Pressable>
-</GlassView>
-```
-
-### Glass Buttons
-
-Create liquid glass buttons:
-
-```tsx
-function GlassButton({ icon, onPress }) {
+function GlassButton({ icon, onPress }: { icon: string; onPress: () => void }) {
   return (
     <GlassView isInteractive style={{ borderRadius: 50 }}>
       <Pressable style={{ padding: 12 }} onPress={onPress}>
-        <SymbolView name={icon} tintColor={colors.label} size={24} />
+        <Image
+          source={`sf:${icon}`}
+          tintColor={colors.label as string}
+          style={{ width: 24, height: 24 }}
+        />
       </Pressable>
     </GlassView>
   );
 }
-
-// Usage
-<GlassButton icon="plus" onPress={handleAdd} />
-<GlassButton icon="gear" onPress={handleSettings} />
 ```
 
-### Glass Card
+### Fallback for Older iOS / Android
 
-```tsx
-<GlassView style={{ borderRadius: 20, padding: 20 }}>
-  <Text style={{ fontSize: 18, fontWeight: '600', color: colors.label }}>
-    Card Title
-  </Text>
-  <Text style={{ color: colors.secondaryLabel, marginTop: 8 }}>
-    Card content goes here
-  </Text>
-</GlassView>
-```
-
-### Checking Availability
-
-```tsx
-import { isLiquidGlassAvailable } from "expo-glass-effect";
-
-if (isLiquidGlassAvailable()) {
-  // Use GlassView
-} else {
-  // Fallback to BlurView or solid background
-}
-```
-
-### Fallback Pattern
+Glass is iOS 26+ only. Check `isLiquidGlassAvailable()` and fall back to `BlurView` or a solid background:
 
 ```tsx
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
@@ -173,7 +72,7 @@ function AdaptiveGlass({ children, style }) {
 
 ## Sheet with Glass Background
 
-Make sheet backgrounds liquid glass on iOS 26+:
+Make sheet backgrounds liquid glass on iOS 26+ by making the content transparent:
 
 ```tsx
 <Stack.Screen
@@ -195,3 +94,5 @@ Make sheet backgrounds liquid glass on iOS 26+:
 - Check `isLiquidGlassAvailable()` and provide fallbacks
 - Avoid nesting blur views (performance impact)
 - Keep blur intensity reasonable (50-100) for readability
+
+> Source: https://docs.expo.dev/versions/latest/sdk/blur-view/ and https://docs.expo.dev/versions/latest/sdk/glass-effect/ — the canonical pages for every tint and prop (append `.md` for markdown; swap `latest` for the project's SDK, e.g. `v57.0.0`). This reference adds only the dark-mode tint rule, the `overflow` gotcha, and the fallback pattern.

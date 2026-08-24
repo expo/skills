@@ -1,33 +1,6 @@
-# `eas channel:insights` JSON schema
+# `eas channel:insights` field semantics
 
-Complete JSON output shape returned by `eas channel:insights --channel <name> --runtime-version <version> --json --non-interactive`.
-
-```json
-{
-  "channel": "production",
-  "runtimeVersion": "1.0.6",
-  "timespan": { "start": "...", "end": "...", "daysBack": 7 },
-  "embeddedUpdateTotalUniqueUsers": 2401,
-  "otaTotalUniqueUsers": 8312,
-  "mostPopularUpdates": [
-    {
-      "rank": 1,
-      "groupId": "abc123",
-      "message": "Fix checkout crash",
-      "platform": "ios",
-      "totalUniqueUsers": 4210
-    }
-  ],
-  "cumulativeMetricsAtLastTimestamp": [
-    { "id": "...", "label": "Embedded update", "data": 12345 },
-    { "id": "...", "label": "Embedded update failed installs", "data": 0 }
-  ],
-  "uniqueUsersOverTime": { "labels": ["..."], "datasets": [ { "id": "...", "label": "...", "data": [100, 200] } ] },
-  "cumulativeMetricsOverTime": { "labels": ["..."], "datasets": [ { "id": "...", "label": "...", "data": [10, 20] } ] }
-}
-```
-
-## Field reference
+Fields returned by `eas channel:insights --channel <name> --runtime-version <version> --json --non-interactive`. Run the command once with `--json` to see the literal shape; this file records what the fields mean.
 
 | Path | Meaning |
 |---|---|

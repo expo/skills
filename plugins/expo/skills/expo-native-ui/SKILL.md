@@ -11,16 +11,18 @@ For routes, links, stacks, tabs, modals, sheets, and headers, use the `expo-rout
 
 > **Before picking any UI component, check `expo-ui` first.** `@expo/ui` provides native equivalents — BottomSheet, Button, Picker, Slider, Menu, Section, Switch, SegmentedControl, and more — rendered as real SwiftUI on iOS and Jetpack Compose on Android, available in Expo Go on SDK 56+ with no custom build. Load the **`expo-ui`** skill to find the right component before falling back to React Native built-ins or community libraries. This skill (`expo-native-ui`) covers the surrounding structure: Expo Router navigation, layout, styling, and animations.
 
+> **Source of truth:** https://docs.expo.dev/versions/latest/ — consult the canonical SDK docs when API details matter. Any docs URL serves markdown when you append `.md`; on `/versions/` paths swap `latest` for the project's SDK (e.g. `v57.0.0`).
+
 ## References
 
 Consult these resources as needed:
 
 ```
 references/
-  animations.md          Reanimated: entering, exiting, layout, scroll-driven, gestures
-  controls.md            Native iOS: Switch, Slider, SegmentedControl, DateTimePicker, Picker
+  animations.md          Reanimated: entering, exiting, layout, scroll-driven (deep guidance: expo-animation skill)
+  controls.md            Control picking: @expo/ui first, RN fallbacks for Switch, Slider, SegmentedControl, DateTimePicker, Picker
   gradients.md           CSS gradients via experimental_backgroundImage (New Arch only)
-  icons.md               SF Symbols via expo-image (sf: source), names, animations, weights
+  icons.md               SF Symbols via expo-image (sf: source), sfEffect animations
   media.md               Camera, audio, video, and file saving
   storage.md             SQLite, AsyncStorage, SecureStore
   visual-effects.md      Blur (expo-blur) and liquid glass (expo-glass-effect)

@@ -9,6 +9,8 @@ license: MIT
 
 This guide covers setting up Tailwind CSS v4 in Expo using react-native-css and NativeWind v5 for universal styling across iOS, Android, and Web.
 
+> **Version stamp:** version pins below were verified against `nativewind@5.0.0-preview.x` and a nightly `react-native-css` build. Re-verify pins when NativeWind v5 stable ships — at that point most of this setup becomes canonical at https://www.nativewind.dev/.
+
 ## Overview
 
 This setup uses:
@@ -22,7 +24,7 @@ This setup uses:
 
 ```bash
 # Install dependencies
-npx expo install tailwindcss@^4 nativewind@5.0.0-preview.2 react-native-css@0.0.0-nightly.5ce6396 @tailwindcss/postcss tailwind-merge clsx
+npx expo install tailwindcss@^4 nativewind@5.0.0-preview.2 react-native-css@0.0.0-nightly.5ce6396 @tailwindcss/postcss
 ```
 
 Add resolutions for lightningcss compatibility:
@@ -103,6 +105,8 @@ Create `src/global.css`:
 }
 ```
 
+The `@media ios` / `@media android` blocks are the general platform-override mechanism — use the same pattern for any platform-specific variable, not just fonts.
+
 ## IMPORTANT: No Babel Config Needed
 
 With Tailwind v4 and NativeWind v5, you do NOT need a babel.config.js for Tailwind. Remove any NativeWind babel presets if present:
@@ -123,48 +127,18 @@ With Tailwind v4 and NativeWind v5, you do NOT need a babel.config.js for Tailwi
 
 ## CSS Component Wrappers
 
-Since react-native-css requires explicit CSS element wrapping, create reusable components:
+react-native-css requires explicit CSS element wrapping — no automatic global `className` support. Create one wrapper per component you use, all following the same pattern.
 
-### Main Components (`src/tw/index.tsx`)
+### Canonical pattern (`src/tw/index.tsx`)
 
 ```tsx
 import {
   useCssElement,
   useNativeVariable as useFunctionalVariable,
 } from "react-native-css";
-
-import { Link as RouterLink } from "expo-router";
-import Animated from "react-native-reanimated";
 import React from "react";
-import {
-  View as RNView,
-  Text as RNText,
-  Pressable as RNPressable,
-  ScrollView as RNScrollView,
-  TouchableHighlight as RNTouchableHighlight,
-  TextInput as RNTextInput,
-  StyleSheet,
-} from "react-native";
+import { View as RNView } from "react-native";
 
-// CSS-enabled Link
-export const Link = (
-  props: React.ComponentProps<typeof RouterLink> & { className?: string }
-) => {
-  return useCssElement(RouterLink, props, { className: "style" });
-};
-
-Link.Trigger = RouterLink.Trigger;
-Link.Menu = RouterLink.Menu;
-Link.MenuAction = RouterLink.MenuAction;
-Link.Preview = RouterLink.Preview;
-
-// CSS Variable hook
-export const useCSSVariable =
-  process.env.EXPO_OS !== "web"
-    ? useFunctionalVariable
-    : (variable: string) => `var(${variable})`;
-
-// View
 export type ViewProps = React.ComponentProps<typeof RNView> & {
   className?: string;
 };
@@ -174,60 +148,33 @@ export const View = (props: ViewProps) => {
 };
 View.displayName = "CSS(View)";
 
-// Text
-export const Text = (
-  props: React.ComponentProps<typeof RNText> & { className?: string }
-) => {
-  return useCssElement(RNText, props, { className: "style" });
-};
-Text.displayName = "CSS(Text)";
+// CSS Variable hook: native needs the runtime hook, web resolves var() itself
+export const useCSSVariable =
+  process.env.EXPO_OS !== "web"
+    ? useFunctionalVariable
+    : (variable: string) => `var(${variable})`;
+```
 
-// ScrollView
-export const ScrollView = (
-  props: React.ComponentProps<typeof RNScrollView> & {
-    className?: string;
-    contentContainerClassName?: string;
-  }
-) => {
-  return useCssElement(RNScrollView, props, {
-    className: "style",
-    contentContainerClassName: "contentContainerStyle",
-  });
-};
-ScrollView.displayName = "CSS(ScrollView)";
+Repeat this exact pattern for every component you style — `Text`, `Pressable`, `TextInput`, `ScrollView`, expo-router's `Link`, `Animated.ScrollView` — only the wrapped component changes. The third `useCssElement` argument maps className props to style props; components with multiple style targets take multiple entries, e.g. ScrollView:
 
-// Pressable
-export const Pressable = (
-  props: React.ComponentProps<typeof RNPressable> & { className?: string }
-) => {
-  return useCssElement(RNPressable, props, { className: "style" });
-};
-Pressable.displayName = "CSS(Pressable)";
+```tsx
+useCssElement(RNScrollView, props, {
+  className: "style",
+  contentContainerClassName: "contentContainerStyle",
+});
+```
 
-// TextInput
-export const TextInput = (
-  props: React.ComponentProps<typeof RNTextInput> & { className?: string }
-) => {
-  return useCssElement(RNTextInput, props, { className: "style" });
-};
-TextInput.displayName = "CSS(TextInput)";
+For Reanimated, animate the CSS wrapper (not the reverse): `RNAnimated.createAnimatedComponent(View)`.
 
-// AnimatedScrollView
-export const AnimatedScrollView = (
-  props: React.ComponentProps<typeof Animated.ScrollView> & {
-    className?: string;
-    contentClassName?: string;
-    contentContainerClassName?: string;
-  }
-) => {
-  return useCssElement(Animated.ScrollView, props, {
-    className: "style",
-    contentClassName: "contentContainerStyle",
-    contentContainerClassName: "contentContainerStyle",
-  });
-};
+Two components need extra handling because CSS properties do not map 1:1 onto their props:
 
-// TouchableHighlight with underlayColor extraction
+### Gotcha 1: TouchableHighlight (`underlayColor` is a prop, not a style)
+
+Extract `underlayColor` from the flattened style before it reaches the native component:
+
+```tsx
+import { TouchableHighlight as RNTouchableHighlight, StyleSheet } from "react-native";
+
 function XXTouchableHighlight(
   props: React.ComponentProps<typeof RNTouchableHighlight>
 ) {
@@ -249,7 +196,9 @@ export const TouchableHighlight = (
 TouchableHighlight.displayName = "CSS(TouchableHighlight)";
 ```
 
-### Image Component (`src/tw/image.tsx`)
+### Gotcha 2: Image (`objectFit` style → `contentFit` prop) (`src/tw/image.tsx`)
+
+expo-image takes `contentFit`/`contentPosition` props, not CSS `objectFit`/`objectPosition` styles — remap them:
 
 ```tsx
 import { useCssElement } from "react-native-css";
@@ -290,86 +239,36 @@ export const Image = (
 Image.displayName = "CSS(Image)";
 ```
 
-### Animated Components (`src/tw/animated.tsx`)
-
-```tsx
-import * as TW from "./index";
-import RNAnimated from "react-native-reanimated";
-
-export const Animated = {
-  ...RNAnimated,
-  View: RNAnimated.createAnimatedComponent(TW.View),
-};
-```
-
 ## Usage
 
-Import CSS-wrapped components from your tw directory:
+Always import from your wrapper directory (`@/tw`), never from `react-native` directly, and style with `className`:
 
 ```tsx
-import { View, Text, ScrollView, Image } from "@/tw";
+import { View, Text } from "@/tw";
 
-export default function MyScreen() {
-  return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="p-4 gap-4">
-        <Text className="text-xl font-bold text-gray-900">Hello Tailwind!</Text>
-        <Image
-          className="w-full h-48 rounded-lg object-cover"
-          source={{ uri: "https://example.com/image.jpg" }}
-        />
-      </View>
-    </ScrollView>
-  );
-}
+<View className="flex-1 p-4 gap-4 bg-white">
+  <Text className="text-xl font-bold text-gray-900">Hello Tailwind!</Text>
+</View>;
 ```
+
+Utility classes behave as standard Tailwind v4: https://tailwindcss.com/docs/styling-with-utility-classes
 
 ## Custom Theme Variables
 
-Add custom theme variables in your global.css using `@theme`:
+Extend the theme with `@theme` inside `@layer theme` in `global.css` — there is no `tailwind.config.js` in v4; theme tokens are CSS variables (`--font-*`, `--text-*--line-height`, `--leading-*`, `--color-*`). Full syntax: https://tailwindcss.com/docs/theme
 
 ```css
 @layer theme {
   @theme {
-    /* Custom fonts */
     --font-rounded: "SF Pro Rounded", sans-serif;
-
-    /* Custom line heights */
-    --text-xs--line-height: calc(1em / 0.75);
-    --text-sm--line-height: calc(1.25em / 0.875);
-    --text-base--line-height: calc(1.5em / 1);
-
-    /* Custom leading scales */
-    --leading-tight: 1.25em;
-    --leading-snug: 1.375em;
-    --leading-normal: 1.5em;
-  }
-}
-```
-
-## Platform-Specific Styles
-
-Use platform media queries for platform-specific styling:
-
-```css
-@media ios {
-  :root {
-    --font-sans: system-ui;
-    --font-rounded: ui-rounded;
-  }
-}
-
-@media android {
-  :root {
-    --font-sans: normal;
-    --font-rounded: normal;
+    --leading-tight: 1.25em; /* use em units so line heights scale on native */
   }
 }
 ```
 
 ## Apple System Colors with CSS Variables
 
-Create a CSS file for Apple semantic colors:
+Three-layer pattern in a dedicated CSS file (e.g. `src/css/sf.css`): `light-dark()` fallbacks for web/Android, real semantic colors via `platformColor()` in `@media ios`, then registration as Tailwind colors in `@theme`:
 
 ```css
 /* src/css/sf.css */
@@ -380,35 +279,18 @@ Create a CSS file for Apple semantic colors:
 }
 
 :root {
-  /* Accent colors with light/dark mode */
+  /* Fallback for web/Android */
   --sf-blue: light-dark(rgb(0 122 255), rgb(10 132 255));
-  --sf-green: light-dark(rgb(52 199 89), rgb(48 209 89));
-  --sf-red: light-dark(rgb(255 59 48), rgb(255 69 58));
-
-  /* Gray scales */
-  --sf-gray: light-dark(rgb(142 142 147), rgb(142 142 147));
-  --sf-gray-2: light-dark(rgb(174 174 178), rgb(99 99 102));
-
-  /* Text colors */
   --sf-text: light-dark(rgb(0 0 0), rgb(255 255 255));
-  --sf-text-2: light-dark(rgb(60 60 67 / 0.6), rgb(235 235 245 / 0.6));
-
-  /* Background colors */
   --sf-bg: light-dark(rgb(255 255 255), rgb(0 0 0));
-  --sf-bg-2: light-dark(rgb(242 242 247), rgb(28 28 30));
 }
 
-/* iOS native colors via platformColor */
+/* iOS: native semantic colors */
 @media ios {
   :root {
     --sf-blue: platformColor(systemBlue);
-    --sf-green: platformColor(systemGreen);
-    --sf-red: platformColor(systemRed);
-    --sf-gray: platformColor(systemGray);
     --sf-text: platformColor(label);
-    --sf-text-2: platformColor(secondaryLabel);
     --sf-bg: platformColor(systemBackground);
-    --sf-bg-2: platformColor(secondarySystemBackground);
   }
 }
 
@@ -416,22 +298,18 @@ Create a CSS file for Apple semantic colors:
 @layer theme {
   @theme {
     --color-sf-blue: var(--sf-blue);
-    --color-sf-green: var(--sf-green);
-    --color-sf-red: var(--sf-red);
-    --color-sf-gray: var(--sf-gray);
     --color-sf-text: var(--sf-text);
-    --color-sf-text-2: var(--sf-text-2);
     --color-sf-bg: var(--sf-bg);
-    --color-sf-bg-2: var(--sf-bg-2);
   }
 }
 ```
+
+Extend the palette (greens, reds, gray scale, secondary text/backgrounds) the same way — take `platformColor()` names and light/dark fallback values from Apple's HIG color reference: https://developer.apple.com/design/human-interface-guidelines/color
 
 Then use in components:
 
 ```tsx
 <Text className="text-sf-text">Primary text</Text>
-<Text className="text-sf-text-2">Secondary text</Text>
 <View className="bg-sf-bg">...</View>
 ```
 

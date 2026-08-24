@@ -9,7 +9,7 @@ license: MIT
 
 > **EAS service - costs apply.** EAS Hosting is a paid Expo Application Services product with free-tier limits; production deploys use your plan's request and bandwidth allowance. See https://expo.dev/pricing. Authoring API routes and exporting the web bundle are free and open source, and you can self-host the exported server output instead of EAS Hosting.
 
-EAS Hosting deploys your Expo **web app and API routes** to Expo's managed edge (Cloudflare Workers). Export the web bundle with `npx expo export -p web` and ship it with `eas deploy` - the same command deploys any Expo Router API routes bundled alongside it. This skill covers deploying a website, authoring API routes, and the hosting runtime; see the Deployment section below for the deploy workflow.
+EAS Hosting deploys your Expo **web app and API routes** to Expo's managed edge (Cloudflare Workers). Export the web bundle with `npx expo export -p web` and ship it with `eas deploy` - the same command deploys any Expo Router API routes bundled alongside it.
 
 ## When to Use API Routes
 
@@ -34,280 +34,49 @@ Avoid API routes when:
 - **File uploads** — Use direct-to-storage uploads (S3 presigned URLs, Cloudflare R2)
 - **Authentication only** — Use Clerk, Auth0, or Firebase Auth instead
 
-## File Structure
+## Authoring API Routes
 
-API routes live in the `app` directory with `+api.ts` suffix:
-
-```
-app/
-  api/
-    hello+api.ts          → GET /api/hello
-    users+api.ts          → /api/users
-    users/[id]+api.ts     → /api/users/:id
-  (tabs)/
-    index.tsx
-```
-
-## Basic API Route
+API routes are files in the `app` directory with a `+api.ts` suffix. Export one named function per HTTP method (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`); handlers take and return standard `Request`/`Response`, and dynamic segments arrive as the second argument:
 
 ```ts
-// app/api/hello+api.ts
-export function GET(request: Request) {
-  return Response.json({ message: "Hello from Expo!" });
+// app/api/users/[id]+api.ts → /api/users/:id
+export async function GET(request: Request, { id }: { id: string }) {
+  return Response.json({ id });
 }
 ```
 
-## HTTP Methods
+Secrets: `process.env` is server-only. Set values locally in `.env` (never commit); on EAS Hosting use `eas env:create` or the Expo dashboard.
 
-Export named functions for each HTTP method:
+> **Source of truth:** https://docs.expo.dev/router/web/api-routes/ — consult the canonical docs when API details matter (request/query/body handling, CORS, errors, and local testing with `npx expo serve`).
 
-```ts
-// app/api/items+api.ts
-export function GET(request: Request) {
-  return Response.json({ items: [] });
-}
-
-export async function POST(request: Request) {
-  const body = await request.json();
-  return Response.json({ created: body }, { status: 201 });
-}
-
-export async function PUT(request: Request) {
-  const body = await request.json();
-  return Response.json({ updated: body });
-}
-
-export async function DELETE(request: Request) {
-  return new Response(null, { status: 204 });
-}
-```
-
-## Dynamic Routes
-
-```ts
-// app/api/users/[id]+api.ts
-export function GET(request: Request, { id }: { id: string }) {
-  return Response.json({ userId: id });
-}
-```
-
-## Request Handling
-
-### Query Parameters
-
-```ts
-export function GET(request: Request) {
-  const url = new URL(request.url);
-  const page = url.searchParams.get("page") ?? "1";
-  const limit = url.searchParams.get("limit") ?? "10";
-
-  return Response.json({ page, limit });
-}
-```
-
-### Headers
-
-```ts
-export function GET(request: Request) {
-  const auth = request.headers.get("Authorization");
-
-  if (!auth) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  return Response.json({ authenticated: true });
-}
-```
-
-### JSON Body
-
-```ts
-export async function POST(request: Request) {
-  const { email, password } = await request.json();
-
-  if (!email || !password) {
-    return Response.json({ error: "Missing fields" }, { status: 400 });
-  }
-
-  return Response.json({ success: true });
-}
-```
-
-## Environment Variables
-
-Use `process.env` for server-side secrets:
-
-```ts
-// app/api/ai+api.ts
-export async function POST(request: Request) {
-  const { prompt } = await request.json();
-
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4",
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  const data = await response.json();
-  return Response.json(data);
-}
-```
-
-Set environment variables:
-
-- **Local**: Create `.env` file (never commit)
-- **EAS Hosting**: Use `eas env:create` or Expo dashboard
-
-## CORS Headers
-
-Add CORS for web clients:
-
-```ts
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
-
-export function OPTIONS() {
-  return new Response(null, { headers: corsHeaders });
-}
-
-export function GET() {
-  return Response.json({ data: "value" }, { headers: corsHeaders });
-}
-```
-
-## Error Handling
-
-```ts
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    // Process...
-    return Response.json({ success: true });
-  } catch (error) {
-    console.error("API error:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
-```
-
-## Testing Locally
-
-Start the development server with API routes:
+## Deployment
 
 ```bash
-npx expo serve
+npm install -g eas-cli && eas login   # once
+
+npx expo export -p web                # 1. export web bundle + API routes (required first)
+npx eas-cli@latest deploy             # 2. preview deploy (PR-style URL)
+npx eas-cli@latest deploy --prod      # 3. production
 ```
 
-This starts a local server at `http://localhost:8081` with full API route support.
+The export runs whether you have a full website, an API-routes-only backend, or both; `eas deploy` ships whatever `npx expo export -p web` produced.
 
-Test with curl:
-
-```bash
-curl http://localhost:8081/api/hello
-curl -X POST http://localhost:8081/api/users -H "Content-Type: application/json" -d '{"name":"Test"}'
-```
-
-## Deployment to EAS Hosting
-
-### Prerequisites
-
-```bash
-npm install -g eas-cli
-eas login
-```
-
-### Deploy
-
-Deploying ships your web bundle and any Expo Router API routes together - `eas deploy` handles both. The export runs whether you have a full website, an API-routes-only backend, or both.
-
-```bash
-# Export the web bundle (includes any API routes)
-npx expo export -p web
-
-# Deploy a preview (PR-style URL)
-npx eas-cli@latest deploy
-
-# Deploy to production
-npx eas-cli@latest deploy --prod
-```
-
-Everything lands on EAS Hosting (Cloudflare Workers).
-
-### Environment Variables for Production
-
-```bash
-# Create a secret
-eas env:create --name OPENAI_API_KEY --value sk-xxx --environment production
-
-# Or use the Expo dashboard
-```
-
-### Custom Domain
-
-Configure in `eas.json` or Expo dashboard.
-
-### Automate with EAS Workflows
-
-Deploy the website (and API routes) on every push to main with a `type: deploy` workflow:
-
-`.eas/workflows/deploy.yml`
-
-```yaml
-name: Deploy
-
-on:
-  push:
-    branches:
-      - main
-
-# https://docs.expo.dev/eas/workflows/syntax/#deploy
-jobs:
-  deploy_web:
-    type: deploy
-    params:
-      prod: true
-```
-
-Preview deploys for pull requests use the same job type with `prod: false`:
-
-```yaml
-name: Web PR Preview
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  preview:
-    type: deploy
-    params:
-      prod: false
-```
-
-To author or validate workflow YAML beyond these examples, use the `eas-workflows` skill.
+- **Production secrets:** `eas env:create --name OPENAI_API_KEY --value sk-xxx --environment production` (or the Expo dashboard).
+- **Custom domain:** configure in `eas.json` or the Expo dashboard.
+- **Deploy on push/PR (CI):** use `type: deploy` EAS Workflows jobs — see the `eas-workflows` skill.
+- **`.well-known` files** (`apple-app-site-association`, `assetlinks.json`): place them in `public/.well-known/` and they deploy as static files. See https://docs.expo.dev/linking/ios-universal-links/ and the sibling `expo-app-clip` skill for the full AASA flow.
 
 ## EAS Hosting Runtime (Cloudflare Workers)
 
 API routes run on Cloudflare Workers. Key limitations:
 
-### Missing/Limited APIs
-
-- **No Node.js filesystem** — `fs` module unavailable
+- **No Node.js filesystem** — `fs` module unavailable; use a hosted database instead (Cloudflare D1, Turso, PlanetScale, Supabase, Neon)
 - **No native Node modules** — Use Web APIs or polyfills
 - **Limited execution time** — 30 second timeout for CPU-intensive tasks
 - **No persistent connections** — WebSockets require Durable Objects
 - **fetch is available** — Use standard fetch for HTTP requests
 
-### Use Web APIs Instead
+Use Web APIs instead of Node equivalents:
 
 ```ts
 // Use Web Crypto instead of Node crypto
@@ -325,102 +94,7 @@ return new Response(JSON.stringify(data), {
 });
 ```
 
-### Database Options
-
-Since filesystem is unavailable, use cloud databases:
-
-- **Cloudflare D1** — SQLite at the edge
-- **Turso** — Distributed SQLite
-- **PlanetScale** — Serverless MySQL
-- **Supabase** — Postgres with REST API
-- **Neon** — Serverless Postgres
-
-Example with Turso:
-
-```ts
-// app/api/users+api.ts
-import { createClient } from "@libsql/client/web";
-
-const db = createClient({
-  url: process.env.TURSO_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
-
-export async function GET() {
-  const result = await db.execute("SELECT * FROM users");
-  return Response.json(result.rows);
-}
-```
-
-## Calling API Routes from Client
-
-```ts
-// From React Native components
-const response = await fetch("/api/hello");
-const data = await response.json();
-
-// With body
-const response = await fetch("/api/users", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ name: "John" }),
-});
-```
-
-## Common Patterns
-
-### Authentication Middleware
-
-```ts
-// utils/auth.ts
-export async function requireAuth(request: Request) {
-  const token = request.headers.get("Authorization")?.replace("Bearer ", "");
-
-  if (!token) {
-    throw new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  // Verify token...
-  return { userId: "123" };
-}
-
-// app/api/protected+api.ts
-import { requireAuth } from "../../utils/auth";
-
-export async function GET(request: Request) {
-  const { userId } = await requireAuth(request);
-  return Response.json({ userId });
-}
-```
-
-### Proxy External API
-
-```ts
-// app/api/weather+api.ts
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const city = url.searchParams.get("city");
-
-  const response = await fetch(
-    `https://api.weather.com/v1/current?city=${city}&key=${process.env.WEATHER_API_KEY}`
-  );
-
-  return Response.json(await response.json());
-}
-```
-
-## Rules
-
-- NEVER expose API keys or secrets in client code
-- ALWAYS validate and sanitize user input
-- Use proper HTTP status codes (200, 201, 400, 401, 404, 500)
-- Handle errors gracefully with try/catch
-- Keep API routes focused — one responsibility per endpoint
-- Use TypeScript for type safety
-- Log errors server-side for debugging
+> **Source of truth:** https://docs.expo.dev/eas/hosting/reference/worker-runtime/ — consult the canonical docs when runtime details matter (available globals, limits, Node compatibility).
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:

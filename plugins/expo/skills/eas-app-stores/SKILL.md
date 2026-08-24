@@ -9,70 +9,40 @@ license: MIT
 
 > **EAS service - costs apply.** This skill uses Expo Application Services (EAS), a paid product with free-tier limits. `eas build` and `eas submit` consume your plan's build minutes, and store submission requires paid Apple Developer and Google Play accounts. Review https://expo.dev/pricing before running cloud commands.
 
-This skill covers building and releasing Expo apps to the iOS App Store, Google Play Store, and TestFlight using EAS (Expo Application Services). For deploying an Expo website or API routes to EAS Hosting, use the `eas-hosting` skill.
+Build and release Expo apps to the iOS App Store, Google Play Store, and TestFlight with EAS.
 
-## References
+> **Source of truth:** https://docs.expo.dev/deploy/submit-to-app-stores/ — consult the canonical docs when API details matter.
 
-Consult these resources as needed:
+## Decision rules
 
-- ./references/workflows.md -- CI/CD workflows for automated store releases and PR previews
-- ./references/testflight.md -- Submitting iOS builds to TestFlight for beta testing
-- ./references/app-store-metadata.md -- Managing App Store metadata and ASO optimization
-- ./references/play-store.md -- Submitting Android builds to Google Play Store
-- ./references/ios-app-store.md -- iOS App Store submission and review process
+- iOS release → always TestFlight first, never straight to App Store — ./references/testflight.md
+- iOS credentials, submission errors, App Review rejections → ./references/ios-app-store.md
+- Android release → the default `eas submit` works first-time onto the internal track; a store listing only blocks production — ./references/play-store.md
+- Store listing copy, release options (automatic/scheduled/phased), ASO → EAS Metadata, Apple App Store only — ./references/app-store-metadata.md
+- CI/CD YAML for automated store releases (build → submit → update pipelines, PR previews) → use the sibling `eas-workflows` skill; it works from the live workflow schema
+- Deploying an Expo website or API routes (`npx expo export -p web`, `eas deploy`) → use the `eas-hosting` skill
 
 ## Quick Start
-
-### Install EAS CLI
 
 ```bash
 npm install -g eas-cli
 eas login
+npx eas-cli@latest init    # creates eas.json with build profiles
 ```
 
-### Initialize EAS
+## Build and Submit
 
 ```bash
-npx eas-cli@latest init
+eas build -p ios --profile production --submit   # build, then auto-submit to the store
+eas submit -p ios --latest                       # submit an existing build
+npx testflight                                   # iOS TestFlight shortcut
 ```
 
-This creates `eas.json` with build profiles.
+Swap `-p android` for the Play Store. Entry commands are `eas build` and `eas submit`; run `eas build --help` / `eas submit --help` for the current surface — subcommands vary by installed eas-cli version, so never guess at `build:*` / `submit:*` subcommands.
 
-## Build Commands
+## eas.json
 
-### Production Builds
-
-```bash
-# iOS App Store build
-npx eas-cli@latest build -p ios --profile production
-
-# Android Play Store build
-npx eas-cli@latest build -p android --profile production
-
-# Both platforms
-npx eas-cli@latest build --profile production
-```
-
-### Submit to Stores
-
-```bash
-# iOS: Build and submit to App Store Connect
-npx eas-cli@latest build -p ios --profile production --submit
-
-# Android: Build and submit to Play Store
-npx eas-cli@latest build -p android --profile production --submit
-
-# Shortcut for iOS TestFlight
-npx testflight
-```
-
-## Web & API Route Hosting
-
-Deploying an Expo website or Expo Router API routes to EAS Hosting (`npx expo export -p web` then `eas deploy`) is covered by the `eas-hosting` skill. This skill focuses on native app store releases.
-
-## EAS Configuration
-
-Standard `eas.json` for production deployments:
+Standard configuration for production deployments:
 
 ```json
 {
@@ -107,49 +77,14 @@ Standard `eas.json` for production deployments:
 }
 ```
 
-## Platform-Specific Guides
+- `appVersionSource: "remote"` + `autoIncrement: true`: EAS owns iOS build numbers and Android version codes, which both stores require to increase on every upload. Check or set with `eas build:version:get` / `eas build:version:set`.
+- `submit` profiles hold store credentials: `ascAppId` (App Store Connect → App Information → Apple ID) for iOS; `serviceAccountKeyPath` + `track` for Android.
 
-### iOS
+## Gotchas
 
-- Use `npx testflight` for quick TestFlight submissions
-- Configure Apple credentials via `eas credentials`
-- See ./references/testflight.md for credential setup
-- See ./references/ios-app-store.md for App Store submission
-
-### Android
-
-- Set up Google Play Console service account
-- Configure tracks: internal → closed → open → production
-- See ./references/play-store.md for detailed setup
-
-## Automated Releases
-
-EAS Workflows automate the build → submit → update pipeline for CI/CD. See ./references/workflows.md for store-release examples. To author or validate workflow YAML, use the `eas-workflows` skill - it works from the live workflow schema.
-
-## Version Management
-
-EAS manages version numbers automatically with `appVersionSource: "remote"`:
-
-```bash
-# Check current versions
-eas build:version:get
-
-# Manually set version
-eas build:version:set -p ios --build-number 42
-```
-
-## Monitoring
-
-```bash
-# List recent builds
-eas build:list
-
-# Check build status
-eas build:view
-
-# View submission status
-eas submit:list
-```
+- `eas submit` requires the app to already exist in the store console (iOS: App Store Connect record with matching bundle ID; Android: Play Console app plus a linked service account).
+- After upload, App Store Connect processes builds for 5-30 minutes before they appear in TestFlight — not an error.
+- New iOS apps must submit a binary before `eas metadata:push` will work.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
