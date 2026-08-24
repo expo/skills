@@ -2,7 +2,7 @@
 
 ## Backdrop Blur (expo-blur)
 
-Prefer the `systemMaterial` tint family (`systemMaterial`, `systemThinMaterial`, `systemUltraThinMaterial`, `systemThickMaterial`, `systemChromeMaterial`) — these adapt to dark mode automatically, unlike the fixed `light`/`dark` tints. `intensity` ranges 0-100.
+Prefer the `systemMaterial` tint family (`systemMaterial`, `systemThinMaterial`, `systemUltraThinMaterial`, `systemThickMaterial`, `systemChromeMaterial`) — these adapt to dark mode automatically, unlike the fixed `light`/`dark` tints. `intensity` ranges 1-100.
 
 ```tsx
 import { BlurView } from "expo-blur";

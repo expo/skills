@@ -30,6 +30,7 @@ Browse the free SF Symbols app on macOS or https://developer.apple.com/sf-symbol
 ## Rules
 
 - Use `.fill` variants for selected/active states
+- Symbol weight, scale, or multicolor rendering: `sf:` sources don't support them — that is the one case for `expo-symbols` `SymbolView` (https://docs.expo.dev/versions/latest/sdk/symbols/)
 - Tint with the cross-platform `colors` helper (see SKILL.md "Colors") so icons adapt to dark mode
 - Keep icons at consistent sizes (16, 20, 24, 32)
 

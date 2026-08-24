@@ -1,11 +1,11 @@
 # Route Structure
 
-> Source: https://docs.expo.dev/router/basics/notation/ — the canonical notation reference (dynamic `[id]`, catch-all `[...slug]`, groups `(name)`, params; append `.md` for markdown). Shared and array routes: https://docs.expo.dev/router/advanced/shared-routes/. This reference adds only what the docs do not cover: structure opinions and the array-route anchor recipe.
+> Source: https://docs.expo.dev/router/basics/notation/ — the canonical notation reference (dynamic `[id]`, groups `(name)`, params; append `.md` for markdown). Shared and array routes: https://docs.expo.dev/router/advanced/shared-routes/. This reference adds only what the docs do not cover: structure opinions and the array-route anchor recipe.
 
 ## File Conventions
 
 - Routes belong in the `app` directory
-- Use `[]` for dynamic routes, e.g. `[id].tsx`
+- Use `[]` for dynamic routes, e.g. `[id].tsx`; `[...slug].tsx` is a catch-all matching `/docs/a`, `/docs/a/b`, … (not on the notation docs page)
 - Routes can never be named `(foo).tsx` - use `(foo)/index.tsx` instead
 - Use `(group)` routes to simplify the public URL structure
 - NEVER co-locate components, types, or utilities in the app directory - these should be in separate directories like `components/`, `utils/`, etc.

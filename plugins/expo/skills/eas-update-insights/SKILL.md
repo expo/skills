@@ -12,7 +12,7 @@ allowed-tools: "Bash(eas *)"
 
 Query the health of published EAS Update directly from the CLI: launches, failed launches, crash rates, unique users, payload size, the embedded-vs-OTA user split per channel, and the most popular updates per runtime version. The data is the same data that powers the update and channel detail pages on expo.dev; these commands expose it in the terminal in human and JSON form.
 
-> **Source of truth:** https://docs.expo.dev/eas-update/eas-cli/ — consult the canonical docs when API details matter.
+> **Adjacent docs:** https://docs.expo.dev/eas-update/eas-cli/ covers branch/channel CLI workflows. The insights commands themselves have no docs page — `--help` on each command is the authoritative reference.
 
 ## When to use this skill
 

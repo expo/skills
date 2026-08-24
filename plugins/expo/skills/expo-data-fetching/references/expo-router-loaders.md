@@ -72,7 +72,7 @@ export default function Posts() {
 }
 ```
 
-Dynamic routes, catch-alls, query params, typed loaders, `StatusError`, and `setResponseHeaders` follow the docs page above.
+Dynamic routes, typed loaders, `StatusError`, and `setResponseHeaders` follow the docs page above. Catch-all param typing (`string | string[]`) and query params via `new URL(request.url).searchParams` are covered by the rules above — the docs page does not mention them.
 
 ## Rules
 

@@ -61,7 +61,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL; // inlined at build time
 Rules:
 
 - Only `EXPO_PUBLIC_`-prefixed variables are exposed to the client bundle — and they are **visible in the built app**. Never put secrets (write-access API keys, database passwords) in them.
-- Values are inlined at **build time**, not runtime. Restart the dev server after changing `.env` files.
+- Values are inlined at **build time**, not runtime. After changing `.env` files, no dev-server restart is needed — but do a full app reload (`r` in the CLI) so the new values are re-inlined.
 - Per-environment config: `.env.development` / `.env.production` are loaded by environment automatically.
 - Server-side secrets belong in non-prefixed env vars, read only inside API routes or loaders.
 

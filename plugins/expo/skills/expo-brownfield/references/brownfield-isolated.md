@@ -95,7 +95,7 @@ Produces an AAR and publishes it to the local Maven repository at `~/.m2`. The M
 
 #### Publishing the Android AAR
 
-The plugin's `publishing` option (an array under the Android plugin config) controls where the AAR goes. Unset, it defaults to local Maven. Four `type` values: `localMaven`, `localDirectory` (with `path`), `remotePublic` (with `url`), `remotePrivate` (with `url`, `username`, `password`). For private repos, URL and credentials accept inline strings or `{ "variable": "ENV_VAR_NAME" }` to read from the environment at publish time. Exact JSON shape: SDK reference in the banner.
+The plugin's `publishing` option (an array under the Android plugin config) controls where the AAR goes. Unset, it defaults to local Maven. Four `type` values: `localMaven`, `localDirectory` (with `path`), `remotePublic` (with `url`), `remotePrivate` (with `url`, `username`, `password`). Each publication also takes a `name`, which becomes the Gradle publication/repository in task names (`"name": "company"` → `publishReleasePublicationToCompanyRepository`). For private repos, URL and credentials accept inline strings or `{ "variable": "ENV_VAR_NAME" }` to read from the environment at publish time. The SDK reference names the four types but not their full JSON schema — mirror the fields above.
 
 By default, `build:android` runs every declared publication. To pick specific publications or repositories from the command line:
 

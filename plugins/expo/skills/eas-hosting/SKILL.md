@@ -47,7 +47,7 @@ export async function GET(request: Request, { id }: { id: string }) {
 
 Secrets: `process.env` is server-only. Set values locally in `.env` (never commit); on EAS Hosting use `eas env:create` or the Expo dashboard.
 
-> **Source of truth:** https://docs.expo.dev/router/web/api-routes/ — consult the canonical docs when API details matter (request/query/body handling, CORS, errors, and local testing with `npx expo serve`).
+> **Source of truth:** https://docs.expo.dev/router/web/api-routes/ — consult the canonical docs when API details matter (request/query/body handling, errors, and local testing with `npx expo serve`). CORS and response headers: https://docs.expo.dev/eas/hosting/reference/responses-and-headers/ — EAS Hosting auto-answers unhandled `OPTIONS` requests with permissive CORS, so most APIs need no manual CORS code.
 
 ## Deployment
 
@@ -70,7 +70,7 @@ The export runs whether you have a full website, an API-routes-only backend, or 
 
 API routes run on Cloudflare Workers. Key limitations:
 
-- **No Node.js filesystem** — `fs` module unavailable; use a hosted database instead (Cloudflare D1, Turso, PlanetScale, Supabase, Neon)
+- **No persistent filesystem** — `node:fs` exists only as an in-memory shim; use a hosted database instead (Cloudflare D1, Turso, PlanetScale, Supabase, Neon)
 - **No native Node modules** — Use Web APIs or polyfills
 - **Limited execution time** — 30 second timeout for CPU-intensive tasks
 - **No persistent connections** — WebSockets require Durable Objects
@@ -94,7 +94,7 @@ return new Response(JSON.stringify(data), {
 });
 ```
 
-> **Source of truth:** https://docs.expo.dev/eas/hosting/reference/worker-runtime/ — consult the canonical docs when runtime details matter (available globals, limits, Node compatibility).
+> **Source of truth:** https://docs.expo.dev/eas/hosting/reference/worker-runtime/ — consult the canonical docs when runtime details matter (available globals and Node compatibility).
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:

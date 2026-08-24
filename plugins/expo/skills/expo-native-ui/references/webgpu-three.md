@@ -345,4 +345,4 @@ npx expo prebuild
 npx expo run:ios
 ```
 
-> Source: https://github.com/wcandillon/react-native-webgpu — the canonical `react-native-wgpu` repo (setup, API, examples). This reference adds only the Expo Metro config, the canvas shims, and the version pins verified to work together.
+> Source: https://github.com/wcandillon/react-native-webgpu — the canonical `react-native-wgpu` repo (setup, API, examples). This reference adds only the Expo Metro config, the canvas shims, and the version pins verified to work together. Touch/orbit controls: see the repo's `apps/example/src/ThreeJS/components/OrbitControl.tsx` — `useControls()` returns `[OrbitControls, events]`; spread `events` on the View wrapping the canvas.

@@ -2,7 +2,7 @@
 
 The New Architecture is enabled by default since Expo SDK 53 (opt-in on SDK 52, experimental before that).
 
-> **Source of truth:** https://docs.expo.dev/guides/new-architecture/ — consult the canonical guide for concepts (JSI, Fabric, TurboModules) and details.
+> **Source of truth:** https://docs.expo.dev/guides/new-architecture/ — consult the canonical guide for configuration and rollout details (it links the React Native announcement for the JSI/Fabric/TurboModules concepts).
 
 ## Configuration
 

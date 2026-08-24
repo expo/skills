@@ -164,6 +164,17 @@ useCssElement(RNScrollView, props, {
 });
 ```
 
+Components that carry static subcomponents lose them when wrapped — reattach them or they are `undefined` at runtime. expo-router's `Link` ships `Link.Trigger` / `Link.Menu` / `Link.MenuAction` / `Link.Preview`:
+
+```tsx
+import { Link as RouterLink } from "expo-router";
+// ...wrap RouterLink with useCssElement as above, then:
+Link.Trigger = RouterLink.Trigger;
+Link.Menu = RouterLink.Menu;
+Link.MenuAction = RouterLink.MenuAction;
+Link.Preview = RouterLink.Preview;
+```
+
 For Reanimated, animate the CSS wrapper (not the reverse): `RNAnimated.createAnimatedComponent(View)`.
 
 Two components need extra handling because CSS properties do not map 1:1 onto their props:
@@ -304,7 +315,7 @@ Three-layer pattern in a dedicated CSS file (e.g. `src/css/sf.css`): `light-dark
 }
 ```
 
-Extend the palette (greens, reds, gray scale, secondary text/backgrounds) the same way — take `platformColor()` names and light/dark fallback values from Apple's HIG color reference: https://developer.apple.com/design/human-interface-guidelines/color
+Extend the palette (greens, reds, gray scale, secondary text/backgrounds) the same way — take `platformColor()` names and light/dark fallback values from Apple's HIG color reference: https://developer.apple.com/design/human-interface-guidelines/color (the HIG lists RGB values for system colors and grays; semantic colors like `secondaryLabel` appear name-only — take their fallback values from Xcode's color picker)
 
 Then use in components:
 

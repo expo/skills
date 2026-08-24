@@ -2,7 +2,7 @@
 
 Form sheets with the Expo Router Stack navigator: set `presentation: "formSheet"` on a `Stack.Screen`.
 
-> Source: https://docs.expo.dev/router/advanced/modals/ — the canonical modal and form-sheet page (detent configuration, sizing, full options; append `.md` for markdown). This reference adds only what the docs do not cover: footer layout, undimmed-detent semantics, and transparent/liquid-glass backgrounds.
+> Source: https://docs.expo.dev/router/advanced/modals/ — the canonical modal and form-sheet page (detent configuration, sizing, full options; append `.md` for markdown). This reference adds only what the docs do not cover: iOS footer layout (the docs only have the Android-only `unstable_sheetFooter`), undimmed-detent semantics, and transparent/liquid-glass backgrounds.
 
 ## Configuration
 

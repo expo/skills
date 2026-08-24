@@ -2,7 +2,7 @@
 
 Fluid zoom transitions between screens. iOS 18+, Expo SDK 55+, Stack navigator only — will not work with sheets or popovers.
 
-> Source: https://docs.expo.dev/router/advanced/zoom-transition/ — the canonical page (full API walkthrough: `withAppleZoom`, `alignmentRect`, `usePreventZoomTransitionDismissal`, `unstable_dismissalBoundsRect`; append `.md` for markdown). API reference: https://docs.expo.dev/versions/latest/sdk/router/ — swap `latest` for the project's SDK. This reference adds only what the docs do not cover: when zoom looks right and how to avoid gesture conflicts.
+> Source: https://docs.expo.dev/router/advanced/zoom-transition/ — the canonical page (full API walkthrough: `alignmentRect`, `usePreventZoomTransitionDismissal`, `unstable_dismissalBoundsRect`; append `.md` for markdown). API reference, including `withAppleZoom` on the Link page: https://docs.expo.dev/versions/latest/sdk/router/ — swap `latest` for the project's SDK. This reference adds only what the docs do not cover: when zoom looks right and how to avoid gesture conflicts.
 
 ## Minimal Example
 
@@ -38,7 +38,7 @@ Wrap the source element in `Link.AppleZoom`; optionally mark the destination ele
 - `Link.AppleZoom` accepts only a single child; siblings outside it are not part of the transition.
 - Without `Link.AppleZoomTarget`, the zoom animates to fill the entire destination screen.
 - `<Link.Trigger withAppleZoom>` zooms the whole trigger element instead of a wrapped subtree.
-- Zoom works alongside `<Link.Preview />` long-press previews on the same Link.
+- Zoom works alongside `<Link.Preview />` long-press previews on the same Link — but only when the destination uses modal presentation; otherwise it falls back to the standard transition.
 
 ## Best Practices
 

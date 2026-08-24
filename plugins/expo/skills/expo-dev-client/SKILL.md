@@ -60,7 +60,7 @@ Entry command: `eas build -p <ios|android> --profile development` (omit `-p` to 
 
 Two flags worth knowing:
 
-- `--submit` — build in the cloud and auto-submit to App Store Connect in one command; EAS emails you when the build is ready in TestFlight:
+- `-s` / `--auto-submit` (hidden alias `--submit`, not listed in `--help`) — build in the cloud and auto-submit to App Store Connect in one command; EAS emails you when the build is ready in TestFlight:
 
   ```bash
   eas build -p ios --profile development --submit

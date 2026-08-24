@@ -1,6 +1,6 @@
 # Native Module and View API: Constraints and Platform Differences
 
-> **Source of truth:** https://docs.expo.dev/modules/module-api/ — consult the canonical docs when API details matter (definition components, argument types, Records, Enumerables, Either types, shared objects, view props, events). This file keeps only the constraints and Kotlin-vs-Swift differences that are easy to get wrong. The minimal module skeleton (Swift, Kotlin, TypeScript) is in SKILL.md.
+> **Source of truth:** https://docs.expo.dev/modules/module-api/ — consult the canonical docs when API details matter (definition components, argument types, Records, Enumerables, Either types, view props, events). Shared objects, `SharedRef`, and the `Class` DSL live on https://docs.expo.dev/modules/shared-objects/. This file keeps only the constraints and Kotlin-vs-Swift differences that are easy to get wrong. The minimal module skeleton (Swift, Kotlin, TypeScript) is in SKILL.md.
 
 ## Constraints and Ordering
 

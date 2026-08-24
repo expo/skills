@@ -16,7 +16,7 @@ Release strategy: always TestFlight first — see ./testflight.md. Listing copy 
 eas credentials -p ios
 ```
 
-Interactive flow that creates or selects the distribution certificate and provisioning profile and configures an App Store Connect API key. EAS creates and manages certificates and profiles automatically — do not hand-manage them unless forced to.
+Interactive flow that creates or selects the distribution certificate and provisioning profile and configures an App Store Connect API key. EAS creates and manages certificates and profiles automatically — do not hand-manage them unless forced to. Certificate/profile limits and expiry: https://docs.expo.dev/app-signing/app-credentials/.
 
 ### App Store Connect API key (use this)
 
@@ -94,4 +94,4 @@ App Store Connect processing can take 5-30 minutes. Check status in App Store Co
 
 ### Purpose strings, ITMS-90683, and universal links
 
-Rejections for missing `infoPlist` purpose strings (ITMS-90683) and universal-links/AASA (`apple-app-site-association`) setup are covered in the sibling `expo-app-clip` skill and its references.
+Rejections for missing `infoPlist` purpose strings (ITMS-90683): add the usage-description keys under `ios.infoPlist` in the app config — see https://docs.expo.dev/guides/permissions/. Universal-links/AASA (`apple-app-site-association`) setup is covered in the sibling `expo-app-clip` skill.
