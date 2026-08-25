@@ -40,7 +40,9 @@ Whenever the tools client is routed to a remote tool-server, it tars the local b
 
 Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `argent --version`. On older versions `reinstall-app` resolves `--appPath` on the VM only, so a local path fails; drive an app already on the sim instead.
 
-**Mode C (dev client) on argent — connect via deep link, not the launcher UI.** argent has `open-url`, which opens a scheme / deep link directly, so you can point a dev client at Metro without tapping through the launcher. Use the dev-client **custom scheme** (not `https://`, which can fall through to Safari):
+**Mode C (dev client) on argent.** Easiest is the native launch (eas-cli ≥ 22.4.0): `simulator:start --type argent --build-id <id> --launch-arg … --open-url "<scheme>://expo-development-client/?url=<metro-url>"` installs, launches, and connects the dev client with the launch-args applied and the "Open in?" dialog auto-handled — same as agent-device Method 1 (see run-your-app.md). No manual `open-url` or coordinate tap. argent needs no `open --foreground` attach either; `argent run screenshot` works against the running app, but pass an explicit `--udid` from `list-devices` (the `Booted` one — there's no default), and it saves to a LOCAL temp path.
+
+To drive the connect yourself on a bare argent session (no launch flags), argent has `open-url`, which opens a scheme / deep link directly, so you can point a dev client at Metro without tapping through the launcher. Use the dev-client **custom scheme** (not `https://`, which can fall through to Safari):
 
 ```bash
 # load the dev client from Metro via its deep link
