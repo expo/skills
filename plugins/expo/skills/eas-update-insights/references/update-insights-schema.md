@@ -1,46 +1,6 @@
-# `eas update:insights` JSON schema
+# `eas update:insights` field semantics
 
-Complete JSON output shape returned by `eas update:insights <groupId> --json --non-interactive`.
-
-```json
-{
-  "groupId": "03d5dfcf-736c-475a-8730-af039c3f4d06",
-  "timespan": {
-    "start": "2026-04-10T00:00:00.000Z",
-    "end": "2026-04-17T00:00:00.000Z",
-    "daysBack": 7
-  },
-  "platforms": [
-    {
-      "platform": "android",
-      "updateId": "019d72ca-...",
-      "totals": {
-        "uniqueUsers": 500,
-        "installs": 990,
-        "failedInstalls": 10,
-        "crashRatePercent": 1.0
-      },
-      "payload": {
-        "launchAssetCount": 4,
-        "averageUpdatePayloadBytes": 1115771
-      },
-      "daily": [
-        { "date": "2026-04-10T00:00:00.000Z", "installs": 182, "failedInstalls": 2 },
-        { "date": "2026-04-11T00:00:00.000Z", "installs": 195, "failedInstalls": 1 }
-      ]
-    },
-    {
-      "platform": "ios",
-      "updateId": "019d72ca-...",
-      "totals": { "uniqueUsers": 100, "installs": 1, "failedInstalls": 0, "crashRatePercent": 0 },
-      "payload": { "launchAssetCount": 4, "averageUpdatePayloadBytes": 1115771 },
-      "daily": [ { "date": "2026-04-10T00:00:00.000Z", "installs": 1, "failedInstalls": 0 } ]
-    }
-  ]
-}
-```
-
-## Field reference
+Fields returned by `eas update:insights <groupId> --json --non-interactive`. Run the command once with `--json` to see the literal shape; this file records what the fields mean.
 
 | Path | Meaning |
 |---|---|
@@ -57,13 +17,7 @@ Complete JSON output shape returned by `eas update:insights <groupId> --json --n
 | `platforms[].payload.averageUpdatePayloadBytes` | Mean bundle size for the window. |
 | `platforms[].daily[]` | Per-day time series of installs and failed installs. |
 
-## `eas update:view <groupId> --insights --json`
+## Caveats
 
-The `update:view --insights --json` command wraps the same insights payload:
-
-```json
-{
-  "updates": [ /* standard update:view entries */ ],
-  "insights": { /* same shape as eas update:insights above */ }
-}
-```
+- The CLI table renders `installs` as "Launches" and `failedInstalls` as "Crashes" — same fields, different display names.
+- `eas update:view <groupId> --insights --json` wraps this same insights payload as `{ "updates": [ /* standard update:view entries */ ], "insights": { /* shape above */ } }`.

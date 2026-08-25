@@ -12,6 +12,8 @@ allowed-tools: "Bash(eas *)"
 
 Query the health of published EAS Update directly from the CLI: launches, failed launches, crash rates, unique users, payload size, the embedded-vs-OTA user split per channel, and the most popular updates per runtime version. The data is the same data that powers the update and channel detail pages on expo.dev; these commands expose it in the terminal in human and JSON form.
 
+> **Adjacent docs:** https://docs.expo.dev/eas-update/eas-cli/ covers branch/channel CLI workflows. The insights commands themselves have no docs page — `--help` on each command is the authoritative reference.
+
 ## When to use this skill
 
 Use this when the user wants to assess the health or adoption of a published EAS Update: crash rates, install counts, unique users, bundle size, or the split between embedded and OTA users on a channel.
@@ -35,20 +37,26 @@ Don't use when the user needs per-user crash detail or device-level reporting; t
 - Logged in: `eas login`.
 - For `channel:insights`: run from an Expo project directory (the command resolves the project ID from `app.json`). `update:insights` only needs a login.
 
-## Commands at a glance
+## Commands
 
-| Command | Purpose |
-|---|---|
-| `eas update:list` | Discover recent update groups, their `group` IDs, and branch names |
-| `eas update:insights <groupId>` | Per-platform launches, failed launches, crash rate, unique users, payload size, daily breakdown |
-| `eas update:view <groupId> --insights` | Update group details + the same metrics appended |
-| `eas channel:insights --channel <name> --runtime-version <version>` | Embedded/OTA user counts, most popular updates, cumulative metrics for a channel + runtime |
+Four entry commands, all supporting `--json --non-interactive` for programmatic parsing. Run `--help` on each for the current flag surface — flags vary by installed eas-cli version.
 
-All of these support `--json --non-interactive` for programmatic parsing.
+- `eas update:list` — discover recent update groups, their `group` IDs, and branch names.
+- `eas update:insights <groupId>` — per-platform launches, failed launches, crash rate, unique users, payload size, daily breakdown.
+- `eas update:view <groupId> --insights` — update group details with the same metrics appended.
+- `eas channel:insights --channel <name> --runtime-version <version>` — embedded/OTA user counts and most popular updates for a channel + runtime.
+
+Flag traps (everything else is in `--help`):
+
+- **`update:list` prompts for a branch selection** unless you pass `--branch <name>` or `--all` — when scripting, always pass one of them plus `--json --non-interactive`.
+- `--days <N>` (default 7) is mutually exclusive with the explicit `--start <iso-date>` / `--end <iso-date>` range.
+- `channel:insights` requires both `--channel` and `--runtime-version`, and the runtime version must match exactly what was published — check `runtimeVersion` values in `update:list` output.
+- `update:view`: the `--days` / `--start` / `--end` flags only apply when `--insights` is set; passing them alone errors. Without `--insights`, `update:view` behaves exactly as before — no JSON shape change for existing consumers.
+- `--json` implies `--non-interactive`, but passing both is explicit and scripting-friendly.
 
 ## Discovering IDs
 
-Before querying insights for an update group, you need its `group` ID. Use `eas update:list` with either `--branch <name>` (updates on that branch) or `--all` (updates across all branches). Always pass `--json --non-interactive` when running non-interactively; without a branch/`--all` flag the command will otherwise prompt for a branch selection:
+Before querying insights for an update group, you need its `group` ID:
 
 ```bash
 # Latest group id across all branches
@@ -58,52 +66,11 @@ eas update:list --all --json --non-interactive | jq -r '.currentPage[0].group'
 eas update:list --branch production --json --non-interactive | jq -r '.currentPage[0].group'
 ```
 
-The JSON response has a `currentPage` array with one entry per update group (both platforms of the same publish are collapsed into one entry):
-
-```json
-{
-  "currentPage": [
-    {
-      "branch": "production",
-      "message": "\"Fix checkout crash\" (1 week ago by someone)",
-      "runtimeVersion": "1.0.6",
-      "group": "03d5dfcf-736c-475a-8730-af039c3f4d06",
-      "platforms": "android, ios",
-      "isRollBackToEmbedded": false
-    }
-  ]
-}
-```
-
-Entries also carry `codeSigningKey` and `rolloutPercentage`, but only when those features are in use for the group (undefined values are omitted from the JSON output).
-
-When called with `--branch <name>`, the response also includes `name` (the branch name) and `id` (the branch ID) at the top level.
+JSON semantics: `currentPage[]` has one entry per update group — both platforms of the same publish are collapsed into a single entry. `codeSigningKey` and `rolloutPercentage` appear only when those features are in use for the group (undefined values are omitted from the output). With `--branch <name>`, the response also includes the branch `name` and `id` at the top level.
 
 ## `eas update:insights <groupId>`
 
-Shows launches, failed launches, crash rate, unique users, launch asset count, and average payload size for a single update group, broken down **per platform** (iOS, Android), plus a daily breakdown of launches and failures.
-
-### Basic use
-
-```bash
-eas update:insights 03d5dfcf-736c-475a-8730-af039c3f4d06
-```
-
-### Flags
-
-| Flag | Description |
-|---|---|
-| `--days <N>` | Look back N days. Default: **7**. Mutually exclusive with `--start`/`--end`. |
-| `--start <iso-date>` / `--end <iso-date>` | Explicit time range, e.g. `--start 2026-04-01 --end 2026-04-15`. |
-| `--platform <ios\|android>` | Filter to a single platform. Omit to see all platforms in the group. |
-| `--json` | Machine-readable output. Implies `--non-interactive`. |
-| `--non-interactive` | Required when scripting. |
-
-### JSON output shape
-
-Top level: `groupId`, `timespan` (`start`, `end`, `daysBack`), and `platforms[]` with one entry per platform the group was published to. Each platform entry has `updateId`, `totals` (`uniqueUsers`, `installs`, `failedInstalls`, `crashRatePercent`), `payload` (`launchAssetCount`, `averageUpdatePayloadBytes`), and a `daily[]` time series of `{ date, installs, failedInstalls }`.
-
-For the complete schema and field reference, see [references/update-insights-schema.md](./references/update-insights-schema.md).
+Shows launches, failed launches, crash rate, unique users, launch asset count, and average payload size for a single update group, broken down **per platform** (iOS, Android), plus a daily breakdown of launches and failures. `--platform <ios|android>` filters to one platform. Field semantics: [references/update-insights-schema.md](./references/update-insights-schema.md).
 
 Fields that matter for health assessment:
 
@@ -117,46 +84,9 @@ Fields that matter for health assessment:
 - `Update group "<id>" has no ios update (available platforms: android)` — `--platform ios` was used but the group wasn't published for iOS.
 - `EAS Update insights is not supported by this version of eas-cli. Please upgrade ...` — the server deprecated a field the CLI relies on. Run `npm install -g eas-cli@latest`.
 
-## `eas update:view <groupId> --insights`
-
-Extends the standard `update:view` output with the same per-platform insights, inline.
-
-```bash
-# Human-readable
-eas update:view 03d5dfcf-... --insights
-eas update:view 03d5dfcf-... --insights --days 30
-
-# JSON: wrapped as { updates: [...], insights: {...} }
-eas update:view 03d5dfcf-... --json --insights
-```
-
-Without `--insights`, `update:view` behaves exactly as before — no JSON shape change for existing consumers. The `--days` / `--start` / `--end` flags only apply when `--insights` is set; passing them alone errors.
-
 ## `eas channel:insights --channel <name> --runtime-version <version>`
 
-Shows, per channel, how many users are on the embedded build vs over-the-air updates and which updates are pulling the most traffic. Must be run from an Expo project directory.
-
-### Basic use
-
-```bash
-eas channel:insights --channel production --runtime-version 1.0.6
-```
-
-### Flags
-
-| Flag | Description |
-|---|---|
-| `--channel <name>` | **Required.** The channel name (e.g. `production`, `staging`). |
-| `--runtime-version <version>` | **Required.** Match exactly what was published. Check `runtimeVersion` values in `update:list`. |
-| `--days <N>` | Look back N days. Default: **7**. |
-| `--start` / `--end` | Explicit time range, like `update:insights`. |
-| `--json` / `--non-interactive` | Machine-readable output. |
-
-### JSON output shape
-
-Top level: `channel`, `runtimeVersion`, `timespan`, `embeddedUpdateTotalUniqueUsers`, `otaTotalUniqueUsers`, `mostPopularUpdates[]` (each with `rank`, `groupId`, `message`, `platform`, `totalUniqueUsers`), `cumulativeMetricsAtLastTimestamp[]`, plus chart-shaped `uniqueUsersOverTime` and `cumulativeMetricsOverTime` objects with `labels` and `datasets`.
-
-For the complete schema and field reference, see [references/channel-insights-schema.md](./references/channel-insights-schema.md).
+Shows, per channel, how many users are on the embedded build vs over-the-air updates and which updates are pulling the most traffic. Must be run from an Expo project directory. Field semantics: [references/channel-insights-schema.md](./references/channel-insights-schema.md).
 
 Fields that matter:
 
@@ -217,8 +147,6 @@ Human-readable group details plus 30 days of launches/failures per platform — 
 
 ## Output tips
 
-- Pipe JSON through `jq`; payloads are structured for easy filtering.
-- `--json` implies `--non-interactive`, but passing both is explicit and scripting-friendly.
 - Dates in `daily[].date` are UTC ISO timestamps; the human-readable table renders them as `YYYY-MM-DD` (UTC).
 - The CLI table labels say "Launches" / "Crashes" while JSON uses `installs` / `failedInstalls`. Same field, different display name.
 

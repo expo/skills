@@ -91,7 +91,7 @@ These steps only apply when `ios/` and/or `android/` directories exist in the pr
 | -------------------- | ---------------------------------------------------- |
 | `expo-av`            | `expo-audio` and `expo-video`                        |
 | `expo-permissions`   | Individual package permission APIs                   |
-| `@expo/vector-icons` | `expo-symbols` (for SF Symbols)                      |
+| `@expo/vector-icons` | SF Symbols via `expo-image` `sf:` source (see `expo-native-ui`) |
 | `AsyncStorage`       | `expo-sqlite/localStorage/install`                   |
 | `expo-app-loading`   | `expo-splash-screen`                                 |
 | expo-linear-gradient | experimental_backgroundImage + CSS gradients in View |

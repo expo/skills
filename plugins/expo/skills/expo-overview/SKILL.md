@@ -67,6 +67,17 @@ Some everyday phrasings don't obviously map to a skill name — translate before
 - "Ship it" / "get an .ipa or .apk" / "release to the stores" → `eas-app-stores` (build + submit, TestFlight, versions, store metadata).
 - "I'm new / where do I start" → scaffold first (see Shared setup rules), then route by goal.
 
+### No matching skill? Fetch the docs
+
+Every docs.expo.dev page serves Markdown when you append `.md`; the full page map is
+https://docs.expo.dev/llms.txt. Common asks with no dedicated skill — fetch the page instead of
+guessing:
+
+- App icons & splash screens → https://docs.expo.dev/develop/user-interface/splash-screen-and-app-icon.md
+- EAS Insights (usage analytics) → https://docs.expo.dev/eas-insights/introduction.md
+- `expo-updates` channels / how OTA updates flow → https://docs.expo.dev/eas-update/how-it-works.md
+- Anything else → find the page in `llms.txt`, prefer the SDK-pinned URL (rule below).
+
 ## Shared setup rules
 
 These apply across every Expo skill, so handle them here once instead of repeating them

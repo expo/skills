@@ -2,9 +2,11 @@
 
 Use Reanimated v4. Avoid React Native's built-in Animated API.
 
-## Entering and Exiting Animations
+For anything beyond the defaults below — gestures, keyboard-driven layout, springs, shared values, staggered lists — load the sibling **`expo-animation`** skill instead of improvising here.
 
-Use Animated.View with entering and exiting animations. Layout animations can animate state changes.
+## Entering, Exiting, Layout
+
+Use `Animated.View` with `entering`/`exiting` presets; `layout` animates position changes when siblings mount/unmount.
 
 ```tsx
 import Animated, {
@@ -24,9 +26,9 @@ function App() {
 }
 ```
 
-## On-Scroll Animations
+## Scroll-Driven
 
-Create high-performance scroll animations using Reanimated's hooks:
+Pair `useAnimatedRef` with `useScrollViewOffset` for high-performance scroll animations on the UI thread:
 
 ```tsx
 import Animated, {
@@ -52,162 +54,6 @@ function Page() {
 }
 ```
 
-## Common Animation Presets
-
-### Entering Animations
-
-- `FadeIn`, `FadeInUp`, `FadeInDown`, `FadeInLeft`, `FadeInRight`
-- `SlideInUp`, `SlideInDown`, `SlideInLeft`, `SlideInRight`
-- `ZoomIn`, `ZoomInUp`, `ZoomInDown`
-- `BounceIn`, `BounceInUp`, `BounceInDown`
-
-### Exiting Animations
-
-- `FadeOut`, `FadeOutUp`, `FadeOutDown`, `FadeOutLeft`, `FadeOutRight`
-- `SlideOutUp`, `SlideOutDown`, `SlideOutLeft`, `SlideOutRight`
-- `ZoomOut`, `ZoomOutUp`, `ZoomOutDown`
-- `BounceOut`, `BounceOutUp`, `BounceOutDown`
-
-### Layout Animations
-
-- `LinearTransition` — Smooth linear interpolation
-- `SequencedTransition` — Sequenced property changes
-- `FadingTransition` — Fade between states
-
-## Customizing Animations
-
-```tsx
-<Animated.View
-  entering={FadeInDown.duration(500).delay(200)}
-  exiting={FadeOut.duration(300)}
-/>
-```
-
-### Modifiers
-
-```tsx
-// Duration in milliseconds
-FadeIn.duration(300);
-
-// Delay before starting
-FadeIn.delay(100);
-
-// Spring physics
-FadeIn.springify();
-FadeIn.springify().damping(15).stiffness(100);
-
-// Easing curves
-FadeIn.easing(Easing.bezier(0.25, 0.1, 0.25, 1));
-
-// Chaining
-FadeInDown.duration(400).delay(200).springify();
-```
-
-## Shared Value Animations
-
-For imperative control over animations:
-
-```tsx
-import {
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
-
-const offset = useSharedValue(0);
-
-// Spring animation
-offset.value = withSpring(100);
-
-// Timing animation
-offset.value = withTiming(100, { duration: 300 });
-
-// Use in styles
-const style = useAnimatedStyle(() => ({
-  transform: [{ translateX: offset.value }],
-}));
-```
-
-## Gesture Animations
-
-Combine with React Native Gesture Handler:
-
-```tsx
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
-
-function DraggableBox() {
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-
-  const gesture = Gesture.Pan()
-    .onUpdate((e) => {
-      translateX.value = e.translationX;
-      translateY.value = e.translationY;
-    })
-    .onEnd(() => {
-      translateX.value = withSpring(0);
-      translateY.value = withSpring(0);
-    });
-
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-    ],
-  }));
-
-  return (
-    <GestureDetector gesture={gesture}>
-      <Animated.View style={[styles.box, style]} />
-    </GestureDetector>
-  );
-}
-```
-
-## Keyboard Animations
-
-Animate with keyboard height changes:
-
-```tsx
-import Animated, {
-  useAnimatedKeyboard,
-  useAnimatedStyle,
-} from "react-native-reanimated";
-
-function KeyboardAwareView() {
-  const keyboard = useAnimatedKeyboard();
-
-  const style = useAnimatedStyle(() => ({
-    paddingBottom: keyboard.height.value,
-  }));
-
-  return <Animated.View style={style}>{/* content */}</Animated.View>;
-}
-```
-
-## Staggered List Animations
-
-Animate list items with delays:
-
-```tsx
-{
-  items.map((item, index) => (
-    <Animated.View
-      key={item.id}
-      entering={FadeInUp.delay(index * 50)}
-      exiting={FadeOutUp}
-    >
-      <ListItem item={item} />
-    </Animated.View>
-  ));
-}
-```
-
 ## Best Practices
 
 - Add entering and exiting animations for state changes
@@ -218,3 +64,5 @@ Animate list items with delays:
 - Keep animations under 300ms for responsive feel
 - Use spring animations for natural movement
 - Avoid animating layout properties (width, height) when possible — prefer transforms
+
+> Source: https://docs.swmansion.com/react-native-reanimated/ — the canonical Reanimated docs (preset catalog, modifiers, hooks). This reference adds only the Expo-specific defaults and the `Color`/`PlatformColor` gotcha above.

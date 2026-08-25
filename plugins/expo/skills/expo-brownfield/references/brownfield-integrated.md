@@ -2,6 +2,8 @@
 
 Add React Native and Expo directly to the existing native project's build system — Gradle on Android, CocoaPods on iOS — the same way you would add any other library. The native project gains React Native capabilities while keeping a single, unified build.
 
+> **Source of truth:** https://docs.expo.dev/brownfield/integrated-approach/ and the [bare-minimum template](https://github.com/expo/expo/tree/main/templates/expo-template-bare-minimum) — consult the canonical docs when API details matter. Docs URLs serve markdown with `.md` appended. These native-config surfaces change across SDKs: copy file contents from the template at your SDK's tag, never from memory.
+
 ## When to use
 
 - A single team owns both the native and React Native code.
@@ -42,17 +44,7 @@ mv /path/to/your/android-project my-project/android/
 
 ### Monorepo alternative
 
-If the native projects cannot be moved, set up a monorepo with the Expo project as a workspace. Create a root `package.json`:
-
-```json
-{
-  "version": "1.0.0",
-  "private": true,
-  "workspaces": ["my-project"]
-}
-```
-
-Run `yarn install` at the root. This installs `node_modules` at the workspace root so Gradle and CocoaPods scripts can resolve React Native and Expo dependencies.
+If the native projects cannot be moved, set up a monorepo with the Expo project as a workspace: create a root `package.json` with `"private": true` and `"workspaces": ["my-project"]`, then run `yarn install` at the root. This installs `node_modules` at the workspace root so Gradle and CocoaPods scripts can resolve React Native and Expo dependencies.
 
 > **Monorepo callout:** with a monorepo, the Expo project is not at `../../` from the native projects. You must set `projectRoot` explicitly in Gradle and pass the project root to CocoaPods so autolinking can find the Expo project.
 
@@ -60,94 +52,21 @@ Run `yarn install` at the root. This installs `node_modules` at the workspace ro
 
 ## 3) Configure Android
 
+Each file below: copy the current content from the template, then merge into your existing file. What each change does:
+
 ### `settings.gradle`
 
-Register the React Native Gradle plugin and Expo autolinking. Reference: [bare-minimum template `settings.gradle`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/android/settings.gradle).
-
-```groovy
-pluginManagement {
-  def reactNativeGradlePlugin = new File(
-    providers.exec {
-      workingDir(rootDir)
-      commandLine("node", "--print", "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })")
-    }.standardOutput.asText.get().trim()
-  ).getParentFile().absolutePath
-  includeBuild(reactNativeGradlePlugin)
-
-  def expoPluginsPath = new File(
-    providers.exec {
-      workingDir(rootDir)
-      commandLine("node", "--print", "require.resolve('expo-modules-autolinking/package.json', { paths: [require.resolve('expo/package.json')] })")
-    }.standardOutput.asText.get().trim(),
-    "../android/expo-gradle-plugin"
-  ).absolutePath
-  includeBuild(expoPluginsPath)
-}
-
-plugins {
-  id("com.facebook.react.settings")
-  id("expo-autolinking-settings")
-}
-
-extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
-  ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand)
-}
-expoAutolinking.useExpoModules()
-expoAutolinking.useExpoVersionCatalog()
-includeBuild(expoAutolinking.reactNativeGradlePlugin)
-```
+Copy from [template `settings.gradle`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/android/settings.gradle). Adds a `pluginManagement` block that resolves the React Native Gradle plugin and the Expo autolinking settings plugin out of `node_modules` via `node --print require.resolve(...)`, applies `com.facebook.react.settings` + `expo-autolinking-settings`, and wires `expoAutolinking` (modules, version catalog, RN Gradle plugin) into the settings evaluation.
 
 > **Monorepo:** add an explicit project root before `expoAutolinking.useExpoModules()` so autolinking finds your Expo project's `node_modules`.
 
 ### Top-level `build.gradle`
 
-Add the React Native Gradle plugin classpath and the Expo root-project plugin:
-
-```groovy
-buildscript {
-  repositories {
-    google()
-    mavenCentral()
-  }
-  dependencies {
-    classpath('com.android.tools.build:gradle')
-    classpath('com.facebook.react:react-native-gradle-plugin')
-    classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
-  }
-}
-
-allprojects {
-  repositories {
-    google()
-    mavenCentral()
-    maven { url 'https://www.jitpack.io' }
-  }
-}
-
-apply plugin: "expo-root-project"
-apply plugin: "com.facebook.react.rootproject"
-```
+Copy from [template `build.gradle`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/android/build.gradle). Adds buildscript classpaths (`com.facebook.react:react-native-gradle-plugin`, Kotlin), the JitPack repository, and applies `expo-root-project` + `com.facebook.react.rootproject` at the root.
 
 ### `app/build.gradle`
 
-Apply the React Native plugin and configure the `react { ... }` block. The full template is at [bare-minimum `app/build.gradle`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/android/app/build.gradle); the minimum that must change in your existing module:
-
-```groovy
-apply plugin: "com.android.application"
-apply plugin: "org.jetbrains.kotlin.android"
-apply plugin: "com.facebook.react"
-
-def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
-
-react {
-  entryFile = file(["node", "-e", "require('expo/scripts/resolveAppEntry')", projectRoot, "android", "absolute"].execute(null, rootDir).text.trim())
-  reactNativeDir = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
-  codegenDir = new File(["node", "--print", "require.resolve('@react-native/codegen/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
-  cliFile = new File(["node", "--print", "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })"].execute(null, rootDir).text.trim())
-  bundleCommand = "export:embed"
-  autolinkLibrariesWithApp()
-}
-```
+Copy from [template `app/build.gradle`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/android/app/build.gradle). The minimum that must change in your existing module: apply the `com.facebook.react` plugin, and add the `react { ... }` block that resolves `entryFile` (via `expo/scripts/resolveAppEntry`), `reactNativeDir`, `codegenDir`, and `cliFile` (`@expo/cli`) through Node, sets `bundleCommand = "export:embed"` so release bundling goes through Expo CLI, and calls `autolinkLibrariesWithApp()`.
 
 > **Monorepo:** set `root = file("../../")` (or wherever your Expo project lives) inside the `react { ... }` block.
 
@@ -163,69 +82,17 @@ hermesEnabled=true
 
 ### `AndroidManifest.xml`
 
-Add the `INTERNET` permission to your main manifest at `app/src/main/AndroidManifest.xml`:
+Add the `INTERNET` permission to `app/src/main/AndroidManifest.xml`:
 
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-In the debug-variant manifest at `app/src/debug/AndroidManifest.xml`, enable cleartext traffic so the app can talk to the local Metro bundler over HTTP:
-
-```xml
-<application
-  android:usesCleartextTraffic="true"
-  tools:targetApi="28"
-  tools:ignore="GoogleAppIndexingWarning">
-  ...
-</application>
-```
+In the debug-variant manifest at `app/src/debug/AndroidManifest.xml`, set `android:usesCleartextTraffic="true"` on `<application>` — Android 9+ blocks HTTP by default, and debug builds load the JS bundle from the local Metro server over HTTP.
 
 ### `MainApplication.kt`
 
-Initialize React Native and Expo lifecycle dispatch in your `Application` class:
-
-```kotlin
-package com.example.myapp
-
-import android.app.Application
-import android.content.res.Configuration
-
-import com.facebook.react.PackageList
-import com.facebook.react.ReactApplication
-import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
-import com.facebook.react.ReactHost
-import com.facebook.react.common.ReleaseLevel
-import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
-
-import expo.modules.ApplicationLifecycleDispatcher
-import expo.modules.ExpoReactHostFactory
-
-class MainApplication : Application(), ReactApplication {
-
-  override val reactHost: ReactHost by lazy {
-    ExpoReactHostFactory.getDefaultReactHost(
-      context = applicationContext,
-      packageList = PackageList(this).packages
-    )
-  }
-
-  override fun onCreate() {
-    super.onCreate()
-    DefaultNewArchitectureEntryPoint.releaseLevel = try {
-      ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
-    } catch (_: IllegalArgumentException) {
-      ReleaseLevel.STABLE
-    }
-    loadReactNative(this)
-    ApplicationLifecycleDispatcher.onApplicationCreate(this)
-  }
-
-  override fun onConfigurationChanged(newConfig: Configuration) {
-    super.onConfigurationChanged(newConfig)
-    ApplicationLifecycleDispatcher.onConfigurationChanged(this, newConfig)
-  }
-}
-```
+Copy from [template `MainApplication.kt`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/android/app/src/main/java/com/helloworld/MainApplication.kt) into your `Application` class. It provides the `reactHost` via `ExpoReactHostFactory.getDefaultReactHost(...)` with the autolinked `PackageList`, calls `loadReactNative(this)` in `onCreate`, and forwards `onCreate` / `onConfigurationChanged` to `ApplicationLifecycleDispatcher` so Expo modules receive lifecycle events.
 
 ### `ReactActivity`
 
@@ -279,61 +146,9 @@ The integrated approach drives iOS through CocoaPods + Expo modules autolinking,
 
 ### `ios/Podfile`
 
-Create (or update) `ios/Podfile` based on the [bare-minimum Podfile](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/ios/Podfile). The essential lines:
+Copy from the [template `Podfile`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/ios/Podfile) and change the target name to your existing Xcode target. What it does: requires Expo's `scripts/autolinking` and RN's `react_native_pods` helpers out of `node_modules`, calls `use_expo_modules!`, feeds `use_native_modules!` the Expo autolinking `config_command`, and calls `use_react_native!` + `react_native_post_install`. The `:app_path` argument tells `use_react_native!` where the JS app lives — set it to the absolute path of your Expo project root if you are in a monorepo.
 
-```ruby
-require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
-require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
-
-require 'json'
-podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
-
-platform :ios, podfile_properties['ios.deploymentTarget'] || '16.4'
-
-prepare_react_native_project!
-
-target 'MyApp' do
-  use_expo_modules!
-
-  config_command = [
-    'node',
-    '--no-warnings',
-    '--eval',
-    'require(\'expo/bin/autolinking\')',
-    'expo-modules-autolinking',
-    'react-native-config',
-    '--json',
-    '--platform',
-    'ios'
-  ]
-
-  config = use_native_modules!(config_command)
-
-  use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
-
-  use_react_native!(
-    :path => config[:reactNativePath],
-    :hermes_enabled => podfile_properties['expo.jsEngine'] == nil || podfile_properties['expo.jsEngine'] == 'hermes',
-    :app_path => "#{Pod::Config.instance.installation_root}/..",
-    :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
-  )
-
-  post_install do |installer|
-    react_native_post_install(installer, config[:reactNativePath], :mac_catalyst_enabled => false)
-  end
-end
-```
-
-Replace `'MyApp'` with the existing Xcode target name. The `:app_path` value tells `use_react_native!` where the JS app lives — set it to the absolute path of your Expo project root if you are in a monorepo.
-
-Create `ios/Podfile.properties.json` alongside the Podfile (defaults are fine):
-
-```json
-{
-  "expo.jsEngine": "hermes",
-  "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true"
-}
-```
+Create `ios/Podfile.properties.json` alongside it ([template defaults](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/ios/Podfile.properties.json) are fine: Hermes engine, network inspector on).
 
 Install pods:
 
@@ -353,40 +168,7 @@ In Xcode, select your project → app target → **Build Settings**, search for 
 
 #### 2. Add a Run Script phase to embed the JS bundle
 
-On the app target's **Build Phases** tab, add a new **Run Script** phase **before** `[CP] Embed Pods Frameworks`. This phase bundles JS for release builds and is skipped automatically in debug (Metro serves the bundle then).
-
-```sh
-if [[ -f "$PODS_ROOT/../.xcode.env" ]]; then
-  source "$PODS_ROOT/../.xcode.env"
-fi
-if [[ -f "$PODS_ROOT/../.xcode.env.local" ]]; then
-  source "$PODS_ROOT/../.xcode.env.local"
-fi
-
-export PROJECT_ROOT="$PROJECT_DIR"/..
-
-if [[ "$CONFIGURATION" = *Debug* ]]; then
-  export SKIP_BUNDLING=1
-fi
-if [[ -z "$ENTRY_FILE" ]]; then
-  export ENTRY_FILE="$("$NODE_BINARY" -e "require('expo/scripts/resolveAppEntry')" "$PROJECT_ROOT" ios absolute | tail -n 1)"
-fi
-if [[ -z "$CLI_PATH" ]]; then
-  export CLI_PATH="$("$NODE_BINARY" --print "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })")"
-fi
-if [[ -z "$BUNDLE_COMMAND" ]]; then
-  export BUNDLE_COMMAND="export:embed"
-fi
-
-if [[ -f "$PODS_ROOT/../.xcode.env.updates" ]]; then
-  source "$PODS_ROOT/../.xcode.env.updates"
-fi
-if [[ -f "$PODS_ROOT/../.xcode.env.local" ]]; then
-  source "$PODS_ROOT/../.xcode.env.local"
-fi
-
-`"$NODE_BINARY" --print "require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'"`
-```
+On the app target's **Build Phases** tab, add a new **Run Script** phase **before** `[CP] Embed Pods Frameworks`. Copy the script body from the "Bundle React Native code and images" phase in the [template `project.pbxproj`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/ios/HelloWorld.xcodeproj/project.pbxproj). What it does: sources `.xcode.env` / `.xcode.env.local`, sets `PROJECT_ROOT`, exports `SKIP_BUNDLING=1` in Debug (Metro serves the bundle then), resolves `ENTRY_FILE` via `expo/scripts/resolveAppEntry` and `CLI_PATH` to `@expo/cli`, sets `BUNDLE_COMMAND="export:embed"`, and invokes React Native's `react-native-xcode.sh`.
 
 > **Monorepo:** override `PROJECT_ROOT` to point at the Expo project (e.g. `export PROJECT_ROOT="$PROJECT_DIR"/../../my-project`). Without this, bundling looks for `node_modules` in the wrong directory.
 
@@ -403,56 +185,7 @@ Set `UIViewControllerBasedStatusBarAppearance` to `NO` so React Native can manag
 
 ### `AppDelegate.swift`
 
-Wire React Native into the app delegate via Expo's `ExpoReactNativeFactory`. The delegate's `bundleURL()` selects the Metro dev server in `DEBUG` and the embedded bundle in release.
-
-```swift
-internal import Expo
-import React
-import ReactAppDependencyProvider
-
-@main
-class AppDelegate: ExpoAppDelegate {
-  var window: UIWindow?
-
-  var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
-  var reactNativeFactory: RCTReactNativeFactory?
-
-  public override func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
-  ) -> Bool {
-    let delegate = ReactNativeDelegate()
-    let factory = ExpoReactNativeFactory(delegate: delegate)
-    delegate.dependencyProvider = RCTAppDependencyProvider()
-
-    reactNativeDelegate = delegate
-    reactNativeFactory = factory
-
-    window = UIWindow(frame: UIScreen.main.bounds)
-    factory.startReactNative(
-      withModuleName: "main",
-      in: window,
-      launchOptions: launchOptions
-    )
-
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-}
-
-class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
-  override func sourceURL(for bridge: RCTBridge) -> URL? {
-    bridge.bundleURL ?? bundleURL()
-  }
-
-  override func bundleURL() -> URL? {
-#if DEBUG
-    return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: ".expo/.virtual-metro-entry")
-#else
-    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
-#endif
-  }
-}
-```
+Copy from the [template `AppDelegate.swift`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/ios/HelloWorld/AppDelegate.swift). It subclasses `ExpoAppDelegate`, creates an `ExpoReactNativeFactory` with an `ExpoReactNativeFactoryDelegate` (plus `RCTAppDependencyProvider`), and calls `factory.startReactNative(withModuleName: "main", in: window, launchOptions:)` to take over the root window. The delegate's `bundleURL()` selects the Metro dev server (`.expo/.virtual-metro-entry` via `RCTBundleURLProvider`) in `DEBUG` and the embedded `main.jsbundle` in release.
 
 The module name `"main"` must match what the JS side registers with `AppRegistry.registerComponent("main", () => App)`.
 

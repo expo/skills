@@ -7,7 +7,9 @@ license: MIT
 
 # Writing Expo Modules
 
-Complete reference for building native modules and views using the Expo Modules API. Covers Swift (iOS), Kotlin (Android), and TypeScript.
+Workflow and gotchas for building native modules and views with the Expo Modules API. Covers Swift (iOS), Kotlin (Android), and TypeScript.
+
+> **Source of truth:** https://docs.expo.dev/modules/module-api/ — consult the canonical docs when API details matter. The Expo Modules API is evolving (API 2.0 macros are landing), so embedded DSL detail goes stale; always check the docs for the project's SDK version. Docs URLs serve markdown with `.md` appended (e.g. `https://docs.expo.dev/modules/module-api.md`); on `/versions/` paths, swap `latest` for the project's SDK.
 
 ## When to Use
 
@@ -27,11 +29,10 @@ Consult these resources as needed:
 ```
 references/
   create-expo-module.md      Scaffolding and add-platform-support workflow, defaults, and quirks
-  native-module.md           Module definition DSL: Name, Function, AsyncFunction, Property, Constant, Events, type system, shared objects
-  native-view.md             Native view components: View, Prop, EventDispatcher, view lifecycle, ref-based functions
-  lifecycle.md               Lifecycle hooks: module, iOS app/AppDelegate, Android activity/application listeners
-  config-plugin.md           Config plugins: modifying Info.plist, AndroidManifest.xml, reading values in native code
-  module-config.md           expo-module.config.json fields, file placement, and autolinking behavior
+  native-api.md              Module/view DSL constraints, ordering rules, and Kotlin-vs-Swift differences
+  lifecycle.md               Lifecycle hook constraints: AppDelegate subscribers, Android listeners, unsupported callbacks
+  config-plugin.md           Config plugins for modules: structure, key rules, reading plugin-written values in native code
+  module-config.md           expo-module.config.json placement, class-name formats, autolinking resolution order
 ```
 
 ## Quick Start
@@ -71,13 +72,9 @@ See [references/create-expo-module.md](references/create-expo-module.md) before 
 - Local modules live in `expo.autolinking.nativeModulesDir` when configured, otherwise in `modules/`.
 - Standalone modules have their own package metadata, scripts, and usually an example app. Local modules use the host app's tooling instead.
 
-## Core File Shapes
+## Module Structure
 
-The Swift and Kotlin DSL share the same structure. Swift is usually the clearest primary example; consult the references for feature-specific details.
-
-## Module Structure Reference
-
-The Swift and Kotlin DSL share the same structure. Both platforms are shown here for reference — in other reference files, Swift is shown as the primary language unless the Kotlin pattern meaningfully differs.
+The Swift and Kotlin DSL share the same structure; Swift is usually the clearest primary example. Kotlin-vs-Swift differences and DSL constraints live in [references/native-api.md](references/native-api.md); the full component reference is in the docs (see banner above).
 
 **Swift (iOS):**
 
@@ -140,7 +137,7 @@ export function hello(name: string): string {
 }
 ```
 
-Note: iOS uses just the class name; Android uses the fully-qualified class name (package + class). See `references/module-config.md` for all fields.
+Note: iOS uses just the class name; Android uses the fully-qualified class name (package + class). See `references/module-config.md` for placement and autolinking behavior.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:

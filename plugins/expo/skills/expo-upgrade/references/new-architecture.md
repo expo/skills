@@ -1,24 +1,8 @@
 # New Architecture
 
-The New Architecture is enabled by default in Expo SDK 53+. It replaces the legacy bridge with a faster, synchronous communication layer between JavaScript and native code.
+The New Architecture is enabled by default since Expo SDK 53 (opt-in on SDK 52, experimental before that).
 
-## Documentation
-
-Full guide: https://docs.expo.dev/guides/new-architecture/
-
-## What Changed
-
-- **JSI (JavaScript Interface)** — Direct synchronous calls between JS and native
-- **Fabric** — New rendering system with concurrent features
-- **TurboModules** — Lazy-loaded native modules with type safety
-
-## SDK Compatibility
-
-| SDK Version | New Architecture Status |
-| ----------- | ----------------------- |
-| SDK 53+     | Enabled by default      |
-| SDK 52      | Opt-in via app.json     |
-| SDK 51-     | Experimental            |
+> **Source of truth:** https://docs.expo.dev/guides/new-architecture/ — consult the canonical guide for configuration and rollout details (it links the React Native announcement for the JSI/Fabric/TurboModules concepts).
 
 ## Configuration
 
@@ -60,16 +44,11 @@ Some layout animations behave differently. Test thoroughly after upgrading.
 
 ## Verifying New Architecture
 
-Check if New Architecture is active:
+Log once from app code — `true` when Fabric is active:
 
 ```tsx
-import { Platform } from "react-native";
-
-// Returns true if Fabric is enabled
 const isNewArch = global._IS_FABRIC !== undefined;
 ```
-
-Verify from the command line if the currently running app uses the New Architecture: `bunx xcobra expo eval "_IS_FABRIC"` -> `true`
 
 ## Troubleshooting
 

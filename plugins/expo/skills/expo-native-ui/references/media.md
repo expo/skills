@@ -8,6 +8,7 @@
 - Icons: `arrow.triangle.2.circlepath` (flip), `photo` (gallery), `bolt` (flash)
 - Eagerly request camera permission
 - Lazily request media library permission
+- `GlassButton` in the example below is defined in `./visual-effects.md`
 
 ```tsx
 import React, { useRef, useState } from "react";
@@ -16,7 +17,6 @@ import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
-import { SymbolView } from "expo-symbols";
 import { colors } from "@/theme/colors";
 import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

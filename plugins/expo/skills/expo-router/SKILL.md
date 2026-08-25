@@ -15,13 +15,15 @@ Consult these resources as needed:
 
 ```
 references/
-  route-structure.md     Route conventions, dynamic routes, groups, folder organization
+  route-structure.md     Route conventions, folder organization, shared array routes
   tabs.md                NativeTabs, migration from JS tabs, iOS 26 features
   toolbar-and-headers.md Stack headers and toolbar buttons, menus, search (iOS only)
   form-sheet.md          Form sheets in expo-router: configuration, footers and background interaction.
-  search.md              Search bar with headers, useSearch hook, filtering patterns
+  search.md              Header search bar, option traps, useSearch hook, native tabs search
   zoom-transitions.md    Apple Zoom: fluid zoom transitions with Link.AppleZoom (iOS 18+)
 ```
+
+Full router API: https://docs.expo.dev/versions/latest/sdk/router/ — swap `latest` for the project's SDK. Docs URLs serve markdown with `.md` appended.
 
 ## Code Style
 
@@ -41,7 +43,7 @@ See `./references/route-structure.md` for detailed route conventions.
 ## Library Preferences
 
 - `Color` from `expo-router` for native semantic colors, not raw `PlatformColor` (type-safe, auto-adapts to light/dark). See `expo-native-ui` for the full color palette pattern.
-- In SDK 56+, never import from `@react-navigation/*` directly — use `expo-router/react-navigation` instead (covers `@react-navigation/native`, `/core`, `/elements`, `/routers`)
+- In SDK 56+, never import from `@react-navigation/*` directly — use `expo-router/react-navigation` instead (covers `@react-navigation/native`, `/core`, `/elements`, `/routers`). Migration guide and codemod: https://docs.expo.dev/router/migrate/sdk-55-to-56/
 
 ## Behavior
 
@@ -71,6 +73,8 @@ Whenever possible, include a `<Link.Preview>` to follow iOS conventions. Add con
 
 - ALWAYS use `_layout.tsx` files to define stacks
 - Use Stack from 'expo-router/stack' for native navigation stacks
+
+> Docs: https://docs.expo.dev/router/advanced/stack/ — screen options and header API.
 
 ### Page Title
 
@@ -135,6 +139,8 @@ Use link previews frequently to enhance navigation:
 
 Link preview can be used with context menus.
 
+> Docs: https://docs.expo.dev/router/reference/link-preview/ — `Link.Preview`, `Link.Trigger`, and `Link.Menu` API.
+
 ## Modal
 
 Present a screen as a modal:
@@ -162,6 +168,8 @@ Present a screen as a dynamic form sheet:
 ```
 
 - Using `contentStyle: { backgroundColor: "transparent" }` makes the background liquid glass on iOS 26+.
+
+> Docs: https://docs.expo.dev/router/advanced/modals/ — modal and form-sheet presentation, detents. See `./references/form-sheet.md` for footers and undimmed-detent semantics.
 
 ## Common route structure
 

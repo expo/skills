@@ -4,6 +4,8 @@ Always prefer NativeTabs from 'expo-router/unstable-native-tabs' for the best iO
 
 **SDK 54+. SDK 55 recommended.**
 
+> Source: https://docs.expo.dev/router/advanced/native-tabs/ — the canonical NativeTabs page (append `.md` for markdown). This reference adds what the docs do not cover: SDK 54 vs 55 API differences, migration from JS tabs, and the known issues below.
+
 ## SDK Compatibility
 
 | Aspect        | SDK 54                                                  | SDK 55+                                                     |
@@ -396,21 +398,21 @@ Configure in app.json:
 4. **Badge not visible**: Badge must be a child of Trigger, not a prop
 5. **Tab bar transparent on iOS 18 and earlier**: If the screen uses a `ScrollView` or `FlatList`, make sure it is the first opaque child of the screen component. If it needs to be wrapped in another `View`, ensure the wrapper uses `collapsable={false}`. If the screen does not use a `ScrollView` or `FlatList`, set `disableTransparentOnScrollEdge` to `true` in the `NativeTabs.Trigger` options, to make the tab bar opaque.
 6. **Scroll to top not working**: Ensure `disableScrollToTop` is not set on the active tab's Trigger and `ScrollView` is the first child of the screen component.
-7. **Header buttons flicker when navigating between tabs**: Make sure the app is wrapped in a `ThemeProvider`
+7. **Header buttons flicker when navigating between tabs**: Make sure the app is wrapped in a `ThemeProvider`. The theme is passed via the `value` prop (`theme=` will not work). On SDK 56+ import from `expo-router/react-navigation` — `@react-navigation/*` imports are no longer supported in app code; on SDK 55 and earlier import from `@react-navigation/native`.
 
 ```tsx
 import {
   ThemeProvider,
   DarkTheme,
   DefaultTheme,
-} from "@react-navigation/native";
+} from "expo-router/react-navigation";
 import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 
 export default function Layout() {
   const colorScheme = useColorScheme();
   return (
-    <ThemeProvider theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack />
     </ThemeProvider>
   );
@@ -420,12 +422,12 @@ export default function Layout() {
 If the app only uses a light or dark theme, you can directly pass `DarkTheme` or `DefaultTheme` to `ThemeProvider` without checking the color scheme.
 
 ```tsx
-import { ThemeProvider, DarkTheme } from "@react-navigation/native";
+import { ThemeProvider, DarkTheme } from "expo-router/react-navigation";
 import { Stack } from "expo-router";
 
 export default function Layout() {
   return (
-    <ThemeProvider theme={DarkTheme}>
+    <ThemeProvider value={DarkTheme}>
       <Stack />
     </ThemeProvider>
   );

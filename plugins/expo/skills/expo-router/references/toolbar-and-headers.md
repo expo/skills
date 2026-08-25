@@ -120,47 +120,15 @@ export default function InboxScreen() {
 
 ## Placement
 
-- `"left"` - Header left
-- `"right"` - Header right
-- `"bottom"` (default) - Bottom toolbar
+`placement`: `"left"` (header left), `"right"` (header right), `"bottom"` (default — bottom toolbar).
 
 ## Components
 
-### Button
+Full component and prop API: see the docs in the Reference section below.
 
 - Icon button: `<Stack.Toolbar.Button icon="star.fill" onPress={() => {}} />`
 - Text button: `<Stack.Toolbar.Button onPress={() => {}}>Done</Stack.Toolbar.Button>`
-
-**Props:** `icon`, `image`, `onPress`, `disabled`, `hidden`, `variant` (`"plain"` | `"done"` | `"prominent"`), `tintColor`
-
-### Menu
-
-Dropdown menu for grouping actions.
-
-```tsx
-<Stack.Toolbar.Menu icon="ellipsis">
-  <Stack.Toolbar.Menu inline>
-    <Stack.Toolbar.MenuAction>Sort by Recently Added</Stack.Toolbar.MenuAction>
-    <Stack.Toolbar.MenuAction isOn>
-      Sort by Date Captured
-    </Stack.Toolbar.MenuAction>
-  </Stack.Toolbar.Menu>
-  <Stack.Toolbar.Menu title="Filter">
-    <Stack.Toolbar.Menu inline>
-      <Stack.Toolbar.MenuAction isOn icon="square.grid.2x2">
-        All Items
-      </Stack.Toolbar.MenuAction>
-    </Stack.Toolbar.Menu>
-    <Stack.Toolbar.MenuAction icon="heart">Favorites</Stack.Toolbar.MenuAction>
-    <Stack.Toolbar.MenuAction icon="photo">Photos</Stack.Toolbar.MenuAction>
-    <Stack.Toolbar.MenuAction icon="video">Videos</Stack.Toolbar.MenuAction>
-  </Stack.Toolbar.Menu>
-</Stack.Toolbar.Menu>
-```
-
-**Menu Props:** All Button props plus `title`, `inline`, `palette`, `elementSize` (`"small"` | `"medium"` | `"large"`)
-
-**MenuAction Props:** `icon`, `onPress`, `isOn`, `destructive`, `disabled`, `subtitle`
+- Menus: nest `Stack.Toolbar.Menu` / `Stack.Toolbar.MenuAction` as in the Mail example above.
 
 When creating a palette with dividers, use `inline` combined with `elementSize="small"`. `palette` will not apply dividers on iOS 26.
 
@@ -173,29 +141,13 @@ When creating a palette with dividers, use `inline` combined with `elementSize="
 
 ### View
 
-Embed custom React Native components. When adding a custom view make sure that there is only a single child with **explicit width and height**.
+Embed custom React Native components. When adding a custom view make sure that there is only a single child with **explicit width and height**. A custom component works as the child as long as its root view has explicit dimensions.
 
 ```tsx
 <Stack.Toolbar.View>
   <View style={{ width: 70, height: 32, justifyContent: "center" }}>
     <Text style={{ fontSize: 12, fontWeight: 700 }}>Filter by</Text>
   </View>
-</Stack.Toolbar.View>
-```
-
-You can pass custom components to views as well:
-
-```tsx
-function CustomFilterView() {
-  return (
-    <View style={{ width: 70, height: 32, justifyContent: "center" }}>
-      <Text style={{ fontSize: 12, fontWeight: 700 }}>Filter by</Text>
-    </View>
-  );
-}
-...
-<Stack.Toolbar.View>
-  <CustomFilterView />
 </Stack.Toolbar.View>
 ```
 
@@ -281,4 +233,4 @@ function Page() {
 
 ## Reference
 
-Docs https://docs.expo.dev/versions/unversioned/sdk/router - read to see the full API.
+> Source: https://docs.expo.dev/router/advanced/stack-toolbar/ — the canonical Stack Toolbar guide (append `.md` for markdown). Full component and prop API: https://docs.expo.dev/versions/latest/sdk/router/ — swap `latest` for the project's SDK. This reference adds only what the docs do not cover: the composition rules and will-not-work patterns above.
