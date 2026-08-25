@@ -103,114 +103,94 @@ npx --yes eas-cli@latest simulator:stop          # omit --id → stops the doten
 
 ---
 
-## Mode C — Local dev build + tunnel (live edits via Fast Refresh)
+## Mode C — Dev build + tunnel (live edits via Fast Refresh)
 
-This is the agentic edit-and-see loop: a **dev (Debug) build** loads JS from your local **Metro** over **tunnel v2**, so code edits appear on the remote sim via Fast Refresh. It has the most steps — each is necessary.
+The agentic edit-and-see loop: a **dev (Debug) build** loads JS from your **Metro** over a tunnel, so edits appear on the remote sim via Fast Refresh. Two ways to connect the dev client to Metro:
 
-⚠️ **Don't install a release build as a "quick interim" and screenshot it** — that interim shows stale, build-time code (the "outdated screenshot" trap). Go straight to the dev build + Metro; screenshot only after the dev client is connected to Metro.
+- **Method 1 (recommended, eas-cli ≥ 22.4.0):** launch at session start — `simulator:start` installs the build, applies launch-args, and opens the Metro URL in one command, and the "Open in?" dialog is auto-handled. Needs a **remote** build source (`--build-id`, `--application-archive-url`, or `--expo-go`); a local `.app` can't be passed here.
+- **Method 2 (fallback):** drive the connect with the controller — for a **local `.app`** build, or eas-cli < 22.4.0.
 
-**No local Mac toolchain?** (the common cloud/Linux case) Build the dev client on **EAS** instead of step 1 below. ⚠️ Same order-matters rule as Mode B: build first, start the session after you have the artifact URL.
+⚠️ **Don't install a release build as a "quick interim" and screenshot it** — it shows stale, build-time code. Use a dev build + Metro; screenshot only after the dev client is connected.
+
+### Get a dev-client build (either method needs one)
+
+- **Local (Mac):** `npx expo install expo-dev-client`; `npx expo prebuild --platform ios --clean` (set `ios.bundleIdentifier` first); `( cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install )`; then `xcodebuild -workspace ios/<App>.xcworkspace -scheme <App> -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-debug build` → `ios/build-debug/Build/Products/Debug-iphonesimulator/<App>.app`. A local `.app` → **Method 2 only**.
+- **EAS (no Mac, or to use Method 1):** ensure a profile with `developmentClient: true` + `ios.simulator: true`, then `npx --yes eas-cli@latest build --platform ios --profile <dev-sim> --non-interactive`. Note the **build id** (Method 1's `--build-id`) or the artifact URL. Reuse a fingerprint-matched build to skip the ~15-20 min.
+
+### Method 1 — launch at session start (recommended)
+
+⚠️ **Metro FIRST, then `simulator:start`** — the runner opens `--open-url` during startup, with no retry.
 
 ```bash
-# ── Non-Mac path: replace step 1 with these ──────────────────────────────────
+# 1. Start Metro with a tunnel on your own free port (tunnel-backend details at the end of this mode).
+EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port <your-free-port>   # background it durably
+#    Capture the manifest host. Headless runs won't print it — read ngrok's API (curl -s 127.0.0.1:4040/api/tunnels)
+#    or the manifest (curl -s -H "expo-platform: ios" localhost:<port>/ → launchAsset.url).
 
-# Find or create a dev-client simulator build profile in eas.json.
-#    Read eas.json if it exists and look for a build profile with developmentClient: true + ios.simulator: true.
-#    If one exists, note its name and skip to the build step.
-#    If not, add one named "dev-sim" — use node, python3, jq, or a direct JSON edit, whichever
-#    is available. Preserve all other profiles. Minimum: { "developmentClient": true, "ios": { "simulator": true } }
+# 2. Start the session AND install+launch+open the app in one command (--launch-arg = one token per flag):
+#    Dev client: --build-id <id>, --open-url <scheme>://expo-development-client/?url=https://<manifest-host>
+#                (scheme = app.json `scheme`, NOT the slug; URL-encode the inner url if it has a path/query)
+#    Expo Go:    --expo-go instead of --build-id, and --open-url exp://<manifest-host>  (no port; https opens Safari)
+npx --yes eas-cli@latest simulator:start --platform ios --build-id <BUILD_ID> \
+  --launch-arg "-EXDevMenuIsOnboardingFinished" --launch-arg "1" \
+  --launch-arg "-EXDevMenuShowsAtLaunch" --launch-arg "0" \
+  --launch-arg "-EXDevMenuShowFloatingActionButton" --launch-arg "0" \
+  --open-url "<scheme>://expo-development-client/?url=https://<manifest-host>" \
+  --non-interactive --name "Coin flip live edits"
+#    The app installs, launches with the launch-args (onboarding/dev-menu/gear suppressed), and opens the URL.
+#    The "Open in '<app>'?" dialog is auto-bypassed (the CLI writes the scheme approval) and the approval
+#    persists session-wide — so NO `alert accept` is needed, here or for later controller opens.
+#    `start` prints NOTHING about the install/launch — confirm from Metro's `iOS Bundled …` line.
 
-# Build (~15-20 min). Prints an artifact URL when done.
-npx --yes eas-cli@latest build --platform ios --profile dev-sim --non-interactive
-# → https://expo.dev/artifacts/eas/<hash>.tar.gz
+# 3. To screenshot/drive, ATTACH the controller once — the CLI launch makes NO agent-device session, so a bare
+#    `screenshot` fails `SESSION_NOT_FOUND`. `open --foreground` attaches without relaunching:
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> --foreground --platform ios
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./live.png
+#    VERIFY it's the REMOTE sim, not a silent local-sim fallback (agent-device falls back to a LOCAL sim with no
+#    error when the dotenv lacks remote config → believable but WRONG screenshots). Decisive tells: `simulator:get
+#    --json` returns the id `start` printed, AND the attach's "Session state:" path is under /Users/expo/ (remote
+#    VM), not /Users/gabe/ (your Mac). The `sessions/` vs `remote-diagnostics/` directory name is NOT reliable.
 
-# Start a session AFTER the build finishes (don't start early — idle sessions time out).
-# Then in step 3 below, use install-from-source (VM downloads the artifact) instead of local install:
-ART="https://expo.dev/artifacts/eas/<hash>.tar.gz"
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest install-from-source "$ART" --platform ios
-# Continue from step 3a (open the dev client, enter Metro URL) onward — identical to the Mac path.
+# 4. Fast Refresh: edit a source file → it hits the remote sim with no reload. Screenshot again to confirm.
+# 5. Stop: npx --yes eas-cli@latest simulator:stop   # then kill the Metro process
 ```
 
+### Method 2 — drive the connect with the controller (fallback)
+
+For a **local `.app`** (can't be passed to `--build-id`) or **eas-cli < 22.4.0**. Start a plain session (see "Starting a session"), install the build, then deep-link the dev client:
+
 ```bash
-# 1. Add expo-dev-client and build a Debug (dev-client) simulator .app
-npx expo install expo-dev-client
-npx expo prebuild --platform ios --clean   # set ios.bundleIdentifier first (as in Mode A) to avoid prompts
-( cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install )
-LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 xcodebuild \
-  -workspace ios/<App>.xcworkspace -scheme <App> \
-  -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-debug build
-DEVAPP=ios/build-debug/Build/Products/Debug-iphonesimulator/<App>.app
+# install: a local .app uploads over the tunnel; an EAS artifact uses install-from-source (VM downloads it):
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest install <bundleId> "$DEVAPP" --platform ios
+#   (EAS artifact instead:  install-from-source "https://expo.dev/artifacts/eas/<hash>.tar.gz" --platform ios)
 
-# 2. Start Metro with a tunnel so the remote sim can reach it. Start on your OWN free port — each run gets
-#    its own tunnel URL, so never fight for or kill :8081 (that's #133's rule, and it holds). BOTH tunnel
-#    backends accept ANY --port:
-#    • ws-tunnel v2 (account-signed): EXPO_UNSTABLE_TUNNEL_V2=1 — mints a signed URL for your EAS account,
-#      returns an on.expo.app host, and is the path for robot/EXPO_TOKEN/cloud agents (plain ngrok is
-#      blocked for them). Needs to be logged in / an EAS-linked project; if the signed URL can't be made
-#      the CLI tells you to unset the flag and use ngrok.
-#    • ngrok (plain `--tunnel`, no flag): returns an <host>.exp.direct host; blocked for robot/EXPO_TOKEN users.
-#    The ONLY 8081 lock is the LEGACY ws-tunnel path, which you hit WITHOUT the v2 account URL — an older CLI
-#    where the flag is a no-op, or EXPO_FORCE_WEBCONTAINER_ENV=1. Do NOT set EXPO_FORCE_WEBCONTAINER_ENV to
-#    "fix" a port: it forces that legacy path and locks you to 8081 (the opposite of what you want).
-#    A bare `&` won't survive across agent shell calls — background it durably.
-EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port <your-free-port>   # any port; drop the flag for the ngrok path
-#    → capture the https manifest URL from stdout (v2: https://<host>.on.expo.app; ngrok: https://<host>.exp.direct).
-#      Headless `-p` runs may not print it — read the Metro log, or ngrok's API: curl -s 127.0.0.1:4040/api/tunnels.
-#      On an older CLI (e.g. expo 56) the v2 flag no-ops and you simply get the ngrok tunnel on your chosen
-#      port (verified: expo 56.0.3 → ngrok on :8083). You only hit the 8081 legacy lock if webcontainer is
-#      detected or EXPO_FORCE_WEBCONTAINER_ENV is set.
-
-# 3. Start a session, install the dev build, then connect it — one `open` call.
-#    FAST path: `open <bundleId> <devClientURL>` deep-links straight into the bundle and skips the
-#    launcher UI. ASSEMBLE <devClientURL> from the app's URL SCHEME — app.json `scheme` (e.g. "coinflip"),
-#    NOT the slug; verify via `npx expo config --json` (.scheme) or Info.plist CFBundleURLSchemes:
-#      <scheme>://expo-development-client/?url=<URL-encoded manifest https URL>
-#      e.g. coinflip://expo-development-client/?url=https%3A%2F%2Fabc123.on.expo.app
-#    URL-encode the manifest URL — dev-client's constructDevClientUrl uses encodeURIComponent; a bare host
-#    works unencoded (as in our testing), but encode it if it carries a path or query.
-#    (Only an app with NO custom scheme uses the auto form exp+<slug>://.) Using the slug when a custom
-#    scheme exists opens the launcher instead of the app, leaving onboarding to tap away. The url MUST be
-#    https. The --launch-args pre-dismiss onboarding + the dev menu — nothing to tap away after.
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest install dev.example.app "$DEVAPP" --platform ios
-
-#    a) open straight into the connected dev client — onboarding, dev menu, and floating gear all suppressed:
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest open dev.example.app "<devClientURL>" --platform ios --relaunch \
+# connect: `open <bundleId> <devClientURL>` deep-links into the bundle, skipping the launcher UI. Assemble
+# <devClientURL> from the app's SCHEME (app.json `scheme`, NOT the slug): <scheme>://expo-development-client/?url=https://<manifest-host>
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> "<devClientURL>" --platform ios --relaunch \
   --launch-args "-EXDevMenuIsOnboardingFinished" --launch-args "1" \
   --launch-args "-EXDevMenuShowsAtLaunch" --launch-args "0" \
   --launch-args "-EXDevMenuShowFloatingActionButton" --launch-args "0"
-
-#    b) a deep-link open can raise the system "Open in '<app>'?" dialog — accept it (waits up to 2.5s, no-op if absent):
+# a controller open on a BARE session (no Method-1 launch to pre-approve the scheme) can raise the
+# "Open in '<app>'?" dialog — accept it (no-op if absent; not needed after a Method-1 launch):
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert accept 2500 --platform ios
-
-#    c) the first bundle build+transfer over the tunnel is ~40-60s; wait, then screenshot to confirm the APP is up.
-#       If it shows the launcher instead, the deep link didn't take — use the manual fallback below.
-
-#    FALLBACK (only if the open lands on the launcher, not the app): enter the URL by hand. The labels
-#    ("Enter URL manually"/"Connect"/"Reload"/"Go back") are expo-dev-client/expo-router UI, stable across
-#    Expo apps but they can shift across versions — if one doesn't match, `snapshot -i` and press the current ref.
-#      open dev.example.app --platform ios
-#      press 'label="Enter URL manually"'  →  snapshot -i  →  fill @<field> "<manifest URL>"  →  press 'label="Connect"'
-#      then press 'label="Reload"' (bundle), and press 'label="Go back"' if expo-router shows "Unmatched Route".
-
-#    ── Dev-menu launch flags (the --launch-args above; iOS UserDefaults `-Key Value`, verified in
-#       expo/expo packages/expo-dev-menu). By default the onboarding popup, auto-opened dev menu, and
-#       floating gear all show and clutter screenshots — these three suppress them:
-#         -EXDevMenuIsOnboardingFinished 1        skip the first-run onboarding popup (dev client AND Expo Go)
-#         -EXDevMenuShowsAtLaunch 0               don't auto-open the dev menu at launch (dev client)
-#         -EXDevMenuShowFloatingActionButton 0    hide the floating gear (defaults visible on both targets)
-#       Expo Go takes the same flags — launch the installed Expo Go shell instead of a build:
-#         open host.exp.Exponent "<exp:// or exp+... URL>" --platform ios --relaunch \
-#           --launch-args "-EXDevMenuIsOnboardingFinished" --launch-args "1" \
-#           --launch-args "-EXDevMenuShowFloatingActionButton" --launch-args "0"
-
-# 4. Edit a source file locally → Fast Refresh pushes it to the remote sim with NO reload. Screenshot to confirm.
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./live.png
-
-# 5. Stop the session AND Metro
-npx --yes eas-cli@latest simulator:stop          # omit --id → stops the dotenv session
-# kill the `expo start --tunnel` process
+# then screenshot; if it shows the launcher not the app, the deep link didn't take → manual fallback:
+#   press 'label="Enter URL manually"' → snapshot -i → fill @<field> "<manifest URL>" → press 'label="Connect"'
+#   → press 'label="Reload"'; press 'label="Go back"' if expo-router shows "Unmatched Route".
 ```
 
-Notes:
-- `open <bundleId> <devClientURL>` is the connect step: the deep link points the dev client at the remote Metro directly, so you skip the launcher (whose auto-discovery only scans the LAN). Manual "Enter URL manually" entry is the fallback for when the deep link doesn't land.
-- If BOTH the direct open and the manual fallback fail, don't switch mechanisms or reconnect in a loop — reset to baseline and redo Mode C once (SKILL.md principle 1).
+### Dev-menu launch flags (both methods)
+
+The launch-args are iOS UserDefaults (`-Key Value`), verified in expo/expo `packages/expo-dev-menu`. By default the onboarding popup, auto-opened dev menu, and floating gear all show and clutter screenshots; these suppress them:
+- `-EXDevMenuIsOnboardingFinished 1` — skip the first-run onboarding popup (dev client **and** Expo Go)
+- `-EXDevMenuShowsAtLaunch 0` — don't auto-open the dev menu at launch (dev client)
+- `-EXDevMenuShowFloatingActionButton 0` — hide the floating gear (defaults visible on both)
+
+Method 1 passes each as two flags: `--launch-arg "<key>" --launch-arg "<value>"`. Method 2 passes them as `--launch-args`.
+
+### Metro tunnel backends (both methods)
+
+Start Metro on your OWN free port — each run gets its own tunnel URL, so never fight for or kill :8081 (#133's rule). BOTH backends accept ANY `--port`:
+- **ws-tunnel v2 (account-signed):** `EXPO_UNSTABLE_TUNNEL_V2=1` — signed URL for your EAS account, `on.expo.app` host, and the path for robot/EXPO_TOKEN/cloud agents (plain ngrok is blocked for them). Needs login / an EAS-linked project; if the signed URL fails, the CLI says to unset the flag and use ngrok.
+- **ngrok (plain `--tunnel`, no flag):** `<host>.exp.direct` host; blocked for robot/EXPO_TOKEN users.
+
+The ONLY 8081 lock is the LEGACY ws-tunnel path — hit WITHOUT the v2 account URL (an older CLI where the flag no-ops, or `EXPO_FORCE_WEBCONTAINER_ENV=1`). Do NOT set `EXPO_FORCE_WEBCONTAINER_ENV` to "fix" a port — it forces that legacy path and locks you to 8081. On an older CLI (e.g. expo 56) the v2 flag no-ops and you get ngrok on your chosen port (verified: expo 56.0.3 → ngrok on :8083).
