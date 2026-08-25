@@ -35,23 +35,30 @@ If you need the id explicitly, it's `EAS_SIMULATOR_SESSION_ID` in `.env.eas-simu
 
 ## Targeting a device — iPad, or several at once
 
-A session is **not** one iPhone. An iOS session exposes several Apple simulators — multiple iPhones and iPads. Only **one iPhone is booted** at start; the rest boot on demand. List them:
+**Boot a specific device at session start** with `eas simulator:start --device "<name|UDID>"` (eas-cli ≥ 22.4.0) — this is how you run on an iPad instead of the default iPhone:
+
+```bash
+npx --yes eas-cli@latest simulator:start --platform ios --device "iPad Pro 13-inch (M5)" \
+  --non-interactive --name "iPad run"
+# then install / launch / screenshot as usual — the iPad renders larger (e.g. 1032x1376).
+```
+
+The value must be a device the **remote runner** offers (NOT your local Xcode set), by name **or** UDID. List them from a live session:
 
 ```bash
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest devices --json
 ```
 
-Target any of them with agent-device's global `--device "<name>"` flag on `open` (and other verbs). **Use the device NAME, not its udid** — in a remote session the udid form returns `DEVICE_NOT_FOUND`; the name from `devices` resolves:
+Available iOS devices today: iPhone 17 / 17 Pro / 17 Pro Max / 17e / Air, and iPad (A16), iPad Air 11"/13" (M4), iPad mini (A17 Pro), iPad Pro 11"/13" (M5).
+
+**Switch devices mid-session:** a session exposes ~16 sims but boots only one at start. Pass the **controller's** global `--device "<name>"` on `open` (and other verbs) to boot + target another; it stays booted alongside the first, so pass `--device` on each verb to say which it hits.
 
 ```bash
-# drive an iPad instead of the default iPhone (add your Mode C --launch-args as usual)
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest open dev.example.app "<devClientURL>" \
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> "<devClientURL>" \
   --platform ios --device "iPad Pro 13-inch (M5)" --relaunch
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./ipad.png   # iPad renders larger, e.g. 1032x1376
 ```
 
-- `--platform ios` covers **both** iPhone and iPad (iPadOS) — add `--device` to disambiguate.
-- **Several at once:** `open`/`boot` a second device by name and it stays booted alongside the first; pass `--device "<name>"` on each verb to say which device it hits.
+- ⚠️ The **controller** `--device` resolves by **NAME only** — a udid returns `DEVICE_NOT_FOUND`. (The start-time CLI `--device` above takes either.)
 - `devices` reports each device's name, kind, and booted state, but **not** its iOS version.
 
 ---
