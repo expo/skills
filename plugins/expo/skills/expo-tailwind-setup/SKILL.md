@@ -315,7 +315,12 @@ Three-layer pattern in a dedicated CSS file (e.g. `src/css/sf.css`): `light-dark
 }
 ```
 
-Extend the palette (greens, reds, gray scale, secondary text/backgrounds) the same way — take `platformColor()` names and light/dark fallback values from Apple's HIG color reference: https://developer.apple.com/design/human-interface-guidelines/color (the HIG lists RGB values for system colors and grays; semantic colors like `secondaryLabel` appear name-only — take their fallback values from Xcode's color picker)
+Extend the palette (greens, reds, gray scale, secondary text/backgrounds) the same way — take `platformColor()` names and light/dark fallback values from Apple's HIG color reference: https://developer.apple.com/design/human-interface-guidelines/color. The HIG lists RGB values only for system colors and grays; semantic colors appear name-only, so their fallbacks are recorded here:
+
+```css
+--sf-text-2: light-dark(rgb(60 60 67 / 0.6), rgb(235 235 245 / 0.6)); /* secondaryLabel */
+--sf-bg-2: light-dark(rgb(242 242 247), rgb(28 28 30)); /* secondarySystemBackground */
+```
 
 Then use in components:
 

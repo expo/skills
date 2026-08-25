@@ -23,6 +23,7 @@ Option traps — everything else is enumerated in the Stack docs above:
 - iOS requires `contentInsetAdjustmentBehavior="automatic"` on the screen's `ScrollView`/`FlatList`; if the screen has no scroll view, set `headerTransparent: false`.
 - `hideWhenScrolling` defaults to `true` on iOS — the search bar stays hidden until the user pulls down. Set it to `false` to always show the bar.
 - `cancelButtonText` is deprecated starting iOS 26.
+- `onFocus` exists alongside `onBlur` (react-native-screens `SearchBarProps`) even though the Stack docs page omits it.
 
 ## useSearch Hook
 
