@@ -28,7 +28,7 @@ EAS-specific notes:
 
 `npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).
 
-**Invoking argent — run its tools directly.** Drive argent by running its tools directly — `argent run <tool> --udid <udid> …` (with `argent link` or the env-var config below) — where flags work (the examples here use this path); or via its MCP server, which passes structured params. Heads-up (flagged elsewhere, not reproduced in our own runs): routing an `argent run` call through `npx --yes eas-cli@latest simulator:exec` can **strip the `--flag` arguments**, so the tool runs with no options and fails confusingly. If you must go through `simulator:exec`, wrap it in `sh -c` and pass one `--args` JSON blob instead of flags: `npx --yes eas-cli@latest simulator:exec sh -c 'argent run <tool> --args "{\"udid\":\"<udid>\", …}"'`. argent's gesture tools take **normalized 0.0–1.0** coordinates, not pixels — check its help for the exact input shape.
+**Invoking argent — run its tools directly.** Drive argent with `npx --yes eas-cli@latest simulator:exec argent run <tool> --udid <udid> …`. `simulator:exec` is `strict = false` and hands the command its args verbatim (it `spawnAsync(command, args)` with the session env loaded), so argent's `--flags` pass straight through — no `sh -c` wrapper and no `--args` JSON blob needed. (You can also drive argent via its MCP server, which passes structured params.) argent's gesture tools take **normalized 0.0–1.0** coordinates, not pixels — check its help for the exact input shape.
 
 **Installing apps in an argent session.** `--type argent` provisions only an argent daemon on the VM — there is no agent-device daemon, so agent-device install verbs don't apply. Install a local build with argent's own `reinstall-app` (tar-upload):
 
@@ -46,13 +46,13 @@ To drive the connect yourself on a bare argent session (no launch flags), argent
 
 ```bash
 # load the dev client from Metro via its deep link
-npx --yes eas-cli@latest simulator:exec sh -c 'argent run open-url --args "{\"udid\":\"<udid>\",\"url\":\"<scheme>://expo-development-client/?url=<metro-url>\"}"'
+npx --yes eas-cli@latest simulator:exec argent run open-url --udid <udid> --url "<scheme>://expo-development-client/?url=<metro-url>"
 # open-url raises the "Open in '<app>'?" system dialog — argent has NO alert-accept, so screenshot to
 # locate "Open", then coordinate-tap it (its describe may not see the dialog — see "System dialogs" below)
-npx --yes eas-cli@latest simulator:exec sh -c 'argent run screenshot --args "{\"udid\":\"<udid>\"}"'
-npx --yes eas-cli@latest simulator:exec sh -c 'argent run gesture-tap --args "{\"udid\":\"<udid>\",\"x\":<0..1>,\"y\":<0..1>}"'
+npx --yes eas-cli@latest simulator:exec argent run screenshot --udid <udid>
+npx --yes eas-cli@latest simulator:exec argent run gesture-tap --udid <udid> --x <0..1> --y <0..1>
 # then attach to Metro's debugger / reload the bundle
-npx --yes eas-cli@latest simulator:exec sh -c 'argent run debugger-connect --args "{\"udid\":\"<udid>\"}"'
+npx --yes eas-cli@latest simulator:exec argent run debugger-connect --udid <udid>
 ```
 
 Where argent is weaker than agent-device Mode C — so it's **capable, not as fast**:
