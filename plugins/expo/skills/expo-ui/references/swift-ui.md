@@ -63,6 +63,25 @@ import { Pressable } from "react-native";
 </Host>;
 ```
 
+### Keep text input native to the SwiftUI tree
+
+Prefer native SwiftUI controls inside a SwiftUI tree when Expo UI provides them. In particular,
+**do not put React Native's `TextInput` inside `RNHostView`**. On SDK 57.0.13, that combination can
+make labels on subsequent SwiftUI `Picker` and `Button` siblings invisible even though their layout
+and tap targets remain intact. Use `TextField` and `useNativeState` from `@expo/ui/swift-ui` instead:
+
+```tsx
+import { TextField, useNativeState } from '@expo/ui/swift-ui';
+
+function NameField() {
+  const text = useNativeState('');
+  return <TextField text={text} placeholder="Name" />;
+}
+```
+
+For cross-platform input, use the universal `TextInput` from `@expo/ui`. See the
+[SwiftUI TextField documentation](https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/textfield/).
+
 - If a required modifier or View is missing in Expo UI, it can be extended via a local Expo module. See: https://docs.expo.dev/guides/expo-ui-swift-ui/extending/index.md. Confirm with the user before extending.
 
 ## useNativeState
