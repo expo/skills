@@ -81,7 +81,9 @@ These steps only apply when `ios/` and/or `android/` directories exist in the pr
 - If using Expo SDK 54 or later, ensure react-native-worklets is installed — this is required for react-native-reanimated to work.
 - Enable React Compiler in SDK 54+ by adding `"experiments": { "reactCompiler": true }` to app.json — it's stable and recommended
 - Delete sdkVersion from `app.json` to let Expo manage it automatically
-- Remove implicit packages from `package.json`: `@babel/core`, `babel-preset-expo`, `expo-constants`.
+- Review formerly implicit packages such as `@babel/core`, `babel-preset-expo`, and `expo-constants` individually instead of removing them wholesale. Keep any package that an installed dependency declares as a required peer.
+- Keep `expo-constants` as a direct dependency whenever `expo-router` is installed. Expo Router imports it and declares it as a required peer; relying on a transitive copy can break native autolinking outside Expo Go.
+- After removing any dependency, immediately run `npx expo-doctor` and restore anything it reports as a missing required peer.
 - If the babel.config.js only contains 'babel-preset-expo', delete the file
 - If the metro.config.js only contains expo defaults, delete the file
 
