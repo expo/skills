@@ -1,72 +1,34 @@
 ---
 name: expo-tailwind-setup
 description: Framework (OSS). Set up Tailwind CSS v4 in Expo with react-native-css and NativeWind v5 for universal styling
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
-# Tailwind CSS Setup for Expo with react-native-css
+# Tailwind CSS v4 and Nativewind v5 for Expo
 
-This guide covers setting up Tailwind CSS v4 in Expo using react-native-css and NativeWind v5 for universal styling across iOS, Android, and Web.
+Use this skill to install, migrate, or debug Nativewind v5 in an Expo app.
 
-## Overview
+Nativewind v5 is currently a **pre-release that its maintainers do not recommend for production**. If the user did not explicitly request v5 and production stability matters, explain that status before proceeding and offer the [stable v4 setup](https://www.nativewind.dev/docs/getting-started/installation) instead.
 
-This setup uses:
+Nativewind changes independently from Expo. Treat the [official v5 installation guide](https://www.nativewind.dev/v5/getting-started/installation) and the installed package types as the source of truth. If these instructions disagree with current upstream docs, follow upstream and submit feedback on this skill.
 
-- **Tailwind CSS v4** - Modern CSS-first configuration
-- **react-native-css** - CSS runtime for React Native
-- **NativeWind v5** - Metro transformer for Tailwind in React Native
-- **@tailwindcss/postcss** - PostCSS plugin for Tailwind v4
+## Install
 
-## Installation
+Use the moving dist-tags documented upstream instead of pinning a preview or nightly build:
 
 ```bash
-# Install dependencies
-npx expo install tailwindcss@^4 nativewind@5.0.0-preview.2 react-native-css@0.0.0-nightly.5ce6396 @tailwindcss/postcss tailwind-merge clsx
+npx expo install nativewind@preview react-native-css@latest react-native-reanimated react-native-safe-area-context
+npx expo install --dev tailwindcss @tailwindcss/postcss postcss
 ```
 
-Add resolutions for lightningcss compatibility:
+Do not use `--force` or `--legacy-peer-deps` to hide a conflict. Remove stale explicit pins from `package.json`, then let `expo install` choose Expo-compatible peer versions. `autoprefixer` is unnecessary because Expo uses Lightning CSS.
 
-```json
-// package.json
-{
-  "resolutions": {
-    "lightningcss": "1.30.1"
-  }
-}
-```
-
-- autoprefixer is not needed in Expo because of lightningcss
-- postcss is included in expo by default
-
-## Configuration Files
-
-### Metro Config
-
-Create or update `metro.config.js`:
-
-```js
-// metro.config.js
-const { getDefaultConfig } = require("expo/metro-config");
-const { withNativewind } = require("nativewind/metro");
-
-/** @type {import('expo/metro-config').MetroConfig} */
-const config = getDefaultConfig(__dirname);
-
-module.exports = withNativewind(config, {
-  // inline variables break PlatformColor in CSS variables
-  inlineVariables: false,
-  // We add className support manually
-  globalClassNamePolyfill: false,
-});
-```
-
-### PostCSS Config
+## Configure
 
 Create `postcss.config.mjs`:
 
 ```js
-// postcss.config.mjs
 export default {
   plugins: {
     "@tailwindcss/postcss": {},
@@ -74,410 +36,139 @@ export default {
 };
 ```
 
-### Global CSS
-
-Create `src/global.css`:
+Create `global.css`:
 
 ```css
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css";
 
-/* Platform-specific font families */
-@media android {
-  :root {
-    --font-mono: monospace;
-    --font-rounded: normal;
-    --font-serif: serif;
-    --font-sans: normal;
-  }
-}
-
-@media ios {
-  :root {
-    --font-mono: ui-monospace;
-    --font-serif: ui-serif;
-    --font-sans: system-ui;
-    --font-rounded: ui-rounded;
-  }
-}
+@import "nativewind/theme";
 ```
 
-## IMPORTANT: No Babel Config Needed
-
-With Tailwind v4 and NativeWind v5, you do NOT need a babel.config.js for Tailwind. Remove any NativeWind babel presets if present:
+Create or update `metro.config.js`:
 
 ```js
-// DELETE babel.config.js if it only contains NativeWind config
-// The following is NO LONGER needed:
-// module.exports = function (api) {
-//   api.cache(true);
-//   return {
-//     presets: [
-//       ["babel-preset-expo", { jsxImportSource: "nativewind" }],
-//       "nativewind/babel",
-//     ],
-//   };
-// };
+const { getDefaultConfig } = require("expo/metro-config");
+const { withNativewind } = require("nativewind/metro");
+
+/** @type {import("expo/metro-config").MetroConfig} */
+const config = getDefaultConfig(__dirname);
+
+module.exports = withNativewind(config);
 ```
 
-## CSS Component Wrappers
+The default `globalClassNamePolyfill: true` rewrites React Native imports so built-in components accept `className`. Do not disable it or add hand-written wrappers for standard `View`, `Text`, `Pressable`, `ScrollView`, or `TextInput` components in a normal setup.
 
-Since react-native-css requires explicit CSS element wrapping, create reusable components:
+Nativewind v5 and Tailwind CSS v4 do not require a Nativewind Babel preset. Remove a legacy `nativewind/babel` preset or `jsxImportSource: "nativewind"`; keep `babel.config.js` only if another package needs it.
 
-### Main Components (`src/tw/index.tsx`)
+## Pin Lightning CSS for builds
 
-```tsx
-import {
-  useCssElement,
-  useNativeVariable as useFunctionalVariable,
-} from "react-native-css";
+Nativewind's v5 guide currently pins `lightningcss` to `1.30.1` to avoid stylesheet deserialization errors. Use the syntax for the project's package manager.
 
-import { Link as RouterLink } from "expo-router";
-import Animated from "react-native-reanimated";
-import React from "react";
-import {
-  View as RNView,
-  Text as RNText,
-  Pressable as RNPressable,
-  ScrollView as RNScrollView,
-  TouchableHighlight as RNTouchableHighlight,
-  TextInput as RNTextInput,
-  StyleSheet,
-} from "react-native";
+For npm, use `overrides` in `package.json`:
 
-// CSS-enabled Link
-export const Link = (
-  props: React.ComponentProps<typeof RouterLink> & { className?: string }
-) => {
-  return useCssElement(RouterLink, props, { className: "style" });
-};
-
-Link.Trigger = RouterLink.Trigger;
-Link.Menu = RouterLink.Menu;
-Link.MenuAction = RouterLink.MenuAction;
-Link.Preview = RouterLink.Preview;
-
-// CSS Variable hook
-export const useCSSVariable =
-  process.env.EXPO_OS !== "web"
-    ? useFunctionalVariable
-    : (variable: string) => `var(${variable})`;
-
-// View
-export type ViewProps = React.ComponentProps<typeof RNView> & {
-  className?: string;
-};
-
-export const View = (props: ViewProps) => {
-  return useCssElement(RNView, props, { className: "style" });
-};
-View.displayName = "CSS(View)";
-
-// Text
-export const Text = (
-  props: React.ComponentProps<typeof RNText> & { className?: string }
-) => {
-  return useCssElement(RNText, props, { className: "style" });
-};
-Text.displayName = "CSS(Text)";
-
-// ScrollView
-export const ScrollView = (
-  props: React.ComponentProps<typeof RNScrollView> & {
-    className?: string;
-    contentContainerClassName?: string;
+```json
+{
+  "overrides": {
+    "lightningcss": "1.30.1"
   }
-) => {
-  return useCssElement(RNScrollView, props, {
-    className: "style",
-    contentContainerClassName: "contentContainerStyle",
-  });
-};
-ScrollView.displayName = "CSS(ScrollView)";
+}
+```
 
-// Pressable
-export const Pressable = (
-  props: React.ComponentProps<typeof RNPressable> & { className?: string }
-) => {
-  return useCssElement(RNPressable, props, { className: "style" });
-};
-Pressable.displayName = "CSS(Pressable)";
+For Yarn, use `resolutions` in `package.json`:
 
-// TextInput
-export const TextInput = (
-  props: React.ComponentProps<typeof RNTextInput> & { className?: string }
-) => {
-  return useCssElement(RNTextInput, props, { className: "style" });
-};
-TextInput.displayName = "CSS(TextInput)";
-
-// AnimatedScrollView
-export const AnimatedScrollView = (
-  props: React.ComponentProps<typeof Animated.ScrollView> & {
-    className?: string;
-    contentClassName?: string;
-    contentContainerClassName?: string;
+```json
+{
+  "resolutions": {
+    "lightningcss": "1.30.1"
   }
-) => {
-  return useCssElement(Animated.ScrollView, props, {
-    className: "style",
-    contentClassName: "contentContainerStyle",
-    contentContainerClassName: "contentContainerStyle",
-  });
-};
-
-// TouchableHighlight with underlayColor extraction
-function XXTouchableHighlight(
-  props: React.ComponentProps<typeof RNTouchableHighlight>
-) {
-  const { underlayColor, ...style } = StyleSheet.flatten(props.style) || {};
-  return (
-    <RNTouchableHighlight
-      underlayColor={underlayColor}
-      {...props}
-      style={style}
-    />
-  );
 }
-
-export const TouchableHighlight = (
-  props: React.ComponentProps<typeof RNTouchableHighlight>
-) => {
-  return useCssElement(XXTouchableHighlight, props, { className: "style" });
-};
-TouchableHighlight.displayName = "CSS(TouchableHighlight)";
 ```
 
-### Image Component (`src/tw/image.tsx`)
+For pnpm 11, use the workspace-level key in `pnpm-workspace.yaml`:
+
+```yaml
+overrides:
+  lightningcss: 1.30.1
+```
+
+For Bun or a later package-manager version, select that package manager's tab in the official installation guide rather than guessing its override syntax.
+
+## Import the stylesheet
+
+Import `global.css` from the file that owns the top-most app component. For Expo Router, that is normally the root layout:
 
 ```tsx
-import { useCssElement } from "react-native-css";
-import React from "react";
-import { StyleSheet } from "react-native";
-import Animated from "react-native-reanimated";
-import { Image as RNImage } from "expo-image";
+// app/_layout.tsx
+import "../global.css";
+import { Stack } from "expo-router";
 
-const AnimatedExpoImage = Animated.createAnimatedComponent(RNImage);
-
-export type ImageProps = React.ComponentProps<typeof Image>;
-
-function CSSImage(props: React.ComponentProps<typeof AnimatedExpoImage>) {
-  // @ts-expect-error: Remap objectFit style to contentFit property
-  const { objectFit, objectPosition, ...style } =
-    StyleSheet.flatten(props.style) || {};
-
-  return (
-    <AnimatedExpoImage
-      contentFit={objectFit}
-      contentPosition={objectPosition}
-      {...props}
-      source={
-        typeof props.source === "string" ? { uri: props.source } : props.source
-      }
-      // @ts-expect-error: Style is remapped above
-      style={style}
-    />
-  );
+export default function RootLayout() {
+  return <Stack />;
 }
-
-export const Image = (
-  props: React.ComponentProps<typeof CSSImage> & { className?: string }
-) => {
-  return useCssElement(CSSImage, props, { className: "style" });
-};
-
-Image.displayName = "CSS(Image)";
 ```
 
-### Animated Components (`src/tw/animated.tsx`)
+Adjust the relative path to the actual stylesheet. Do not import it in the file that calls `AppRegistry.registerComponent`, because that breaks Fast Refresh.
 
-```tsx
-import * as TW from "./index";
-import RNAnimated from "react-native-reanimated";
+## TypeScript
 
-export const Animated = {
-  ...RNAnimated,
-  View: RNAnimated.createAnimatedComponent(TW.View),
-};
+Starting Metro with a cleared cache generates `nativewind-env.d.ts`. It can also be created explicitly:
+
+```ts
+/// <reference types="react-native-css/types" />
 ```
 
-## Usage
+Commit the generated file. Do not name it `nativewind.d.ts`, give it the same name as a sibling file or directory, or name it after a package in `node_modules`; TypeScript may then ignore the declarations.
 
-Import CSS-wrapped components from your tw directory:
+## Use `className` directly
 
 ```tsx
-import { View, Text, ScrollView, Image } from "@/tw";
+import { Text, View } from "react-native";
 
-export default function MyScreen() {
+export function Welcome() {
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="p-4 gap-4">
-        <Text className="text-xl font-bold text-gray-900">Hello Tailwind!</Text>
-        <Image
-          className="w-full h-48 rounded-lg object-cover"
-          source={{ uri: "https://example.com/image.jpg" }}
-        />
-      </View>
-    </ScrollView>
+    <View className="flex-1 items-center justify-center bg-white">
+      <Text className="text-xl font-bold text-blue-500">
+        Welcome to Nativewind!
+      </Text>
+    </View>
   );
 }
 ```
 
-## Custom Theme Variables
+Use wrappers only for third-party components whose style props need mapping. Follow Nativewind's current [third-party component guide](https://www.nativewind.dev/v5/guides/styling-third-party-components) and prefer its public `styled`/interop APIs over copying `useCssElement` internals. If wrapping Expo Router's `Link`, preserve its static `Trigger`, `Menu`, `MenuAction`, and `Preview` properties. If wrapping `expo-image`, map CSS object-fit/object-position values to `contentFit`/`contentPosition` rather than assuming a `style` object is sufficient.
 
-Add custom theme variables in your global.css using `@theme`:
+## Migrate a stale v5 setup
 
-```css
-@layer theme {
-  @theme {
-    /* Custom fonts */
-    --font-rounded: "SF Pro Rounded", sans-serif;
+1. Remove explicit old preview/nightly dependency pins and any package-manager entry that forces them.
+2. Run the two current install commands above.
+3. Replace custom `withNativewind` options with `withNativewind(config)` unless the app has a documented reason to override a default.
+4. Add `@import "nativewind/theme"` to the global stylesheet.
+5. Remove wrappers around standard React Native components and import them directly.
+6. Use the correct Lightning CSS override field for the active package manager.
+7. Clear Metro and test every requested platform.
 
-    /* Custom line heights */
-    --text-xs--line-height: calc(1em / 0.75);
-    --text-sm--line-height: calc(1.25em / 0.875);
-    --text-base--line-height: calc(1.5em / 1);
+## Verify
 
-    /* Custom leading scales */
-    --leading-tight: 1.25em;
-    --leading-snug: 1.375em;
-    --leading-normal: 1.5em;
-  }
-}
+```bash
+npx expo start --clear
+# TypeScript projects:
+npx tsc --noEmit
 ```
 
-## Platform-Specific Styles
-
-Use platform media queries for platform-specific styling:
-
-```css
-@media ios {
-  :root {
-    --font-sans: system-ui;
-    --font-rounded: ui-rounded;
-  }
-}
-
-@media android {
-  :root {
-    --font-sans: normal;
-    --font-rounded: normal;
-  }
-}
-```
-
-## Apple System Colors with CSS Variables
-
-Create a CSS file for Apple semantic colors:
-
-```css
-/* src/css/sf.css */
-@layer base {
-  html {
-    color-scheme: light;
-  }
-}
-
-:root {
-  /* Accent colors with light/dark mode */
-  --sf-blue: light-dark(rgb(0 122 255), rgb(10 132 255));
-  --sf-green: light-dark(rgb(52 199 89), rgb(48 209 89));
-  --sf-red: light-dark(rgb(255 59 48), rgb(255 69 58));
-
-  /* Gray scales */
-  --sf-gray: light-dark(rgb(142 142 147), rgb(142 142 147));
-  --sf-gray-2: light-dark(rgb(174 174 178), rgb(99 99 102));
-
-  /* Text colors */
-  --sf-text: light-dark(rgb(0 0 0), rgb(255 255 255));
-  --sf-text-2: light-dark(rgb(60 60 67 / 0.6), rgb(235 235 245 / 0.6));
-
-  /* Background colors */
-  --sf-bg: light-dark(rgb(255 255 255), rgb(0 0 0));
-  --sf-bg-2: light-dark(rgb(242 242 247), rgb(28 28 30));
-}
-
-/* iOS native colors via platformColor */
-@media ios {
-  :root {
-    --sf-blue: platformColor(systemBlue);
-    --sf-green: platformColor(systemGreen);
-    --sf-red: platformColor(systemRed);
-    --sf-gray: platformColor(systemGray);
-    --sf-text: platformColor(label);
-    --sf-text-2: platformColor(secondaryLabel);
-    --sf-bg: platformColor(systemBackground);
-    --sf-bg-2: platformColor(secondarySystemBackground);
-  }
-}
-
-/* Register as Tailwind theme colors */
-@layer theme {
-  @theme {
-    --color-sf-blue: var(--sf-blue);
-    --color-sf-green: var(--sf-green);
-    --color-sf-red: var(--sf-red);
-    --color-sf-gray: var(--sf-gray);
-    --color-sf-text: var(--sf-text);
-    --color-sf-text-2: var(--sf-text-2);
-    --color-sf-bg: var(--sf-bg);
-    --color-sf-bg-2: var(--sf-bg-2);
-  }
-}
-```
-
-Then use in components:
-
-```tsx
-<Text className="text-sf-text">Primary text</Text>
-<Text className="text-sf-text-2">Secondary text</Text>
-<View className="bg-sf-bg">...</View>
-```
-
-## Using CSS Variables in JavaScript
-
-Use the `useCSSVariable` hook:
-
-```tsx
-import { useCSSVariable } from "@/tw";
-
-function MyComponent() {
-  const blue = useCSSVariable("--sf-blue");
-
-  return <View style={{ borderColor: blue }} />;
-}
-```
-
-## Key Differences from NativeWind v4 / Tailwind v3
-
-1. **No babel.config.js** - Configuration is now CSS-first
-2. **PostCSS plugin** - Uses `@tailwindcss/postcss` instead of `tailwindcss`
-3. **CSS imports** - Use `@import "tailwindcss/..."` instead of `@tailwind` directives
-4. **Theme config** - Use `@theme` in CSS instead of `tailwind.config.js`
-5. **Component wrappers** - Must wrap components with `useCssElement` for className support
-6. **Metro config** - Use `withNativewind` with different options (`inlineVariables: false`)
+Render a screen containing direct `className` usage on iOS and Android. If web is in scope, verify it too. Do not accept a web-only pass for a native bundling problem.
 
 ## Troubleshooting
 
-### Styles not applying
-
-1. Ensure you have the CSS file imported in your app entry
-2. Check that components are wrapped with `useCssElement`
-3. Verify Metro config has `withNativewind` applied
-
-### Platform colors not working
-
-1. Use `platformColor()` in `@media ios` blocks
-2. Fall back to `light-dark()` for web/Android
-
-### TypeScript errors
-
-Add className to component props:
-
-```tsx
-type Props = React.ComponentProps<typeof RNView> & { className?: string };
-```
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `ERESOLVE` mentions an Expo 54 preview or React Native 0.81 | Deprecated `react-native-css` nightly | Remove the stale pin and install `react-native-css@latest` with `expo install` |
+| Metro crashes while reading `addedFiles` after importing CSS | Old `react-native-css` emits a legacy watcher event | Upgrade `react-native-css`; do not patch Metro or suppress the error |
+| Build cannot deserialize a stylesheet specifier | Incompatible Lightning CSS version | Apply the package-manager-specific `1.30.1` override, reinstall, and clear caches |
+| Styles work on web but native bundling fails | Native Metro integration is still broken | Recheck `react-native-css`, `metro.config.js`, and the native logs |
+| `className` is missing from React Native types | Declaration file was not generated or is misnamed | Run `npx expo start --clear` and inspect `nativewind-env.d.ts` |
+| A third-party component ignores `className` | Its style prop is not mapped | Use the upstream third-party component guidance; do not wrap every built-in component |
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
