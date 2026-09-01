@@ -72,7 +72,7 @@ Expo Go supports a huge range of features out of the box:
 - Never use legacy expo-permissions
 - `expo-audio` not `expo-av`
 - `expo-video` not `expo-av`
-- `expo-image` with `source="sf:name"` for SF Symbols, not `expo-symbols` or `@expo/vector-icons`
+- `expo-image` with `source="sf:name"` for SF Symbols on iOS, not `expo-symbols` or `@expo/vector-icons`. SF Symbols never render on Android - pair every icon with a Material source: the `md` prop beside `sf` on NativeTabs triggers, and `@expo/vector-icons` Material families (`MaterialIcons`, `MaterialCommunityIcons`) in-screen. One icon family per platform; never SF-only iconography, never emoji as icons (see `references/icons.md`)
 - `react-native-safe-area-context` not react-native SafeAreaView
 - `process.env.EXPO_OS` not `Platform.OS`
 - `React.use` not `React.useContext`
@@ -98,10 +98,13 @@ Expo Go supports a huge range of features out of the box:
 - Use the `<Text selectable />` prop on text containing data that could be copied
 - Consider formatting large numbers like 1.4M or 38k
 - Never use intrinsic elements like 'img' or 'div' unless in a webview or Expo DOM component
+- On any scrollable shown over a live keyboard (compose forms, search results), set `keyboardShouldPersistTaps="always"` - with the default, the first tap on a button only dismisses the keyboard and gets swallowed, so the user must tap twice
+- When closing a surface that overlaps the keyboard (attachment panel, emoji picker), restore focus with `KeyboardController.setFocusTo('current')` from `react-native-keyboard-controller` - otherwise the field stays logically focused with no keyboard, and the next tap on it no-ops
+- A form's primary action must never sit under the keyboard. For UI that tracks the keyboard's real frame, load the `expo-animation` skill's keyboard recipe (`react-native-keyboard-controller`) - never `Keyboard.addListener` plus a timing animation
 
 # Styling
 
-Follow Apple Human Interface Guidelines.
+Follow each platform's own design language: Apple Human Interface Guidelines on iOS, Material Design 3 on Android. Never dress one platform in the other's uniform - no FAB or ripple in iOS layouts; no iOS back-chevrons, large titles, or iOS-styled switches on Android. Press feedback follows the same split: `android_ripple` on `Pressable` for Android, highlight/dim on iOS. Where a rule below is iOS-specific, apply the Material equivalent on Android rather than the iOS treatment on both.
 
 ## General Styling Rules
 

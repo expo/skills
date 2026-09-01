@@ -49,7 +49,12 @@ grep -rEn 'shadow(Color|Offset|Opacity|Radius)|elevation:' $SRC --include='*.tsx
 
 # Multiple theme entry points (there must be exactly one)
 ls src/theme.ts src/theme/index.ts theme.ts theme/index.ts constants/theme.ts 2>/dev/null
+
+# Files with custom tappables but zero accessibility props (unlabeled for VoiceOver/TalkBack)
+grep -rln '<Pressable' $SRC --include='*.tsx' | xargs grep -LE 'accessibility(Role|Label)'
 ```
+
+Then run the named-tell checks in `native-slop.md`. The token checks above already cover the Dark-Mode Amnesia, 16-Everything, and Shadowboxing tells; the slop file covers the rest (web modals, hand-rolled headers, gradient heroes, ...).
 
 For a Tailwind project, also check for values that bypass `global.css` variables: arbitrary-value classes like `p-[13px]` or `text-[#5B21B6]`.
 
@@ -87,7 +92,7 @@ For each component in the shared components directory (`src/components/`, or `co
 | Pressed state | Tappable components give pressed feedback via a `Pressable` style function |
 | Disabled / loading | Handled, and disabled blocks `onPress` |
 | Style override | Accepts `style`, merged last |
-| Accessibility | `accessibilityRole` set; touch target ≥ 44pt |
+| Accessibility | `accessibilityRole` set; `accessibilityLabel` on icon-only controls; touch target ≥ 44pt |
 | Tokens only | No literals that duplicate a theme value |
 
 ## 4. Report format

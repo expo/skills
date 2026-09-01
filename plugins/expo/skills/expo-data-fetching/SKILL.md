@@ -1,6 +1,6 @@
 ---
 name: expo-data-fetching
-description: Framework (OSS). Use when implementing or debugging ANY network request, API call, or data fetching. Covers fetch API, React Query, SWR, error handling, caching, offline support, and Expo Router data loaders (`useLoaderData`).
+description: Framework (OSS). Use when implementing or debugging ANY network request, API call, or data fetching. Covers fetch API, React Query, SWR, error handling, caching, offline support, loading/empty/error screen states, and Expo Router data loaders (`useLoaderData`).
 version: 1.0.0
 license: MIT
 ---
@@ -35,6 +35,15 @@ Use this skill when:
 ## Preferences
 
 - Avoid axios, prefer expo/fetch
+
+## Every Screen Has Four States
+
+Every screen that loads data has four states: **loading**, **error**, **empty**, and **content**. Generated apps usually ship two - and the missing branches are the most recognizable "AI-built" tell.
+
+- **Loading ≠ empty.** Never render "No items yet" while the first fetch (or a persisted-store hydration) is still resolving - the false-empty flash. Branch on `isLoading` before any `data.length === 0` check; empty means *resolved with zero items*.
+- **Empty is a designed state, not a blank list.** Use `ListEmptyComponent` on FlatList/FlashList: one line of copy plus the action that creates the first item.
+- **Refetches keep stale content.** Render `data` whenever it exists and revalidate behind it (React Query's default - gate spinners on `isLoading`, never `isFetching`). A full-screen spinner is for the first load only; past ~300ms prefer a skeleton of the known layout, and use `RefreshControl` for user-initiated refresh.
+- **Gate on hydration.** When initial UI or a redirect depends on persisted state (auth token, onboarding flag), the root layout renders nothing - or the splash - until that state has loaded. Deciding on unhydrated state flashes the wrong screen on every cold start and misroutes deep links that arrive before hydration.
 
 ## Common Issues & Solutions
 
