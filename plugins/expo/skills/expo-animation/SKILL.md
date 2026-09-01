@@ -101,20 +101,28 @@ Reach for a shared value only when the value is continuous or interruptible. A p
 
 ### 5. Timing or spring
 
-**If a finger was involved, use a spring.** Springs carry velocity through an interruption; timing curves restart. Everything else uses timing.
+**Springs move things; curves fade things.** If a finger was involved, a spring is mandatory — springs carry velocity through an interruption; timing curves restart. But springs are the default for anything that travels even with no finger on it: a strong ease-out spends its whole back half creeping through the last few percent of the distance, which is invisible on a fade and reads as sluggish on movement.
 
 Reanimated's spring takes Apple's two designer parameters directly — use this form, not mass/stiffness/damping:
 
 | Interaction | Config |
 | --- | --- |
-| Default settle, no overshoot | `{ duration: 400, dampingRatio: 1 }` |
-| Reposition / snap back after a drag | `{ duration: 400, dampingRatio: 0.8, velocity }` |
-| Sheet, drawer | `{ duration: 300, dampingRatio: 0.8, velocity }` |
+| Surface arriving — sheet, panel, menu opening | `{ duration: 400, dampingRatio: 0.8 }` |
+| The same surface leaving | `{ duration: 400, dampingRatio: 1 }` |
+| Release after a drag — snap back, settle to a detent | `{ duration: 300, dampingRatio: 0.8, velocity }` |
+| Reflow with nothing to prove | `withSpring(target)` — the default is `{ duration: 550, dampingRatio: 1 }` |
 | Must not pass a hard edge | add `overshootClamping: true` |
 
-**Bounce only when the gesture carried momentum.** Overshoot on a menu that faded in feels wrong; overshoot on a card you flicked feels right.
+**Arrivals may overshoot; exits never do.** `dampingRatio: 0.8` in, `1` out. A surface that bounces on the way out is arguing with the tap that dismissed it — and an exit overshooting its resting point pokes past whatever it's collapsing toward.
 
-**Easing**, for everything without a finger on it:
+Two facts that turn spring configs from eyeballing into arithmetic:
+
+- **`duration` is perceptual.** The spring reads as settled around it but keeps micro-moving to roughly 1.5×. The untouched default — `{ duration: 550, dampingRatio: 1 }` — is SwiftUI's `.smooth`; Apple's `bounce` is `1 − dampingRatio`, so `.snappy` ≈ `0.85` and `.bouncy` ≈ `0.7`, and a designer's SwiftUI spec translates directly.
+- **Overshoot is a pure function of `dampingRatio`**, as a fraction of the travel distance: `0.9` → 0.2%, `0.85` → 0.6%, `0.8` → 1.5%, `0.7` → 4.6%, `0.5` → 16%. A 300pt sheet at `0.8` lands ~4pt past target — thrown and caught, not a toy. Pick the ratio from the points of overshoot the layout can afford, not by feel.
+
+**Visible bounce (`0.7` and below) only when the gesture carried momentum.** Overshoot on a menu that faded in feels wrong; overshoot on a card you flicked feels right.
+
+**Easing**, for what timing owns — fades, color, progress, the rare timed exit:
 
 | Situation | Easing |
 | --- | --- |
@@ -133,16 +141,22 @@ const EASE_IN_OUT = Easing.bezier(0.77, 0, 0.175, 1);  // on-screen movement
 const EASE_SHEET = Easing.bezier(0.32, 0.72, 0, 1);    // iOS sheet curve
 ```
 
+For a plain fade, `Easing.out(Easing.quad)` is enough — save the strong beziers for the rare timed move that needs authority, like a toast's committed exit. And a crossfade riding a larger move stays much shorter than the move (150ms inside a 400ms morph): it only has to cover the stretch where both sides are legible at once.
+
 **Duration:**
 
 | Element | Duration |
 | --- | --- |
 | Press feedback | 100–150ms |
 | Toggle, chip, small state change | 150–200ms |
+| Content crossfade inside a moving surface | ~150ms |
 | Sheet, modal, drawer | spring, ~300ms perceived |
+| Any exit | at most its entrance, usually ~20% less |
 | Screen transition | the platform default — don't override it |
 
 Mobile UI animations stay under 300ms, same as web. The platform's own transitions are longer (iOS push is 350ms); match the platform for navigation, beat it everywhere else.
+
+**An exit is a quieter shape, not the entrance reversed.** Leave the way you came — same edge, same axis — but simpler: less travel, fade-forward, no overshoot. A toast that sprang up with scale can leave as a fast fade with a short drop. And when one action clears several elements, only the one the user acted on gets the move; the rest fade in place.
 
 ### 6. Keep it off the JS thread
 
@@ -153,6 +167,7 @@ This is the mobile-specific craft, and it's where most React Native motion dies.
 - **Never read a shared value during render** (`translateY.get()` in JSX). It's a snapshot that never updates and it silently desyncs. **Never write one during render either** — it fires mid-reconciliation, and a re-render you didn't cause replays the write. Touch shared values only in worklets, handlers, and effects.
 - **Use `.get()` / `.set()`, not `.value`.** Same API, but direct `.value` access is the form the React Compiler can't see through — the Reanimated docs call `get`/`set` the compiler-safe way. `set` also takes a functional update: `sv.set((v) => v + 1)`.
 - **Functions called from a worklet need `'worklet'`** as their first line, or they throw at runtime on device while working fine in the debugger.
+- **Shared values are presentation state, never business truth.** Selection, deletion, order live in React state or the store; the store commits the change and the animation reveals it. If interrupting the animation could resurrect a "deleted" row, the order is wrong — and business logic never reads a shared value to decide anything.
 
 ### 7. Press, not hover
 
@@ -170,15 +185,15 @@ Mobile has a sense the web doesn't. Use it sparingly and it becomes the thing th
 
 | Moment | Call |
 | --- | --- |
-| A value ticks past a step — picker, slider detent, segmented control | `Haptics.selectionAsync()` |
-| Something snaps home, a sheet detent catches, a drag commits | `Haptics.impactAsync(ImpactFeedbackStyle.Light)` |
-| A heavy object lands, a destructive action fires | `Haptics.impactAsync(ImpactFeedbackStyle.Medium)` |
-| Operation succeeded or failed | `Haptics.notificationAsync(NotificationFeedbackType.Success / Error)` |
+| Selection changes under the finger — item picked, toggle flipped, a value crosses a detent | `Haptics.selectionAsync()` |
+| A lightweight surface opens or snaps into place — menu unfolds, drag commits, sheet catches a detent | `Haptics.impactAsync(ImpactFeedbackStyle.Light)` |
+| A commit that produces a result — confirm, capture, send, a destructive action fires | `Haptics.impactAsync(ImpactFeedbackStyle.Medium)` |
+| An async outcome arrives — the success or failure the user was waiting on | `Haptics.notificationAsync(NotificationFeedbackType.Success / Error)` |
 
 Three rules, and they're absolute:
 
 - **Same frame as the visual.** A haptic that lags its animation reads as a glitch, not as feedback. Fire it at the causal moment — the detent catching — not when the animation finishes.
-- **One per user action.** Never on scroll, never per frame, never on an entrance animation the user didn't cause.
+- **Causes, never effects — one per action.** Never on scroll, never per frame, never on an entrance the user didn't cause. Nothing on dismiss or back, nothing when an animation merely settles, and when one tap moves several elements, that's one haptic, not one per element.
 - **Never the only feedback.** Haptics are off system-wide for many users, and silent on most Android hardware. The visual has to stand alone.
 
 From a worklet, haptics must be scheduled back to the RN runtime: `scheduleOnRN(Haptics.selectionAsync)`.
@@ -222,6 +237,8 @@ Then the frame budget is 8ms, not 16. This is also why a UI-thread animation mat
 
 For ready-to-build implementations — press feedback, drag-to-dismiss sheet, swipe-to-delete, collapsing header, list entrances, keyboard-synced UI, tab indicator, screen transitions — see [RECIPES.md](RECIPES.md). Load it whenever the request matches one; start from the recipe rather than from a blank file.
 
+For interruption and hand-off discipline — opens that stay cancellable through every stage, exits that keep their content alive until the spring lands, elements that move between containers without double-exposing — see [references/interruption.md](references/interruption.md). Load it whenever motion can be interrupted mid-flight, runs in stages, or transfers an element from one surface to another.
+
 ## Never Ship
 
 | Never | Instead |
@@ -230,7 +247,11 @@ For ready-to-build implementations — press feedback, drag-to-dismiss sheet, sw
 | `setState` in a gesture or scroll handler | shared value + `useAnimatedStyle` |
 | `runOnJS` (deprecated in Reanimated 4) | `scheduleOnRN` from `react-native-worklets` |
 | `scheduleOnRN` per frame | `onEnd`, or `useAnimatedReaction` at a threshold |
+| `setTimeout` to remove an element after its exit | the animation's completion callback, or `useAnimatedReaction` on the landed value |
+| An `await` or timer between the two halves of a hand-off | one synchronous commit — see [references/interruption.md](references/interruption.md) |
 | Reading or writing a shared value during render | `.get()` / `.set()` in worklets, handlers, effects |
+| Arithmetic on what `withSpring` / `withTiming` return | animate a source value, derive the rest — math on an animation descriptor is `NaN` |
+| Spring overshoot reaching `opacity` | clamp opacity (past 1 is an error); let transforms extend (past 1 is a bounce) |
 | Core `Animated` for anything a finger touches | Reanimated |
 | Animating `height` / `width` / `margin` / `flex` / `top` | `transform` + `opacity` (absolute, childless elements exempt) |
 | Animating `BlurView` intensity or Android `elevation` | crossfade a static layer |
