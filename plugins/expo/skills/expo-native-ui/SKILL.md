@@ -17,10 +17,10 @@ Consult these resources as needed:
 
 ```
 references/
-  animations.md          Reanimated: entering, exiting, layout, scroll-driven, gestures
+  animations.md          Pointer to the expo-animation skill + Reanimated color caveat
   controls.md            Native iOS: Switch, Slider, SegmentedControl, DateTimePicker, Picker
   gradients.md           CSS gradients via experimental_backgroundImage (New Arch only)
-  icons.md               SF Symbols via expo-image (sf: source), names, animations, weights
+  icons.md               SF Symbols via expo-symbols SymbolView: names, weights, animations
   media.md               Camera, audio, video, and file saving
   storage.md             SQLite, AsyncStorage, SecureStore
   visual-effects.md      Blur (expo-blur) and liquid glass (expo-glass-effect)
@@ -48,12 +48,11 @@ You need `npx expo run:ios/android` or `eas build` ONLY when using:
 
 ### When Expo Go Works
 
-Expo Go supports a huge range of features out of the box:
+Expo Go supports a wide range of features out of the box:
 
-- All `expo-*` packages (camera, location, notifications, etc.)
-- Expo Router navigation
+- Most `expo-*` packages (camera, location, sensors, sqlite, etc.) — but not all: remote push notifications don't work in Expo Go on Android since SDK 53, and some packages need native capabilities Expo Go doesn't bundle (e.g. WebGPU — see `references/webgpu-three.md`)
+- Expo Router navigation and deep links
 - Most UI libraries (reanimated, gesture handler, etc.)
-- Push notifications, deep links, and more
 
 **If you're unsure, try Expo Go first.** Creating custom builds adds complexity, slower iteration, and requires Xcode/Android Studio setup.
 
@@ -72,7 +71,7 @@ Expo Go supports a huge range of features out of the box:
 - Never use legacy expo-permissions
 - `expo-audio` not `expo-av`
 - `expo-video` not `expo-av`
-- `expo-image` with `source="sf:name"` for SF Symbols, not `expo-symbols` or `@expo/vector-icons`
+- `expo-symbols` (`SymbolView`) for SF Symbols, not `@expo/vector-icons` — see `references/icons.md`. SF Symbols are Apple-only: on Android use Material icons (the `md` prop on NativeTabs triggers) or a platform-specific asset, never SF-only iconography
 - `react-native-safe-area-context` not react-native SafeAreaView
 - `process.env.EXPO_OS` not `Platform.OS`
 - `React.use` not `React.useContext`
@@ -83,7 +82,7 @@ Expo Go supports a huge range of features out of the box:
 
 ## Responsiveness
 
-- Always wrap root component in a scroll view for responsiveness
+- Wrap screens with scrollable content in a ScrollView. Screens whose root is a FlatList/FlashList must not add an outer ScrollView (the list is the scroll container), and full-bleed screens (camera, map, canvas) need neither
 - Use `<ScrollView contentInsetAdjustmentBehavior="automatic" />` instead of `<SafeAreaView>` for smarter safe area insets
 - `contentInsetAdjustmentBehavior="automatic"` should be applied to FlatList and SectionList as well
 - Use flexbox instead of Dimensions API
@@ -93,8 +92,7 @@ Expo Go supports a huge range of features out of the box:
 
 - Use expo-haptics conditionally on iOS to make more delightful experiences
 - Use views with built-in haptics like `<Switch />` from React Native and `@react-native-community/datetimepicker`
-- When a route belongs to a Stack, its first child should almost always be a ScrollView with `contentInsetAdjustmentBehavior="automatic"` set
-- When adding a `ScrollView` to the page it should almost always be the first component inside the route component
+- When a Stack route has scrollable content, make the ScrollView (or FlatList) the first component inside the route, with `contentInsetAdjustmentBehavior="automatic"` set
 - Use the `<Text selectable />` prop on text containing data that could be copied
 - Consider formatting large numbers like 1.4M or 38k
 - Never use intrinsic elements like 'img' or 'div' unless in a webview or Expo DOM component
@@ -110,7 +108,7 @@ Follow Apple Human Interface Guidelines.
 - Always account for safe area, either with stack headers, tabs, or ScrollView/FlatList `contentInsetAdjustmentBehavior="automatic"`
 - Ensure both top and bottom safe area insets are accounted for
 - Inline styles not StyleSheet.create unless reusing styles is faster
-- Add entering and exiting animations for state changes
+- For any motion or animation work, load the `expo-animation` skill — it owns the animate-or-not decision, timing values, and interruption rules
 - Use `{ borderCurve: 'continuous' }` for rounded corners unless creating a capsule shape
 - ALWAYS use a navigation stack title instead of a custom text element on the page
 - When padding a ScrollView, use `contentContainerStyle` padding and gap instead of padding on the ScrollView itself (reduces clipping)
@@ -147,6 +145,11 @@ export const colors = {
     ios: Color.ios.systemBackground,
     android: Color.android.dynamic.surface,
     default: "#ffffff",
+  })!,
+  secondarySystemBackground: Platform.select({
+    ios: Color.ios.secondarySystemBackground,
+    android: Color.android.dynamic.surfaceVariant,
+    default: "#f2f2f7",
   })!,
   systemBlue: Platform.select({
     ios: Color.ios.systemBlue,

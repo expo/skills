@@ -217,13 +217,13 @@ export default function Layout({ segment }) {
         headerLargeTitleShadowVisible: false,
         headerLargeStyle: { backgroundColor: "transparent" },
         headerTitleStyle: { color: colors.label },
-        headerLargeTitle: true,
+        headerLargeTitleEnabled: true,
         headerBlurEffect: "none",
         headerBackButtonDisplayMode: "minimal",
       }}
     >
       <Stack.Screen name={screen} options={{ title: titles[screen] }} />
-      <Stack.Screen name="i/[id]" options={{ headerLargeTitle: false }} />
+      <Stack.Screen name="i/[id]" options={{ headerLargeTitleEnabled: false }} />
     </Stack>
   );
 }

@@ -31,7 +31,7 @@ Disclosed reference for [`expo-web-to-native`](../SKILL.md), step 4. `false-frie
 The table gets the right *components*; "native" also lives in *motion and touch* - and a web port arrives with almost none, so you must add it. The tooling is in `expo-router` (navigation/transitions) and `expo-native-ui` (motion/effects); reach for it, don't hand-roll:
 
 - **Transitions for free** - use Expo Router's native-stack so push/pop, modals, and sheets animate with real platform physics; shared-element zoom via `expo-router` `zoom-transitions.md`.
-- **Motion** - Reanimated (`withSpring`/`withTiming`; `entering`/`exiting` for list items) + `react-native-gesture-handler` for swipes/drags → `expo-native-ui` `animations.md`.
+- **Motion** - Reanimated (`withSpring`/`withTiming`) + `react-native-gesture-handler` for swipes/drags → load the `expo-animation` skill (purpose gate, timing values, interruption).
 - **Touch** — `expo-haptics` on commits, selection changes, and pull-to-refresh — choreography, not just a toast buzz.
 - **Native rhythm** — large-title collapse on scroll, momentum / inverted scroll, a keyboard that pushes content (`KeyboardAvoidingView`).
 - **Respect reduced motion** — gate non-essential animation on Reanimated's `useReducedMotion()`.
