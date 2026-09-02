@@ -18,7 +18,7 @@ The recurring failures of AI-generated React Native apps, each with a memorable 
 | 10 | **alert() Confirmation** | `Alert.alert("Are you sure?")` for destructive confirms, or alerts for successes and validation errors | Destructive: action sheet anchored to the action (iOS) / dialog or snackbar+undo (Android). Errors: inline. Success: the UI just updates |
 | 11 | **The Hand-Rolled Header** | `headerShown: false` plus a `<Text>` title and custom back button - losing large-title collapse, back-swipe, and scroll-to-top | Stack header options. The navigation bar is configured, never rebuilt |
 | 12 | **16-Everything** | The same 16px padding on every axis at every level; section gaps equal row gaps, so proximity carries no meaning | The spacing scale with distinct steps: row gap < group gap < section gap |
-| 13 | **The Squish Reflex** | `scale: 0.96` press feedback on *every* touchable - including full-width list rows - or `TouchableOpacity`'s washed-out flash | Rows highlight (background change); buttons scale; `Pressable` with per-role feedback. Never `TouchableOpacity` |
+| 13 | **The Squish Reflex** | `scale: 0.96` press feedback on *every* touchable - including full-width list rows - or `TouchableOpacity`'s washed-out flash | Rows highlight (background change); buttons scale slightly or dim; `Pressable` with per-role feedback. Never `TouchableOpacity` |
 | 14 | **The Grand Entrance** | Staggered `FadeInDown.delay(i * 100)` on every list and screen, replaying on every visit | Entrance animation only for rare/first-time moments (`expo-animation`'s frequency gate); routine screens just appear |
 | 15 | **The Onboarding Carousel** | Three swipe slides with centered illustrations, page dots, and a Skip button before the app's first useful screen | Get to content on screen one; teach contextually at first use |
 | 16 | **Cross-Platform Costume** | One platform wearing the other's uniform: a FAB or ripple in an iOS-idiom app; iOS back-chevrons, large titles, or iOS-styled switches on Android | Each platform gets its own HIG's idiom - or a deliberate, documented platform-neutral treatment |
@@ -29,7 +29,7 @@ The recurring failures of AI-generated React Native apps, each with a memorable 
 
 ## Grep the greppable tells
 
-Same shell-variable convention as `audit.md` (set `$SRC` and `$THEME` first, run from the repo root). Three hit classes:
+Same shell-variable convention as `audit.md` (set `$SRC` and `$THEME` first, run from the repo root). Only checks precise enough to trust are listed - a noisy check trains the reader to ignore the suite. Three hit classes:
 
 - **always-fix** - a hit is a defect; no judgment needed.
 - **review-each** - legitimate uses exist; check each hit against the tell's description.
@@ -59,18 +59,6 @@ grep -rn 'headerShown:\s*false' $SRC --include='*.tsx'
 # Custom tab bar chrome → #5 The Floating Pill Tab Bar
 grep -rn 'tabBarStyle' $SRC --include='*.tsx'
 
-# 1px outlines on containers → #9 Wireframe Borders (inputs may keep theirs)
-grep -rn 'borderWidth' $SRC --include='*.tsx'
-
-# Entrance animations on routine screens → #14 The Grand Entrance (check expo-animation's frequency gate)
-grep -rn 'entering={' $SRC --include='*.tsx'
-
-# Full-screen spinners between states → #19 The Spinner Blink
-grep -rn 'ActivityIndicator' $SRC --include='*.tsx'
-
-# Hand-patched notch/status-bar offsets → #17 Safe-Area Collision
-grep -rEn '(margin|padding)Top:\s*[4-6][0-9]' $SRC --include='*.tsx'
-
 # --- advisory ---
 # Emoji as UI glyphs → #3 Emoji Iconography (content strings may contain emoji; glyph-as-icon is the tell)
 # \x{FE0F} catches text-default emoji rendered emoji-style (⚙️ ❤️), which Emoji_Presentation alone misses
@@ -79,7 +67,7 @@ rg -n '[\p{Emoji_Presentation}\x{FE0F}]' $SRC -g '*.tsx'
 
 Already covered by `audit.md` §1 - run both: hardcoded hex → #18 Dark-Mode Amnesia; off-scale spacing → #12 16-Everything; legacy shadow props → #8 Shadowboxing.
 
-Screenshot-only tells (no useful grep): #2 X-Button Sheet, #7 Everything's a Card, #15 Onboarding Carousel, #16 Cross-Platform Costume, #20 Keyboard Blindness. Check these visually per `SKILL.md`'s Self-Critique Pass - #20 with the keyboard open, #16 on both platforms.
+Screenshot-only tells (no grep precise enough to trust): #2 X-Button Sheet, #7 Everything's a Card, #9 Wireframe Borders, #15 Onboarding Carousel, #16 Cross-Platform Costume, #17 Safe-Area Collision. Three more need a running app: #14 The Grand Entrance (re-enter a screen), #19 The Spinner Blink (watch the first load and a refetch), #20 Keyboard Blindness (keyboard open). Check them per `SKILL.md`'s Self-Critique Pass, #16 on both platforms.
 
 ## Growing the list
 

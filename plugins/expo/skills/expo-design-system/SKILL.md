@@ -26,7 +26,7 @@ references/
                   scoring rubric, incremental adoption plan, and templates for
                   documenting or extending components
   native-slop.md  The 20 named anti-pattern tells of AI-generated apps (The Web
-                  Modal, Everything's a Card, ...) with per-tell grep checks
+                  Modal, Everything's a Card, ...) with grep checks for the greppable ones
 ```
 
 ## Adopt Before You Build
@@ -359,7 +359,7 @@ The recurring visual tells of AI-generated apps have names - use them when build
 - **The Purple-Gradient Hero** - a screen opening on a gradient block with display text. Screens start with the user's data under a navigation title, not a hero.
 - **The Spinner Blink** - a full-screen spinner between every state, or "No items yet" flashing during the first load. Every screen has four states (see `expo-data-fetching`).
 
-A present tell is a bug unless it is a deliberate, documented decision of this app. The full list of 20 - each with its observable tell, native replacement, and grep - is in `./references/native-slop.md`; scan every new screen against it by name before shipping.
+A present tell is a bug unless it is a deliberate, documented decision of this app. The full list of 20 - each with its observable tell and native replacement, plus grep checks where a grep is precise enough - is in `./references/native-slop.md`; scan every new screen against it by name before shipping.
 
 ## Auditing an Existing App
 
