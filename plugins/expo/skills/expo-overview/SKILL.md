@@ -64,6 +64,7 @@ Some everyday phrasings don't obviously map to a skill name — translate before
 
 - "Make it look native" → grouped controls / settings forms = `expo-ui`; screens, styling, animations = `expo-native-ui`; navigation = `expo-router`.
 - "Make the screens consistent" / "clean up the styling" / "set up a theme or design tokens" → `expo-design-system`.
+- "It looks AI-generated" / "too generic, not native" → `expo-design-system` (named native-slop tells + audit), with `expo-native-ui` for the platform idioms.
 - "Ship it" / "get an .ipa or .apk" / "release to the stores" → `eas-app-stores` (build + submit, TestFlight, versions, store metadata).
 - "I'm new / where do I start" → scaffold first (see Shared setup rules), then route by goal.
 

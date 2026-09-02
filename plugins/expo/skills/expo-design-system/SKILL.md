@@ -1,6 +1,6 @@
 ---
 name: expo-design-system
-description: Framework (OSS). Build and maintain a design system inside an Expo app - a reusable theme of design tokens (color, spacing, typography, radius, shadow, motion), reusable component structure with variant/size/state prop conventions, and rules for when to extract a repeated view into a shared component. Use when creating or organizing theme files and design tokens (theme.ts / theme/), extending an existing theme or styling library (NativeWind, Tamagui, Restyle, Unistyles) in its own idiom, standardizing styles so screens (including AI-generated ones) look consistent and polished, building an in-app component library, or auditing an app for design-system drift (hardcoded colors, spacing, fonts). For platform styling specifics (semantic colors, HIG rules, native controls) use expo-native-ui; for folder layout of a new app use expo-project-structure.
+description: Framework (OSS). Build and maintain a design system inside an Expo app - a reusable theme of design tokens (color, spacing, typography, radius, shadow, motion), reusable component structure with variant/size/state prop conventions, and rules for when to extract a repeated view into a shared component. Use when creating or organizing theme files and design tokens (theme.ts / theme/), extending an existing theme or styling library (NativeWind, Tamagui, Restyle, Unistyles) in its own idiom, standardizing styles so screens (including AI-generated ones) look consistent and polished, fixing an app that looks AI-generated or generic instead of native (the named native-slop tells), building an in-app component library, or auditing an app for design-system drift (hardcoded colors, spacing, fonts). For platform styling specifics (semantic colors, HIG rules, native controls) use expo-native-ui; for folder layout of a new app use expo-project-structure.
 version: 1.0.0
 license: MIT
 ---
@@ -22,9 +22,11 @@ Consult these resources as needed:
 
 ```
 references/
-  audit.md      Audit an existing app for design-system drift: grep checks,
-                scoring rubric, incremental adoption plan, and templates for
-                documenting or extending components
+  audit.md        Audit an existing app for design-system drift: grep checks,
+                  scoring rubric, incremental adoption plan, and templates for
+                  documenting or extending components
+  native-slop.md  The 20 named anti-pattern tells of AI-generated apps (The Web
+                  Modal, Everything's a Card, ...) with grep checks for the greppable ones
 ```
 
 ## Adopt Before You Build
@@ -190,6 +192,8 @@ export function ThemedText({
 
 Screen titles still come from the navigation stack header (`expo-native-ui` rule), so `largeTitle` is mostly for non-stack contexts.
 
+**Dynamic Type.** Text scales with the user's system text-size setting (`allowFontScaling` is on by default), so the ramp values above are starting points, not fixed truths. Never hard-code a container height around text - use padding or `minHeight` so rows grow - and check screens at a large accessibility text size, where a fixed `height: 44` row truncates its label. Where extreme scaling would break chrome (tab labels, dense rows), cap it per element with `maxFontSizeMultiplier` (1.5-2 is typical); never disable scaling app-wide with `allowFontScaling={false}`.
+
 ### Radius
 
 ```tsx
@@ -244,6 +248,7 @@ Every design-system primitive defines, explicitly:
 - **Sizes** - `sm`, `md`, `lg`. Default `md`. Sizes map to spacing/typography tokens, never to fresh numbers.
 - **States** - default, **pressed** (not hover - this is touch), disabled, loading. Handle pressed with a `Pressable` style function; never leave a tappable element without pressed feedback.
 - **Style override** - accept a `style` prop and merge it **last**, so callers can adjust layout (margins, flex) without forking the component. Callers may override layout, not identity - a caller changing a button's colors is a signal the variant set is missing something.
+- **Accessibility** - every interactive primitive sets `accessibilityRole`, and icon-only controls also set `accessibilityLabel` (visible text doubles as the label otherwise). Native and `@expo/ui` controls come labeled by default - custom `Pressable`s don't, so the label is this contract's job.
 
 ```tsx
 // components/button.tsx
@@ -343,6 +348,18 @@ After building or changing a screen, screenshot it and check it against these pr
 - **Alignment** - do edges share axes? Fix with consistent screen edge padding.
 
 The pass is complete only when all four checks pass, or every failing value has moved into the theme or a component. If a screen fails the same check twice, the fix belongs in the theme or a component - not in the screen.
+
+## Named Failures: Native Slop
+
+The recurring visual tells of AI-generated apps have names - use them when building and reviewing. The five most frequent:
+
+- **The Web Modal** - a centered dialog over a dimmed backdrop. Use a sheet (`formSheet`, `@expo/ui` BottomSheet), action sheet, or anchored menu instead.
+- **Everything's a Card** - every row and section in its own white rounded shadowed box. Use grouped lists; group with background and hairlines, not borders.
+- **Emoji Iconography** - 🔥 ⚙️ ✨ as tab or button icons. SF Symbols on iOS, Material icons on Android.
+- **The Purple-Gradient Hero** - a screen opening on a gradient block with display text. Screens start with the user's data under a navigation title, not a hero.
+- **The Spinner Blink** - a full-screen spinner between every state, or "No items yet" flashing during the first load. Every screen has four states (see `expo-data-fetching`).
+
+A present tell is a bug unless it is a deliberate, documented decision of this app. The full list of 20 - each with its observable tell and native replacement, plus grep checks where a grep is precise enough - is in `./references/native-slop.md`; scan every new screen against it by name before shipping.
 
 ## Auditing an Existing App
 

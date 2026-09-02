@@ -72,7 +72,7 @@ Expo Go supports a huge range of features out of the box:
 - Never use legacy expo-permissions
 - `expo-audio` not `expo-av`
 - `expo-video` not `expo-av`
-- `expo-image` with `source="sf:name"` for SF Symbols, not `expo-symbols` or `@expo/vector-icons`
+- `expo-image` with `source="sf:name"` for SF Symbols on iOS, not `expo-symbols` or `@expo/vector-icons`. SF Symbols never render on Android - every icon needs a Material source there (see `references/icons.md`)
 - `react-native-safe-area-context` not react-native SafeAreaView
 - `process.env.EXPO_OS` not `Platform.OS`
 - `React.use` not `React.useContext`
@@ -98,10 +98,13 @@ Expo Go supports a huge range of features out of the box:
 - Use the `<Text selectable />` prop on text containing data that could be copied
 - Consider formatting large numbers like 1.4M or 38k
 - Never use intrinsic elements like 'img' or 'div' unless in a webview or Expo DOM component
+- Every screen that loads data has four states (loading, error, empty, content) - never show the empty state while the first load is still resolving; the rules live in the `expo-data-fetching` skill
+- On any scrollable shown over a live keyboard (compose forms, search results), set `keyboardShouldPersistTaps="always"` - with the default, the first tap on a button only dismisses the keyboard and gets swallowed, so the user must tap twice
+- A form's primary action must never sit under the keyboard. For UI that tracks the keyboard's real frame, load the `expo-animation` skill's keyboard recipe (`react-native-keyboard-controller`) - never `Keyboard.addListener` plus a timing animation
 
 # Styling
 
-Follow Apple Human Interface Guidelines.
+Follow each platform's own design language: Apple Human Interface Guidelines on iOS, Material Design 3 on Android. Never dress one platform in the other's uniform - no FAB or ripple in iOS layouts; no hand-built iOS chrome (back-chevrons, large-title text, iOS-styled switches) on Android.
 
 ## General Styling Rules
 

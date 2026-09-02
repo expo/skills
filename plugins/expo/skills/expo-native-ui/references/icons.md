@@ -1,6 +1,6 @@
 # Icons (SF Symbols)
 
-Use SF Symbols for native feel. Never use FontAwesome or Ionicons.
+Use SF Symbols on iOS for native feel. SF Symbols are an Apple asset and never render on Android - every icon needs a Material counterpart (see "Android: Material Icons" below). Never use FontAwesome or Ionicons on either platform, and never emoji as icons.
 
 ## Basic Usage
 
@@ -198,6 +198,25 @@ Some symbols support multiple colors:
 />
 ```
 
+## Android: Material Icons
+
+On Android an SF Symbol source renders nothing - an app that ships SF-only iconography ships blank icons. Give every icon a Material source:
+
+- **Tab bars**: pass `md` (Material Symbol name) beside `sf` on NativeTabs triggers - `<NativeTabs.Trigger.Icon sf="gear" md="settings" />` (SDK 55+, see the `expo-router` skill).
+- **In screens**: `@expo/vector-icons` Material families, gated by platform:
+
+```tsx
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+
+process.env.EXPO_OS === "ios" ? (
+  <SymbolView name="gear" tintColor={colors.label} style={{ width: 24, height: 24 }} />
+) : (
+  <MaterialIcons name="settings" size={24} color={colors.label} />
+);
+```
+
+One icon family per platform - never a mixed set, never SF names on Android or Material glyphs on iOS.
+
 ## Finding Symbol Names
 
 1. Use the SF Symbols app on macOS (free from Apple)
@@ -206,7 +225,7 @@ Some symbols support multiple colors:
 
 ## Best Practices
 
-- Always use SF Symbols over vector icon libraries
+- On iOS, always use SF Symbols over vector icon libraries; on Android, use Material icons (see above)
 - Match symbol weight to nearby text weight
 - Use `.fill` variants for selected/active states
 - Use the cross-platform `colors` helper (see SKILL.md "Colors") for tint to support dark mode
