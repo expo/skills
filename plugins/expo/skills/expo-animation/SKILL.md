@@ -151,12 +151,11 @@ For a plain fade, `Easing.out(Easing.quad)` is enough — save the strong bezier
 | Toggle, chip, small state change | 150–200ms |
 | Content crossfade inside a moving surface | ~150ms |
 | Sheet, modal, drawer | spring, ~300ms perceived |
-| Any exit | at most its entrance, usually ~20% less |
 | Screen transition | the platform default — don't override it |
 
 Mobile UI animations stay under 300ms, same as web. The platform's own transitions are longer (iOS push is 350ms); match the platform for navigation, beat it everywhere else.
 
-**An exit is a quieter shape, not the entrance reversed.** Leave the way you came — same edge, same axis — but simpler: less travel, fade-forward, no overshoot. A toast that sprang up with scale can leave as a fast fade with a short drop. And when one action clears several elements, only the one the user acted on gets the move; the rest fade in place.
+**An exit is a quieter shape, not the entrance reversed.** Leave the way you came — same edge, same axis — but simpler and shorter: less travel, fade-forward, no overshoot, at most the entrance's duration and usually ~20% less. A toast that sprang up with scale can leave as a fast fade with a short drop. When one action clears several elements, only the one the user acted on gets the move; the rest fade in place.
 
 ### 6. Keep it off the JS thread
 
@@ -237,7 +236,7 @@ Then the frame budget is 8ms, not 16. This is also why a UI-thread animation mat
 
 For ready-to-build implementations — press feedback, drag-to-dismiss sheet, swipe-to-delete, collapsing header, list entrances, keyboard-synced UI, tab indicator, screen transitions — see [RECIPES.md](RECIPES.md). Load it whenever the request matches one; start from the recipe rather than from a blank file.
 
-For interruption and hand-off discipline — opens that stay cancellable through every stage, exits that keep their content alive until the spring lands, elements that move between containers without double-exposing — see [references/interruption.md](references/interruption.md). Load it whenever motion can be interrupted mid-flight, runs in stages, or transfers an element from one surface to another.
+For interruption and hand-off discipline — cancellable staged opens, exits that keep their content alive until the spring lands, one-commit element hand-offs — see [references/interruption.md](references/interruption.md). Load it when a build stages an open, retains exit content, or moves an element between containers. Also load it when a bug sounds like one of these: the surface arrives after the tap that dismissed it; a removed item flashes back or vanishes early; the wrong content shows through a crossfade; an element appears twice mid-flight; something disappears on its own after an interrupted exit.
 
 ## Never Ship
 
