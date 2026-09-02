@@ -1,6 +1,6 @@
 ---
 name: eas-update
-description: "EAS service (paid). Configure and use EAS Update for over-the-air JavaScript and asset updates with expo-updates and EAS CLI. Use when setting up OTA updates, running eas update:configure or eas update, publishing to preview/staging/production channels, explaining branches/channels/runtime versions, testing an update in a development or release/TestFlight build, or debugging why a build did not receive an update. Not for update health metrics; use eas-update-insights for adoption, crashes, and rollout monitoring."
+description: "EAS service (paid). Configure and use EAS Update for over-the-air JavaScript and asset updates with expo-updates and EAS CLI. Use when setting up OTA updates, running eas update:configure or eas update, publishing to preview/staging/production channels, explaining branches/channels/runtime versions, testing updates, or debugging why an installed build still shows old code. Load for TestFlight, preview, or production updates that do not appear, including questions about cold launches or reopening the app. Not for update health metrics; use eas-update-insights for adoption, crashes, and rollout monitoring."
 version: 1.0.0
 license: MIT
 allowed-tools: "Bash(npx expo *), Bash(npx *eas-cli@*), Bash(eas *)"
@@ -58,6 +58,8 @@ Use this model to make decisions, but explain only the concepts needed for the u
 Use an update for changes to JavaScript, styling, and bundled assets that the installed native runtime already supports.
 
 Create a new native build when a change adds or modifies native code or native configuration, including most native-library additions and SDK upgrades. Do not work around a runtime mismatch or imply that publishing can add native capabilities to an existing build. See https://docs.expo.dev/eas-update/runtime-versions/.
+
+Do not change the project's runtime-version policy as an incidental fix. Explain how the current policy affects compatibility; treat changing it as a separate decision because it changes which installed builds can receive future updates.
 
 ## Publish deliberately
 
