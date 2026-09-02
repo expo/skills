@@ -7,7 +7,7 @@ license: MIT
 
 # Expo Router Navigation
 
-Navigation and routing for Expo Router apps. For screen styling, colors, controls, animations, media, and visual effects, use the `expo-native-ui` skill.
+Navigation and routing for Expo Router apps. For screen styling, colors, controls, media, and visual effects, use the `expo-native-ui` skill; for motion and gestures, use `expo-animation`.
 
 ## References
 
@@ -228,6 +228,8 @@ export default function Layout({ segment }) {
   );
 }
 ```
+
+`headerLargeTitleEnabled` is the SDK 56+ option name; older SDKs use `headerLargeTitle`, which is deprecated upstream.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
