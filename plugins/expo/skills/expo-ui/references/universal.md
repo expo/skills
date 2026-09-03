@@ -14,7 +14,7 @@ import { Host, Column, Button, Text } from '@expo/ui';
 <Host matchContents>
   <Column>
     <Text>Hello</Text>
-    <Button onPress={() => alert('Pressed!')}>Press me</Button>
+    <Button label="Press me" onPress={() => alert('Pressed!')} />
   </Column>
 </Host>;
 ```
@@ -74,7 +74,7 @@ export default function MapScreen() {
 
   return (
     <Host>
-      <Button onPress={() => setIsOpen(true)}>Show details</Button>
+      <Button label="Show details" onPress={() => setIsOpen(true)} />
       <BottomSheet
         isPresented={isOpen}
         onDismiss={() => setIsOpen(false)}
@@ -82,7 +82,7 @@ export default function MapScreen() {
       >
         <Column>
           <Text>Sheet content</Text>
-          <Button onPress={() => setIsOpen(false)}>Close</Button>
+          <Button label="Close" onPress={() => setIsOpen(false)} />
         </Column>
       </BottomSheet>
     </Host>

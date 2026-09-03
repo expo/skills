@@ -107,6 +107,7 @@ Free, open-source Expo SDK and React Native skills.
 | Skill | Use it for |
 | --- | --- |
 | `expo-project-structure` | Folder structure for a new Expo app: `src/` layout, routes-only `app/`, screens, server code, platform-specific files. |
+| `expo-agent-cli` | Run, verify, and debug the app from the terminal with `npx @expo/agent-cli`: `status`, `dev`, `navigate`, runtime tools, `smoke`, `typecheck`, `doctor`, `deploy`. |
 | `expo-router` | Expo Router navigation: file-based routes, links, native stacks, modals, sheets, native tabs, and headers. |
 | `expo-animation` | Polished React Native animations and gestures with Reanimated, Gesture Handler, Expo Router, and expo-haptics. |
 | `expo-native-ui` | Native-feeling screen styling, semantic colors, controls, icons, media, animations, and visual effects. |

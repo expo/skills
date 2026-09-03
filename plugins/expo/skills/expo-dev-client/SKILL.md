@@ -13,12 +13,9 @@ Use EAS Build to create development clients for testing native code changes on p
 
 **Development clients are the recommended setup for any real or production app.** Expo Go is a playground for learning and quick experiments with the native libraries it bundles; most apps outgrow it and move to a development client. See [Expo Go vs. development builds](https://docs.expo.dev/develop/development-builds/introduction/) for the full reasoning.
 
-You need a dev client ONLY when using:
+Let the tooling decide for the project in front of you: `npx @expo/agent-cli status` says whether Expo Go can run it and names what blocks it (`probe.expoGo.reasons` under `--json`), and `npx @expo/agent-cli dev --plan` prints the build plan. In general a dev client is needed for local Expo modules (custom native code), Apple targets (widgets, App Clips, extensions), third-party native modules Expo Go does not bundle, config plugins from such packages, and for testing remote push notifications or App/Universal Links.
 
-- Local Expo modules (custom native code)
-- Apple targets (widgets, app clips, extensions)
-- Third-party native modules not in Expo Go
-- Config plugins, or testing remote push notifications and App/Universal Links
+**Running a development build on this machine is the `expo-agent-cli` skill**: `npx @expo/agent-cli dev --dev-client --yes` installs `expo-dev-client`, runs `expo prebuild` and `expo run:ios` / `run:android`, opens the app, and records the fingerprint so later `dev` runs skip the build until native code changes. This skill covers **distributing** a dev client: EAS development profiles, cloud builds, TestFlight, and installing the artifacts.
 
 ## EAS Configuration
 
@@ -70,47 +67,24 @@ After receiving the TestFlight email:
 
 1. Download the build from TestFlight on your device
 2. Launch the app to see the expo-dev-client UI
-3. Connect to your local Metro bundler or scan a QR code
+3. Start the dev server with `npx @expo/agent-cli dev --detach` (or `npx expo start --dev-client`); the launcher lists it on the same network, or scan the QR code
 
-## Building Locally
+## Building Locally with EAS
 
-Build a development client on your machine:
+`eas build --local` runs the EAS build pipeline on your machine and produces the same artifact as the cloud: an `.ipa` (iOS, needs Xcode) or an `.apk` / `.aab` (Android).
 
 ```bash
-# iOS (requires Xcode)
 eas build -p ios --profile development --local
-
-# Android
 eas build -p android --profile development --local
 ```
 
-Local builds output:
+For a development build you only need on this machine's simulator, skip EAS: `npx @expo/agent-cli dev --dev-client --yes` (`expo-agent-cli`) builds, installs, and opens it.
 
-- iOS: `.ipa` file
-- Android: `.apk` or `.aab` file
+## Installing Build Artifacts
 
-## Installing Local Builds
-
-Install iOS build on simulator:
-
-```bash
-# Find the .app in the .tar.gz output
-tar -xzf build-*.tar.gz
-xcrun simctl install booted ./path/to/App.app
-```
-
-Install iOS build on device (requires signing):
-
-```bash
-# Use Xcode Devices window or ideviceinstaller
-ideviceinstaller -i build.ipa
-```
-
-Install Android build:
-
-```bash
-adb install build.apk
-```
+- Simulator or emulator build from EAS: `eas build:run --platform ios --latest` (or `--platform android`) downloads and installs it on the booted device.
+- iOS device (needs signing): the Xcode Devices window, or `ideviceinstaller -i build.ipa`.
+- Android device: `adb install build.apk`.
 
 ## Building for Specific Platform
 
@@ -128,29 +102,23 @@ eas build --profile development
 ## Checking Build Status
 
 ```bash
-# List recent builds
-eas build:list
-
-# View build details
-eas build:view
+eas build:list   # recent builds
+eas build:view   # one build's details
 ```
+
+`npx @expo/agent-cli status --explain` (signed in) also reports whether EAS already has a finished build for the project's current fingerprint, so you download instead of rebuilding.
 
 ## Using the Dev Client
 
-Once installed, the dev client provides:
-
-- **Development server connection** - Enter your Metro bundler URL or scan QR
-- **Build information** - View native build details
-- **Launcher UI** - Switch between development servers
-
-Connect to local development:
+Once installed, the dev client shows a launcher: the development servers it can see, a field to enter a URL manually, and the native build details. Connect it from the terminal:
 
 ```bash
-# Start Metro bundler
-npx expo start --dev-client
-
-# Scan QR code with dev client or enter URL manually
+npx @expo/agent-cli dev --detach --wait-ready   # start the dev server in the background
+npx @expo/agent-cli navigate /                  # open the app on the booted device at a route
+npx @expo/agent-cli status                      # "1 app connected" confirms the link
 ```
+
+Without the agent CLI: `npx expo start --dev-client`, then scan the QR code or enter the URL in the launcher. Everything after that - reload, runtime errors, tapping through screens, the `smoke` gate - is in `expo-agent-cli`.
 
 ## Troubleshooting
 
@@ -166,12 +134,13 @@ eas credentials
 eas build -p ios --profile development --clear-cache
 ```
 
-**Check EAS CLI version:**
+**Find the failing line in a local build log:**
 
 ```bash
-eas --version
-eas update
+npx @expo/agent-cli inspect:build-log --file <xcodebuild-or-gradle.log>
 ```
+
+**Check the EAS CLI version:** `npx eas-cli@latest --version` (a global `eas` is often outdated; running it via `npx eas-cli@latest` avoids that).
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:

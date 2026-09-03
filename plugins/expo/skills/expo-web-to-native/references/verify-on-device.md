@@ -28,13 +28,13 @@ agent-browser screenshot web.png   # visual reference
 
 **Tip:** capture web baselines for every screen once, up front, then diff against them instead of re-opening the web app each iteration.
 
-**B. Capture the native screen** (iOS shown via `simctl`; Android note below):
-1. Run the app: `npx expo start --ios` (Expo Go). On **SDK 56+ both `@expo/ui` and DOM components run in Expo Go** — no dev build, no `react-native-webview` to install; reach for a dev build (the `expo-dev-client` skill) only for *custom* native modules. Stale-bundle trap: a CI-mode Metro + cached Expo Go can show an old build — terminate Expo Go and add `--clear` if a change doesn't appear.
-2. Boot a sim: `xcrun simctl boot <udid>` (`xcrun simctl list devices available`); `open -a Simulator`.
-3. Open the route: deep-link `xcrun simctl openurl booted "exp://<lan-ip>:8081/--/<route>?<params>"`, or argent `launch-app` + `gesture-tap`.
-4. Capture: `xcrun simctl io booted screenshot native.png`, or `argent run describe --udid <udid>` for structure.
+**B. Capture the native screen** - `expo-agent-cli` runs and reads the app, `argent` captures pixels and accessibility (iOS shown; Android note below):
+1. Run the app: `npx @expo/agent-cli dev --detach --wait-ready --ios` starts the dev server and opens the app on the booted simulator - in Expo Go while it can run the project (on **SDK 56+ both `@expo/ui` and DOM components run in Expo Go**, no `react-native-webview` to install), otherwise in the development build the plan makes (`--yes` to consent). After a change that does not show up: `npx @expo/agent-cli runtime:reload`.
+2. Open the route: `npx @expo/agent-cli navigate "/<route>?<params>"`. On a fresh simulator the first deep link raises an iOS "Open in …?" dialog - accept it once (see `expo-agent-cli`, traps).
+3. Read the structure: `npx @expo/agent-cli runtime:tree --all` (elements, text, testIDs of the focused screen) and `runtime:errors --duration 4s` for what it threw; `smoke --route "/<route>"` is the pass/fail gate.
+4. Capture pixels and a11y: `xcrun simctl io booted screenshot native.png`, or `argent run screenshot --udid <udid>` / `argent run describe --udid <udid>`.
 
-> **Android:** `simctl` / `expo run:ios` are iOS-only. Use an Android emulator + `adb` — `adb exec-out screencap -p > native.png`, `adb shell am start -a android.intent.action.VIEW -d "<deep-link>"`, `adb shell screenrecord` for motion — or `npx expo run:android` for a dev build.
+> **Android:** `npx @expo/agent-cli dev --detach --android` and `navigate --android` work the same way, but Expo Go on Android ships no debugger, so `runtime:*` and `smoke` need a development build there (`dev --dev-client --android --yes`). Pixels via `adb exec-out screencap -p > native.png`, motion via `adb shell screenrecord`.
 
 **C. Compare** the two for the same route — layout, content, behavior. Diff the structures (agent-browser `snapshot` against argent `describe` / `debugger-component-tree`), not just pixels. Pass only on parity: same data, and params passed into a DOM webview must produce the same result.
 

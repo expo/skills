@@ -99,7 +99,7 @@ Small differences: use `Platform.select` / `Platform.OS`. For larger ones, split
 
 ## AI and config files
 
-Agent instructions live at the repo root — `AGENTS.md` / `CLAUDE.md`, with project skills under `.claude/`. Other config and assets stay outside `src/`: `app.json` / `app.config.ts`, `eas.json`, `package.json`, `assets/`, and `scripts/`.
+Agent instructions live at the repo root — `AGENTS.md` / `CLAUDE.md`, with project skills under `.claude/`. `npx @expo/agent-cli agents:setup` writes a managed block into `AGENTS.md` (project facts and the agent-cli commands) and links skills shipped by installed packages into `.claude/skills` and `.agents/skills`; everything outside its markers is left alone. Other config and assets stay outside `src/`: `app.json` / `app.config.ts`, `eas.json`, `package.json`, `assets/`, and `scripts/`.
 
 ---
 

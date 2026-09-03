@@ -36,7 +36,7 @@ npx expo install expo@latest
 npx expo install --fix
 ```
 
-2. Run diagnostics: `npx expo-doctor`
+2. Run diagnostics: `npx @expo/agent-cli doctor` (runs `expo-doctor` and exits 20 with the failed checks and their advice; `--json` for data) or plain `npx expo-doctor`
 
 3. Clear caches and reinstall
 
@@ -45,6 +45,8 @@ npx expo export -p ios --clear
 rm -rf node_modules .expo
 watchman watch-del-all
 ```
+
+4. Verify: `npx @expo/agent-cli typecheck` (the project's own `tsc --noEmit`, exit 20 on the first error) and `npx @expo/agent-cli smoke` (the app boots on a device without runtime errors) - see the `expo-agent-cli` skill
 
 ## Breaking Changes Checklist
 
@@ -56,7 +58,7 @@ watchman watch-del-all
 
 ## Prebuild for Native Changes
 
-**First check if `ios/` and `android/` directories exist in the project.** If neither directory exists, the project uses Continuous Native Generation (CNG) and native projects are regenerated at build time — skip this section and "Clear caches for bare workflow" entirely.
+**First check whether the project is bare or CNG:** `npx @expo/agent-cli status` prints `CNG` or `bare (ios, android)` on its `project` line (equivalently, look for committed `ios/` and `android/` directories). A CNG project regenerates its native projects at build time — skip this section and "Clear caches for bare workflow" entirely.
 
 If upgrading requires native changes:
 
@@ -77,7 +79,7 @@ These steps only apply when `ios/` and/or `android/` directories exist in the pr
 ## Housekeeping
 
 - Review release notes for the target SDK version at https://expo.dev/changelog
-- Update versioned docs links in agent instruction files (`AGENTS.md`). The default template links to `https://docs.expo.dev/versions/v<version>/`. Search for `docs.expo.dev/versions/` and bump each link to the new SDK version.
+- Update versioned docs links in agent instruction files (`AGENTS.md`). The default template links to `https://docs.expo.dev/versions/v<version>/`. Search for `docs.expo.dev/versions/` and bump each link to the new SDK version. If `AGENTS.md` carries the `@expo/agent-cli` managed block, `npx @expo/agent-cli agents:setup` rewrites its SDK line.
 - If using Expo SDK 54 or later, ensure react-native-worklets is installed — this is required for react-native-reanimated to work.
 - Enable React Compiler in SDK 54+ by adding `"experiments": { "reactCompiler": true }` to app.json — it's stable and recommended
 - Delete sdkVersion from `app.json` to let Expo manage it automatically
