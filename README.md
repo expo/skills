@@ -133,6 +133,7 @@ Skills whose core purpose uses paid Expo Application Services (EAS).
 | `eas-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. |
 | `eas-workflows` | EAS Workflow YAML files and CI/CD automation. |
 | `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. |
+| `eas-update` | EAS Update setup, OTA publishing, runtime compatibility, testing, and debugging. |
 | `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
 | `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator on EAS cloud - from the CLI or an agent, with a live browser preview (iOS only). |
 
