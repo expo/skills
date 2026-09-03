@@ -6,17 +6,17 @@
 - Ensure to flip the camera with `mirror` to emulate social apps
 - Use liquid glass buttons on cameras
 - Icons: `arrow.triangle.2.circlepath` (flip), `photo` (gallery), `bolt` (flash)
-- Eagerly request camera permission
-- Lazily request media library permission
+- Gate the camera behind an explanation screen with a Grant button (as below) — never fire the permission prompt on mount
+- Lazily request media library permission (at first save/pick)
+
+The example uses the `GlassButton` helper defined in `visual-effects.md` (Glass Buttons section).
 
 ```tsx
 import React, { useRef, useState } from "react";
-import { View, TouchableOpacity, Text, Alert } from "react-native";
+import { View, Pressable, Text } from "react-native";
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
-import * as MediaLibrary from "expo-media-library";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
-import { SymbolView } from "expo-symbols";
 import { colors } from "@/theme/colors";
 import { GlassView } from "expo-glass-effect";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -32,9 +32,9 @@ function Camera({ onPicture }: { onPicture: (uri: string) => Promise<void> }) {
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.systemBackground }}>
         <Text style={{ color: colors.label, padding: 16 }}>Camera access is required</Text>
         <GlassView isInteractive tintColor={colors.systemBlue} style={{ borderRadius: 12 }}>
-          <TouchableOpacity onPress={requestPermission} style={{ padding: 12, borderRadius: 12 }}>
+          <Pressable onPress={requestPermission} style={{ padding: 12, borderRadius: 12 }}>
             <Text style={{ color: "white" }}>Grant Permission</Text>
-          </TouchableOpacity>
+          </Pressable>
         </GlassView>
       </View>
     );
@@ -64,7 +64,7 @@ function Camera({ onPicture }: { onPicture: (uri: string) => Promise<void> }) {
       <CameraView ref={cameraRef} mirror style={{ flex: 1 }} facing={type} />
       <View style={{ position: "absolute", left: 0, right: 0, bottom: bottom, gap: 16, alignItems: "center" }}>
         <GlassView isInteractive style={{ padding: 8, borderRadius: 99 }}>
-          <TouchableOpacity onPress={takePhoto} style={{ width: 64, height: 64, borderRadius: 99, backgroundColor: "white" }} />
+          <Pressable onPress={takePhoto} style={{ width: 64, height: 64, borderRadius: 99, backgroundColor: "white" }} />
         </GlassView>
         <View style={{ flexDirection: "row", justifyContent: "space-around", paddingHorizontal: 8 }}>
           <GlassButton onPress={selectPhoto} icon="photo" />
@@ -98,30 +98,25 @@ import {
   setAudioModeAsync,
   useAudioRecorderState,
 } from 'expo-audio';
-import { useEffect } from 'react';
 import { Alert, Button } from 'react-native';
 
 function App() {
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
 
+  // Request the microphone on first record, not on mount — no prompt before user intent
   const record = async () => {
+    const status = await AudioModule.requestRecordingPermissionsAsync();
+    if (!status.granted) {
+      Alert.alert('Permission to access microphone was denied');
+      return;
+    }
+    await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true });
     await audioRecorder.prepareToRecordAsync();
     audioRecorder.record();
   };
 
   const stop = () => audioRecorder.stop();
-
-  useEffect(() => {
-    (async () => {
-      const status = await AudioModule.requestRecordingPermissionsAsync();
-      if (status.granted) {
-        setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true });
-      } else {
-        Alert.alert('Permission to access microphone was denied');
-      }
-    })();
-  }, []);
 
   return (
     <Button

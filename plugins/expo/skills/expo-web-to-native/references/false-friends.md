@@ -11,7 +11,7 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 | `<div>`, `<section>`, `<span>` | `<View>` | `View` is the only generic container; no semantic element variants. |
 | `<p>`, `<h1>`, raw text in JSX | `<Text>` | **All** text must sit inside `<Text>`. Bare strings in a `View` throw. |
 | `<img src>` | `<Image>` / `expo-image` | `expo-image` adds caching, blurhash, transitions. Remote images need an explicit `width`/`height` or a flex parent. |
-| `<button>`, `<a>` | `<Pressable>` (or `TouchableOpacity`) | No default styling, no hover. Wrap label text in `<Text>`. |
+| `<button>`, `<a>` | `<Pressable>` | No default styling, no hover. Wrap label text in `<Text>`. |
 | `<input>` | `<TextInput>` | Controlled via `value` + `onChangeText` (not `onChange`/`e.target.value`). |
 | `<ul>/<li>` rendered with `.map()` | `<FlatList>` / `<FlashList>` | `.map()` over a long list mounts every row at once → jank. Use a virtualized list with `data` + `renderItem`. |
 
