@@ -1,0 +1,4 @@
+interface:
+  display_name: "Expo Agent CLI"
+  short_description: "Run, verify, and debug an Expo app with npx @expo/agent-cli: status, dev, navigate, runtime tools, smoke, typecheck, deploy"
+  default_prompt: "Use $expo-agent-cli to get an Expo app running on a device and verify it: read `npx @expo/agent-cli status`, start the app with `dev`, open routes with `navigate`, reload and read runtime errors after edits, drive the screen by testID, and gate the work with `smoke` and `typecheck`. Also use it to interpret a `@expo/agent-cli` exit code or report."

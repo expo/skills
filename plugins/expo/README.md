@@ -10,6 +10,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 - Routes any Expo/EAS request to the right skill and applies shared setup rules (`expo-overview`)
 - Recommends a starting folder structure for new projects
+- Runs, verifies, and debugs the app from the terminal with `npx @expo/agent-cli` (`expo-agent-cli`)
 - Provides UI guidelines following Apple Human Interface Guidelines
 - Builds polished, accessible React Native animations and gestures that stay off the JS thread
 - Builds in-app design systems: token themes, reusable component conventions, and style audits
@@ -40,6 +41,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 - Starting any Expo/EAS task when no specific skill is named yet
 - Building new Expo apps from scratch
+- Running the app on a simulator or device, checking that it boots, reading runtime errors, tapping through screens, and gating with typecheck/doctor
 - Adding navigation, styling, or animations
 - Building or fixing animations, gestures, transitions, press feedback, or haptics
 - Setting up a theme with design tokens, or standardizing styles across screens
@@ -74,6 +76,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 ### Framework (open source)
 
 - **expo-project-structure** - Recommended folder structure for new Expo projects
+- **expo-agent-cli** - Run, verify, and debug the app with `npx @expo/agent-cli`: status, dev, navigate, runtime tools, smoke, typecheck, doctor, deploy
 - **expo-router** - Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, and headers
 - **expo-animation** - Build polished animations and gestures with Reanimated, Gesture Handler, Expo Router, and expo-haptics
 - **expo-native-ui** - Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, animations, and visual effects

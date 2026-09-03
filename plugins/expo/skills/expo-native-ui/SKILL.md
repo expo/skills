@@ -29,33 +29,7 @@ references/
 
 ## Running the App
 
-**CRITICAL: Always try Expo Go first before creating custom builds.**
-
-Most Expo apps work in Expo Go without any custom native code. Before running `npx expo run:ios` or `npx expo run:android`:
-
-1. **Start with Expo Go**: Run `npx expo start` and scan the QR code with Expo Go
-2. **Check if features work**: Test your app thoroughly in Expo Go
-3. **Only create custom builds when required** - see below
-
-### When Custom Builds Are Required
-
-You need `npx expo run:ios/android` or `eas build` ONLY when using:
-
-- **Local Expo modules** (custom native code in `modules/`)
-- **Apple targets** (widgets, app clips, extensions via `@bacons/apple-targets`)
-- **Third-party native modules** not included in Expo Go
-- **Custom native configuration** that can't be expressed in `app.json`
-
-### When Expo Go Works
-
-Expo Go supports a huge range of features out of the box:
-
-- All `expo-*` packages (camera, location, notifications, etc.)
-- Expo Router navigation
-- Most UI libraries (reanimated, gesture handler, etc.)
-- Push notifications, deep links, and more
-
-**If you're unsure, try Expo Go first.** Creating custom builds adds complexity, slower iteration, and requires Xcode/Android Studio setup.
+Run and verify with the `expo-agent-cli` skill. `npx @expo/agent-cli status` says whether Expo Go can run the project and which package blocks it; `npx @expo/agent-cli dev` starts the app in Expo Go or in a development build accordingly; `npx @expo/agent-cli smoke` proves the screen boots without runtime errors. Stay in Expo Go while it can run the project - a custom build adds Xcode / Android Studio setup and slower iteration - and let the plan switch to a development build only when a package outside Expo Go, custom native code in `modules/`, or an Apple target requires it.
 
 ## Code Style
 
@@ -171,7 +145,7 @@ import { colors } from "@/theme/colors";
 ## Text Styling
 
 - Add the `selectable` prop to every `<Text/>` element displaying important data or error messages
-- Counters should use `{ fontVariant: 'tabular-nums' }` for alignment
+- Counters should use `{ fontVariant: ['tabular-nums'] }` for alignment (`fontVariant` is typed as an array)
 
 ## Shadows
 

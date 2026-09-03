@@ -220,14 +220,13 @@ curl -X POST http://localhost:8081/api/users -H "Content-Type: application/json"
 
 ### Prerequisites
 
-```bash
-npm install -g eas-cli
-eas login
-```
+An Expo account signed in on this machine: `npx eas-cli@latest login`, or `EXPO_TOKEN` in the environment on CI. `npx @expo/agent-cli status` shows the sign-in state on its `auth` line.
 
 ### Deploy
 
 Deploying ships your web bundle and any Expo Router API routes together - `eas deploy` handles both. The export runs whether you have a full website, an API-routes-only backend, or both.
+
+One command: `npx @expo/agent-cli deploy --web` runs the export and `eas deploy`, and exits 7 with the sign-in instruction (`needsHuman` under `--json`) when nobody is signed in - hand that to the user instead of retrying. Step by step:
 
 ```bash
 # Export the web bundle (includes any API routes)

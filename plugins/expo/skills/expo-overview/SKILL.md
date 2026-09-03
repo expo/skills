@@ -39,12 +39,15 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 
 > **Component selection rule:** whenever you need a UI component (list rows, bottom sheets, pickers, sliders, menus, buttons, segmented controls, toggles), **consult `expo-ui` first** to check whether `@expo/ui` has a native equivalent before reaching for a React Native built-in or a community library. Native `@expo/ui` components give the best platform fit, and on SDK 56+ the universal ones run in Expo Go with no custom build. Load `expo-ui` alongside `expo-native-ui` for any app that renders lists, detail sheets, or form controls. One exception: `@expo/ui` `List` renders native grouped rows (an iOS Settings screen), **not** a virtualized list — use `FlatList` / `FlashList` for large datasets.
 
+**Run & verify**
+- `expo-agent-cli` — run the app on a simulator or device and prove it works: `npx @expo/agent-cli status` (SDK, bare vs CNG, Expo Go compatibility with reasons, dev server, device, auth, next command), `dev` (Expo Go vs development build decided for you), `navigate`, `runtime:reload` / `runtime:errors` / `runtime:tree` / `runtime:tap`, and the `smoke` / `typecheck` / `doctor` gates; also the exit-code contract (0 / 1 / 7 / 20 / 22)
+
 **Ship & operate**
 - `eas-app-stores` — build and submit to the App Store / Play Store / TestFlight, versions, and store metadata
 - `eas-hosting` — deploy the web bundle to EAS Hosting; also author Expo Router API routes (`+api.ts` handlers) and their environments / domains
 - `eas-workflows` — EAS Workflow YAML and CI/CD pipelines
 - `eas-simulator` — run and drive the app on a remote iOS / Android simulator on EAS cloud
-- `expo-dev-client` — custom development builds
+- `expo-dev-client` — distributable development builds: EAS development profiles, TestFlight / internal distribution of a dev client (running one locally is `expo-agent-cli`)
 - `eas-update-insights` — OTA update health: crash rate, adoption, payload size
 - `eas-observe` — startup / launch / TTI performance with EAS Observe
 
@@ -65,6 +68,7 @@ Some everyday phrasings don't obviously map to a skill name — translate before
 - "Make it look native" → grouped controls / settings forms = `expo-ui`; screens, styling, animations = `expo-native-ui`; navigation = `expo-router`.
 - "Make the screens consistent" / "clean up the styling" / "set up a theme or design tokens" → `expo-design-system`.
 - "Ship it" / "get an .ipa or .apk" / "release to the stores" → `eas-app-stores` (build + submit, TestFlight, versions, store metadata).
+- "Run it" / "start the app" / "does it work on the simulator" / "it crashes on launch" / "check it before we're done" → `expo-agent-cli` on this machine; a remote or shareable simulator → `eas-simulator`.
 - "I'm new / where do I start" → scaffold first (see Shared setup rules), then route by goal.
 
 ## Shared setup rules
@@ -72,26 +76,29 @@ Some everyday phrasings don't obviously map to a skill name — translate before
 These apply across every Expo skill, so handle them here once instead of repeating them
 in each leaf.
 
-- **No Expo project yet?** Start one the standard way before routing to a feature skill:
-  `npx create-expo-app@latest`, laying out folders per `expo-project-structure`. Then
-  classify the user's goal and route.
-- **Detect the SDK version** before giving version-specific advice: read the `expo`
-  version in `package.json` (and `app.json` / `app.config.{js,ts}`). Many APIs and
-  defaults differ by SDK.
+- **Read the project once with `npx @expo/agent-cli status`** (`bunx` when there is a
+  `bun.lock`). One read-only command prints the installed SDK, `bare` vs `CNG`, whether
+  Expo Go can run the project and why not, the dev server and connected apps, the booted
+  device, the EAS sign-in state, and the next command. Take version-specific facts from
+  there instead of guessing; `expo-agent-cli` explains every line. If the CLI is
+  unavailable, fall back to the `expo` version in `package.json`, committed `ios/` /
+  `android/` directories for bare vs CNG, and `eas whoami` for auth.
+- **No Expo project yet?** `npx @expo/agent-cli new <dir>` runs `create-expo-app` with
+  every prompt answered (plain `npx create-expo-app@latest` also works), laying out
+  folders per `expo-project-structure`. Then classify the user's goal and route.
 - **Read the docs for that SDK, not `latest`.** Use the version-pinned URL, e.g.
   `https://docs.expo.dev/versions/v56.0.0/sdk/ui/` on SDK 56 instead of
   `https://docs.expo.dev/versions/latest/sdk/ui/` — the `latest` pages track the newest
   SDK and can document APIs the project does not have yet.
 - **Moving to a newer SDK is its own task** — load `expo-upgrade` instead of bumping
   versions by hand.
-- **Managed vs. bare/prebuild**: the presence of committed `ios/` and `android/`
-  directories means native projects exist (prebuild or bare). Config-plugin and
-  native-setup steps differ — note which one the project is in.
-- **Install packages with `npx expo install <pkg>`**, not raw `npm`/`yarn`/`pnpm add`,
-  so versions stay compatible with the project's SDK.
-- **EAS auth & linking** (only needed for build/submit/update/observe/workflows): check
-  login with `eas whoami`, log in with `eas login`. A project is linked when
-  `extra.eas.projectId` exists in the app config; create it with `eas init` if missing.
+- **Install packages with `npx @expo/agent-cli install <pkg>`** (it runs `npx expo install`
+  so versions match the SDK, and reports whether the package needs a native rebuild) or
+  `npx expo install <pkg>` — never raw `npm`/`yarn`/`pnpm`/`bun add`.
+- **EAS auth & linking** (only needed for build/submit/update/observe/workflows): the
+  `auth` line of `status` says whether this machine is signed in; sign in with `eas login`.
+  A project is linked when `extra.eas.projectId` exists in the app config; create it with
+  `eas init` if missing.
 
 ## When to skip the router hop
 
