@@ -14,7 +14,14 @@ Use EAS Update to deliver compatible JavaScript, styling, and asset changes to i
 
 ## Start with the supported configuration path
 
-Before changing anything, inspect `package.json`, the Expo app config, `eas.json` if present, and whether `ios/` or `android/` are committed. Detect the Expo SDK version and preserve existing dynamic or platform-specific configuration.
+Before changing anything, inspect `package.json`, the Expo app config, `eas.json` if present, and whether `ios/` or `android/` are tracked. Use what you find when reviewing the CLI's changes:
+
+- Preserve existing dynamic or platform-specific app configuration.
+- If `eas.json` exists, preserve its profiles and existing channel assignments. The CLI adds a channel matching the profile name only to build profiles that do not already have one.
+- If `eas.json` is absent, do not create it by hand. The CLI may direct the user to run `eas build:configure` separately.
+- With tracked native projects, expect the CLI to synchronize the platform's native Update configuration. Without them, expect Continuous Native Generation to apply the native configuration during a later build.
+
+Detect the Expo SDK version before installing packages or interpreting version-specific behavior.
 
 If `expo-updates` is not installed, install the SDK-compatible version:
 
@@ -32,7 +39,7 @@ Use `eas update:configure` rather than manually inventing `updates.url`, `runtim
 
 If the command cannot proceed because the project is not linked or the user has not authorized the required remote operation, stop after any independently valid package installation and explain what remains. Do not partially reproduce `update:configure` by adding a runtime-version policy, config plugin, update URL, or channels by hand.
 
-For dynamic app config, non-EAS builds, or a command that cannot complete automatically, follow the current setup documentation instead of guessing: https://docs.expo.dev/eas-update/getting-started/.
+For dynamic app config, non-EAS builds, or a command that cannot complete automatically, follow the current setup documentation instead of guessing: https://docs.expo.dev/eas-update/getting-started.md.
 
 ## Keep the model straight
 
@@ -59,7 +66,7 @@ Use this model to make decisions, but explain only the concepts needed for the u
 
 Use an update for changes to JavaScript, styling, and bundled assets that the installed native runtime already supports.
 
-Create a new native build when a change adds or modifies native code or native configuration, including most native-library additions and SDK upgrades. Do not work around a runtime mismatch or imply that publishing can add native capabilities to an existing build. See https://docs.expo.dev/eas-update/runtime-versions/.
+Create a new native build when a change adds or modifies native code or native configuration, including most native-library additions and SDK upgrades. Do not work around a runtime mismatch or imply that publishing can add native capabilities to an existing build. See https://docs.expo.dev/eas-update/runtime-versions.md.
 
 Do not change the project's runtime-version policy as an incidental fix. Explain how the current policy affects compatibility; treat changing it as a separate decision because it changes which installed builds can receive future updates.
 
@@ -84,7 +91,7 @@ SDK 55 and later require an EAS environment for publishing. Choose the environme
 
 Publishing changes remote state and can affect installed applications. Before running it, establish the exact project, channel, environment, platforms, runtime version, and message. Publish to production only when the user has explicitly requested or approved it; if the authorization or target is ambiguous, stop before the command and ask. Do not infer a production destination solely from the current Git branch.
 
-Prefer a preview or staging channel for validation. When promoting a tested update, use the documented deployment flow so production receives the same artifact where possible: https://docs.expo.dev/eas-update/deployment/.
+Prefer a preview or staging channel for validation. When promoting a tested update, use the documented deployment flow so production receives the same artifact where possible: https://docs.expo.dev/eas-update/deployment.md.
 
 ## Test according to the build type
 
@@ -112,23 +119,23 @@ Check these in order:
 3. Confirm the build actually contains the expected update URL and channel; app-config changes take effect only in a newly compiled build.
 4. Inspect the channel-to-branch mapping and the active update on that branch.
 5. Fully terminate the release build and allow for the normal download-then-apply lifecycle.
-6. Use the current debugging guide for native logs, export problems, and configuration checks: https://docs.expo.dev/eas-update/debug/.
+6. Use the current debugging guide for native logs, export problems, and configuration checks: https://docs.expo.dev/eas-update/debug.md.
 
 Never bypass a compatibility or anti-bricking safeguard merely to make an update appear.
 
 ## Advanced and adjacent workflows
 
-- **Channel surfing:** an individual release build can override its `expo-channel-name` request header to request another compatible channel. This differs from changing the server-side channel-to-branch mapping. Follow https://docs.expo.dev/eas-update/channel-surfing/ and preserve its access-control, persistence, recovery, and compatibility constraints.
+- **Channel surfing:** an individual release build can override its `expo-channel-name` request header to request another compatible channel. This differs from changing the server-side channel-to-branch mapping. Follow https://docs.expo.dev/eas-update/channel-surfing.md and preserve its access-control, persistence, recovery, and compatibility constraints.
 - **Update health:** load `eas-update-insights` for adoption, launch failures, crash rate, payload size, and rollout monitoring after publishing.
 - **Store releases:** load `eas-app-stores` when native changes require a new TestFlight, App Store, or Play Store build.
 
 ## Official references
 
-- Setup: https://docs.expo.dev/eas-update/getting-started/
-- Concepts and matching: https://docs.expo.dev/eas-update/how-it-works/
-- Deployment: https://docs.expo.dev/eas-update/deployment/
-- Debugging: https://docs.expo.dev/eas-update/debug/
-- Current EAS CLI reference: https://docs.expo.dev/eas/cli/
+- Setup: https://docs.expo.dev/eas-update/getting-started.md
+- Concepts and matching: https://docs.expo.dev/eas-update/how-it-works.md
+- Deployment: https://docs.expo.dev/eas-update/deployment.md
+- Debugging: https://docs.expo.dev/eas-update/debug.md
+- Current EAS CLI reference: https://docs.expo.dev/eas/cli.md
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
