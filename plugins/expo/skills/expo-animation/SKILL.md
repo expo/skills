@@ -126,12 +126,18 @@ Reanimated's spring takes Apple's two designer parameters directly — use this 
 **Never `ease-in` on UI.** It starts slow, delaying the exact moment the user is watching. Reanimated's built-ins are as weak as CSS's — use these:
 
 ```js
-import { Easing } from 'react-native-reanimated';
+import { cubicBezier, Easing } from 'react-native-reanimated';
 
+// transitionTimingFunction / animationTimingFunction
+const CSS_EASE_OUT = cubicBezier(0.23, 1, 0.32, 1);
+
+// withTiming / .easing(...)
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);      // strong ease-out for UI
 const EASE_IN_OUT = Easing.bezier(0.77, 0, 0.175, 1);  // on-screen movement
 const EASE_SHEET = Easing.bezier(0.32, 0.72, 0, 1);    // iOS sheet curve
 ```
+
+Reanimated 4.1.1 and 4.5.1 reject raw `'cubic-bezier(...)'` strings. CSS transitions and animations use `cubicBezier(...)`; `withTiming` and `.easing(...)` use `Easing.bezier(...)`.
 
 **Duration:**
 
@@ -238,6 +244,7 @@ For ready-to-build implementations — press feedback, drag-to-dismiss sheet, sw
 | A screen transition rebuilt in JS | native stack `animation` |
 | Sliding between tabs | `animation: 'none'` |
 | `Easing.in(...)` on a UI element | `Easing.bezier(0.23, 1, 0.32, 1)` |
+| `'cubic-bezier(...)'` in a Reanimated CSS style | `cubicBezier(...)` from `react-native-reanimated` |
 | `scale(0)` entrance | `scale(0.95)` + `opacity: 0` |
 | Distance-only dismissal threshold | velocity **or** distance — a flick is enough |
 | Hard stop at a boundary | rubber-band resistance |

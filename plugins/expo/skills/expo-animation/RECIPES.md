@@ -89,7 +89,7 @@ function rubberband(overshoot, dimension, constant = 0.55) {
 Every pressable in the app. This passes the frequency gate only because it's near-imperceptible: 120ms and a 3% scale is the ceiling for something touched this often — anything longer or larger belongs to rarer moments, per step 1 in SKILL.md. No gesture, no shared value — a CSS transition is the whole implementation.
 
 ```jsx
-import Animated from 'react-native-reanimated';
+import Animated, { cubicBezier } from 'react-native-reanimated';
 import { Pressable, StyleSheet } from 'react-native';
 
 function PressableScale({ onPress, children }) {
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1 }],
     transitionProperty: 'transform',
     transitionDuration: '120ms',
-    transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
+    transitionTimingFunction: cubicBezier(0.23, 1, 0.32, 1),
   },
   pressed: { transform: [{ scale: 0.97 }] },
 });
