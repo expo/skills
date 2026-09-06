@@ -40,6 +40,11 @@ jobs:
         continue-on-error: true
         run: bun scripts/check-skill-limits.ts
 
+      - name: Check native iOS release validation
+        id: ios-release-tests
+        continue-on-error: true
+        run: python3 plugins/expo/skills/eas-app-stores/scripts/test-ios-release.py -v
+
       - name: Check plugin version bump
         id: version-check
         continue-on-error: true
@@ -61,6 +66,7 @@ jobs:
         if: always()
         env:
           SKILL_LIMITS_OUTCOME: ${{ steps.skill-limits.outcome }}
+          IOS_RELEASE_TESTS_OUTCOME: ${{ steps.ios-release-tests.outcome }}
           VERSION_CHECK_TEST_OUTCOME: ${{ steps.version-check-test.outcome }}
           VERSION_CHECK_OUTCOME: ${{ steps.version-check.outcome }}
           ROUTING_CHECK_OUTCOME: ${{ steps.routing-check.outcome }}
@@ -92,6 +98,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun scripts/check-skill-limits.ts"
+          report "native iOS release checks" "$IOS_RELEASE_TESTS_OUTCOME" "python3 plugins/expo/skills/eas-app-stores/scripts/test-ios-release.py -v"
           report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
           report "plugin version bump" "$VERSION_CHECK_OUTCOME" "bun scripts/check-plugin-version-bump.ts origin/main"
           report "expo-overview routing" "$ROUTING_CHECK_OUTCOME" "bun scripts/check-overview-routing.ts"
