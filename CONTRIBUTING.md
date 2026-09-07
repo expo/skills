@@ -163,3 +163,7 @@ preserves this repository's skill name, category metadata, collaboration notice,
 - MIT license for every skill; use `@expo.io` or `@expo.dev` author emails.
 - Keep `references/` next to the skill that uses them.
 - Don't broaden a skill's scope or trigger intent when editing it - keep changes focused.
+
+## Runnable brownfield fixtures
+
+Use the [iOS brownfield playgrounds](tests/fixtures/expo-brownfield/README.md) to exercise integrated and isolated SwiftUI hosts when changing `expo-brownfield`. They include SDK 55 and SDK 57 dependency snapshots, setup commands, and a Debug/Release acceptance checklist. Native validation requires the selected SDK's Xcode toolchain; these fixtures are not part of the distributed plugin.
