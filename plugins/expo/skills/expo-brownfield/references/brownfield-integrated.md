@@ -6,39 +6,35 @@ Add React Native and Expo directly to the existing native project's build system
 
 - A single team owns both the native and React Native code.
 - The team is comfortable adding React Native and Expo to the native build (Gradle plugin, CocoaPods pods).
-- You want hot reload, JS source maps, and a single Metro instance to "just work" inside the existing build.
+- You want JS bundling and native compilation in the host's existing build pipeline. Both approaches support Metro during development.
 - You prefer one repository and one build pipeline over shipping a prebuilt artifact.
 
 If the native team must not need Node, Yarn, or React Native tooling, use [./brownfield-isolated.md](./brownfield-isolated.md) instead.
 
 ## Prerequisites
 
-- **Expo SDK 54 or later** — the `ExpoReactHostFactory`, `ExpoReactNativeFactory`, and `ApplicationLifecycleDispatcher` entry points used below require SDK 54+. Earlier SDKs do not support this setup.
+- **An Expo/React Native version pair compatible with the host** — check [version compatibility](./version-compatibility.md) before editing the host. Use the selected SDK's native template and installed APIs; do not infer the minimum version of integrated brownfield from the separate `expo-brownfield` package.
 - **Node.js (LTS)** — runs JavaScript and the Expo CLI.
-- **Yarn** — manages JavaScript dependencies.
-- **CocoaPods** (iOS) — `sudo gem install cocoapods`.
+- The existing package manager and lockfile (commands below use Yarn as an example).
+- **Xcode and CocoaPods** (iOS) — use the host's Gemfile/Bundler setup when available.
 
 ---
 
 ## 1) Create an Expo project
 
-Create the Expo project inside (or alongside) the existing native project. **Pin to SDK 55 or later — earlier SDKs do not support brownfield integration:**
+Create the Expo project inside or alongside the existing native project, using the SDK selected during host inspection. For a new small feature on the current stable SDK:
 
 ```sh
-npx create-expo-app@latest my-project --template default@sdk-55
+npx create-expo-app@latest my-project --template blank@latest
 ```
 
-The new project ships a TypeScript example app. The JS entry point registers a root component under the name `"main"` — this name must match the `moduleName` referenced from the native side later.
+For TypeScript, install `typescript` and `@types/react` with `npx expo install`, then use the explicit entry point in [feature integration](./feature-integration.md#register-the-component-that-receives-input). The JS entry point registers a root component under the name `"main"` — this name must match the `moduleName` referenced from the native side later.
 
-## 2) Place native projects under the Expo project
+## 2) Establish the project layout
 
-A standard React Native project keeps native code under `android/` and `ios/`. Move the existing native projects in:
+Keep the existing repository layout when possible and configure paths explicitly. If consolidating into an Expo root, the resulting native build roots should be `my-project/ios/<Host>.xcodeproj` and `my-project/android/settings.gradle`, not an extra nested `android/android-project/` directory. Preserve source files, targets, signing, schemes, and relative resource paths; verify the native host still builds after relocation.
 
-```sh
-mkdir my-project/android
-mv /path/to/your/android-project my-project/android/
-# repeat for ios/
-```
+Ensure hand-maintained `ios/` and `android/` files are tracked and included in any EAS upload. A create-expo-app `.gitignore` may exclude them by default. **Do not run prebuild on this host.** Apply native configuration and SDK upgrade diffs directly.
 
 ### Monorepo alternative
 
@@ -62,7 +58,7 @@ Run `yarn install` at the root. This installs `node_modules` at the workspace ro
 
 ### `settings.gradle`
 
-Register the React Native Gradle plugin and Expo autolinking. Reference: [bare-minimum template `settings.gradle`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/android/settings.gradle).
+Register the React Native Gradle plugin and Expo autolinking. Reference: [bare-minimum template `settings.gradle`](https://github.com/expo/expo/blob/sdk-57/templates/expo-template-bare-minimum/android/settings.gradle).
 
 ```groovy
 pluginManagement {
@@ -130,7 +126,7 @@ apply plugin: "com.facebook.react.rootproject"
 
 ### `app/build.gradle`
 
-Apply the React Native plugin and configure the `react { ... }` block. The full template is at [bare-minimum `app/build.gradle`](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/android/app/build.gradle); the minimum that must change in your existing module:
+Apply the React Native plugin and configure the `react { ... }` block. The full template is at [bare-minimum `app/build.gradle`](https://github.com/expo/expo/blob/sdk-57/templates/expo-template-bare-minimum/android/app/build.gradle); the minimum that must change in your existing module:
 
 ```groovy
 apply plugin: "com.android.application"
@@ -142,12 +138,15 @@ def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 react {
   entryFile = file(["node", "-e", "require('expo/scripts/resolveAppEntry')", projectRoot, "android", "absolute"].execute(null, rootDir).text.trim())
   reactNativeDir = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
+  hermesCommand = new File(["node", "--print", "require.resolve('hermes-compiler/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile().getAbsolutePath() + "/hermesc/%OS-BIN%/hermesc"
   codegenDir = new File(["node", "--print", "require.resolve('@react-native/codegen/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
   cliFile = new File(["node", "--print", "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })"].execute(null, rootDir).text.trim())
   bundleCommand = "export:embed"
   autolinkLibrariesWithApp()
 }
 ```
+
+The Hermes compiler resolution above follows SDK 57; use the selected SDK's template for other versions.
 
 > **Monorepo:** set `root = file("../../")` (or wherever your Expo project lives) inside the `react { ... }` block.
 
@@ -279,7 +278,7 @@ The integrated approach drives iOS through CocoaPods + Expo modules autolinking,
 
 ### `ios/Podfile`
 
-Create (or update) `ios/Podfile` based on the [bare-minimum Podfile](https://github.com/expo/expo/blob/main/templates/expo-template-bare-minimum/ios/Podfile). The essential lines:
+Create (or update) `ios/Podfile` based on the [bare-minimum Podfile](https://github.com/expo/expo/blob/sdk-57/templates/expo-template-bare-minimum/ios/Podfile). The following excerpt follows SDK 57. For another SDK, adapt its matching template; preserve the host's other targets and Podfile hooks:
 
 ```ruby
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
@@ -287,6 +286,13 @@ require File.join(File.dirname(`node --print "require.resolve('react-native/pack
 
 require 'json'
 podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
+
+ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
+ENV['RCT_USE_RN_DEP'] ||= podfile_properties['ios.buildReactNativeFromSource'] == 'true' ? '0' : '1'
+ENV['RCT_USE_PREBUILT_RNCORE'] ||= podfile_properties['ios.buildReactNativeFromSource'] == 'true' ? '0' : '1'
+ENV['RCT_HERMES_V1_ENABLED'] ||= '0' if podfile_properties['expo.useHermesV1'] == 'false'
+ENV['EXPO_USE_PRECOMPILED_MODULES'] = '0' if podfile_properties['EXPO_USE_PRECOMPILED_MODULES'] == 'false'
+ENV['EXPO_USE_PRECOMPILED_MODULES'] ||= '1'
 
 platform :ios, podfile_properties['ios.deploymentTarget'] || '16.4'
 
@@ -324,7 +330,7 @@ target 'MyApp' do
 end
 ```
 
-Replace `'MyApp'` with the existing Xcode target name. The `:app_path` value tells `use_react_native!` where the JS app lives — set it to the absolute path of your Expo project root if you are in a monorepo.
+The `16.4` fallback and prebuilt settings match the SDK 57 template; retain a higher host/module requirement and use the selected SDK's minimum for other versions. Replace `'MyApp'` with the existing Xcode target name. The `:app_path` value tells `use_react_native!` where the JS app lives — set it to the absolute path of your Expo project root if you are in a monorepo.
 
 Create `ios/Podfile.properties.json` alongside the Podfile (defaults are fine):
 
@@ -345,7 +351,9 @@ Open the generated `.xcworkspace` (not the `.xcodeproj`) from now on.
 
 ### Xcode project changes
 
-Three Xcode-side adjustments are required before the app can build and run a React Native screen. Skip any one and either CocoaPods scripts fail under sandboxing, the JS bundle never lands in the IPA (release crashes looking for `main.jsbundle`), or the status bar fights React Native at runtime.
+Merge these settings into the existing target. Compare against the native template for the selected SDK rather than copying the moving `main` template wholesale.
+
+Configure script execution and Release bundling, then reconcile status-bar ownership with the native host.
 
 #### 1. Disable user script sandboxing
 
@@ -356,6 +364,8 @@ In Xcode, select your project → app target → **Build Settings**, search for 
 On the app target's **Build Phases** tab, add a new **Run Script** phase **before** `[CP] Embed Pods Frameworks`. This phase bundles JS for release builds and is skipped automatically in debug (Metro serves the bundle then).
 
 ```sh
+# Configure NODE_BINARY in ios/.xcode.env for the machine running Xcode.
+# For example: export NODE_BINARY=$(command -v node)
 if [[ -f "$PODS_ROOT/../.xcode.env" ]]; then
   source "$PODS_ROOT/../.xcode.env"
 fi
@@ -394,48 +404,35 @@ This script writes `main.jsbundle` into the app's resources directory in release
 
 #### 3. Update `Info.plist`
 
-Set `UIViewControllerBasedStatusBarAppearance` to `NO` so React Native can manage the status bar:
+Expo templates set `UIViewControllerBasedStatusBarAppearance` to `NO` for React Native status-bar control. This is an app-wide setting: preserve the host's existing controller-based behavior when required, and adapt the embedded screen's status-bar handling. If the host adopts the template behavior, use:
 
 ```xml
 <key>UIViewControllerBasedStatusBarAppearance</key>
 <false/>
 ```
 
-### `AppDelegate.swift`
+### Own the runtime without replacing the native window
 
-Wire React Native into the app delegate via Expo's `ExpoReactNativeFactory`. The delegate's `bundleURL()` selects the Metro dev server in `DEBUG` and the embedded bundle in release.
+Keep the existing `AppDelegate`, `SceneDelegate`, SwiftUI `App`, and navigation stack. Add one retained runtime owner and pass it to RN screens. This keeps the factory and its delegate alive across presentations without creating a competing `@main` or a new root window.
 
 ```swift
+import UIKit
 internal import Expo
 import React
 import ReactAppDependencyProvider
 
-@main
-class AppDelegate: ExpoAppDelegate {
-  var window: UIWindow?
+@MainActor
+final class ReactNativeRuntime {
+  private let delegate: ReactNativeDelegate
+  let factory: ExpoReactNativeFactory
+  let launchOptions: [UIApplication.LaunchOptionsKey: Any]?
 
-  var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
-  var reactNativeFactory: RCTReactNativeFactory?
-
-  public override func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
-  ) -> Bool {
+  init(launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) {
+    self.launchOptions = launchOptions
     let delegate = ReactNativeDelegate()
-    let factory = ExpoReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
-
-    reactNativeDelegate = delegate
-    reactNativeFactory = factory
-
-    window = UIWindow(frame: UIScreen.main.bounds)
-    factory.startReactNative(
-      withModuleName: "main",
-      in: window,
-      launchOptions: launchOptions
-    )
-
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    self.delegate = delegate
+    self.factory = ExpoReactNativeFactory(delegate: delegate)
   }
 }
 
@@ -454,47 +451,75 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
 }
 ```
 
-The module name `"main"` must match what the JS side registers with `AppRegistry.registerComponent("main", () => App)`.
+Keep Swift import access levels consistent with the generated Expo module provider (the inspected SDK 55 and 57 providers use `internal import Expo`).
 
-### Embedding RN inside an existing screen (not the root window)
+Create and retain `ReactNativeRuntime(launchOptions: launchOptions)` from the existing app delegate's launch callback. Forward Expo module lifecycle callbacks as described in [feature integration](./feature-integration.md#forward-lifecycle-events). If your delegate can inherit from `ExpoAppDelegate`, call `super` from its overrides; otherwise use the subscriber manager while preserving the existing superclass and host behavior.
 
-If you do not want React Native to take over the whole window, instantiate the factory the same way but mount the produced root view inside an existing `UIViewController`:
+The code above selects Metro in Debug and the embedded bundle in Release. It does not configure an Updates controller or a development-client launcher. Those integrations need their own SDK-matched delegate setup.
+
+### Present a React Native screen
 
 ```swift
 import UIKit
-import React
-import Expo
 
-class ReactNativeScreenViewController: UIViewController {
-  private var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
-  private var reactNativeFactory: RCTReactNativeFactory?
+final class ReactNativeScreenViewController: UIViewController {
+  private let runtime: ReactNativeRuntime
+  private let initialProps: [AnyHashable: Any]?
 
-  override func viewDidLoad() {
-    super.viewDidLoad()
+  init(runtime: ReactNativeRuntime, initialProps: [AnyHashable: Any]? = nil) {
+    self.runtime = runtime
+    self.initialProps = initialProps
+    super.init(nibName: nil, bundle: nil)
+  }
 
-    let delegate = ReactNativeDelegate()
-    let factory = ExpoReactNativeFactory(delegate: delegate)
-    delegate.dependencyProvider = RCTAppDependencyProvider()
-    self.reactNativeDelegate = delegate
-    self.reactNativeFactory = factory
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    fatalError("Use init(runtime:initialProps:)")
+  }
 
-    let rootView = factory.rootViewFactory.view(
+  override func loadView() {
+    view = runtime.factory.rootViewFactory.view(
       withModuleName: "main",
-      initialProperties: nil,
-      launchOptions: nil
+      initialProperties: initialProps,
+      launchOptions: runtime.launchOptions
     )
-    rootView.frame = view.bounds
-    rootView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    view.addSubview(rootView)
   }
 }
 ```
 
-Present it like any other view controller:
+From the existing UIKit controller, using the runtime supplied by the app:
 
 ```swift
-navigationController?.pushViewController(ReactNativeScreenViewController(), animated: true)
+let screen = ReactNativeScreenViewController(
+  runtime: runtime,
+  initialProps: ["userId": "123"]
+)
+navigationController?.pushViewController(screen, animated: true)
 ```
+
+For SwiftUI, retain the existing `@main struct HostApp: App`. If it has no delegate, attach one with `@UIApplicationDelegateAdaptor(AppDelegate.self)`; if it already has one, extend that delegate. Pass the retained runtime through the host's view hierarchy and wrap the controller:
+
+```swift
+import SwiftUI
+
+struct EmbeddedReactScreen: UIViewControllerRepresentable {
+  let runtime: ReactNativeRuntime
+  let userId: String
+
+  func makeUIViewController(context: Context) -> ReactNativeScreenViewController {
+    ReactNativeScreenViewController(
+      runtime: runtime,
+      initialProps: ["userId": userId]
+    )
+  }
+
+  func updateUIViewController(_ controller: ReactNativeScreenViewController, context: Context) {}
+}
+```
+
+Present `EmbeddedReactScreen` from the host's sheet or navigation destination. Initial props are creation-time input; use messaging/shared state for subsequent changes. For input registration, result handling, and dismissal, read [feature integration](./feature-integration.md).
+
+Only use `factory.startReactNative(withModuleName:in:launchOptions:)` with a window when the task explicitly calls for making RN the app's root. It is not necessary for this embedded-screen recipe.
 
 > **Monorepo iOS:** `pod install` is run from `ios/`, but Node module resolution starts from the Expo project root. Pass `EXPO_PROJECT_ROOT=/absolute/path/to/expo-project` to the `pod install` invocation if autolinking cannot find the Expo project automatically.
 
@@ -513,7 +538,7 @@ Build and run the native app normally (Android Studio / Xcode). Navigate to your
 ### Development vs. production
 
 - **Development** — Metro serves the JS bundle with hot reloading over HTTP. Debug builds use the Metro URL via `RCTBundleURLProvider` (iOS) or the dev server detection in `ReactActivity` (Android).
-- **Production** — Metro is not used. Run `expo export:embed` (invoked automatically by the React Native Gradle plugin and the iOS build phase) to embed the bundle into the APK/IPA.
+- **Production** — Metro is not used. The configured Gradle/Xcode build phases invoke `export:embed`. Stop Metro and run the host in Release; verify input, result, dismissal, and reopening as in [feature integration](./feature-integration.md#acceptance-scenario).
 
 For Metro connection issues, build failures, missing modules, or arch mismatches, see [./troubleshooting.md](./troubleshooting.md).
 
