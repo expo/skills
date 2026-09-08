@@ -33,6 +33,7 @@
         "eas-hosting",
         "eas-workflows",
         "eas-observe",
+        "eas-update",
         "eas-update-insights",
         "eas-simulator"
       ]

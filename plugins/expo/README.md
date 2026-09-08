@@ -30,6 +30,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Covers EAS Build configuration and version management
 - Helps write and validate EAS Workflow YAML files for CI/CD
 - Checks EAS Update health, adoption, crash rates, and payload size
+- Configures, publishes, tests, and debugs over-the-air updates with EAS Update
 - Tracks production performance with EAS Observe
 - Covers website and API route authoring and deployment with EAS Hosting
 - Runs and drives your app on remote iOS/Android simulators on EAS cloud
@@ -61,6 +62,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Configuring EAS Build profiles
 - Writing CI/CD workflows for automated deployments
 - Inspecting EAS Update rollout health and adoption
+- Configuring, publishing, testing, or debugging an EAS Update
 - Tracking startup, navigation, and event performance with EAS Observe
 - Deploying a website or Expo Router API routes to EAS Hosting
 - Running your app on a remote cloud simulator when no local simulator is available
@@ -96,6 +98,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **eas-hosting** - Deploy Expo websites and API routes to EAS Hosting (secrets, custom domains, Cloudflare Workers)
 - **eas-workflows** - EAS workflow YAML files for CI/CD pipelines
 - **eas-observe** - EAS Observe setup and launch, route, event, and version metrics
+- **eas-update** - Configure, publish, test, and debug over-the-air updates
 - **eas-update-insights** - Check EAS Update health, crash rates, adoption, and payload size
 - **eas-simulator** - Run and drive your app on a remote iOS/Android simulator on EAS cloud, from the CLI or an AI agent
 
