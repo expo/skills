@@ -302,7 +302,7 @@ export default function HomeStack() {
     <Stack>
       <Stack.Screen
         name="index"
-        options={{ title: "Home", headerLargeTitle: true }}
+        options={{ title: "Home", headerLargeTitleEnabled: true }}
       />
       <Stack.Screen name="details" options={{ title: "Details" }} />
     </Stack>
@@ -403,14 +403,14 @@ import {
   ThemeProvider,
   DarkTheme,
   DefaultTheme,
-} from "@react-navigation/native";
+} from "expo-router/react-navigation";
 import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 
 export default function Layout() {
   const colorScheme = useColorScheme();
   return (
-    <ThemeProvider theme={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack />
     </ThemeProvider>
   );
@@ -420,12 +420,12 @@ export default function Layout() {
 If the app only uses a light or dark theme, you can directly pass `DarkTheme` or `DefaultTheme` to `ThemeProvider` without checking the color scheme.
 
 ```tsx
-import { ThemeProvider, DarkTheme } from "@react-navigation/native";
+import { ThemeProvider, DarkTheme } from "expo-router/react-navigation";
 import { Stack } from "expo-router";
 
 export default function Layout() {
   return (
-    <ThemeProvider theme={DarkTheme}>
+    <ThemeProvider value={DarkTheme}>
       <Stack />
     </ThemeProvider>
   );
