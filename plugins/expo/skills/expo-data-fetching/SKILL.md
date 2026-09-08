@@ -38,12 +38,14 @@ Use this skill when:
 
 ## Every Screen Has Four States
 
-Every screen that loads data has four states: **loading**, **error**, **empty**, and **content**. Generated apps usually ship two - and the missing branches are the most recognizable "AI-built" tell.
+Design **loading**, **error**, **empty**, and **content** for screens that load data. These can overlap: a refresh error should coexist with cached content.
 
-- **Loading ≠ empty.** Never render "No items yet" while the first fetch (or a persisted-store hydration) is still resolving - the false-empty flash. Branch on `isLoading` before any `data.length === 0` check; empty means *resolved with zero items*.
-- **Empty is a designed state, not a blank list.** Use `ListEmptyComponent` on FlatList/FlashList: one line of copy plus the action that creates the first item.
-- **Refetches keep stale content.** Render `data` whenever it exists and revalidate behind it (React Query's default - gate spinners on `isLoading`, never `isFetching`). A full-screen spinner is for the first load only; past ~300ms prefer a skeleton of the known layout, and use `RefreshControl` for user-initiated refresh.
+- **Loading ≠ empty.** Empty means *resolved with zero items*, not missing data. Handle initial loading, failure, and hydration before checking list length. In TanStack Query v5, `isLoading` means the first fetch is running; a disabled or offline-paused query can have no data without being loading. Show the prerequisite or offline state in that case.
+- **Empty is a designed state, not a blank list.** Use `ListEmptyComponent` on FlatList/FlashList: explain why it is empty and offer the relevant next action. "No items yet" can offer Create; "No results" should offer changing or clearing the search/filter.
+- **Refetches keep stale content.** Render cached `data` even if a refresh fails, with a nonblocking error and retry. Use `isLoading` for first-fetch spinners and `isFetching` for background activity; prefer a skeleton for a slow initial load with a known layout, and `RefreshControl` for user-initiated refresh.
 - **Gate on hydration.** When initial UI or a redirect depends on persisted state (auth token, onboarding flag), the root layout renders nothing - or the splash - until that state has loaded. Deciding on unhydrated state flashes the wrong screen on every cold start and misroutes deep links that arrive before hydration.
+
+**Saves preserve work.** While a mutation is pending, disable repeat submission. On failure, retain the draft, show an inline error, and let the user retry; clear or dismiss only after success. If updating optimistically, restore the previous value or mark the edit as unsynced on failure. Verify with a failed save followed by retry.
 
 ## Common Issues & Solutions
 
@@ -119,15 +121,23 @@ export default function RootLayout() {
 import { useQuery } from "@tanstack/react-query";
 
 function UserProfile({ userId }: { userId: string }) {
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, fetchStatus, error, refetch } = useQuery({
     queryKey: ["user", userId],
     queryFn: () => fetchUser(userId),
   });
 
-  if (isLoading) return <Loading />;
-  if (error) return <Error message={error.message} />;
+  if (data === undefined) {
+    if (error) return <ErrorState message={error.message} onRetry={() => refetch()} />;
+    if (fetchStatus === "paused") return <OfflineState />;
+    return <Loading />;
+  }
 
-  return <Profile user={data} />;
+  return (
+    <>
+      {error && <InlineError message="Could not refresh. Showing saved data." onRetry={() => refetch()} />}
+      {data === null ? <EmptyState message="User not found" /> : <Profile user={data} />}
+    </>
+  );
 }
 ```
 
@@ -148,10 +158,12 @@ function CreateUserForm() {
   });
 
   const handleSubmit = (data: UserData) => {
+    if (mutation.isPending) return;
     mutation.mutate(data);
   };
 
-  return <Form onSubmit={handleSubmit} isLoading={mutation.isPending} />;
+  // Form keeps its draft on error and disables Submit while isLoading.
+  return <Form onSubmit={handleSubmit} isLoading={mutation.isPending} error={mutation.error?.message} />;
 }
 ```
 

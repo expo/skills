@@ -192,7 +192,7 @@ export function ThemedText({
 
 Screen titles still come from the navigation stack header (`expo-native-ui` rule), so `largeTitle` is mostly for non-stack contexts.
 
-**Dynamic Type.** Text scales with the user's system text-size setting (`allowFontScaling` is on by default), so the ramp values above are starting points, not fixed truths. Never hard-code a container height around text - use padding or `minHeight` so rows grow - and check screens at a large accessibility text size, where a fixed `height: 44` row truncates its label. Where extreme scaling would break chrome (tab labels, dense rows), cap it per element with `maxFontSizeMultiplier` (1.5-2 is typical); never disable scaling app-wide with `allowFontScaling={false}`.
+**Dynamic Type.** Text scales with the user's system text-size setting (`allowFontScaling` is on by default). Use padding or `minHeight` around text so rows can grow, and check large accessibility text sizes. Let labels wrap or reflow before considering a per-element `maxFontSizeMultiplier` for constrained chrome; dense rows alone are not a reason to cap readable text. Never disable scaling app-wide with `allowFontScaling={false}`.
 
 ### Radius
 
@@ -248,7 +248,7 @@ Every design-system primitive defines, explicitly:
 - **Sizes** - `sm`, `md`, `lg`. Default `md`. Sizes map to spacing/typography tokens, never to fresh numbers.
 - **States** - default, **pressed** (not hover - this is touch), disabled, loading. Handle pressed with a `Pressable` style function; never leave a tappable element without pressed feedback.
 - **Style override** - accept a `style` prop and merge it **last**, so callers can adjust layout (margins, flex) without forking the component. Callers may override layout, not identity - a caller changing a button's colors is a signal the variant set is missing something.
-- **Accessibility** - every interactive primitive sets `accessibilityRole`, and icon-only controls also set `accessibilityLabel` (visible text doubles as the label otherwise). Native and `@expo/ui` controls come labeled by default - custom `Pressable`s don't, so the label is this contract's job.
+- **Accessibility** - custom interactive primitives expose their role and disabled/busy/selected state as applicable. Text children can supply the label; icon-only controls and buttons that replace text with a spinner need an explicit label that remains available while loading. Verify labels on native controls too.
 
 ```tsx
 // components/button.tsx
@@ -286,6 +286,8 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: !!(disabled || loading), busy: !!loading }}
       disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed }) => [
@@ -347,19 +349,19 @@ After building or changing a screen, screenshot it and check it against these pr
 - **Repetition / unity** - do all corners, shadows, and accents match? If not, a value escaped the theme - move it in.
 - **Alignment** - do edges share axes? Fix with consistent screen edge padding.
 
-The pass is complete only when all four checks pass, or every failing value has moved into the theme or a component. If a screen fails the same check twice, the fix belongs in the theme or a component - not in the screen.
+Recheck the rendered result after fixing a value; moving it into the theme does not itself fix the layout. If the same defect recurs across screens, fix the shared token or component. Also run the primary-task and content checks in `expo-native-ui`'s Behavior section; screenshots alone cannot verify interaction.
 
 ## Named Failures: Native Slop
 
-The recurring visual tells of AI-generated apps have names - use them when building and reviewing. The five most frequent:
+Use these names to recognize common mistakes when building and reviewing:
 
-- **The Web Modal** - a centered dialog over a dimmed backdrop. Use a sheet (`formSheet`, `@expo/ui` BottomSheet), action sheet, or anchored menu instead.
+- **The Web Modal** - a custom centered dialog used for composing or picking. Prefer a native sheet (`formSheet`, `@expo/ui` BottomSheet) or menu; native confirmation alerts remain appropriate for consequential actions.
 - **Everything's a Card** - every row and section in its own white rounded shadowed box. Use grouped lists; group with background and hairlines, not borders.
 - **Emoji Iconography** - 🔥 ⚙️ ✨ as tab or button icons. SF Symbols on iOS, Material icons on Android.
-- **The Purple-Gradient Hero** - a screen opening on a gradient block with display text. Screens start with the user's data under a navigation title, not a hero.
+- **The Purple-Gradient Hero** - a decorative gradient intro pushing the task below the fold. Lead task screens with useful content; retain a hero when it serves the requested experience.
 - **The Spinner Blink** - a full-screen spinner between every state, or "No items yet" flashing during the first load. Every screen has four states (see `expo-data-fetching`).
 
-A present tell is a bug unless it is a deliberate, documented decision of this app. The full list of 20 - each with its observable tell and native replacement, plus grep checks where a grep is precise enough - is in `./references/native-slop.md`; scan every new screen against it by name before shipping.
+Treat visual tells as review prompts, not blanket bans on cards, fonts, or branding. Fix the observable problem and respect the user's brief and existing design system. The full list of 20 and candidate grep checks are in `./references/native-slop.md`; use them to explain the problem and replacement when reviewing a screen.
 
 ## Auditing an Existing App
 

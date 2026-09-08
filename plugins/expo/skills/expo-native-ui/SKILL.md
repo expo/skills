@@ -96,8 +96,12 @@ Expo Go supports a wide range of features out of the box:
 - Consider formatting large numbers like 1.4M or 38k
 - Never use intrinsic elements like 'img' or 'div' unless in a webview or Expo DOM component
 - Every screen that loads data has four states (loading, error, empty, content) - never show the empty state while the first load is still resolving; the rules live in the `expo-data-fetching` skill
-- On any scrollable shown over a live keyboard (compose forms, search results), set `keyboardShouldPersistTaps="always"` - with the default, the first tap on a button only dismisses the keyboard and gets swallowed, so the user must tap twice
+- On scrollable forms and search results, use `keyboardShouldPersistTaps="handled"` so controls receive the first tap and unhandled taps can dismiss the keyboard. Use `"always"` only when unhandled taps should also keep it open
 - A form's primary action must never sit under the keyboard. For UI that tracks the keyboard's real frame, load the `expo-animation` skill's keyboard recipe (`react-native-keyboard-controller`) - never `Keyboard.addListener` plus a timing animation
+- Every enabled control must perform its advertised action: search filters results, Save commits edits, and settings affect behavior. Empty handlers and success alerts are not implementations; local state is enough when the user requested a prototype
+- For async saves, preserve drafts and handle pending/failure states per `expo-data-fetching`; do not dismiss a form before its save succeeds
+
+Before calling a screen complete, walk through its primary task, including one failure and recovery when it loads or saves data. Check keyboard access and back/dismiss behavior. Try long titles, missing images, no search results, and large system text; required actions must remain reachable. Report what you exercised and what you could not run.
 
 # Styling
 
