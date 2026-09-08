@@ -45,6 +45,7 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 - `eas-workflows` — EAS Workflow YAML and CI/CD pipelines
 - `eas-simulator` — run and drive the app on a remote iOS / Android simulator on EAS cloud
 - `expo-dev-client` — custom development builds
+- `eas-update` — configure, publish, test, and debug compatible over-the-air updates
 - `eas-update-insights` — OTA update health: crash rate, adoption, payload size
 - `eas-observe` — startup / launch / TTI performance with EAS Observe
 
