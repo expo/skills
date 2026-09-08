@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, realpath } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import process from 'node:process';
 
@@ -92,7 +92,13 @@ function parseMaxAge(cacheControl) {
   return match ? parseInt(match[1], 10) : null;
 }
 
-if (import.meta.main) {
+// Older Node versions need a real-path comparison so symlinked installs still run.
+const isMain = import.meta.main ?? (
+  process.argv[1] &&
+  (await realpath(process.argv[1]).catch(() => null)) === (await realpath(new URL(import.meta.url)))
+);
+
+if (isMain) {
   const url = process.argv[2];
 
   if (!url || url === '--help' || url === '-h') {
