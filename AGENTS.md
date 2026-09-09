@@ -34,7 +34,7 @@ plugins/
           openai.yaml       # Codex trigger metadata
     README.md               # Plugin documentation
 README.md                   # User-facing installation instructions
-CONTRIBUTING.md             # Contributor guidance (adding skills, naming, framework vs services)
+CONTRIBUTING.md             # Contributor guidance (adding skills, naming, free vs paid)
 skills.sh.json              # skills.sh catalog groupings
 scripts/                    # CI checks (skill limits, plugin version bump)
 ```
@@ -96,7 +96,7 @@ Frontmatter fields:
 
 Skill guidelines:
 
-- Name skills `expo-*` (open-source framework) or `eas-*` (hosted EAS service), and prefix the description with `Framework (OSS).` or `EAS service.` to match. The cross-cutting `expo-skill-feedback` skill is exempt because it accepts framework, EAS, docs, CLI, and MCP feedback. EAS skills open the body with a usage/pricing callout. See `CONTRIBUTING.md` for the full rules.
+- Name skills `expo-*` (open-source framework) or `eas-*` (paid EAS service), and prefix the description with `Framework (OSS).` or `EAS service (paid).` to match. The cross-cutting `expo-skill-feedback` skill is exempt because it accepts framework, EAS, docs, CLI, and MCP feedback. Paid skills open the body with a costs/plan-limits callout. See `CONTRIBUTING.md` for the full rules.
 - Keep the `SKILL.md` body under 500 lines and the `description` under 1024 characters - both are CI-enforced by `scripts/check-skill-limits.ts`.
 - Move detailed material to `references/` and load it only when the skill needs it.
 - Put reusable validation or fetching logic in `scripts/` instead of pasting large command blocks into the skill.
@@ -198,8 +198,8 @@ When changing Claude Code marketplace aliases, preserve backward compatibility u
 
 Follow the full guide in `CONTRIBUTING.md`. In short:
 
-1. Pick the name per the naming rule: `expo-*` for open-source framework skills, `eas-*` for hosted EAS service skills.
-2. Create `plugins/expo/skills/<skill-name>/SKILL.md` with the category-prefixed description (`Framework (OSS).` or `EAS service.`); `expo-skill-feedback` is the sole cross-cutting exception. EAS skills open with a usage/pricing callout.
+1. Pick the name per the naming rule: `expo-*` for open-source framework skills, `eas-*` for paid EAS service skills.
+2. Create `plugins/expo/skills/<skill-name>/SKILL.md` with the category-prefixed description (`Framework (OSS).` or `EAS service (paid).`); `expo-skill-feedback` is the sole cross-cutting exception. Paid skills open with a costs/plan-limits callout.
 3. Add focused reference files under `references/` when the skill needs more detail than belongs in the main `SKILL.md`, scripts under `scripts/` only for reusable logic, and `agents/openai.yaml` for Codex triggering.
 4. Add the canonical feedback block with `bun scripts/check-skill-limits.ts --fix-feedback`; CI verifies that its subject matches the skill name.
 5. Register the skill in every catalog: `skills.sh.json`, `plugins/expo/README.md`, `plugins/expo/skills/README.md`, and the root `README.md`.

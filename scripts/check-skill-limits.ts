@@ -6,10 +6,10 @@ import { dirname, join } from "node:path";
 const MAX_DESCRIPTION = 1024;
 const MAX_BODY_LINES = 500;
 const FRAMEWORK_PREFIX = "Framework (OSS).";
-const EAS_PREFIX = "EAS service.";
-const EAS_CALLOUT = "**EAS usage and pricing.**";
-const EAS_PRICING_LINK = "expo.dev/pricing";
-const EAS_CODEX_PREFIX = "EAS service.";
+const PAID_PREFIX = "EAS service (paid).";
+const PAID_CALLOUT = "**EAS service - costs apply.**";
+const PAID_PRICING_LINK = "expo.dev/pricing";
+const PAID_CODEX_PREFIX = "Paid EAS service.";
 const CATEGORY_PREFIX_EXEMPT_SKILLS = new Set(["expo-skill-feedback"]);
 const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
 const FEEDBACK_HEADING = "## Submitting Feedback";
@@ -59,15 +59,15 @@ function syncFeedbackBlock(path: string, skillName: string): void {
   if (updated !== content) writeFileSync(path, updated);
 }
 
-function loadCatalogGroups(): Map<string, "framework" | "services" | "experimental"> {
-  const groups = new Map<string, "framework" | "services" | "experimental">();
+function loadCatalogGroups(): Map<string, "framework" | "paid" | "experimental"> {
+  const groups = new Map<string, "framework" | "paid" | "experimental">();
   const catalog = JSON.parse(readFileSync("skills.sh.json", "utf8"));
   for (const grouping of catalog.groupings ?? []) {
     const kind = grouping.title.startsWith("Framework")
       ? "framework"
       : grouping.title.startsWith("Experimental")
         ? "experimental"
-        : "services";
+        : "paid";
     for (const skill of grouping.skills ?? []) groups.set(skill, kind);
   }
   return groups;
@@ -91,14 +91,14 @@ for (const path of skills) {
   const rel = path.replace(process.cwd() + "/", "");
   const dirName = dirname(path).split("/").pop() ?? "";
   seenDirs.add(dirName);
-  const isEas = dirName.startsWith("eas-");
+  const isPaid = dirName.startsWith("eas-");
 
   if (description.length > MAX_DESCRIPTION)
     errors.push(`${rel}: description ${description.length} chars (max ${MAX_DESCRIPTION})`);
   if (bodyLines > MAX_BODY_LINES)
     errors.push(`${rel}: body ${bodyLines} lines (max ${MAX_BODY_LINES})`);
 
-  // naming: expo-* (framework) or eas-* (hosted EAS service), frontmatter name matches directory
+  // naming: expo-* (framework) or eas-* (paid EAS service), frontmatter name matches directory
   if (!dirName.startsWith("expo-") && !dirName.startsWith("eas-"))
     errors.push(`${rel}: skill directory must be named expo-* or eas-* (got "${dirName}")`);
   if (name !== dirName)
@@ -110,31 +110,32 @@ for (const path of skills) {
 
   // Category prefix on the always-loaded description. The cross-cutting feedback skill
   // spans framework, EAS, docs, CLI, and MCP feedback, so it has no category label.
-  const expectedPrefix = isEas ? EAS_PREFIX : FRAMEWORK_PREFIX;
+  const expectedPrefix = isPaid ? PAID_PREFIX : FRAMEWORK_PREFIX;
   if (!CATEGORY_PREFIX_EXEMPT_SKILLS.has(name) && !description.startsWith(expectedPrefix))
     errors.push(`${rel}: description must start with "${expectedPrefix}"`);
 
-  // EAS skills disclose usage and pricing up front.
-  if (isEas && (!body.includes(EAS_CALLOUT) || !body.includes(EAS_PRICING_LINK)))
-    errors.push(`${rel}: EAS skill body must include the "${EAS_CALLOUT}" callout with a ${EAS_PRICING_LINK} link`);
+  // paid skills disclose costs up front (dash style varies: em dash or hyphen)
+  const normalizedBody = body.replace(/—/g, "-");
+  if (isPaid && (!normalizedBody.includes(PAID_CALLOUT) || !normalizedBody.includes(PAID_PRICING_LINK)))
+    errors.push(`${rel}: paid skill body must include the "${PAID_CALLOUT}" callout with a ${PAID_PRICING_LINK} link`);
 
   // Codex trigger metadata
   const openaiYamlPath = join(dirname(path), "agents", "openai.yaml");
   if (!existsSync(openaiYamlPath)) {
     errors.push(`${rel}: missing agents/openai.yaml (Codex trigger metadata)`);
-  } else if (isEas) {
+  } else if (isPaid) {
     const yaml = readFileSync(openaiYamlPath, "utf8");
     const shortDesc = yaml.match(/^\s*short_description:\s*"?(.*?)"?\s*$/m)?.[1] ?? "";
-    if (!shortDesc.startsWith(EAS_CODEX_PREFIX))
-      errors.push(`${rel}: EAS skill's openai.yaml short_description must start with "${EAS_CODEX_PREFIX}"`);
+    if (!shortDesc.startsWith(PAID_CODEX_PREFIX))
+      errors.push(`${rel}: paid skill's openai.yaml short_description must start with "${PAID_CODEX_PREFIX}"`);
   }
 
   // catalog sync with skills.sh.json groups; the experimental group accepts either
-  // prefix - the description label still enforces the framework vs services distinction
+  // prefix - the description label still enforces the free vs paid boundary
   const group = catalogGroups.get(dirName);
   if (!group) errors.push(`${rel}: skill is not listed in skills.sh.json`);
-  else if (group !== "experimental" && group !== (isEas ? "services" : "framework"))
-    errors.push(`${rel}: skills.sh.json lists this skill in the ${group} group, but the ${isEas ? "eas-" : "expo-"} prefix requires the ${isEas ? "services" : "framework"} group`);
+  else if (group !== "experimental" && group !== (isPaid ? "paid" : "framework"))
+    errors.push(`${rel}: skills.sh.json lists this skill in the ${group} group, but the ${isPaid ? "eas-" : "expo-"} prefix requires the ${isPaid ? "paid" : "framework"} group`);
 }
 
 for (const [skill] of catalogGroups) {
@@ -143,7 +144,7 @@ for (const [skill] of catalogGroups) {
 }
 
 if (errors.length === 0) {
-  console.log("✓ All skills pass limits, naming, feedback, category labels, EAS usage callouts, Codex metadata, and catalog sync.");
+  console.log("✓ All skills pass limits, naming, feedback, category labels, paid callouts, Codex metadata, and catalog sync.");
   process.exit(0);
 } else {
   console.log("✗ Skill check violations:\n");
