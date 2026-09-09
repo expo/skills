@@ -8,7 +8,7 @@ allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(npx expo *
 
 # EAS Simulator
 
-> **EAS service - costs apply.** EAS Simulator runs on Expo Application Services cloud infrastructure, a paid product with free-tier limits; remote simulator sessions use your plan's compute allowance. See https://expo.dev/pricing.
+> **EAS service - costs apply.** EAS Simulator is a hosted EAS service. Session usage is subject to your account's pricing and limits. See https://expo.dev/pricing for current terms.
 
 EAS Simulator runs a remote iOS simulator or Android emulator on EAS infrastructure that you drive from your machine — from the CLI, from an AI agent (via `agent-device`), and from a browser preview. It's the unlock for **environments that can't run a simulator locally** (Linux boxes, cloud/background agents like Cursor Cloud), and for letting an agent *verify* a change on a real device instead of only reasoning about code.
 
@@ -20,18 +20,14 @@ The frontmatter `description` carries the trigger phrases. In short: use this to
 
 ## Cloud vs local: decide this first
 
-- **Non-macOS** (Linux / CI / cloud sandbox like Cursor Cloud, detect via `uname -s` ≠ `Darwin`): the only way to get a sim — **proceed, once you've confirmed access** (see *Check availability first* below).
-- **macOS:** local sims exist and a cloud session costs money + latency, so **ask first** ("a remote cloud sim — to share a live preview, offload, or test an iOS version you lack — or just run locally?") unless the user explicitly said cloud/remote/shareable.
-- Always honor an explicit choice; for "run it locally" hand off to `expo run:ios` / Xcode.
+- **Explicit cloud/remote/shareable request:** use EAS Simulator after checking access, on any host.
+- **Generic simulator request:** use a suitable local simulator when available. If the host cannot run the requested simulator (for example, iOS on Linux or a cloud sandbox), use EAS Simulator after checking access. A non-macOS host may still support a local Android emulator.
+- Honor an explicit local choice; hand off to `expo run:ios` / Xcode / Android Studio as appropriate. Clarify only when the requested environment remains ambiguous and affects the task.
 
-```bash
-# Programmatic detection — run this to decide before doing anything else:
-if [ "$(uname -s)" != "Darwin" ] || ! xcrun --find simctl &>/dev/null 2>&1; then
-  echo "no local sim — proceed with EAS Simulator"
-else
-  echo "local sim available — ask the user (cloud or local?)"
-fi
-```
+When the user requests EAS Simulator or a cloud simulator, proceed within that request and
+any stated budget. Explain applicable usage once and carry existing authorization through
+the session. Ask before purchasing or upgrading a plan, exceeding a stated budget, or
+expanding beyond the requested work.
 
 ## Prerequisites
 
@@ -40,12 +36,12 @@ fi
 - Run from an Expo **project directory.** A fresh app needs one-time setup: `npx --yes eas-cli@latest init` to create/link the project (when there's no `projectId`), and **set `ios.bundleIdentifier`** in app config if it's missing — a fresh `create-expo-app` often has none, and `prebuild`/`eas build` need it (they prompt or fail without it; e.g. `dev.<owner>.<slug>`). Read current config with `npx expo config --json` (it may live in `app.config.js`). The first Mode-C run is slow (native build); later runs reuse it.
 - A controller to drive the device. This skill uses **agent-device** (open source, MIT), run on demand via `npx agent-device@latest` — nothing globally installed. **argent** is an alternative (`--type argent` in `simulator:start`); see [references/controllers.md](./references/controllers.md).
 - **`.env.eas-simulator`** is written/managed by eas-cli (not this skill): it holds the session id (`EAS_SIMULATOR_SESSION_ID`) + the daemon URL/**token**, so `get`/`stop`/`exec` default to that session (usually **omit `--id`**; pass `--id <id>` to target another). It carries a **token → keep it gitignored** (eas-cli marks it "do not commit" but may not add the ignore rule, and a fresh app's `.gitignore` won't cover it — add `.env.eas-simulator` if missing).
-- `--max-duration-minutes` is paid-plan only; otherwise a default applies.
+- Use `--max-duration-minutes` when supported by the account; otherwise use the service's default session limit.
 - **The command blocks assume a POSIX shell** (bash/zsh) — `printf`, `lsof`, `$(seq …)` loops won't run in cmd/PowerShell. On Windows, run them in WSL or Git Bash, or translate as you go (the `eas-cli`/`agent-device` invocations themselves are cross-platform).
 
 ## Check availability first
 
-EAS Simulator is a **limited-access** EAS feature that is still rolling out, so it isn't enabled on every account. Confirm access **before** starting a session — this is a read-only check: no session, no billing.
+EAS Simulator is a **limited-access** EAS feature that is still rolling out, so it isn't enabled on every account. Check access **before** starting a session; this read-only command does not create a session.
 
 ```bash
 npx --yes eas-cli@latest simulator:availability --json
@@ -77,7 +73,7 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest snapshot -i     
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest press @e2            # tap a ref (NOTE: 'press', not 'tap')
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./shot.png
 
-# 3. Stop (ends billing; tears down the VM) and reset the dotenv. Omit --id to target the dotenv session.
+# 3. Stop the session and reset the dotenv. Omit --id to target the dotenv session.
 npx --yes eas-cli@latest simulator:stop
 printf '# managed by eas-cli\n' > .env.eas-simulator
 ```
@@ -86,7 +82,7 @@ To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (an 
 - **"Open it here" (Cursor/VS Code)** → print the URL on its own line and tell the user to open Simple Browser (`Cmd/Ctrl+Shift+P` → "Simple Browser: Show") and paste it. Then **stop**: do not shell out to a system browser or a Cursor/VS Code URL handler, and do not ask "did a tab appear?" — you can't confirm it, the handoff is done.
 - **Never `open` the `webPreviewUrl` on the sim.** It's a browser preview, not a deep link and not an `agent-device open` argument; routing it to the device renders a browser-in-a-browser (a real past failure).
 - **Headless agent** (no display) → just return the URL as the deliverable.
-- **Keeping it alive for the user to drive** → bound it: start with `--max-duration-minutes N` so it auto-stops; tell them it bills until stopped and when it auto-stops; offer to reopen/extend when it ends. (This is the one case where "stop right away" doesn't apply; one-shot `screenshot`/`get` runs still stop immediately.)
+- **Keeping it alive for the user to drive** → use `--max-duration-minutes N` when supported, otherwise use the service's default limit. Tell the user when the session expires, using the CLI's reported duration or expiry. Keep it running for the requested preview; stop sessions created for one-shot tasks when the task finishes.
 
 `start` also prints a job-run URL.
 
@@ -178,12 +174,12 @@ The non-obvious mental model worth internalizing. Specific error→fix lookups (
    If current code isn't rendering after your **first** connect, stop poking live state: **reset to baseline** (stop session → clear dotenv → kill your Metro) and redo the mode **once**; a second failure → stop and report. Never restart Metro in place, reconnect more than once, rebuild the native client to fix a JS/connection problem, or surface a preview URL while state is unknown. (A daemon drop — `ERR_NGROK_3200` / `Remote daemon is unavailable` — is the same: reset, don't retry.)
 2. **`exec` is a wrapper, not a driver.** `simulator:exec` loads `.env.eas-simulator` and spawns the command you pass; the device verbs come from the controller (`npx agent-device@latest`). There is no `simulator:tap`.
 3. **Act immediately; don't park an idle session.** Sessions are short-lived — install and drive right after `start`. Leaving one idle drops the tunnel/daemon (→ reset, per #1).
-4. **Stop on every exit path (billing) and reset the dotenv.** `--non-interactive` doesn't auto-stop, and a forgotten session bills until stopped. Don't `start` again to "retry" a slow boot — that orphans a second billed session.
+4. **Stop sessions you created on completion or failure and reset the dotenv.** `--non-interactive` does not stop a session when your task ends. For a requested live preview, follow the duration guidance above. Poll the existing session during a slow boot; starting another creates an extra session and overwrites the dotenv's session id.
 5. **Screenshot only the correct, fresh build.** Mode C only after the dev client connects to Metro; A/B only from a build matching current source — reusing a pre-existing build is the #1 "my edits don't show" cause (see the build caveat above). (`9:41` in the status bar is the sim default, not staleness.)
 
 ## Stop and clean up
 
-Stop the session (ends billing) **and reset the dotenv** so a later run doesn't try to reuse the dead session:
+After the task, stop the session you created **and reset the dotenv** so a later run doesn't try to reuse the dead session. For a requested live preview, keep it available for the agreed duration instead:
 
 ```bash
 npx --yes eas-cli@latest simulator:stop          # omit --id → stops the dotenv session (or pass --id <id>)
