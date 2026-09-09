@@ -7,7 +7,7 @@ license: MIT
 
 Use EAS Build to create development clients for testing native code changes on physical devices. Use this for creating custom Expo Go clients for testing branches of your app.
 
-> **Local builds and EAS usage.** `expo-dev-client` is open source and building locally is free. EAS Build offers Free-plan allowances and paid plans; cloud builds are subject to your plan's limits and pricing. Apple device/TestFlight distribution requires an Apple Developer account. See https://expo.dev/pricing.
+> **Free locally; cloud builds are paid.** `expo-dev-client` itself is open source and building locally is free. Building or distributing via EAS Build/TestFlight uses your EAS plan's build minutes and needs a paid Apple Developer account for device/TestFlight distribution. See https://expo.dev/pricing.
 
 ## Important: When Development Clients Are Needed
 
