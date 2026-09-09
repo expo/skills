@@ -1,6 +1,6 @@
 # Expo Skills Index
 
-Every skill in this directory is a sibling folder containing a `SKILL.md`. Skills are discovered **one level deep** - `skills/<skill-name>/SKILL.md` - so this index groups them for humans; the filesystem stays flat. Each skill's frontmatter `description` is prefixed with its category so agents can see the free vs paid boundary in the always-loaded metadata, except the cross-cutting `expo-skill-feedback` skill.
+Every skill in this directory is a sibling folder containing a `SKILL.md`. Skills are discovered **one level deep** - `skills/<skill-name>/SKILL.md` - so this index groups them for humans; the filesystem stays flat. Each skill's frontmatter `description` is prefixed with its category so agents can see the framework vs hosted-service distinction in the always-loaded metadata, except the cross-cutting `expo-skill-feedback` skill.
 
 ## Start Here
 
@@ -27,17 +27,17 @@ Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `F
 | `expo-web-to-native` | Migrating an existing web/React app (Next.js, Vite, CRA) to a native iOS/Android app with Expo. |
 | `expo-module` | Expo native modules and views with Swift, Kotlin, TypeScript, config plugins, and autolinking. |
 | `expo-brownfield` | Adding Expo or React Native to an existing iOS or Android app. |
-| `expo-dev-client` | Development clients (local builds are free; EAS Build/TestFlight is a paid step). |
+| `expo-dev-client` | Development clients (local builds are free; EAS Build has plan limits, and TestFlight requires Apple Developer membership). |
 | `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold from. |
 | `expo-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
 | `expo-upgrade` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
 | `expo-skill-feedback` | Sharing what worked or fell short across Expo, its skills, docs, CLIs, or MCP, and controlling opt-in usage telemetry. |
 
-## Services & paid distribution
+## EAS services
 
-Skills whose core purpose uses paid Expo Application Services (EAS). Descriptions are prefixed `EAS service (paid).`, and each `SKILL.md` opens with a costs/plan-limits callout.
+Skills whose core purpose uses hosted Expo Application Services (EAS). Descriptions are prefixed `EAS service.`, and each `SKILL.md` opens with a usage/pricing callout.
 
-| Skill | Use it for | Paid dependency |
+| Skill | Use it for | Service dependency |
 | --- | --- | --- |
 | `eas-app-stores` | Production builds, App Store, Play Store, TestFlight, eas.json profiles, versioning, and store metadata. | EAS + Apple/Google accounts |
 | `eas-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. | EAS Hosting usage |
@@ -50,7 +50,7 @@ Skills whose core purpose uses paid Expo Application Services (EAS). Description
 ## Adding a skill
 
 1. Create `skills/<skill-name>/SKILL.md` (one level deep - do not nest under a category folder, or it will not be discovered).
-2. Prefix the frontmatter `description` with the category label (`Framework (OSS).` or `EAS service (paid).`); `expo-skill-feedback` is the sole cross-cutting exception.
-3. For a services skill, open the body with a costs/plan-limits callout right after the H1.
+2. Prefix the frontmatter `description` with the category label (`Framework (OSS).` or `EAS service.`); `expo-skill-feedback` is the sole cross-cutting exception.
+3. For a services skill, open the body with a usage/pricing callout right after the H1.
 4. Add the skill to the table above, to `skills.sh.json`, and to the root and plugin `README.md` lists.
-5. Bump the version in all three plugin manifests (see `CONTRIBUTING.md`).
+5. Bump the version in all four plugin manifests (see `CONTRIBUTING.md`).

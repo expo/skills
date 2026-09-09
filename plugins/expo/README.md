@@ -2,7 +2,7 @@
 
 Official AI agent skills from the Expo team for building, deploying, upgrading, and debugging Expo apps.
 
-Skills come in two groups so the free vs paid boundary stays clear: open-source **framework** skills, and **services & paid distribution** skills whose core purpose uses paid Expo Application Services (EAS). Each services skill opens with a costs/plan-limits note.
+Skills cover open-source **framework** tooling and hosted **EAS services**. Services may include free allowances, paid plans, and usage-based charges; each EAS skill opens with a usage/pricing note.
 
 ## What This Plugin Does
 
@@ -24,7 +24,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Wires Expo projects into the Codex app Run button and action terminal
 - Shares specific feedback about what worked or fell short across Expo, its skills, docs, CLIs, or MCP
 
-### Services & paid distribution
+### EAS services
 
 - Guides iOS App Store, TestFlight, and Android Play Store submissions
 - Covers EAS Build configuration and version management
@@ -55,7 +55,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Adding a Codex app Run button for `expo start` and optional iOS/Android/Web/dev-client action buttons
 - Sharing what worked or fell short across Expo, its skills, docs, CLIs, or MCP
 
-### Services & paid distribution
+### EAS services
 
 - Submitting apps to App Store Connect or Google Play
 - Setting up TestFlight beta testing
@@ -86,13 +86,13 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-web-to-native** - Migrate an existing web/React app to a native iOS/Android app with Expo
 - **expo-module** - Write Expo native modules and views (Swift, Kotlin, TypeScript, config plugins)
 - **expo-brownfield** - Integrate Expo and React Native into existing native iOS or Android apps
-- **expo-dev-client** - Build and distribute Expo development clients (local builds free; EAS Build/TestFlight paid)
+- **expo-dev-client** - Build and distribute Expo development clients (local builds are free; EAS Build has plan limits, and TestFlight requires Apple Developer membership)
 - **expo-examples** - Adapt or scaffold from the `expo/examples` repo of `with-*` integrations
 - **expo-app-clip** - Add an iOS App Clip target (AASA, associated domains, Smart App Banners; needs an Apple Developer account)
 - **expo-upgrade** - Upgrade Expo SDK versions and fix dependency issues
 - **expo-skill-feedback** - Share feedback across Expo surfaces and control opt-in usage telemetry
 
-### Services & paid distribution
+### EAS services
 
 - **eas-app-stores** - Build and submit to the iOS App Store, Android Play Store, and TestFlight
 - **eas-hosting** - Deploy Expo websites and API routes to EAS Hosting (secrets, custom domains, Cloudflare Workers)

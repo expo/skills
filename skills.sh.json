@@ -26,8 +26,8 @@
       ]
     },
     {
-      "title": "Services & paid distribution",
-      "description": "Skills whose core purpose uses paid Expo Application Services (EAS). Each one discloses costs and plan limits up front.",
+      "title": "EAS services",
+      "description": "Skills whose core purpose uses hosted Expo Application Services (EAS). Each one explains applicable usage, plan limits, and pricing up front.",
       "skills": [
         "eas-app-stores",
         "eas-hosting",

@@ -25,11 +25,11 @@ plugins/expo/skills/<skill-name>/
 
 ### 2. Name it `expo-*` or `eas-*`
 
-Names are lowercase kebab-case (max 64 chars). The prefix signals the free/paid boundary:
+Names are lowercase kebab-case (max 64 chars). The prefix signals the framework/services boundary:
 
 - **`expo-*`** - open-source framework skills: the Expo SDK, Expo Router, React Native, and
   local tooling. Examples: `expo-router`, `expo-dom`, `expo-module`, `expo-web-to-native`.
-- **`eas-*`** - skills whose core purpose is a paid Expo Application Services product.
+- **`eas-*`** - skills whose core purpose is a hosted Expo Application Services product.
   Examples: `eas-hosting`, `eas-app-stores`, `eas-workflows`, `eas-observe`, `eas-simulator`.
 
 Name after what users say, and prefer the real product or package name (e.g. `eas-hosting`,
@@ -37,33 +37,45 @@ not `expo-api-routes`). To rename an existing skill, `git mv` the directory (to 
 history), update the frontmatter `name:`, and fix every reference (catalogs, `agents/openai.yaml`,
 cross-links in other skills).
 
-### 3. Decide free vs paid - and be strict about it
+### 3. Distinguish framework tooling from EAS services
 
-A skill belongs in **Services & paid distribution** only if its **core purpose requires a paid
-EAS product** (EAS Build, Submit, Hosting, Update, Workflows, Observe, Simulator, …).
+A skill belongs in **EAS services** when its **core purpose uses an EAS product**
+(EAS Build, Submit, Hosting, Update, Workflows, Observe, Simulator, …). EAS services
+can include Free-plan allowances, paid subscriptions, and usage-based charges;
+the category identifies the service dependency, not whether every invocation costs money.
 
-- A paid **Apple Developer or Google Play** account does **not** make a skill "paid" here - that
+- A paid **Apple Developer or Google Play** account does **not** make a skill an EAS service - that
   is app-store distribution, not EAS. `expo-app-clip` is a framework skill even though shipping a
   Clip needs an Apple account.
-- If authoring is free and only *deploying* is paid, it is usually still framework - unless the
-  skill is fundamentally about the paid service. (`eas-hosting` is the deploy skill, so it is
-  paid; free API-route authoring lives inside it.)
-- Litmus test: *can a developer get the main value of this skill without paying Expo?*
-  Yes → framework (`expo-*`). No → paid (`eas-*`).
+- Classify by the main workflow. `eas-hosting` deploys to EAS, even though it also covers
+  free API-route authoring. `expo-dev-client` covers an open-source package and local builds,
+  even though cloud builds are an option.
+- Litmus test: *is the skill primarily about using an EAS service?*
+  Yes → services (`eas-*`). No → framework (`expo-*`).
 
-### 4. Prefix the description, and add a costs note for paid skills
+### 4. Prefix the description, and disclose EAS usage and pricing
 
 Every `description` opens with its category label, except the cross-cutting
 `expo-skill-feedback` skill, which accepts feedback across framework, EAS, docs, CLI, and MCP:
 
 - Framework: `Framework (OSS). <what it does and when to use it>`
-- Paid: `EAS service (paid). <what it does and when to use it>`
+- Services: `EAS service. <what it does and when to use it>`
 
-Paid skills also open the `SKILL.md` **body** with a short callout:
+EAS skills also open the `SKILL.md` **body** with a short callout after the H1:
 
 ```markdown
-> **EAS service - costs apply.** <one line on what consumes the plan>. See https://expo.dev/pricing.
+> **EAS usage and pricing.** <what usage is subject to the account's pricing and limits>. See https://expo.dev/pricing.
 ```
+
+Explain included allowances and additional charges separately when verified against current
+Expo documentation. For services without published pricing, state that account terms and
+limits apply; avoid inventing free tiers, billing units, or rates. Keep the disclosure in one
+place, and describe session limits and cleanup as operating steps.
+
+Pricing information should help the agent carry out authorized work. Carry existing user
+authorization through the workflow; ask before purchasing or upgrading a plan, exceeding a
+stated budget, or expanding beyond the requested work. Production publishing and other
+consequential actions retain their own authorization requirements.
 
 ### 5. Write a description that triggers well
 
@@ -90,12 +102,12 @@ When a skill triggers, its whole `SKILL.md` loads into the agent's context. Shor
 
 ### 7. Add the Codex agent file
 
-Add `agents/openai.yaml` with `display_name`, `short_description` (paid skills prefix it
-`Paid EAS service.`), and a `default_prompt` that references the skill via `$<skill-name>`.
+Add `agents/openai.yaml` with `display_name`, `short_description` (EAS skills prefix it
+`EAS service.`), and a `default_prompt` that references the skill via `$<skill-name>`.
 
 ### 8. Register the skill in every catalog
 
-Add it to the correct group (framework vs paid) in all of:
+Add it to the correct group (framework vs EAS services) in all of:
 
 - `skills.sh.json`
 - `plugins/expo/README.md` - **What This Plugin Does**, **When to Use**, and **Skills Included**
@@ -149,7 +161,7 @@ Also run `python3 -m json.tool <file>` on any JSON you edited, and if the skill 
 run that skill's own validation.
 
 `check-skill-limits.ts` enforces more than the size caps: the naming rule (step 2), the category
-prefixes and paid costs callout (step 4), the Codex agent file and its paid prefix (step 7), the
+prefixes and EAS usage callout (step 4), the Codex agent file and its EAS prefix (step 7), the
 `skills.sh.json` grouping (step 8), and the feedback block (step 9) all fail CI when violated.
 
 ### Syncing `expo-animation`

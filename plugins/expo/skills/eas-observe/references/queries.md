@@ -29,7 +29,7 @@ All six commands share these flags:
 
 Default time range is the last 60 days when none of `--days`, `--start`, `--end` is given.
 
-**Plan gating.** Observe is a paid feature, and the server rejects queries the account's plan does not include (`EAS_OBSERVE_PLAN_UPGRADE_REQUIRED` or `EAS_OBSERVE_FEATURE_NOT_AVAILABLE_IN_FREE_TIER`). The CLI surfaces the server's upgrade message, which links to the account's billing page. Session timelines in particular are checked before the interactive picker runs. A plan-gate failure is not a bug in the command or its flags.
+**Plan gating.** Observe features vary by plan, and the server rejects queries the account's plan does not include (`EAS_OBSERVE_PLAN_UPGRADE_REQUIRED` or `EAS_OBSERVE_FEATURE_NOT_AVAILABLE_IN_FREE_TIER`). The CLI surfaces the server's upgrade message, which links to the account's billing page. Session timelines in particular are checked before the interactive picker runs. A plan-gate failure is not a bug in the command or its flags.
 
 ## Supported Metrics
 
