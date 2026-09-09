@@ -11,13 +11,17 @@ Migrate the Swift side of an existing Expo module without changing its observabl
 
 ## Prerequisite
 
-The Expo Modules API 2.0 macros require `expo` `57.0.7` or newer. Before editing, check the target's installed version (`expo` in `package.json`/lockfile, or `npm ls expo`). If it is older, stop and tell the user to upgrade first; do not attempt the migration against an unsupported version. This is a floor, not a guarantee: the exact macro and core surface still varies within `57.x`, so step 2 must still verify the checked-out source.
+Use `expo` `57.0.21` or newer. Earlier `57.x` versions can compile the macros but lack many of the 2.0 features and performance optimizations, so do not target them. Before editing, check the target's installed version (`expo` in `package.json`/lockfile, or `npm ls expo`). If it is older, stop and tell the user to upgrade first.
+
+Check the example app's own `package.json` too, not only the module root. The example app is the integration surface you build and launch in step 4, so it needs the same floor.
+
+This is a floor, not a guarantee: the exact macro and core surface still varies within `57.x`, so step 2 must still verify the checked-out source.
 
 ## References
 
 - Read `references/migration-map.md` before changing source. It contains the 1.0-to-2.0 mappings, semantic traps, and mixed-mode rules.
 - Read `references/example.md` for a full before/after walkthrough of one module through mixed mode to a complete migration. Consult it when you need to see how the per-member rules compose.
-- Read `references/compatibility.md` when the checked-out `expo-modules-core` version or branch is not known to support every requested macro. It explains how to verify the actual compile-time and runtime surface instead of guessing from an SDK number.
+- Read `references/compatibility.md` when the checked-out `expo-modules-core` version or branch is not known to support every requested macro. It explains how to verify the actual compile-time and runtime surface instead of guessing from an SDK number, and lists what the macros plugin gained through `v0.9.0`.
 
 ## Workflow
 
@@ -28,11 +32,11 @@ Inspect repository instructions and the worktree before editing. Locate the Swif
 Inventory every exported item before rewriting it:
 
 - module and shared-object JS names
-- function names, arity, labels, defaults, nullability, sync/async behavior, errors, and queue semantics
+- function names, arity, labels, defaults, nullability, sync/async behavior, errors, and queue/thread semantics (note which `AsyncFunction` bodies do blocking or long-running work, and any `.runOnQueue(...)`)
 - property names, mutability, and constant caching behavior
 - event wire names and payload shapes
 - record field names, defaults, requiredness, and nullability
-- shared-object constructors and instance/static placement
+- shared-object constructors and instance/static placement (`Function` vs `StaticFunction`/`StaticAsyncFunction`)
 - lifecycle hooks and views
 
 Use the TypeScript declarations and JS call sites to resolve ambiguity. Do not silently "improve" requiredness, rename an event, or change sync behavior during a syntax migration.
@@ -58,9 +62,14 @@ Follow these invariants:
 - Preserve every existing JS-visible name explicitly when Swift naming rules or macro defaults differ.
 - Keep original optional/default behavior. An optional 1.0 record field must not become required merely because 2.0 can express required fields.
 - Do not migrate same-JS-name overloads unless the checked-out macro groups and dispatches them.
-- Do not migrate queue-pinned DSL functions as-is; restructure onto Swift Concurrency or dispatch to the original queue via a continuation, per the async-function rules in `references/migration-map.md`.
-- Do not migrate views, unions, synchronous events, or shared-object static functions without verified support.
+- Preserve async threading behavior. A 1.0 `AsyncFunction` body ran off the JS thread from its first statement; a 2.0 `async` `@JS` member starts on the JS thread and leaves it only at the first real suspension point. A body with no `await`, or with work ahead of its first `await`, therefore blocks the JS thread after a verbatim migration, with no visible change to the JS signature. Audit each migrated body for what runs before its first `await`, and never leave blocking I/O on the JS actor. `@JS(.concurrent)` (macros plugin `0.10.0`) restores the 1.0 behavior and is the preferred fix where available; otherwise restructure onto Swift Concurrency or dispatch via a continuation, per the async-function rules in `references/migration-map.md`.
+- Do not migrate queue-pinned DSL functions as-is; restructure onto Swift Concurrency or dispatch to the original queue via a continuation.
+- Do not migrate views, unions, or synchronous events without verified support. `@Union` and `@JS(.concurrent)` are in macros plugin `0.10.0`, which was untagged as of 2026-09-09 and needs paired core declarations; verify both sides before using either.
+- Shared-object static members bind through a different hook than instance members, and the released core did not declare it as of 2026-09-09. Verify before migrating one; otherwise keep `StaticFunction`/`StaticAsyncFunction` entries in the 1.0 `Class(...)` block and migrate the constructor and instance members around them.
+- Keep the module's `expo-module.config.json` declarations. Automatic `@ExpoModule` discovery via the plugin's `scan-modules` command is not wired into `expo-modules-autolinking` yet, and a migrated module class must stay `public` or `open` to link from the app target.
+- Free-form `Any`, `[Any]`, and `[String: Any]` work only as `@JS` argument types, and only when the checked-out core supports decoding them (it did not as of 2026-09-09). They are compile errors as return types and properties. Prefer `[String: JavaScriptValue]` when the JS contract allows it.
 - Do not change Kotlin, JS wrappers, or public `.d.ts` files unless the user requested an API change.
+- Never write macro-generated symbols into the module's source. The macro emits them; hand-writing or overriding them is not part of a migration.
 
 After each group, search for old DSL entries and call sites that should have moved. Avoid broad formatting or unrelated cleanup.
 
@@ -91,11 +100,13 @@ Run the narrowest available checks first, then the real integration surface:
 2. Run native unit tests and JS/TS tests.
 3. Build and launch the example app when the repository provides one.
 4. Compare the final exported surface with the inventory from step 1.
-5. Search for stale `Name`, migrated `Function`/`Property`/`Constant`/`Events` entries, old `sendEvent` calls, `@Field`, and duplicate registrations.
+5. Search for stale `Name`, migrated `Function`/`AsyncFunction`/`StaticFunction`/`StaticAsyncFunction`/`Property`/`Constant`/`Events` entries, old `sendEvent` calls, `@Field`, and duplicate registrations. Search the source you wrote, not macro expansion output.
 
-Expansion tests alone are insufficient: generated macro code can look correct while failing against mismatched core symbols. If dependencies changed or macro plugin flags are missing, reinstall JS dependencies as appropriate, run the repository's CocoaPods installation workflow, and restart Xcode before diagnosing plugin communication failures.
+Expansion tests alone are insufficient: generated macro code can look correct while failing to link or run against a mismatched core. If dependencies changed or macro plugin flags are missing, reinstall JS dependencies as appropriate, run the repository's CocoaPods installation workflow, and restart Xcode before diagnosing plugin communication failures.
 
 ## Handoff
+
+Never print macro-generated or core-internal symbol names to the user. `references/compatibility.md` cites them so you can grep for them, but they are implementation details that change between plugin revisions, and they are noise in a report. Name a capability by its macro (`@JS static`, `@Event(sync:)`) and by observable JS behavior. Say "the installed core does not support decoding free-form dictionary arguments yet", not the name of the missing method. The exception is a tracking issue on `expo/expo`, where the specific missing hook is the point.
 
 Report:
 
