@@ -24,6 +24,20 @@ EAS-specific notes:
 - **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts — avoids a large upload).
 - **Exercised against a live session:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`, `scroll`, `gesture` (needs a preset, e.g. `gesture swipe left`), `logs`, `record` (`start`/`stop <path>`), `network`, `perf`. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
 
+## Recording download recovery
+
+If downloading a recording through agent-device or argent fails, fetch the recording from **EAS session artifacts**. A controller download failure does not mean the recording was lost. Keep the original EAS session id and query its artifacts:
+
+```bash
+npx --yes eas-cli@latest simulator:get --id <session-id> --json
+# Select the recording in artifacts[] by filename/name and metadata; use its downloadUrl:
+curl --fail --location --max-time 600 --output ./capture.mp4 '<downloadUrl>'
+```
+
+Use the URL returned by EAS, not a path on the simulator or a controller artifact id. If the recording has not appeared yet, poll the same session with a bounded wait for upload completion. Already-uploaded artifacts can be retrieved after the session stops using its explicit id. If a download URL expires, query the session again for a fresh one. Give the download command more than 10 minutes in the outer runner, increase `--max-time` for larger files, and verify the downloaded video before reporting success.
+
+Source: EAS CLI [simulator:get](https://github.com/expo/eas-cli/blob/main/packages/eas-cli/src/commands/simulator/get.ts) exposes `artifacts[].{id,name,filename,metadata,downloadUrl}` (verified in eas-cli 23.2.0).
+
 ## argent (alternative)
 
 `npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).

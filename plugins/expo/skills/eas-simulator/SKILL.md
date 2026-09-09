@@ -144,7 +144,11 @@ Quick decision — **default to C; A and B are explicit-only:**
 - **A:** only an explicit one-shot **static** screenshot on a Mac.
 - **B:** only when the user names an existing/EAS build or wants a static EAS artifact (CI/sharing) — see the box above for why a static build is the wrong tool for "iterate."
 
+Before starting a Mode C tunnel, read [Tunnel scope and approvals](./references/run-your-app.md#tunnel-scope-and-approvals) for its data flow, authorization context, and handling approval rejections.
+
 ## Driving the device (agent-device)
+
+If a controller fails to download a recording, retrieve it from [EAS session artifacts](./references/controllers.md#recording-download-recovery).
 
 `agent-device` is the controller. Common verbs (run each as `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`):
 
