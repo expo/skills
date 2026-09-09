@@ -49,7 +49,12 @@ grep -rEn 'shadow(Color|Offset|Opacity|Radius)|elevation:' $SRC --include='*.tsx
 
 # Multiple theme entry points (there must be exactly one)
 ls src/theme.ts src/theme/index.ts theme.ts theme/index.ts constants/theme.ts 2>/dev/null
+
+# Candidate files with custom tappables but no explicit accessibility role/label (inspect each control; text or forwarded props may supply labels)
+grep -rln '<Pressable' $SRC --include='*.tsx' | xargs grep -LE 'accessibility(Role|Label)'
 ```
+
+Then run the candidate checks in `native-slop.md`. Inspect the rendered result: token checks alone cannot establish readable dark mode, spacing hierarchy, or appropriate shadows.
 
 For a Tailwind project, also check for values that bypass `global.css` variables: arbitrary-value classes like `p-[13px]` or `text-[#5B21B6]`.
 
@@ -87,7 +92,7 @@ For each component in the shared components directory (`src/components/`, or `co
 | Pressed state | Tappable components give pressed feedback via a `Pressable` style function |
 | Disabled / loading | Handled, and disabled blocks `onPress` |
 | Style override | Accepts `style`, merged last |
-| Accessibility | `accessibilityRole` set; touch target ≥ 44pt |
+| Accessibility | Role and applicable disabled/busy/selected state exposed; label survives loading and identifies icon-only controls; touch target ≥ 44pt (48dp Android) |
 | Tokens only | No literals that duplicate a theme value |
 
 ## 4. Report format

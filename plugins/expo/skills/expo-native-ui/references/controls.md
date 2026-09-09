@@ -17,17 +17,7 @@ const [enabled, setEnabled] = useState(false);
 <Switch value={enabled} onValueChange={setEnabled} />;
 ```
 
-### Customization
-
-```tsx
-<Switch
-  value={enabled}
-  onValueChange={setEnabled}
-  trackColor={{ false: "#767577", true: "#81b0ff" }}
-  thumbColor={enabled ? "#f5dd4b" : "#f4f3f4"}
-  ios_backgroundColor="#3e3e3e"
-/>
-```
+Don't recolor the Switch — native styling adapts to dark mode automatically.
 
 ## Segmented Control
 
@@ -81,21 +71,6 @@ const [value, setValue] = useState(0.5);
   minimumValue={0}
   maximumValue={1}
 />;
-```
-
-### Customization
-
-```tsx
-<Slider
-  value={value}
-  onValueChange={setValue}
-  minimumValue={0}
-  maximumValue={100}
-  step={1}
-  minimumTrackTintColor="#007AFF"
-  maximumTrackTintColor="#E5E5EA"
-  thumbTintColor="#007AFF"
-/>
 ```
 
 ### Discrete Steps
@@ -174,39 +149,22 @@ const [date, setDate] = useState(new Date());
 />
 ```
 
-## Stepper
-
-Increment/decrement numeric values.
-
-```tsx
-import { Stepper } from "react-native";
-import { useState } from "react";
-
-const [count, setCount] = useState(0);
-
-<Stepper
-  value={count}
-  onValueChange={setCount}
-  minimumValue={0}
-  maximumValue={10}
-/>;
-```
-
 ## TextInput
 
 Native text input with various keyboard types.
 
 ```tsx
 import { TextInput } from "react-native";
+import { colors } from "@/theme/colors";
 
 <TextInput
   placeholder="Enter text..."
-  placeholderTextColor="#999"
+  placeholderTextColor={colors.secondaryLabel as string}
   style={{
     padding: 12,
     fontSize: 16,
     borderRadius: 8,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: colors.secondarySystemBackground,
   }}
 />
 ```
@@ -265,6 +223,7 @@ const [selected, setSelected] = useState("js");
 ## Best Practices
 
 - **Haptics**: Switch and DateTimePicker have built-in haptics — don't add extra
+- **No native Stepper**: React Native has no `Stepper` component — compose increment/decrement from two Buttons or a numeric TextInput
 - **Accessibility**: Native controls have proper accessibility labels by default
 - **Dark Mode**: Avoid custom colors — native styling adapts automatically
 - **Spacing**: Use consistent padding around controls (12-16pt)
