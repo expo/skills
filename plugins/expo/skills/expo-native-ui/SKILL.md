@@ -1,15 +1,15 @@
 ---
 name: expo-native-ui
-description: Framework (OSS). Build beautiful, native-feeling Expo screens. Covers Apple HIG styling, semantic colors, native controls, SF Symbols, media, animations, visual effects, gradients, storage, and responsive layout. For routing and navigation, use the expo-router skill.
+description: Framework (OSS). Build beautiful, native-feeling Expo screens. Covers Apple HIG styling, semantic colors, native controls, SF Symbols, media, visual effects, gradients, storage, and responsive layout. For routing and navigation, use the expo-router skill; for motion and animation, use the expo-animation skill.
 version: 1.1.1
 license: MIT
 ---
 
 # Expo Native UI Guidelines
 
-For routes, links, stacks, tabs, modals, sheets, and headers, use the `expo-router` skill.
+For routes, links, stacks, tabs, modals, sheets, and headers, use the `expo-router` skill. For any motion — entering/exiting, gestures, springs, keyboard-driven UI — use the `expo-animation` skill.
 
-> **Before picking any UI component, check `expo-ui` first.** `@expo/ui` provides native equivalents — BottomSheet, Button, Picker, Slider, Menu, Section, Switch, SegmentedControl, and more — rendered as real SwiftUI on iOS and Jetpack Compose on Android, available in Expo Go on SDK 56+ with no custom build. Load the **`expo-ui`** skill to find the right component before falling back to React Native built-ins or community libraries. This skill (`expo-native-ui`) covers the surrounding structure: Expo Router navigation, layout, styling, and animations.
+> **Before picking any UI component, check `expo-ui` first.** `@expo/ui` provides native equivalents — BottomSheet, Button, Picker, Slider, Menu, Section, Switch, SegmentedControl, and more — rendered as real SwiftUI on iOS and Jetpack Compose on Android, available in Expo Go on SDK 56+ with no custom build. Load the **`expo-ui`** skill to find the right component before falling back to React Native built-ins or community libraries. This skill (`expo-native-ui`) covers the surrounding structure: Expo Router navigation, layout, styling, and visual effects.
 
 ## References
 
@@ -17,10 +17,9 @@ Consult these resources as needed:
 
 ```
 references/
-  animations.md          Reanimated: entering, exiting, layout, scroll-driven, gestures
   controls.md            Native iOS: Switch, Slider, SegmentedControl, DateTimePicker, Picker
   gradients.md           CSS gradients via experimental_backgroundImage (New Arch only)
-  icons.md               SF Symbols via expo-image (sf: source), names, animations, weights
+  icons.md               SF Symbols via expo-symbols SymbolView: names, weights, animations; Material icons on Android
   media.md               Camera, audio, video, and file saving
   storage.md             SQLite, AsyncStorage, SecureStore
   visual-effects.md      Blur (expo-blur) and liquid glass (expo-glass-effect)
@@ -48,12 +47,11 @@ You need `npx expo run:ios/android` or `eas build` ONLY when using:
 
 ### When Expo Go Works
 
-Expo Go supports a huge range of features out of the box:
+Expo Go supports a wide range of features out of the box:
 
-- All `expo-*` packages (camera, location, notifications, etc.)
-- Expo Router navigation
+- Most `expo-*` packages (camera, location, sensors, sqlite, etc.) — but not all: remote push notifications don't work in Expo Go on Android since SDK 53, and some packages need native capabilities Expo Go doesn't bundle (e.g. WebGPU — see `references/webgpu-three.md`)
+- Expo Router navigation and deep links
 - Most UI libraries (reanimated, gesture handler, etc.)
-- Push notifications, deep links, and more
 
 **If you're unsure, try Expo Go first.** Creating custom builds adds complexity, slower iteration, and requires Xcode/Android Studio setup.
 
@@ -72,7 +70,7 @@ Expo Go supports a huge range of features out of the box:
 - Never use legacy expo-permissions
 - `expo-audio` not `expo-av`
 - `expo-video` not `expo-av`
-- `expo-image` with `source="sf:name"` for SF Symbols, not `expo-symbols` or `@expo/vector-icons`
+- `expo-symbols` (`SymbolView`) for SF Symbols on iOS, not `@expo/vector-icons` — see `references/icons.md`. SF Symbols are Apple-only: on Android every icon needs a Material source (`md` prop on NativeTabs triggers; in-screen options under "Android: Material Icons" in icons.md), never SF-only iconography
 - `react-native-safe-area-context` not react-native SafeAreaView
 - `process.env.EXPO_OS` not `Platform.OS`
 - `React.use` not `React.useContext`
@@ -83,7 +81,7 @@ Expo Go supports a huge range of features out of the box:
 
 ## Responsiveness
 
-- Always wrap root component in a scroll view for responsiveness
+- Wrap screens with scrollable content in a ScrollView. Screens whose root is a FlatList/FlashList must not add an outer ScrollView (the list is the scroll container), and full-bleed screens (camera, map, canvas) need neither
 - Use `<ScrollView contentInsetAdjustmentBehavior="automatic" />` instead of `<SafeAreaView>` for smarter safe area insets
 - `contentInsetAdjustmentBehavior="automatic"` should be applied to FlatList and SectionList as well
 - Use flexbox instead of Dimensions API
@@ -93,15 +91,21 @@ Expo Go supports a huge range of features out of the box:
 
 - Use expo-haptics conditionally on iOS to make more delightful experiences
 - Use views with built-in haptics like `<Switch />` from React Native and `@react-native-community/datetimepicker`
-- When a route belongs to a Stack, its first child should almost always be a ScrollView with `contentInsetAdjustmentBehavior="automatic"` set
-- When adding a `ScrollView` to the page it should almost always be the first component inside the route component
+- When a Stack route has scrollable content, make the ScrollView (or FlatList) the first component inside the route, with `contentInsetAdjustmentBehavior="automatic"` set
 - Use the `<Text selectable />` prop on text containing data that could be copied
 - Consider formatting large numbers like 1.4M or 38k
 - Never use intrinsic elements like 'img' or 'div' unless in a webview or Expo DOM component
+- Every screen that loads data has four states (loading, error, empty, content) - never show the empty state while the first load is still resolving; the rules live in the `expo-data-fetching` skill
+- On scrollable forms and search results, use `keyboardShouldPersistTaps="handled"` so controls receive the first tap and unhandled taps can dismiss the keyboard. Use `"always"` only when unhandled taps should also keep it open
+- A form's primary action must never sit under the keyboard. For UI that tracks the keyboard's real frame, load the `expo-animation` skill's keyboard recipe (`react-native-keyboard-controller`) - never `Keyboard.addListener` plus a timing animation
+- Every enabled control must perform its advertised action: search filters results, Save commits edits, and settings affect behavior. Empty handlers and success alerts are not implementations; local state is enough when the user requested a prototype
+- For async saves, preserve drafts and handle pending/failure states per `expo-data-fetching`; do not dismiss a form before its save succeeds
+
+Before calling a screen complete, walk through its primary task, including one failure and recovery when it loads or saves data. Check keyboard access and back/dismiss behavior. Try long titles, missing images, no search results, and large system text; required actions must remain reachable. Report what you exercised and what you could not run.
 
 # Styling
 
-Follow Apple Human Interface Guidelines.
+Follow each platform's own design language: Apple Human Interface Guidelines on iOS, Material Design 3 on Android. Never dress one platform in the other's uniform - no FAB or ripple in iOS layouts; no hand-built iOS chrome (back-chevrons, large-title text, iOS-styled switches) on Android.
 
 ## General Styling Rules
 
@@ -110,7 +114,7 @@ Follow Apple Human Interface Guidelines.
 - Always account for safe area, either with stack headers, tabs, or ScrollView/FlatList `contentInsetAdjustmentBehavior="automatic"`
 - Ensure both top and bottom safe area insets are accounted for
 - Inline styles not StyleSheet.create unless reusing styles is faster
-- Add entering and exiting animations for state changes
+- For any motion or animation work, load the `expo-animation` skill — it owns the animate-or-not decision, timing values, and interruption rules
 - Use `{ borderCurve: 'continuous' }` for rounded corners unless creating a capsule shape
 - ALWAYS use a navigation stack title instead of a custom text element on the page
 - When padding a ScrollView, use `contentContainerStyle` padding and gap instead of padding on the ScrollView itself (reduces clipping)
@@ -148,6 +152,11 @@ export const colors = {
     android: Color.android.dynamic.surface,
     default: "#ffffff",
   })!,
+  secondarySystemBackground: Platform.select({
+    ios: Color.ios.secondarySystemBackground,
+    android: Color.android.dynamic.surfaceVariant,
+    default: "#f2f2f7",
+  })!,
   systemBlue: Platform.select({
     ios: Color.ios.systemBlue,
     android: Color.android.dynamic.primary,
@@ -165,7 +174,7 @@ import { colors } from "@/theme/colors";
 ```
 
 - iOS re-resolves these colors automatically when the system theme changes. On Android, call `useColorScheme()` inside any component that renders them so it re-renders when the theme flips (required when React Compiler memoizes the component).
-- Don't pass `Color` / `PlatformColor` values into Reanimated styles — use static colors there (see `references/animations.md`).
+- Don't pass `Color` / `PlatformColor` values into Reanimated styles — they are opaque native color objects, not strings; use static colors there.
 - `Platform.select({...})!` returns `string | OpaqueColorValue`. Most React Native style props accept `ColorValue` (`string | OpaqueColorValue`) so this works fine. But some third-party props only accept `string` (e.g. `tintColor` on `expo-image`). Cast when needed: `colors.label as string`.
 
 ## Text Styling

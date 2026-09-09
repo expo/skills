@@ -142,24 +142,22 @@ function GlassButton({ icon, onPress }) {
 
 ### Checking Availability
 
-```tsx
-import { isLiquidGlassAvailable } from "expo-glass-effect";
+Check both guards: `isLiquidGlassAvailable()` (OS support) and `isGlassEffectAPIAvailable()` — some iOS 26 beta versions lack the API and crash without the second check.
 
-if (isLiquidGlassAvailable()) {
-  // Use GlassView
-} else {
-  // Fallback to BlurView or solid background
-}
+```tsx
+import { isLiquidGlassAvailable, isGlassEffectAPIAvailable } from "expo-glass-effect";
+
+const canUseGlass = isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
 ```
 
 ### Fallback Pattern
 
 ```tsx
-import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
+import { GlassView, isLiquidGlassAvailable, isGlassEffectAPIAvailable } from "expo-glass-effect";
 import { BlurView } from "expo-blur";
 
 function AdaptiveGlass({ children, style }) {
-  if (isLiquidGlassAvailable()) {
+  if (isLiquidGlassAvailable() && isGlassEffectAPIAvailable()) {
     return <GlassView style={style}>{children}</GlassView>;
   }
 
@@ -170,6 +168,8 @@ function AdaptiveGlass({ children, style }) {
   );
 }
 ```
+
+When the user has Reduce Transparency enabled (`AccessibilityInfo.isReduceTransparencyEnabled()`), skip glass *and* blur — render a solid `colors.systemBackground` surface instead.
 
 ## Sheet with Glass Background
 
@@ -190,8 +190,9 @@ Make sheet backgrounds liquid glass on iOS 26+:
 ## Best Practices
 
 - Use `systemMaterial` tints for automatic dark mode support
-- Always set `overflow: 'hidden'` on BlurView for rounded corners
-- Use `isInteractive` on GlassView for buttons and pressables
-- Check `isLiquidGlassAvailable()` and provide fallbacks
+- Always set `overflow: 'hidden'` on BlurView for rounded corners — but never on a `GlassView` or its ancestors: glass clips itself via `borderRadius` (+ `borderCurve`), and outside clipping cuts off the rim highlight and press bulge
+- Use `isInteractive` on GlassView only for actual controls (buttons, pressables) — leave background surfaces non-interactive
+- Check `isLiquidGlassAvailable()` **and** `isGlassEffectAPIAvailable()`, provide fallbacks, and respect Reduce Transparency with a solid surface
+- Never animate opacity on a `GlassView` or an ancestor — animate content around a stable glass surface, or switch `glassEffectStyle` on the mounted view to change its look
 - Avoid nesting blur views (performance impact)
 - Keep blur intensity reasonable (50-100) for readability
