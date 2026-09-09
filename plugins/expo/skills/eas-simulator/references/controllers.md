@@ -24,6 +24,31 @@ EAS-specific notes:
 - **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts — avoids a large upload).
 - **Exercised against a live session:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`, `scroll`, `gesture` (needs a preset, e.g. `gesture swipe left`), `logs`, `record` (`start`/`stop <path>`), `network`, `perf`. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
 
+## Remote recordings and download timeouts
+
+Prepare the interaction before `record start`, then capture the duration the task needs. For long recordings, budget separately for stopping/finalizing on the VM and downloading the resulting file. Give the outer command runner enough time for both (start with 15 minutes for a long capture's stop/download); if the runner yields a process handle, poll that same process instead of launching another `record stop`.
+
+**Check the client version before setting timeout variables.** In agent-device source version `0.21.0` checked on 2026-09-09, automatic artifact downloads have a hard-coded **90,000 ms total deadline**. The CLI call site does not pass an override. Neither `--timeout` / `AGENT_DEVICE_TIMEOUT_MS` nor `AGENT_DEVICE_DAEMON_IDLE_TIMEOUT_MS` extends that transfer; the latter controls daemon idle shutdown, and setting it locally does not configure the EAS daemon. Do not invent an `AGENT_DEVICE_*` download setting. If a later client adds one, verify its name and that the artifact-download path reads it, then set it on the **local client invocation** with an initial budget of `600000` ms (10 minutes), increasing for measured file size/throughput. Keep overrides scoped to this operation.
+
+For the checked client, recover a timed-out download from the existing artifact with the bundled helper:
+
+```bash
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest record start
+# Perform the requested interaction, then stop once. --json preserves error.details.artifactId.
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest record stop ./capture.mp4 --json
+# Only after an artifact-download failure with an artifactId, while the same EAS session is live:
+npx --yes eas-cli@latest simulator:exec node <absolute-skill-dir>/scripts/download-recording.mjs \
+  <artifact-id-from-error> ./capture.mp4 --timeout-ms 600000
+```
+
+Resolve `<absolute-skill-dir>` to this skill's installed directory. The helper reads the daemon URL/token from the environment supplied by `simulator:exec`, uses the same authenticated artifact endpoint as agent-device, and extends the **whole download** deadline. It streams to a temporary file, publishes only a complete download, and refuses to overwrite an existing output or follow redirects. It does not stop or restart recording. Give its outer runner more than 10 minutes, and keep the EAS session alive until recovery and inspection finish.
+
+On `Remote artifact download timed out`, retain `error.details.artifactId` and the original EAS session id. Finalization has already returned an artifact, so retrieve that artifact instead of recording again or resetting the VM. A timeout before an artifact id is returned needs command/session diagnosis; the helper cannot recover an unknown id. A `401`/`403` requires checking the same session's credentials; a `404` may mean the artifact/session has expired. Longer timeouts do not repair those failures. After download, verify with `ffprobe` (duration and readable video stream) and inspect frames before reporting success, then stop the EAS session normally.
+
+Source verification: [artifact download deadline](https://github.com/callstack/agent-device/blob/e7d97f7dfea648e141e61b62312738dfb0bf447c/src/remote/artifact-download.ts), [CLI materialization and endpoint](https://github.com/callstack/agent-device/blob/e7d97f7dfea648e141e61b62312738dfb0bf447c/src/remote/daemon-artifacts.ts), and [authentication headers](https://github.com/callstack/agent-device/blob/e7d97f7dfea648e141e61b62312738dfb0bf447c/packages/contracts/src/daemon-http.ts). Recheck these paths in the installed version when behavior differs.
+
+Helper validation (Node 20+, local HTTP fixtures, no EAS session needed): `node --test <absolute-skill-dir>/scripts/download-recording.test.mjs`.
+
 ## argent (alternative)
 
 `npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).
