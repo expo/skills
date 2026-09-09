@@ -120,15 +120,21 @@ That local build number is a starting value; EAS writes the remote value during 
 
 An existing generated-plist setup can also work if its build process explicitly sets `CURRENT_PROJECT_VERSION` before archiving. Keep it when verified; do not migrate every native project automatically. Changing only `app.json` or observing an incremented remote counter is insufficient evidence.
 
-Use the bundled checker on the built device product, `.xcarchive`, or exported `.ipa`:
+When setting up versioning or diagnosing a rejected upload, inspect the built app's plist with macOS's built-in tools:
 
 ```bash
-python3 scripts/check-ios-release.py /path/to/MyApp.ipa \
-  --bundle-id com.example.myapp --build-number 42 --version 1.0.0 \
-  --icon /path/to/Assets.xcassets/AppIcon.appiconset/icon.png
+plutil -p "/path/to/MyApp.xcarchive/Products/Applications/MyApp.app/Info.plist"
 ```
 
-Resolve `scripts/` relative to this skill directory. The checker verifies main-app identity/version, device platform, and any explicitly supplied flattened PNG icons. It catches a stale build number and PNG alpha channels even when every alpha sample is opaque. It does not verify signatures, entitlements, embedded extensions, compiled asset catalogs, or Apple's acceptance. `--icon` is for a flat AppIcon PNG; do not apply it to transparent layers in an Icon Composer `.icon` asset. Only pass the icon source selected by the build profile.
+For a downloaded `.ipa`, unzip it into a temporary directory and inspect `Payload/MyApp.app/Info.plist`; for a built `.app`, inspect its `Info.plist` directly. Compare `CFBundleIdentifier`, `CFBundleShortVersionString`, and `CFBundleVersion` with the intended release. Values must be resolved strings, and `CFBundleSupportedPlatforms` must contain `iPhoneOS`, not `iPhoneSimulator`. `eas build:view BUILD_ID --json` provides build details and the artifact URL; its reported version is not a substitute for checking the archive.
+
+For a rejected default (Any/light) 1024px AppIcon PNG, inspect the source selected by that build profile:
+
+```bash
+sips -g pixelWidth -g pixelHeight -g hasAlpha "/path/to/AppIcon.appiconset/icon.png"
+```
+
+The default icon should be 1024×1024 with no alpha channel, even if every pixel looks opaque. Preserve transparency in dark variants and Icon Composer layers; follow [Apple's guidance for each appearance](https://developer.apple.com/documentation/xcode/configuring-your-app-icon). These local checks help diagnose the artifact; use the EAS submission logs and Apple processing status to verify acceptance.
 
 Check privacy usage descriptions against the features used by the app. Set the encryption declaration according to the app's actual encryption use; do not copy `false` solely to suppress an export-compliance prompt.
 

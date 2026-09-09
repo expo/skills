@@ -51,7 +51,7 @@ Do not report an upload as finished based only on `--no-wait` returning successf
 | Required agreement missing or expired | The Account Holder must resolve it for the app's Apple team. Retrying or rebuilding does not accept an agreement. |
 | App missing in App Store Connect | Check the selected organization and `ascAppId` against the native bundle identifier. One login may belong to several teams. |
 | Duplicate build number despite EAS auto-increment | Inspect the archive's `CFBundleVersion`; for native Swift, check explicit versus generated plist configuration in `native-ios.md`. |
-| Invalid large app icon / alpha channel | For a flattened AppIcon PNG, remove the alpha channel and rebuild. Even an all-opaque RGBA file can fail. Preserve the artwork; check the icon selected by that profile. Icon Composer layers are a different format. |
+| Invalid large app icon / alpha channel | For the default (Any/light) AppIcon PNG, remove the alpha channel and rebuild. Even an all-opaque RGBA file can fail. Check the icon selected by that profile; preserve transparency in dark variants and Icon Composer layers. See the icon checks in `native-ios.md`. |
 | Upload accepted but no installable build | Check processing/compliance state and the intended tester group's build assignment in App Store Connect. |
 | Optional release-notes feature rejected by the EAS plan | Complete the required upload without that optional parameter and use App Store Connect for notes. Do not rebuild a valid binary or change the account plan for this. |
 
