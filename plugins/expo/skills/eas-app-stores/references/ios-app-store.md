@@ -218,7 +218,7 @@ For Expo projects whose native files are generated from app config, configure in
 }
 ```
 
-With `autoIncrement: true` and remote versioning, EAS increments its counter and writes native version metadata during the build. For hand-maintained Swift projects, follow [native-ios.md](native-ios.md) and verify `CFBundleVersion` in the resulting archive. A changing remote counter does not prove Xcode used it.
+With `autoIncrement: true` and remote versioning, EAS increments its counter and writes native version metadata during the build. When setting up or changing native Swift versioning, or diagnosing a duplicate build number, verify the archive's `CFBundleVersion` as described in [native-ios.md](native-ios.md). A changing remote counter does not prove Xcode used it.
 
 ## Release Options
 

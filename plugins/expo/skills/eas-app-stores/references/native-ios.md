@@ -95,7 +95,9 @@ A pure Swift wrapper with neither Expo dependencies nor Expo SDK metadata needs 
 
 For icon selection or other native build preparation, use an EAS lifecycle hook such as `eas-build-post-install` when necessary. An Expo config/prebuild plugin will not run on this native path. Preserve an existing hook rather than replacing its other work.
 
-## Verify the number inside the archive
+## Versioning and icon troubleshooting
+
+These checks address two failures encountered while testing a SwiftUI release: a stale archive build number and a default icon with an alpha channel. Use the relevant check during initial setup, after changing versioning, bundle IDs, or icons, or to diagnose a rejected upload. Routine releases use the EAS build/submit flow below.
 
 EAS remote versioning increments a counter. The [native version updater](https://github.com/expo/eas-cli/blob/main/packages/eas-cli/src/build/ios/version.ts) writes `CFBundleVersion` to the target's explicit `INFOPLIST_FILE`. A generated plist with a fixed `CURRENT_PROJECT_VERSION` can leave every archive reporting build 1 even while the EAS dashboard reports increasing numbers.
 
@@ -120,7 +122,7 @@ That local build number is a starting value; EAS writes the remote value during 
 
 An existing generated-plist setup can also work if its build process explicitly sets `CURRENT_PROJECT_VERSION` before archiving. Keep it when verified; do not migrate every native project automatically. Changing only `app.json` or observing an incremented remote counter is insufficient evidence.
 
-When setting up versioning or diagnosing a rejected upload, inspect the built app's plist with macOS's built-in tools:
+When setting up or changing versioning or the bundle ID, or diagnosing a rejected upload, inspect the built app's plist with macOS's built-in tools:
 
 ```bash
 plutil -p "/path/to/MyApp.xcarchive/Products/Applications/MyApp.app/Info.plist"
@@ -128,7 +130,7 @@ plutil -p "/path/to/MyApp.xcarchive/Products/Applications/MyApp.app/Info.plist"
 
 For a downloaded `.ipa`, unzip it into a temporary directory and inspect `Payload/MyApp.app/Info.plist`; for a built `.app`, inspect its `Info.plist` directly. Compare `CFBundleIdentifier`, `CFBundleShortVersionString`, and `CFBundleVersion` with the intended release. Values must be resolved strings, and `CFBundleSupportedPlatforms` must contain `iPhoneOS`, not `iPhoneSimulator`. `eas build:view BUILD_ID --json` provides build details and the artifact URL; its reported version is not a substitute for checking the archive.
 
-For a rejected default (Any/light) 1024px AppIcon PNG, inspect the source selected by that build profile:
+When adding or changing a default (Any/light) 1024px AppIcon PNG, or diagnosing an icon rejection, inspect the source selected by that build profile:
 
 ```bash
 sips -g pixelWidth -g pixelHeight -g hasAlpha "/path/to/AppIcon.appiconset/icon.png"

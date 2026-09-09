@@ -34,7 +34,7 @@ Older CLIs such as 18.6.0 lack these commands. Check `eas --version` and command
 
 | Verified state | What it establishes | Next check |
 | --- | --- | --- |
-| EAS build finished | An artifact was produced | Inspect the device archive's identity, version and selected icon |
+| EAS build finished | An artifact was produced | Confirm the intended build ID, source revision and store-distribution profile |
 | Submission queued | EAS scheduled an upload | Follow the returned submission URL and worker logs |
 | Apple upload/processing succeeded | Apple accepted the binary | Check TestFlight availability and any export-compliance work |
 | Build assigned and available to testers | The intended testers can install it | Verify the beta app on a device |

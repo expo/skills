@@ -18,7 +18,7 @@ This skill covers building and releasing iOS and Android apps with EAS: Expo and
 - **Expo/React Native app:** use the quick-start below, then the relevant store reference.
 - **Adding React Native screens to an existing native app:** use `expo-brownfield` for that integration; return here for distribution.
 
-Before uploading, verify the actual device archive's version and identity. A successful EAS build or a queued submission does not establish Apple acceptance, tester access, or an App Store release. See [references/testflight.md](references/testflight.md) for those separate states.
+Use the archive and icon checks in [references/native-ios.md](references/native-ios.md) during initial native iOS setup, after changing versioning, bundle IDs, or icons, or when diagnosing a rejected upload. Routine releases follow the EAS build/submit flow and the processing and availability checks in [references/testflight.md](references/testflight.md). A successful EAS build or a queued submission does not establish Apple acceptance, tester access, or an App Store release.
 
 ## References
 
@@ -149,7 +149,7 @@ eas build:version:get
 eas build:version:set -p ios
 ```
 
-The version-set command prompts for the value. For native projects, inspect the archived `CFBundleVersion` too: the remote counter alone does not prove that Xcode used it.
+The version-set command prompts for the value. When setting up or changing native iOS versioning, or diagnosing a duplicate build number, inspect the archived `CFBundleVersion`: the remote counter alone does not prove that Xcode used it.
 
 ## Monitoring
 
