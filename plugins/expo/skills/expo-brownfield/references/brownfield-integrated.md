@@ -451,7 +451,7 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
 }
 ```
 
-Keep Swift import access levels consistent with the generated Expo module provider (the inspected SDK 55 and 57 providers use `internal import Expo`).
+Keep Swift import access levels consistent with the generated Expo module provider (SDK 55 and 57 providers use `internal import Expo`).
 
 Create and retain `ReactNativeRuntime(launchOptions: launchOptions)` from the existing app delegate's launch callback. Forward Expo module lifecycle callbacks as described in [feature integration](./feature-integration.md#forward-lifecycle-events). If your delegate can inherit from `ExpoAppDelegate`, call `super` from its overrides; otherwise use the subscriber manager while preserving the existing superclass and host behavior.
 

@@ -59,8 +59,6 @@ export default function Feature({ requestId, userId, greeting: initialGreeting }
 }
 ```
 
-The SDK 55 fixture reproduced a missed eager context reply on cold launch, while later requests succeeded. This example therefore supplies the initial greeting as a prop and requests subsequent context explicitly. It does not rely on an arbitrary startup delay.
-
 ## SwiftUI host: receive the result and dismiss
 
 This example uses **Expo's isolated generated framework**, configured as `MyBrownfield`, with `ReactNativeHostManager.shared.initialize()` already connected to the host's app delegate as in [isolated setup](./brownfield-isolated.md). It adds a feature to the existing SwiftUI view hierarchy; it introduces no app entry point.
@@ -137,9 +135,9 @@ struct FeatureLauncher: View {
 
 The same message contract works with UIKit: the presenting coordinator owns the subscription, passes the request as `initialProps`, handles the result on the main thread, then pops or dismisses its controller. Remove the subscription on interactive cancellation and coordinator teardown too. Remove only the listener you own, not every feature's listeners.
 
-For **integrated** builds, install/autolink `expo-brownfield` only if using these APIs. The isolated plugin's generated `BrownfieldMessaging` facade is not automatically present in the host. In the inspected 55.0.28 and 57.0.18 packages, `internal import ExpoBrownfield` (matching the generated module provider) exposes `BrownfieldMessagingInternal.shared` with instance `addListener`, `sendMessage`, and `removeListener(id:)` methods. Confirm the installed Swift interface before adapting the example, or keep a small host adapter around that SDK-specific surface. Use the [integrated controller](./brownfield-integrated.md#present-a-react-native-screen) instead of the isolated `ReactNativeView`.
+For **integrated** builds, install/autolink `expo-brownfield` only if using these APIs. The isolated plugin's generated `BrownfieldMessaging` facade is not automatically present in the host. In `expo-brownfield` 55.0.28 and 57.0.18, `internal import ExpoBrownfield` (matching the generated module provider) exposes `BrownfieldMessagingInternal.shared` with instance `addListener`, `sendMessage`, and `removeListener(id:)` methods. Confirm the installed Swift interface before adapting the example, or keep a small host adapter around that SDK-specific surface. Use the [integrated controller](./brownfield-integrated.md#present-a-react-native-screen) instead of the isolated `ReactNativeView`.
 
-Navigation behavior depends on the native container. In the inspected SDK 55 and 57 wrappers, the generated UIKit controller handles `popToNative()` by popping its navigation controller, while the generated SwiftUI `ReactNativeView` also listens for that event and calls SwiftUI `dismiss()`. A custom integrated controller does not acquire these handlers automatically. The example above lets the host consume a result before closing its sheet. Use either that result/close contract or the wrapper's navigation API for a given action; do not trigger both.
+Navigation behavior depends on the native container. In the SDK 55 and 57 wrappers, the generated UIKit controller handles `popToNative()` by popping its navigation controller, while the generated SwiftUI `ReactNativeView` also listens for that event and calls SwiftUI `dismiss()`. A custom integrated controller does not acquire these handlers automatically. The example above lets the host consume a result before closing its sheet. Use either that result/close contract or the wrapper's navigation API for a given action; do not trigger both.
 
 ## Forward lifecycle events
 
@@ -158,12 +156,8 @@ Use the [Expo lifecycle guide](https://docs.expo.dev/brownfield/lifecycle-listen
 4. Reopen with a fresh request ID and different input. Verify no stale result or duplicate callback. Cancel through both the RN button and native swipe/back dismissal; repeat.
 5. Build/select the Release artifact and host Release configuration. Stop Metro, launch afresh, and repeat the interaction, including any bundled images/fonts. Check the original native screens and relevant lifecycle callbacks.
 
-This recipe was built and run in isolated and integrated SwiftUI hosts with SDK 57 and Xcode 26.6 on an iOS 26.5 simulator, in Debug and Release with the fixture Metro stopped for Release. Initial props, later messages, results, cancellation, reopening, bundled images, and native navigation passed. SDK 55 was also exercised previously; see [version compatibility](./version-compatibility.md#validation-scope) for exact versions and test scope. These example hosts do not establish compatibility with arbitrary native build setups or every module lifecycle callback.
-
-Contributors can run the repository's [iOS brownfield playgrounds](https://github.com/expo/skills/tree/main/tests/fixtures/expo-brownfield), which package this feature and both SwiftUI hosts with dependency lockfiles. These fixtures are separate from the installed plugin.
-
-Record package versions, host scheme/destination, commands, and observed results. Source review, syntax checks, producer builds, and running the consumer are distinct evidence; report any untested steps explicitly.
+For runnable examples of both SwiftUI hosts, see the [iOS brownfield playgrounds](https://github.com/expo/skills/tree/main/tests/fixtures/expo-brownfield).
 
 EAS Build/Submit can distribute the host after this integration works; they do not implement the runtime boundary. EAS Update requires an updates-enabled RN runtime and separate brownfield setup, not just an EAS project ID. Consult the [existing-native-app Update guide](https://docs.expo.dev/eas-update/integration-in-existing-native-apps/) if requested; use the chosen toolchain's setup for isolated artifacts. Updates cannot replace compiled Swift code or add a native module absent from the shipped binary.
 
-Select the matching SDK/API using [version compatibility](./version-compatibility.md). Current reference: [Brownfield API](https://docs.expo.dev/versions/latest/sdk/brownfield/); inspected source: [Expo SDK 57 brownfield](https://github.com/expo/expo/tree/sdk-57/packages/expo-brownfield).
+Select the matching SDK/API using [version compatibility](./version-compatibility.md). Current reference: [Brownfield API](https://docs.expo.dev/versions/latest/sdk/brownfield/); implementation: [Expo SDK 57 brownfield](https://github.com/expo/expo/tree/sdk-57/packages/expo-brownfield).

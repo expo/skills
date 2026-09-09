@@ -87,6 +87,8 @@ When a skill triggers, its whole `SKILL.md` loads into the agent's context. Shor
 - Put reusable validation or fetching logic in `scripts/` instead of long inline command blocks.
 - One skill = one job. If it grows two distinct triggers, split it (that is why `eas-hosting` and
   `eas-app-stores` are separate skills).
+- Keep skills and references focused on requirements, supported workflows, and instructions.
+  Put test results and validation history in fixture READMEs or PR descriptions.
 
 ### 7. Add the Codex agent file
 

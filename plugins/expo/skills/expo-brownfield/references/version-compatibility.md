@@ -20,9 +20,7 @@ npx expo install expo-brownfield typescript @types/react
 
 This avoids adding a Router shell just to export one component. For an existing Router app, preserve it and add the root-props adapter described in [feature integration](./feature-integration.md). If selecting an older SDK, use a verified template tag such as `blank@sdk-55`; the scaffolder's own `@latest` version does not determine the template's SDK. Commit the producer's lockfile for repeatable builds.
 
-## Concrete differences to account for
-
-Verified against published packages and templates on 2026-09-09; recheck current requirements when using this skill.
+## SDK requirements and build defaults
 
 | Surface | SDK 55 | SDK 57 |
 | --- | --- | --- |
@@ -38,20 +36,5 @@ React Native prebuilt binaries and precompiled Expo modules are separate setting
 In 57.0.18, precompiled builds suffix the generated package/product with its configuration (`MyAppPackage-release` or `MyAppPackage-debug`). They do not rename the generated Swift module: continue to import the configured target, such as `MyBrownfield`. Inspect the emitted manifest instead of constructing an assumed package path.
 
 SDK 56 introduced additional brownfield capabilities carried into SDK 57, including experimental multiple isolated frameworks and registering host Turbo Module classes. Load the selected SDK's API and installed interfaces only when the task needs them. Do not enable experimental multi-framework support for a single feature or assume two independently packaged RN runtimes can be linked together without collision handling.
-
-## Validation scope
-
-Record exact versions and distinguish source/API inspection, native compilation, and running the consuming host. An older SDK's successful simulator run does not establish a newer SDK's compatibility. A local build on a toolchain below Expo's documented minimum is also not evidence that the older toolchain is supported.
-
-The feature recipe has been built and run in isolated and integrated SwiftUI hosts with these versions:
-
-| Tested on | Expo / brownfield / RN | Xcode | iOS simulator | Configurations |
-| --- | --- | --- | --- | --- |
-| 2026-09-09 | 57.0.21 / 57.0.18 / 0.86.3 | 26.6 (17F113) | iPhone 17, iOS 26.5 | Debug and Release, both hosts |
-| 2026-09-07 | 55.0.31 / 55.0.28 / 0.83.10 | 26.1.1 | iPhone 17, iOS 26.1 | Debug and Release, both hosts |
-
-The SDK 57 runs passed initial props, later native/JS messages, results, cancellation, swipe dismissal, reopening with fresh input, and native navigation. Both Release hosts loaded the feature and bundled image with the fixture Metro stopped. The isolated hosts consumed the generated configuration-specific aggregate Swift Package products. Dependency checks and TypeScript also passed; no package source was patched.
-
-The SDK 55 run used Xcode below its documented minimum and remains historical evidence only. These tests cover the example iOS simulator hosts, not arbitrary host configurations, physical devices, signing, or Android. Report the actual result of the current host's Debug and Release acceptance checks rather than claiming universal SDK support.
 
 Sources: [SDK requirements](https://docs.expo.dev/versions/latest/), [SDK 57 Brownfield API](https://docs.expo.dev/versions/v57.0.0/sdk/brownfield/), [SDK 57 native template](https://github.com/expo/expo/tree/sdk-57/templates/expo-template-bare-minimum), [SDK 56 brownfield additions](https://expo.dev/changelog/sdk-56), [published Brownfield package](https://www.npmjs.com/package/expo-brownfield).

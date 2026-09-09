@@ -52,9 +52,9 @@ The iOS build environment needs Xcode and CocoaPods (use the project's Gemfile/B
 
 ## Select compatible versions
 
-For an existing Expo/RN project, keep its selected SDK and use `npx expo install` to align dependencies. Do not upgrade it just to follow this skill. For a new producer, use the **current stable SDK** compatible with the host's OS support, dependencies, and build toolchain; verify the stable release rather than choosing a canary or copying an old test version.
+For an existing Expo/RN project, keep its selected SDK and use `npx expo install` to align dependencies. Do not upgrade it just to follow this skill. For a new producer, use the **current stable SDK** compatible with the host's OS support, dependencies, and build toolchain; confirm the release is stable before selecting it.
 
-Before native setup, read [./references/version-compatibility.md](./references/version-compatibility.md). It explains how to select the matching native template, check toolchain/OS requirements, and distinguish current package behavior from historical test results. A purely native consumer has no Expo SDK version to pin, but must satisfy the artifact's requirements.
+Before native setup, read [./references/version-compatibility.md](./references/version-compatibility.md) for matching native templates, toolchain/OS requirements, and build defaults across SDK versions. A purely native consumer has no Expo SDK version to pin, but must satisfy the artifact's requirements.
 
 ## Verify the feature in the host
 

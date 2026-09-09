@@ -83,6 +83,6 @@ First check the selected SDK's Node, Xcode, and minimum OS requirements in [vers
 ## Result missing, duplicate callbacks, or a sheet that will not close
 
 - Check the module registration and per-presentation request ID. Root props need an explicit JS entry point; do not assume a Router route receives native `initialProps` directly.
-- Attach the host listener before mounting RN and supply required startup data through initial props. In the SDK 55 fixture, an eager request/reply during cold startup could miss its reply even though later requests worked. For live updates, verify subscription readiness and use acknowledgements where delivery matters; messages are not a durable queue.
+- Attach the host listener before mounting RN and supply required startup data through initial props. For live updates, verify subscription readiness and use acknowledgements where delivery matters; messages are not a durable queue.
 - Remove only this feature's listeners on completion, cancellation, and host dismissal. Dispatch UI changes to the main thread.
 - `popToNative()` depends on the native wrapper: the SDK 55 UIKit controller pops navigation, and its SwiftUI wrapper separately calls `dismiss()`. Custom integrated containers need their own handler. Check which wrapper is actually mounted, or let the host close it on a result/close message. See [feature integration](./feature-integration.md).
