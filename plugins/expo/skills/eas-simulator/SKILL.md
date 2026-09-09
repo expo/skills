@@ -148,7 +148,7 @@ Before starting a Mode C tunnel, read [Tunnel scope and approvals](./references/
 
 ## Driving the device (agent-device)
 
-**Before recording remotely**, read [Remote recordings and download timeouts](./references/controllers.md#remote-recordings-and-download-timeouts). Video finalization and artifact download have separate deadlines; `--timeout` alone does not extend the download.
+If a controller fails to download a recording, retrieve it from [EAS session artifacts](./references/controllers.md#recording-download-recovery).
 
 `agent-device` is the controller. Common verbs (run each as `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`):
 
