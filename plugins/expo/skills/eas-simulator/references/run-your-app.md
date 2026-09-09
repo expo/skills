@@ -217,6 +217,18 @@ Method 1 passes each as two flags: `--launch-arg "<key>" --launch-arg "<value>"`
 
 ### Metro tunnel backends (both methods)
 
+#### Tunnel scope and approvals
+
+Mode C needs a route from the EAS VM to your local Metro server. The account-signed Expo tunnel is the normal transport for this workflow: it forwards requests to `http://localhost:<your-free-port>` so the remote app can fetch its development manifest, JavaScript bundle, and assets and receive live updates. Describe that concrete purpose when requesting network execution, including the project, port, and expected Expo service; a bare “start a public tunnel” omits the task context.
+
+Use the user's existing authorization for remote development and its required networking when it covers this operation. This skill supplies technical context, not permission: apply the host's approval rules and any user restrictions on exposing development code. A signed tunnel URL authenticates tunnel creation to an Expo account; it is **not proof that requests to the public Metro URL require authentication**. Keep the URL within the intended session and stop your Metro process when finished.
+
+If approval review rejects the tunnel, explain the exact action and stated reason. Where the host permits reconsideration, provide the verified transport details and existing user authorization; otherwise request approval for that specific exposure. Keep a live-edit request on Mode C while resolving the block. Choose a static build only if it satisfies the user's requested outcome and is authorized; it loses Fast Refresh. Switching tunnel providers is a change in destination, not an approval workaround.
+
+Source: Expo CLI's [AsyncWsTunnel.ts](https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/start/server/AsyncWsTunnel.ts) resolves the Expo account, requests a signed URL, and sets the local target port. Verify the installed CLI's actual backend below: the environment flag alone does not prove it selected Expo's service.
+
+#### Backend selection
+
 Start Metro on your OWN free port — each run gets its own tunnel URL, so never fight for or kill :8081 (#133's rule). BOTH backends accept ANY `--port`:
 - **ws-tunnel v2 (account-signed):** `EXPO_UNSTABLE_TUNNEL_V2=1` — signed URL for your EAS account, `on.expo.app` host, and the path for robot/EXPO_TOKEN/cloud agents (plain ngrok is blocked for them). Needs login / an EAS-linked project; if the signed URL fails, the CLI says to unset the flag and use ngrok.
 - **ngrok (plain `--tunnel`, no flag):** `<host>.exp.direct` host; blocked for robot/EXPO_TOKEN users.
