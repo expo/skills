@@ -22,7 +22,7 @@ This avoids adding a Router shell just to export one component. For an existing 
 
 ## Concrete differences to account for
 
-Verified against published packages and templates on 2026-09-07; recheck current requirements when using this skill.
+Verified against published packages and templates on 2026-09-09; recheck current requirements when using this skill.
 
 | Surface | SDK 55 | SDK 57 |
 | --- | --- | --- |
@@ -43,6 +43,15 @@ SDK 56 introduced additional brownfield capabilities carried into SDK 57, includ
 
 Record exact versions and distinguish source/API inspection, native compilation, and running the consuming host. An older SDK's successful simulator run does not establish a newer SDK's compatibility. A local build on a toolchain below Expo's documented minimum is also not evidence that the older toolchain is supported.
 
-The feature recipe has been built and run in isolated and integrated SwiftUI hosts with Expo 55.0.31, `expo-brownfield` 55.0.28, RN 0.83.10, and Xcode 26.1.1 on an iOS 26.1 simulator. This is historical test evidence, not the recommended SDK/toolchain for new projects. For Expo 57.0.20 and `expo-brownfield` 57.0.18, dependency checks, TypeScript, iOS prebuild/Pod installation, and JS/asset export passed; the template, CLI, plugin defaults, and messaging wrappers were inspected. Native compilation failed in Expo modules with the available Xcode 26.1.1, below the documented 26.4 minimum, so SDK 57 consumer runtime validation remains outstanding on a supported toolchain. Report the actual result of the current host's Debug and Release acceptance checks rather than claiming universal SDK support.
+The feature recipe has been built and run in isolated and integrated SwiftUI hosts with these versions:
+
+| Tested on | Expo / brownfield / RN | Xcode | iOS simulator | Configurations |
+| --- | --- | --- | --- | --- |
+| 2026-09-09 | 57.0.21 / 57.0.18 / 0.86.3 | 26.6 (17F113) | iPhone 17, iOS 26.5 | Debug and Release, both hosts |
+| 2026-09-07 | 55.0.31 / 55.0.28 / 0.83.10 | 26.1.1 | iPhone 17, iOS 26.1 | Debug and Release, both hosts |
+
+The SDK 57 runs passed initial props, later native/JS messages, results, cancellation, swipe dismissal, reopening with fresh input, and native navigation. Both Release hosts loaded the feature and bundled image with the fixture Metro stopped. The isolated hosts consumed the generated configuration-specific aggregate Swift Package products. Dependency checks and TypeScript also passed; no package source was patched.
+
+The SDK 55 run used Xcode below its documented minimum and remains historical evidence only. These tests cover the example iOS simulator hosts, not arbitrary host configurations, physical devices, signing, or Android. Report the actual result of the current host's Debug and Release acceptance checks rather than claiming universal SDK support.
 
 Sources: [SDK requirements](https://docs.expo.dev/versions/latest/), [SDK 57 Brownfield API](https://docs.expo.dev/versions/v57.0.0/sdk/brownfield/), [SDK 57 native template](https://github.com/expo/expo/tree/sdk-57/templates/expo-template-bare-minimum), [SDK 56 brownfield additions](https://expo.dev/changelog/sdk-56), [published Brownfield package](https://www.npmjs.com/package/expo-brownfield).

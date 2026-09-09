@@ -158,7 +158,7 @@ Use the [Expo lifecycle guide](https://docs.expo.dev/brownfield/lifecycle-listen
 4. Reopen with a fresh request ID and different input. Verify no stale result or duplicate callback. Cancel through both the RN button and native swipe/back dismissal; repeat.
 5. Build/select the Release artifact and host Release configuration. Stop Metro, launch afresh, and repeat the interaction, including any bundled images/fonts. Check the original native screens and relevant lifecycle callbacks.
 
-This recipe was compiled with Expo 55.0.31, `expo-brownfield` 55.0.28, React Native 0.83.10, and Xcode 26.1.1. Its isolated and integrated SwiftUI flows were exercised on an iOS 26.1 simulator, including Release with the fixture Metro stopped. This does not establish compatibility with other SDKs, arbitrary host build setups, or every module lifecycle callback.
+This recipe was built and run in isolated and integrated SwiftUI hosts with SDK 57 and Xcode 26.6 on an iOS 26.5 simulator, in Debug and Release with the fixture Metro stopped for Release. Initial props, later messages, results, cancellation, reopening, bundled images, and native navigation passed. SDK 55 was also exercised previously; see [version compatibility](./version-compatibility.md#validation-scope) for exact versions and test scope. These example hosts do not establish compatibility with arbitrary native build setups or every module lifecycle callback.
 
 Contributors can run the repository's [iOS brownfield playgrounds](https://github.com/expo/skills/tree/main/tests/fixtures/expo-brownfield), which package this feature and both SwiftUI hosts with dependency lockfiles. These fixtures are separate from the installed plugin.
 

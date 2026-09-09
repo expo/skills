@@ -10,7 +10,7 @@ Use macOS with Node, npm, CocoaPods, and Xcode. Isolated consumers also use [Xco
 
 | Fixture | Expo / brownfield / React Native | Documented Node / Xcode minimum | iOS minimum |
 | --- | --- | --- | --- |
-| SDK 57 (current fixture) | 57.0.20 / 57.0.18 / 0.86.3 | 22.13.x / 26.4 | 16.4 |
+| SDK 57 (current fixture) | 57.0.21 / 57.0.18 / 0.86.3 | 22.13.x / 26.4 | 16.4 |
 | SDK 55 (historical regression fixture) | 55.0.31 / 55.0.28 / 0.83.10 | 20.19.x / 26.2 | 15.1 |
 
 These are reproducible snapshots, not instructions to pin every new app to these versions. Check [Expo's compatibility table](https://docs.expo.dev/versions/latest/) when upgrading a snapshot. Both approaches and both SDKs use separate working directories.
@@ -107,7 +107,9 @@ On 2026-09-07, the original SDK 55 isolated and integrated SwiftUI hosts were bu
 
 The checked-in fixture helpers were then exercised from this repository: Both SDKs and both approaches prepared successfully, the SDK 55 integrated Release app was rebuilt, and the isolated host was rebuilt against the earlier SDK 55 Release artifact with identical feature/entry/image source. Debug/Release package switching preserved host Swift edits, and repeated setup refused to overwrite existing playgrounds. Both SDK 55 Release hosts loaded the feature, received the later greeting reply, and returned one completion without Metro.
 
-SDK 57 dependency checks, TypeScript, iOS generation/Pod installation, and JS/asset export passed. Native artifact compilation failed in ExpoModulesJSI on the available Xcode 26.1.1, below SDK 57's required 26.4. **SDK 57 consumer runtime validation remains outstanding on a supported toolchain.** No package source was patched to bypass this.
+On 2026-09-09, the SDK 57 fixture was updated to Expo 57.0.21, `expo-brownfield` 57.0.18, and React Native 0.86.3. Both hosts were built with Xcode 26.6 (17F113) and exercised in Debug and Release on an iPhone 17 simulator running iOS 26.5 (23F77). Dependency and TypeScript checks passed. The tested feature, host sources, and npm lockfiles matched the checked-in fixtures.
+
+Both hosts passed the acceptance checklist: initial props and image, later greeting reply, exactly one completion per Done tap, fresh input on reopening, cancellation, swipe dismissal, and native navigation. Both Release apps passed with the fixture Metro stopped. The isolated native dismiss API also closed its sheet without recording a completion; the integrated diagnostic remained a no-op as documented. Debug and Release isolated consumers used their matching generated aggregate Swift Package products. No Expo or React Native package source was patched.
 
 These are iOS simulator fixtures. Android, physical devices, signing, EAS, Updates, deep links, push callbacks, arbitrary host migrations, and memory/leak instrumentation were not validated. Record versions, destination, build configuration, and observed results when using these fixtures for a new SDK.
 
