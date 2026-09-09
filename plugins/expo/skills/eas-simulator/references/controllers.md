@@ -14,7 +14,7 @@ All four types include a web preview. Before setting `--max-idle-time-minutes`, 
 Start with `--type appium`, then run the user's Appium client through `simulator:exec`; the wrapper loads `APPIUM_URL` and JSON-encoded `APPIUM_CAPS` from `.env.eas-simulator`:
 
 ```bash
-npx --yes eas-cli@latest simulator:start --platform ios --type appium --non-interactive --no-force \
+npx --yes eas-cli@latest simulator:start --platform ios --type appium --non-interactive \
   --name "Appium checkout run"
 npx --yes eas-cli@latest simulator:exec <appium-client> [args...]
 ```

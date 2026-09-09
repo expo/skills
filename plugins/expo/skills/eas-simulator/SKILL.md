@@ -73,7 +73,7 @@ A session is: **start → (install your app) → drive → stop.** `eas-cli` own
 # If the dotenv names a session, inspect it with simulator:get --json first; stop it if still live.
 printf '# managed by eas-cli\n' > .env.eas-simulator   # clear only after resolving any live session
 npx --yes eas-cli@latest simulator:start --platform ios --type agent-device --non-interactive \
-  --no-force --name "Checkout flow screenshots"   # always name it — see 'Always name the session'
+  --name "Checkout flow screenshots"   # always name it — see 'Always name the session'
 #    Then confirm it's live: simulator:get --json → status IN_PROGRESS (bounded poll in run-your-app.md).
 
 # 2. Drive it through `exec` (loads the session env, then runs the command you give it).
