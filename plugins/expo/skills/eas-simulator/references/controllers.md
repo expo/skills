@@ -1,10 +1,25 @@
-# Controllers: agent-device and argent
+# Controllers: agent-device, Appium, and argent
 
-`eas-cli` has no device verbs — it manages the *session*. The verbs (open/tap/type/screenshot/inspect) come from a **controller** that `npx --yes eas-cli@latest simulator:exec` runs locally and that talks to the controller daemon on the remote VM. Two controllers are supported by `npx --yes eas-cli@latest simulator:start --type`:
+`eas-cli` has no device verbs — it manages the *session*. Automation commands come from the interface selected by `simulator:start --type`:
 
 - `agent-device` (Callstack, MIT) — used throughout this skill; runs on demand via `npx agent-device@latest`, nothing installed globally.
+- `appium` — exposes `APPIUM_URL` and `APPIUM_CAPS` for an Appium client.
 - `argent` (Software Mansion) — a capable alternative controller; check its license for your use.
-- `serve-sim` — not a controller; a streaming/preview-only type (iOS), no programmatic control.
+- `web-preview-only` — browser preview with no programmatic control.
+
+All four types include a web preview. Before setting `--max-idle-time-minutes`, follow [Session lifetime](../SKILL.md#session-lifetime); activity does not reset the timer for every interface.
+
+## Appium
+
+Start with `--type appium`, then run the user's Appium client through `simulator:exec`; the wrapper loads `APPIUM_URL` and JSON-encoded `APPIUM_CAPS` from `.env.eas-simulator`:
+
+```bash
+npx --yes eas-cli@latest simulator:start --platform ios --type appium --non-interactive --no-force \
+  --name "Appium checkout run"
+npx --yes eas-cli@latest simulator:exec <appium-client> [args...]
+```
+
+Use the maximum duration as the lifetime bound; Appium commands do not reset the idle timer.
 
 ## agent-device verbs (run via `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`)
 
