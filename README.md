@@ -90,7 +90,7 @@ Agents choose the right skill from the task context and each skill's description
 
 ## Skills Included
 
-Skills come in two groups so the free vs paid boundary is clear. Each skill's description carries the same label, and every services skill opens with a costs/plan-limits note.
+Skills are grouped into open-source framework tooling and hosted EAS services. Each skill's description carries the same label, and every services skill opens with a usage/pricing note.
 
 ### Start Here
 
@@ -117,15 +117,15 @@ Free, open-source Expo SDK and React Native skills.
 | `expo-web-to-native` | Migrating an existing web/React app (Next.js, Vite, CRA) to a native iOS/Android app with Expo. |
 | `expo-module` | Expo native modules and views with Swift, Kotlin, TypeScript, config plugins, and autolinking. |
 | `expo-brownfield` | Adding Expo or React Native to an existing iOS or Android app. |
-| `expo-dev-client` | Development clients (local builds are free; EAS Build/TestFlight is a paid step). |
+| `expo-dev-client` | Development clients (local builds are free; EAS Build has plan limits, and TestFlight requires Apple Developer membership). |
 | `expo-examples` | The `expo/examples` repo of `with-*` integrations to adapt or scaffold a new project from. |
 | `expo-app-clip` | iOS App Clip targets, AASA files, associated domains, and Smart App Banners. |
 | `expo-upgrade` | Expo SDK upgrades, dependency conflicts, deprecated packages, and cache cleanup. |
 | `expo-skill-feedback` | Share what worked or fell short across Expo, its skills, docs, CLIs, or MCP, and control opt-in usage telemetry. |
 
-### Services & paid distribution
+### EAS services
 
-Skills whose core purpose uses paid Expo Application Services (EAS).
+Skills whose core purpose uses hosted Expo Application Services (EAS). Services may include free allowances, paid plans, and usage-based charges; each skill explains applicable usage and links to current pricing.
 
 | Skill | Use it for |
 | --- | --- |

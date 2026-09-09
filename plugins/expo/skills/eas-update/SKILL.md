@@ -1,6 +1,6 @@
 ---
 name: eas-update
-description: "EAS service (paid). Configure and use EAS Update for over-the-air JavaScript and asset updates with expo-updates and EAS CLI. Use when setting up OTA updates, running eas update:configure or eas update, publishing to preview/staging/production channels, explaining branches/channels/runtime versions, testing updates, or debugging why an installed build still shows old code. Load for TestFlight, preview, or production updates that do not appear, including questions about cold launches or reopening the app. Not for update health metrics; use eas-update-insights for adoption, crashes, and rollout monitoring."
+description: "EAS service. Configure and use EAS Update for over-the-air JavaScript and asset updates with expo-updates and EAS CLI. Use when setting up OTA updates, running eas update:configure or eas update, publishing to preview/staging/production channels, explaining branches/channels/runtime versions, testing updates, or debugging why an installed build still shows old code. Load for TestFlight, preview, or production updates that do not appear, including questions about cold launches or reopening the app. Not for update health metrics; use eas-update-insights for adoption, crashes, and rollout monitoring."
 version: 1.0.0
 license: MIT
 allowed-tools: "Bash(npx expo *), Bash(npx *eas-cli@*), Bash(eas *)"
@@ -8,7 +8,7 @@ allowed-tools: "Bash(npx expo *), Bash(npx *eas-cli@*), Bash(eas *)"
 
 # EAS Update
 
-> **EAS service - costs apply.** EAS Update is available on the Free plan; publishing and delivery use update, bandwidth, and storage allowances, with higher limits on paid plans. See https://expo.dev/pricing.
+> **EAS usage and pricing.** EAS Update is available on the Free plan. Update delivery uses your plan's monthly active user and bandwidth allowances; storage limits also apply. Additional usage on paid plans can incur charges. See https://expo.dev/pricing.
 
 Use EAS Update to deliver compatible JavaScript, styling, and asset changes to installed apps without submitting a new native binary. Native-code changes still require a new build.
 
