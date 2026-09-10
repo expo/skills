@@ -178,3 +178,31 @@ Submission details and telemetry controls live in `expo-skill-feedback`.
 ## License
 
 MIT
+
+## Evaluating skill changes
+
+The existing EAS `skill-eval-ci` workflow compares three complete app-building tasks
+against main. For focused routing and source-edit cases, use:
+
+```sh
+eas workflow:run .eas/workflows/skill-eval-focused.yml
+```
+
+This runs a small smoke comparison on EAS using the project's `production` credentials.
+Download `focused-skill-eval` and open `comparison.html`, then each side's `report.html`
+for expectations, raw trace evidence, source checks and pending behavior reviews.
+For a larger development sample, add `-F case_id=all -F repetitions=3`. Validation and
+holdout task families require explicit `-F split=validation` or `-F split=holdout`.
+
+Agent evaluations run in CI only. Validate cases locally without model calls:
+
+```sh
+git submodule update --init eval-harness
+(cd eval-harness && bun install --frozen-lockfile)
+bun eval-harness/eval_harness/evaluator/skill_invocation/focused/main.ts validate --plugin plugins/expo
+```
+
+Cases, fixtures and evaluator implementation live in the pinned `eval-harness` submodule.
+See its [focused evaluation guide](eval-harness/eval_harness/evaluator/skill_invocation/focused/README.md).
+Harness changes must be committed and pushed there before updating this repo's submodule
+pointer, so remote CI can fetch the exact implementation being reviewed.

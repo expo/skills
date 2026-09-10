@@ -30,7 +30,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-FINGERPRINT_SCHEMA_VERSION = 1
+FINGERPRINT_SCHEMA_VERSION = 2
 SUPPORTED_MANIFEST_SCHEMA_VERSIONS = {1}
 
 
@@ -123,6 +123,9 @@ def cmd_fingerprint(args: argparse.Namespace) -> None:
         "harness_sha256": harness_revision(args.harness_dir),
         "eval_config_sha256": eval_config_hash(args.prd, args.prd_skills, args.prd_id, args.scenario),
         "agent": args.agent,
+        "agent_cli_version": args.agent_version,
+        "prompt_variant": args.prompt_variant,
+        "runner_image": args.runner_image,
         "model": args.model,
         "scenario": args.scenario,
         "prd_id": args.prd_id,
@@ -327,6 +330,9 @@ def build_parser() -> argparse.ArgumentParser:
     fp.add_argument("--prd-id", required=True)
     fp.add_argument("--scenario", required=True)
     fp.add_argument("--agent", required=True)
+    fp.add_argument("--agent-version", default="unspecified")
+    fp.add_argument("--prompt-variant", default="baseline")
+    fp.add_argument("--runner-image", default="unspecified")
     fp.add_argument("--model", default="unspecified")
     fp.add_argument("--repetitions", default="1")
     fp.set_defaults(func=cmd_fingerprint)

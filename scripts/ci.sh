@@ -13,6 +13,7 @@
 # from its menu, so nothing triggers and every trigger score reads 0. Nobody
 # documents this, we hit it in CI. Shared here so both workflows stay in sync.
 export AGENT_MODEL="${AGENT_MODEL:-sonnet[1m]}"
+export AGENT_CLI_VERSION="${AGENT_CLI_VERSION:-2.1.267}"
 
 # Configures the (private, token-scoped) eval-harness submodule fetch and
 # initializes it. Called by every function below that needs eval-harness.
@@ -83,7 +84,10 @@ fingerprint_main_content() {
       --prd-id "${PRD_ID}" \
       --scenario "${SCENARIO}" \
       --agent "${AGENT}" \
-      --model "${AGENT_MODEL}"
+      --model "${AGENT_MODEL}" \
+      --agent-version "${AGENT_CLI_VERSION}" \
+      --prompt-variant "${PROMPT_VARIANT:-baseline}" \
+      --runner-image sdk-57
   )
 }
 
