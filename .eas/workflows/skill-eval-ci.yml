@@ -1,12 +1,5 @@
-# Skill eval for PRs labeled "eval". Advisory, never blocks merge.
-# Authors+evaluates 3 PRDs vs main and this PR. "_main" jobs cache via
-# fingerprint+restore_cache; only skill-eval-main-baseline.yml writes that
-# cache. Logic in scripts/*: EAS caps workflow files at 16 KiB.
-# Authoring model: AGENT_MODEL in scripts/ci.sh, shared by both workflows.
 name: skill-eval-ci
 
-# Must match eval-harness's own .eas/workflows/*.yml. The default worker image
-# ships Bun 1.0.14 / Node 18, too old for the analyzer to write metrics.json.
 defaults:
   image: sdk-57
   tools:
@@ -337,7 +330,6 @@ jobs:
           name: skill-eval-report-wiki_reader-pr
           path: skill-eval-report-wiki_reader-pr.tar.gz
 
-  # after: (not needs:) posts even if some jobs failed.
   comment:
     name: comment
     after:
@@ -353,9 +345,7 @@ jobs:
     params:
       payload: |
         <!-- expo-skill-eval -->
-        ## Expo skill eval
 
-        ### Triggers
 
         | App | Expected | main (recall/precision) | PR (recall/precision) |
         |---|---|---|---|
@@ -363,7 +353,6 @@ jobs:
         | hot_chocolate | ${{ after.se_hot_chocolate_pr.outputs.expected }} | ${{ after.se_hot_chocolate_main.outputs.detected }} (${{ after.se_hot_chocolate_main.outputs.recall }} / ${{ after.se_hot_chocolate_main.outputs.precision }}) | ${{ after.se_hot_chocolate_pr.outputs.detected }} (${{ after.se_hot_chocolate_pr.outputs.recall }} / ${{ after.se_hot_chocolate_pr.outputs.precision }}) |
         | wiki_reader | ${{ after.se_wiki_reader_pr.outputs.expected }} | ${{ after.se_wiki_reader_main.outputs.detected }} (${{ after.se_wiki_reader_main.outputs.recall }} / ${{ after.se_wiki_reader_main.outputs.precision }}) | ${{ after.se_wiki_reader_pr.outputs.detected }} (${{ after.se_wiki_reader_pr.outputs.recall }} / ${{ after.se_wiki_reader_pr.outputs.precision }}) |
 
-        ### Code quality
 
         Lexical/structural: passed/total. Failing: PR only.
 
@@ -376,7 +365,6 @@ jobs:
         | wiki_reader | main | ${{ after.se_wiki_reader_main.outputs.lexical }} | ${{ after.se_wiki_reader_main.outputs.structural }} | ${{ after.se_wiki_reader_main.outputs.syntax_ok }} | ${{ after.se_wiki_reader_main.outputs.bundle_ok }} | — |
         | wiki_reader | PR | ${{ after.se_wiki_reader_pr.outputs.lexical }} | ${{ after.se_wiki_reader_pr.outputs.structural }} | ${{ after.se_wiki_reader_pr.outputs.syntax_ok }} | ${{ after.se_wiki_reader_pr.outputs.bundle_ok }} | ${{ after.se_wiki_reader_pr.outputs.failing }} |
 
-        ### Focused catalog-value pilot
 
         Four cases × three trials, with and without Expo skills. Pending reviews are not passes; source checks do not establish native-runtime correctness.
 

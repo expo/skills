@@ -45,6 +45,12 @@ class FingerprintTests(unittest.TestCase):
 
 
 class LabelWorkflowTests(unittest.TestCase):
+    def test_eas_workflows_fit_the_server_file_limit(self):
+        root = Path(__file__).resolve().parents[1]
+        for path in (root / ".eas/workflows").glob("*.y*ml"):
+            with self.subTest(workflow=path.name):
+                self.assertLessEqual(len(path.read_bytes()), 16384)
+
     def test_pending_reviews_are_not_counted_as_success(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "summary.json"
