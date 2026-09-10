@@ -35,9 +35,9 @@ grep -rn 'fontSize:' $SRC --include='*.tsx' | grep -v "^$THEME/"
 # Spacing values outside the named steps of the scale.
 # The whitelist is the project's actual scale (here: the example scale from
 # SKILL.md) - substitute the project's steps before running. Multiples of 4
-# that are not named steps (12, 20, 40, ...) are flagged on purpose: the rule
-# is "use the nearest step". If one keeps recurring, the fix is to add it to
-# the scale and to this whitelist, not to ignore the hits.
+# that are not named steps (12, 20, 40, ...) are candidates for review.
+# Reuse a step when grouping/alignment survives, or name a recurring value.
+# Exclude justified native metrics and insets before counting escapes.
 grep -rEn '(padding|margin|gap)[A-Za-z]*:\s*[0-9]+' $SRC --include='*.tsx' \
   | grep -vE ':\s*(0|4|8|16|24|32|48)\b' | grep -v "^$THEME/"
 
@@ -56,7 +56,7 @@ grep -rln '<Pressable' $SRC --include='*.tsx' | xargs grep -LE 'accessibility(Ro
 
 Then run the candidate checks in `native-slop.md`. Inspect the rendered result: token checks alone cannot establish readable dark mode, spacing hierarchy, or appropriate shadows.
 
-For a Tailwind project, also check for values that bypass `global.css` variables: arbitrary-value classes like `p-[13px]` or `text-[#5B21B6]`.
+For a Tailwind-based project, review arbitrary-value classes like `p-[13px]` or `text-[#5B21B6]` against its actual token configuration; do not assume every version stores tokens in `global.css`.
 
 ```bash
 grep -rEn 'className="[^"]*\[[^"]*\]' $SRC --include='*.tsx'
@@ -64,7 +64,7 @@ grep -rEn 'className="[^"]*\[[^"]*\]' $SRC --include='*.tsx'
 
 ## 2. Scoring
 
-Turn raw hit counts into a comparable score so runs can be tracked over time:
+After reviewing candidates and excluding justified exceptions, track confirmed escapes within the same app and source scope. This measures token drift, not visual quality; raw grep hits and scores from different apps are not comparable.
 
 ```bash
 # Source lines of code (the denominator)
@@ -75,15 +75,15 @@ For each category: **score = escapes per 100 source lines** (hits ÷ SLOC × 100
 
 | Score per category | Reading |
 |---|---|
-| < 0.5 | Healthy - fix opportunistically |
-| 0.5 - 2.0 | Drifting - schedule cleanup for the worst files |
-| > 2.0 | Systemic - the token or component for this category is missing or unused; fix the system first (see §5) |
+| < 0.5 | Few confirmed escapes - fix opportunistically |
+| 0.5 - 2.0 | Review files with repeated escapes for focused cleanup |
+| > 2.0 | Investigate a missing or unused shared token/component before editing each occurrence (see §5) |
 
-Report the per-category scores in the summary. The overall priority order falls out of the scores: the highest-scoring category is usually the first migration target.
+Treat these ranges as rough cleanup heuristics, not pass/fail thresholds or proof that a system is missing. Report the source scope and confirmed counts alongside each score. Prioritize broken behavior, accessibility, and visible inconsistencies before token cleanup; a higher count does not automatically mean a more important fix.
 
 ## 3. Component completeness
 
-For each component in the shared components directory (`src/components/`, or `components/` in a root-level layout), check it against the contract in `SKILL.md`:
+For each custom component in the shared components directory (`src/components/`, or `components/` in a root-level layout), check the applicable parts of the contract in `SKILL.md`. Native controls retain their built-in behavior; text/layout primitives do not need button states or variants:
 
 | Check | Pass condition |
 |---|---|
@@ -129,7 +129,7 @@ Views repeated across ≥2 screens that are still colocated or duplicated:
 
 An app with dozens of escapes is migrated in order, never big-bang. A big-bang conversion produces one huge unreviewable diff and usually stalls half-done.
 
-1. **Create the tokens first.** Derive the scales from the values the audit found most often, snapped to the grid. A theme built from the app's real values gets adopted; an aspirational one gets bypassed.
+1. **Create the tokens first.** Derive scales from the values the audit found most often. Normalize custom spacing where useful; preserve platform typography, control metrics, and insets. A theme built from the app's real values gets adopted; an aspirational one gets bypassed.
 2. **Typography before spacing.** Convert raw `fontSize` to the `type` ramp + `ThemedText` first: it is the highest-visibility win and touches the fewest layout decisions. Then spacing, then colors, then radius/shadows.
 3. **Convert one worst-offender file completely** and use it as the reference pattern for the rest of the migration.
 4. **Then convert per-screen**, one screen per commit, using the audit greps scoped to that screen to verify it comes out clean.
@@ -178,7 +178,7 @@ Before designing a new primitive, prove the existing set can't cover it:
 |---|---|---|
 
 ### API
-Props table (variant / size / state / style only - content via children).
+Props table (applicable variant / size / state / style, simple semantic content props, and children for composition).
 
 ### Tokens used
 Colors: [...] Spacing: [...] Typography: [...] Radius: [...]

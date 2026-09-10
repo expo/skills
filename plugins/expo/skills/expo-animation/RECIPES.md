@@ -86,45 +86,57 @@ function rubberband(overshoot, dimension, constant = 0.55) {
 
 ## Press feedback
 
-Every pressable in the app. This passes the frequency gate only because it's near-imperceptible: 120ms and a 3% scale is the ceiling for something touched this often — anything longer or larger belongs to rarer moments, per step 1 in SKILL.md. No gesture, no shared value — a CSS transition is the whole implementation.
+For custom buttons when the app uses scale feedback. Full-width rows highlight; native controls keep their own feedback. This uses a 120ms transition and a 3% scale; reduced motion switches to opacity. No gesture or shared value is needed.
 
 ```jsx
-import Animated from 'react-native-reanimated';
-import { Pressable, StyleSheet } from 'react-native';
+import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 
-function PressableScale({ onPress, children }) {
+function PressableScale({ onPress, children, accessibilityLabel }) {
   const [pressed, setPressed] = useState(false);
+  const reduced = useReducedMotion();
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      style={styles.target}
       onPress={onPress}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
       hitSlop={12}
       pressRetentionOffset={16}
     >
-      <Animated.View style={[styles.box, pressed && styles.pressed]}>{children}</Animated.View>
+      <Animated.View style={[styles.box, reduced && styles.reduced, pressed && (reduced ? styles.dimmed : styles.pressed)]}>{children}</Animated.View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  target: {
+    minWidth: Platform.OS === 'android' ? 48 : 44,
+    minHeight: Platform.OS === 'android' ? 48 : 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   box: {
     transform: [{ scale: 1 }],
     transitionProperty: 'transform',
     transitionDuration: '120ms',
-    transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
+    transitionTimingFunction: cubicBezier(0.23, 1, 0.32, 1),
   },
   pressed: { transform: [{ scale: 0.97 }] },
+  reduced: { transitionProperty: 'opacity' },
+  dimmed: { opacity: 0.7 },
 });
 ```
 
-`setState` is fine here — it fires twice per press, not per frame. `hitSlop` brings a small icon up to the 44pt target without growing it; `pressRetentionOffset` stops a slight finger drift from cancelling.
+`setState` is fine here — it fires twice per press, not per frame. Supply `accessibilityLabel` for icon-only buttons. Size or pad the target to 44pt (48dp Android); the example's `hitSlop` only helps within the parent bounds. `pressRetentionOffset` tolerates slight finger drift.
 
 ---
 
 ## Bottom sheet you can drag to dismiss
 
-Before writing this: if the sheet is its own destination, use `presentation: 'formSheet'` (see **Screen transitions**) and get the platform's real sheet for free. Build this only when the sheet has to live inside an existing screen.
+Before writing this: use `presentation: 'formSheet'` for a route destination (see **Screen transitions**), or consult `expo-ui` for an in-screen `BottomSheet`. Use this custom gesture recipe only when neither native option meets the required behavior.
 
 ```jsx
 const translateY = useSharedValue(0);
