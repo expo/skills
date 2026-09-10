@@ -201,9 +201,8 @@ the HTTP cases have executable behavior checks. These are controlled file-edit t
 For a larger development sample, add `-F case_id=all -F repetitions=3`. Validation and
 holdout task families require explicit `-F split=validation` or `-F split=holdout`.
 
-EAS reads workflow definitions from the default branch. The new standalone inputs and
-focused PR-comment section become available after merge; the existing label workflow
-already checks out the PR scripts and runs the pilot, whose results are in its artifact.
+The label workflow uses the PR workflow definition and scripts. Its comment summarizes
+the focused pilot; detailed results remain in the Notes PR artifact.
 
 Agent evaluations run in CI only. Validate cases locally without model calls:
 

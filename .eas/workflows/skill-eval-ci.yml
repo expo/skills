@@ -345,7 +345,9 @@ jobs:
     params:
       payload: |
         <!-- expo-skill-eval -->
+        ## Expo skill eval
 
+        ### Triggers
 
         | App | Expected | main (recall/precision) | PR (recall/precision) |
         |---|---|---|---|
@@ -353,6 +355,7 @@ jobs:
         | hot_chocolate | ${{ after.se_hot_chocolate_pr.outputs.expected }} | ${{ after.se_hot_chocolate_main.outputs.detected }} (${{ after.se_hot_chocolate_main.outputs.recall }} / ${{ after.se_hot_chocolate_main.outputs.precision }}) | ${{ after.se_hot_chocolate_pr.outputs.detected }} (${{ after.se_hot_chocolate_pr.outputs.recall }} / ${{ after.se_hot_chocolate_pr.outputs.precision }}) |
         | wiki_reader | ${{ after.se_wiki_reader_pr.outputs.expected }} | ${{ after.se_wiki_reader_main.outputs.detected }} (${{ after.se_wiki_reader_main.outputs.recall }} / ${{ after.se_wiki_reader_main.outputs.precision }}) | ${{ after.se_wiki_reader_pr.outputs.detected }} (${{ after.se_wiki_reader_pr.outputs.recall }} / ${{ after.se_wiki_reader_pr.outputs.precision }}) |
 
+        ### Code quality
 
         Lexical/structural: passed/total. Failing: PR only.
 
@@ -365,6 +368,7 @@ jobs:
         | wiki_reader | main | ${{ after.se_wiki_reader_main.outputs.lexical }} | ${{ after.se_wiki_reader_main.outputs.structural }} | ${{ after.se_wiki_reader_main.outputs.syntax_ok }} | ${{ after.se_wiki_reader_main.outputs.bundle_ok }} | — |
         | wiki_reader | PR | ${{ after.se_wiki_reader_pr.outputs.lexical }} | ${{ after.se_wiki_reader_pr.outputs.structural }} | ${{ after.se_wiki_reader_pr.outputs.syntax_ok }} | ${{ after.se_wiki_reader_pr.outputs.bundle_ok }} | ${{ after.se_wiki_reader_pr.outputs.failing }} |
 
+        ### Focused catalog-value pilot
 
         Four cases × three trials, with and without Expo skills. Pending reviews are not passes; source checks do not establish native-runtime correctness.
 

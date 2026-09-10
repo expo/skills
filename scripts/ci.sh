@@ -178,8 +178,8 @@ author_and_evaluate() {
     echo "❌ skill-eval wrote no $out_dir/metrics.json -- this job's PR comment cells will all read '?'" >&2
   fi
 
-  # The existing label-triggered workflow reads its YAML from main, but checks
-  # out this PR's scripts. The candidate Notes job runs a paired catalog-value
+  # The label-triggered workflow checks out this PR. The candidate Notes job
+  # runs a paired catalog-value
   # pilot; the main job must not duplicate these 24 attempts.
   # Keep the report inside the artifact this job already uploads.
   local focused_status=0
