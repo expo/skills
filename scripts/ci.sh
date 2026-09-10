@@ -179,11 +179,11 @@ author_and_evaluate() {
   fi
 
   # The existing label-triggered workflow reads its YAML from main, but checks
-  # out this PR's scripts. Run one focused case on each Notes side here so the
-  # new runner is exercised before its standalone workflow has been merged.
+  # out this PR's scripts. The candidate Notes job runs a paired catalog-value
+  # pilot; the main job must not duplicate these 24 attempts.
   # Keep the report inside the artifact this job already uploads.
   local focused_status=0
-  if [ "${PRD:-}" = "dataset/prds/notes/prd/mvp.txt" ]; then
+  if [ "${PRD:-}" = "dataset/prds/notes/prd/mvp.txt" ] && [ "$plugin_dir" = "$(pwd)/plugins/expo" ]; then
     focused_smoke "$plugin_dir" "$out_dir/focused" || focused_status=$?
   fi
 
@@ -221,7 +221,7 @@ focused_smoke() {
     fi
     SKILL_EVAL_REMOTE=1 bun eval-harness/eval_harness/evaluator/skill_invocation/focused/main.ts run \
       --plugin "$plugin_dir" --out "$out_dir" --model "$AGENT_MODEL" \
-      --case native-form-advice --split development --repetitions 1
+      --case pilot --split development --repetitions 3 --skill-mode both
   )
 }
 

@@ -182,9 +182,9 @@ MIT
 ## Evaluating skill changes
 
 The existing EAS `skill-eval-ci` workflow compares three complete app-building tasks
-against main. Adding the `eval` label to a PR also runs a focused routing smoke
-case inside both Notes jobs. Each Notes artifact includes a `focused/` report with
-raw traces and frozen catalog evidence. No local EAS login is needed to trigger
+against main. Adding the `eval` label also runs a four-case focused pilot in the Notes PR
+job: three attempts per case with and without Expo skills (24 attempts). Its Notes PR
+artifact includes `focused/report.html`, outcome summaries, raw traces and frozen catalog evidence. No local EAS login is needed to trigger
 this path; it uses the existing GitHub-to-EAS connection.
 
 For focused routing and source-edit cases with configurable splits/repetitions, use:
@@ -193,11 +193,17 @@ For focused routing and source-edit cases with configurable splits/repetitions, 
 eas workflow:run .eas/workflows/skill-eval-focused.yml
 ```
 
-This runs a small smoke comparison on EAS using the project's `production` credentials.
-Download `focused-skill-eval` and open `comparison.html`, then each side's `report.html`
-for expectations, raw trace evidence, source checks and pending behavior reviews.
+This defaults to the same catalog-value pilot on EAS using the project's `production` credentials.
+Download `focused-skill-eval` and open `report.html` for outcomes, routing, costs and evidence.
+Use `-F experiment=catalog-change` to compare main against the candidate instead; that mode
+also writes `comparison.html` and per-side reports. Advice reviews remain pending, while
+the HTTP cases have executable behavior checks. These are controlled file-edit tasks, not native app validation.
 For a larger development sample, add `-F case_id=all -F repetitions=3`. Validation and
 holdout task families require explicit `-F split=validation` or `-F split=holdout`.
+
+EAS reads workflow definitions from the default branch. The new standalone inputs and
+focused PR-comment section become available after merge; the existing label workflow
+already checks out the PR scripts and runs the pilot, whose results are in its artifact.
 
 Agent evaluations run in CI only. Validate cases locally without model calls:
 

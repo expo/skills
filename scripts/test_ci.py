@@ -45,6 +45,14 @@ class FingerprintTests(unittest.TestCase):
 
 
 class LabelWorkflowTests(unittest.TestCase):
+    def test_pending_reviews_are_not_counted_as_success(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "summary.json"
+            self.assertIn("not available", ci.focused_summary(path))
+            path.write_text(json.dumps([{"id": "advice", "skill_mode": "with-expo", "outcome_passed": 0,
+                "outcome_failed": 0, "outcome_pending": 3, "outcome_unavailable": 0, "attempted": 3}]))
+            self.assertIn("0/0 outcomes passed; 3 pending", ci.focused_summary(path))
+
     def test_canonical_harness_report_is_copied_into_job_artifact(self):
         ci_script = str(Path(__file__).with_name("ci.sh").resolve())
         with tempfile.TemporaryDirectory() as directory:
@@ -76,7 +84,7 @@ focused_smoke() { mkdir -p "$2"; echo smoke > "$2/report.html"; return "$focused
 focused_rc="$3"
 export PRD=dataset/prds/notes/prd/mvp.txt
 cd "$2"
-author_and_evaluate true cached plugin report skills_available_unmentioned report.tar.gz
+author_and_evaluate true cached "$PWD/plugins/expo" report skills_available_unmentioned report.tar.gz
 """
         for code in [0, 1]:
             with self.subTest(focused_exit=code), tempfile.TemporaryDirectory() as directory:
@@ -87,6 +95,21 @@ author_and_evaluate true cached plugin report skills_available_unmentioned repor
                 self.assertEqual(result.returncode, code, result.stderr)
                 self.assertTrue((root / "report/focused/report.html").exists())
                 self.assertTrue((root / "report.tar.gz").exists())
+
+    def test_main_notes_job_does_not_duplicate_the_pilot(self):
+        ci_script = str(Path(__file__).with_name("ci.sh").resolve())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "cached").mkdir()
+            (root / "cached/metrics.json").write_text("{}")
+            result = subprocess.run(["bash", "-c", r'''
+source "$1" true
+focused_smoke() { echo "unexpected pilot" >&2; return 99; }
+export PRD=dataset/prds/notes/prd/mvp.txt
+author_and_evaluate true cached /tmp/plugins-main/plugins/expo report skills_available_unmentioned report.tar.gz
+''', "test", ci_script], cwd=root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn("unexpected pilot", result.stderr)
 
 
 if __name__ == "__main__":

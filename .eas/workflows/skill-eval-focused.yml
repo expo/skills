@@ -10,10 +10,15 @@ defaults:
 on:
   workflow_dispatch:
     inputs:
+      experiment:
+        type: choice
+        options: [catalog-value, catalog-change]
+        default: catalog-value
+        description: With/without Expo skills, or main versus candidate
       case_id:
         type: string
-        default: native-form-advice
-        description: Case ID, or all to run the selected split
+        default: pilot
+        description: Case ID, pilot (four cases), or all in the selected split
       split:
         type: choice
         options: [development, validation, holdout]
@@ -21,7 +26,7 @@ on:
         description: Task-family split; holdout is only for final validation
       repetitions:
         type: number
-        default: 1
+        default: 3
         description: Attempts per case on each side; use 3 for a smoke sample
 
 jobs:
@@ -29,6 +34,7 @@ jobs:
     runs_on: linux-medium
     environment: production
     env:
+      FOCUSED_EXPERIMENT: ${{ inputs.experiment }}
       FOCUSED_CASE: ${{ inputs.case_id }}
       FOCUSED_SPLIT: ${{ inputs.split }}
       FOCUSED_REPETITIONS: ${{ inputs.repetitions }}

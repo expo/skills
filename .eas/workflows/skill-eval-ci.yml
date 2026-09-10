@@ -89,6 +89,7 @@ jobs:
       SCENARIO: skills_available_unmentioned
     outputs:
       report: ${{ steps.run.outputs.report }}
+      focused: ${{ steps.run.outputs.focused }}
       expected: ${{ steps.run.outputs.expected }}
       detected: ${{ steps.run.outputs.detected }}
       recall: ${{ steps.run.outputs.recall }}
@@ -107,6 +108,7 @@ jobs:
           bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-notes-pr "${SCENARIO}" skill-eval-report-notes-pr.tar.gz
           eval "$(python3 scripts/ci.py print-outputs skill-eval-report-notes-pr/metrics.json)"
           set-output report "$report"
+          set-output focused "$focused"
           set-output expected "$expected"
           set-output detected "$detected"
           set-output recall "$recall"
@@ -373,5 +375,13 @@ jobs:
         | hot_chocolate | PR | ${{ after.se_hot_chocolate_pr.outputs.lexical }} | ${{ after.se_hot_chocolate_pr.outputs.structural }} | ${{ after.se_hot_chocolate_pr.outputs.syntax_ok }} | ${{ after.se_hot_chocolate_pr.outputs.bundle_ok }} | ${{ after.se_hot_chocolate_pr.outputs.failing }} |
         | wiki_reader | main | ${{ after.se_wiki_reader_main.outputs.lexical }} | ${{ after.se_wiki_reader_main.outputs.structural }} | ${{ after.se_wiki_reader_main.outputs.syntax_ok }} | ${{ after.se_wiki_reader_main.outputs.bundle_ok }} | — |
         | wiki_reader | PR | ${{ after.se_wiki_reader_pr.outputs.lexical }} | ${{ after.se_wiki_reader_pr.outputs.structural }} | ${{ after.se_wiki_reader_pr.outputs.syntax_ok }} | ${{ after.se_wiki_reader_pr.outputs.bundle_ok }} | ${{ after.se_wiki_reader_pr.outputs.failing }} |
+
+        ### Focused catalog-value pilot
+
+        Four cases × three trials, with and without Expo skills. Pending reviews are not passes; source checks do not establish native-runtime correctness.
+
+        ${{ after.se_notes_pr.outputs.focused }}
+
+        Open `focused/report.html` inside the Notes PR artifact for outcomes, routing, costs and traces.
 
         📎 [Reports](${{ workflow.url }})

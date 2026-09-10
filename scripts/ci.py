@@ -307,10 +307,30 @@ def cmd_print_outputs(args: argparse.Namespace) -> None:
         "syntax_ok": syntax_ok,
         "bundle_ok": bundle_ok,
         "failing": failing,
+        "focused": focused_summary(Path(args.metrics_path).parent / "focused" / "summary.json"),
     }
 
     for key, value in fields.items():
         print(f"{key}={shell_quote(value)}")
+
+
+def focused_summary(path: Path) -> str:
+    """Only evaluated outcomes enter the denominator; pending is never a pass."""
+    if not path.exists():
+        return "Focused pilot not available; see job artifacts."
+    try:
+        rows = json.loads(path.read_text(encoding="utf-8"))
+        if not rows:
+            return "No focused attempts recorded."
+        return "<br>".join(
+            f"{row['id']} ({row['skill_mode']}): "
+            f"{row['outcome_passed']}/{row['outcome_passed'] + row['outcome_failed']} outcomes passed; "
+            f"{row['outcome_pending']} pending; {row['outcome_unavailable']} unavailable; "
+            f"{row['attempted']} attempted"
+            for row in rows
+        )
+    except (ValueError, KeyError, TypeError):
+        return "Invalid focused summary; inspect job artifacts."
 
 
 # ---------------------------------------------------------------------------

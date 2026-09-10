@@ -22,23 +22,30 @@ focused_cli=eval-harness/eval_harness/evaluator/skill_invocation/focused/main.ts
 out="$(pwd)/focused-skill-eval"
 mkdir -p "$out"
 case_args=()
-if [ "${FOCUSED_CASE:-native-form-advice}" != all ]; then
-  case_args=(--case "${FOCUSED_CASE:-native-form-advice}")
+if [ "${FOCUSED_CASE:-pilot}" != all ]; then
+  case_args=(--case "${FOCUSED_CASE:-pilot}")
 fi
 
 run_side() {
-  local plugin="$1" destination="$2"
+  local plugin="$1" destination="$2" skill_mode="${3:-with-expo}"
   # The explicit branch supports macOS Bash 3.2 as well as EAS Linux.
   if [ "${#case_args[@]}" -gt 0 ]; then
     bun "$focused_cli" run --plugin "$plugin" --out "$destination" \
-      --model 'sonnet[1m]' --split "${FOCUSED_SPLIT:-development}" \
-      --repetitions "${FOCUSED_REPETITIONS:-1}" "${case_args[@]}"
+      --model 'sonnet[1m]' --skill-mode "$skill_mode" --split "${FOCUSED_SPLIT:-development}" \
+      --repetitions "${FOCUSED_REPETITIONS:-3}" "${case_args[@]}"
   else
     bun "$focused_cli" run --plugin "$plugin" --out "$destination" \
-      --model 'sonnet[1m]' --split "${FOCUSED_SPLIT:-development}" \
-      --repetitions "${FOCUSED_REPETITIONS:-1}"
+      --model 'sonnet[1m]' --skill-mode "$skill_mode" --split "${FOCUSED_SPLIT:-development}" \
+      --repetitions "${FOCUSED_REPETITIONS:-3}"
   fi
 }
+
+if [ "${FOCUSED_EXPERIMENT:-catalog-value}" = catalog-value ]; then
+  # One catalog, alternating presence/absence conditions inside each repetition.
+  run_side "$(pwd)/plugins/expo" "$out" both
+  exit $?
+fi
+[ "$FOCUSED_EXPERIMENT" = catalog-change ] || { echo "Unknown experiment" >&2; exit 2; }
 
 main_status=0
 candidate_status=0
