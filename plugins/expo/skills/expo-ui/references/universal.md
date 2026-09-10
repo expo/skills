@@ -29,6 +29,9 @@ import { Host, Column, Button, Text } from '@expo/ui';
 | Controls | `Button`, `Switch`, `Checkbox`, `Slider`, `TextInput`, `Picker` |
 | Disclosure & presentation | `BottomSheet`, `Collapsible` |
 | Collections & forms | `List` (with `ListItem`), `FieldGroup` |
+| Interop | `RNHostView` (hosts React Native views inside an `@expo/ui` tree) |
+
+> **`RNHostView matchContents` does not wrap text.** With `matchContents` the host measures its child itself — the width the native parent offers never reaches that child, so unbounded `<Text>` measures on one line and overflows. Give the hosted child a `maxWidth` (or a fixed `width`). It also lays out only its first child, so wrap several views in one parent `View`. See `swift-ui.md` / `jetpack-compose.md` for the full rules.
 
 > **`List` is not suitable for large lists.** Each `ListItem` is a JSX node processed on the JS thread — for large datasets this causes noticeable slowdowns.
 
