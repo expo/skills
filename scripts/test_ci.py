@@ -45,6 +45,29 @@ class FingerprintTests(unittest.TestCase):
 
 
 class LabelWorkflowTests(unittest.TestCase):
+    def test_canonical_harness_report_is_copied_into_job_artifact(self):
+        ci_script = str(Path(__file__).with_name("ci.sh").resolve())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            analyzer = root / "eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh"
+            analyzer.parent.mkdir(parents=True)
+            analyzer.write_text('''set -eu
+test "$AUTHORED_ARTIFACT" = "$PWD/eval-harness/authored-app"
+test "$SCENARIO" = skills_available_unmentioned
+test "$OUT_DIR" = skill-eval-report
+test "$PRD_SKILLS" = "$PWD/eval-harness/dataset/prd_skills.json"
+mkdir -p eval-harness/skill-eval-report
+echo '{"runs":[]}' > eval-harness/skill-eval-report/metrics.json
+echo report > eval-harness/skill-eval-report/report.html
+''')
+            result = subprocess.run(
+                ["bash", ci_script, "analyze_authored_app", "skills_available_unmentioned", "notes-report"],
+                cwd=root, capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads((root / "notes-report/metrics.json").read_text()), {"runs": []})
+            self.assertEqual((root / "notes-report/report.html").read_text(), "report\n")
+
     def test_cached_notes_jobs_run_focused_probe_and_upload_diagnostics(self):
         ci_script = str(Path(__file__).with_name("ci.sh").resolve())
         shell = r"""

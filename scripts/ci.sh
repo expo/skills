@@ -169,11 +169,7 @@ author_and_evaluate() {
     export SKILL_PLUGIN_DIR="$plugin_dir"
     bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
 
-    AUTHORED_ARTIFACT="$(pwd)/eval-harness" \
-    SCENARIO="$scenario" \
-    OUT_DIR="$out_dir" \
-    PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-    bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+    analyze_authored_app "$scenario" "$out_dir"
   fi
 
   # Warn only: this function swallows failures on purpose (see above), and
@@ -193,6 +189,23 @@ author_and_evaluate() {
 
   tar -czf "$tarball" "$out_dir" 2>/dev/null || true
   return "$focused_status"
+}
+
+# The harness now emits a canonical authored-app tree and restricts its shell
+# analyzer to its canonical report directory. Copy that report into the per-job
+# artifact location expected by the skills repository's existing workflows.
+analyze_authored_app() {
+  (
+    set -euo pipefail
+    local scenario="$1" out_dir="$2"
+    AUTHORED_ARTIFACT="$(pwd)/eval-harness/authored-app" \
+    SCENARIO="$scenario" \
+    OUT_DIR=skill-eval-report \
+    PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+    bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+    mkdir -p "$out_dir"
+    cp -R eval-harness/skill-eval-report/. "$out_dir/"
+  )
 }
 
 # Small CI-only routing probe, shared by the label workflow and manual runner.
@@ -234,11 +247,7 @@ author_and_evaluate_baseline() {
     export SKILL_PLUGIN_DIR="$plugin_dir"
     bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
 
-    AUTHORED_ARTIFACT="$(pwd)/eval-harness" \
-    SCENARIO="$scenario" \
-    OUT_DIR="$out_dir" \
-    PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-    bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+    analyze_authored_app "$scenario" "$out_dir"
 
     [ -f "$out_dir/metrics.json" ] || {
       echo "❌ skill-eval wrote no $out_dir/metrics.json -- refusing to cache this baseline" >&2
