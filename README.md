@@ -182,7 +182,12 @@ MIT
 ## Evaluating skill changes
 
 The existing EAS `skill-eval-ci` workflow compares three complete app-building tasks
-against main. For focused routing and source-edit cases, use:
+against main. Adding the `eval` label to a PR also runs a focused routing smoke
+case inside both Notes jobs. Each Notes artifact includes a `focused/` report with
+raw traces and frozen catalog evidence. No local EAS login is needed to trigger
+this path; it uses the existing GitHub-to-EAS connection.
+
+For focused routing and source-edit cases with configurable splits/repetitions, use:
 
 ```sh
 eas workflow:run .eas/workflows/skill-eval-focused.yml

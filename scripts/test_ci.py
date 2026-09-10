@@ -5,6 +5,7 @@ import io
 import json
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -41,6 +42,28 @@ class FingerprintTests(unittest.TestCase):
                           ["--repetitions", "3"]]:
                 with self.subTest(extra=extra):
                     self.assertNotEqual(baseline, fingerprint(extra))
+
+
+class LabelWorkflowTests(unittest.TestCase):
+    def test_cached_notes_jobs_run_focused_probe_and_upload_diagnostics(self):
+        ci_script = str(Path(__file__).with_name("ci.sh").resolve())
+        shell = r"""
+source "$1" true
+focused_smoke() { mkdir -p "$2"; echo smoke > "$2/report.html"; return "$focused_rc"; }
+focused_rc="$3"
+export PRD=dataset/prds/notes/prd/mvp.txt
+cd "$2"
+author_and_evaluate true cached plugin report skills_available_unmentioned report.tar.gz
+"""
+        for code in [0, 1]:
+            with self.subTest(focused_exit=code), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / "cached").mkdir()
+                (root / "cached/metrics.json").write_text("{}")
+                result = subprocess.run(["bash", "-c", shell, "test", ci_script, directory, str(code)], capture_output=True, text=True)
+                self.assertEqual(result.returncode, code, result.stderr)
+                self.assertTrue((root / "report/focused/report.html").exists())
+                self.assertTrue((root / "report.tar.gz").exists())
 
 
 if __name__ == "__main__":

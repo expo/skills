@@ -182,7 +182,34 @@ author_and_evaluate() {
     echo "❌ skill-eval wrote no $out_dir/metrics.json -- this job's PR comment cells will all read '?'" >&2
   fi
 
+  # The existing label-triggered workflow reads its YAML from main, but checks
+  # out this PR's scripts. Run one focused case on each Notes side here so the
+  # new runner is exercised before its standalone workflow has been merged.
+  # Keep the report inside the artifact this job already uploads.
+  local focused_status=0
+  if [ "${PRD:-}" = "dataset/prds/notes/prd/mvp.txt" ]; then
+    focused_smoke "$plugin_dir" "$out_dir/focused" || focused_status=$?
+  fi
+
   tar -czf "$tarball" "$out_dir" 2>/dev/null || true
+  return "$focused_status"
+}
+
+# Small CI-only routing probe, shared by the label workflow and manual runner.
+# Ordinary behavioral misses remain advisory; infrastructure errors fail the job.
+focused_smoke() {
+  (
+    set -euo pipefail
+    local plugin_dir="$1" out_dir="$2"
+    [ -n "${CI:-}" ] || { echo "Focused agent runs require CI" >&2; exit 1; }
+    install_harness_deps
+    if ! command -v claude >/dev/null 2>&1 || [ "$(claude --version | cut -d ' ' -f 1)" != "$AGENT_CLI_VERSION" ]; then
+      npm install -g "@anthropic-ai/claude-code@$AGENT_CLI_VERSION"
+    fi
+    SKILL_EVAL_REMOTE=1 bun eval-harness/eval_harness/evaluator/skill_invocation/focused/main.ts run \
+      --plugin "$plugin_dir" --out "$out_dir" --model "$AGENT_MODEL" \
+      --case native-form-advice --split development --repetitions 1
+  )
 }
 
 # Runs author-app.sh then eval-skill-use.sh directly into OUT_DIR -- no
