@@ -157,7 +157,6 @@ prefixes and paid costs callout (step 4), the Codex agent file and its paid pref
 `expo-animation` mirrors `skills/animate-expo` from `emilkowalski/skills`. Pull upstream changes
 with `bun scripts/sync-animate-expo.ts`; use `--check` to detect drift without writing. The script
 preserves this repository's skill name, category metadata, collaboration notice, and feedback block.
-The sync replaces the remaining body and recipes. Review its diff against local fixes and sibling skills before committing; do not blindly overwrite Expo-specific component-selection or accessibility guidance.
 
 ### Conventions
 

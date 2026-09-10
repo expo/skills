@@ -57,14 +57,14 @@ Can't name it? Don't build it.
 
 ### 3. Pick the tool — cheapest that works
 
-Walk down; stop at the first that fits. Keep built-in motion on native controls. For in-screen sheets, pickers, toggles, and menus, consult `expo-ui` before building custom animation; the tools below apply when native behavior does not meet the task.
+Walk down; stop at the first that fits.
 
 | Need | Tool |
 | --- | --- |
 | A state-driven change with no gesture — press, toggle, color, a value flipping | **Reanimated CSS transition** (`transitionProperty` in the style) |
 | Loop, multi-stage, or plays on mount with no state change | **Reanimated CSS animation** (`animationName` keyframes) |
 | An element mounting or unmounting, or a list reflowing | **Layout animations** (`entering` / `exiting` / `itemLayoutAnimation`) |
-| Continuous drag/pinch gestures, or anything derived from scroll | **`useSharedValue` + `Gesture` + `useAnimatedStyle`** |
+| Anything a finger touches, or anything derived from scroll | **`useSharedValue` + `Gesture` + `useAnimatedStyle`** |
 | Screen to screen | **Native stack options in Expo Router.** Never hand-roll this |
 | A bottom sheet that is its own screen | **`presentation: 'formSheet'`** — it's a real UISheetPresentationController, free and correct |
 | Tab bar | **`NativeTabs`** (from `expo-router/unstable-native-tabs`) — the platform's real tab bar, its behaviors and transitions included |
@@ -95,13 +95,13 @@ Reach for a shared value only when the value is continuous or interruptible. A p
 - **The one exception: an absolutely positioned element with no children** — a tab pill, a progress bar fill. It's out of flow, so nothing else re-lays-out, and animating `width` keeps the corner radius that `scaleX` would smear.
 - **Never `scale(0)`.** Start from `scale(0.9–0.97)` + `opacity: 0`. Nothing in the real world appears from nothing.
 - **`transform` is an array and order matters** — `[{ translateY }, { scale }]` scales after moving; reversed, the translate gets scaled too. Keep translate first unless you want the multiplication.
-- **For shadows, follow `expo-native-ui`'s `boxShadow` guidance.** In existing code using Android `elevation`, crossfade a pre-shadowed layer instead of animating elevation every frame.
+- **Android shadows are `elevation`, and animating elevation re-renders the shadow every frame.** Animate opacity of a pre-shadowed layer instead.
 - **Never animate `BlurView` intensity.** On Android it re-renders the blur each frame. Crossfade the opacity of a static `BlurView` instead.
 - **Percentages work in `translate`** and are relative to the element's own size — `translateY('100%')` moves a sheet by its own height whatever its content.
 
 ### 5. Timing or spring
 
-**For continuous gestures, use a spring.** Springs carry velocity through an interruption. Discrete press feedback can use a short timing transition; native controls keep their built-in feedback.
+**If a finger was involved, use a spring.** Springs carry velocity through an interruption; timing curves restart. Everything else uses timing.
 
 Reanimated's spring takes Apple's two designer parameters directly — use this form, not mass/stiffness/damping:
 
@@ -133,8 +133,6 @@ const EASE_IN_OUT = Easing.bezier(0.77, 0, 0.175, 1);  // on-screen movement
 const EASE_SHEET = Easing.bezier(0.32, 0.72, 0, 1);    // iOS sheet curve
 ```
 
-These `Easing.bezier` functions are for `withTiming` and layout-animation `.easing(...)`. Reanimated CSS `transitionTimingFunction` / `animationTimingFunction` use named strings such as `'ease-out'` or the `cubicBezier(...)` helper from `react-native-reanimated`, not a browser-style `'cubic-bezier(...)'` string.
-
 **Duration:**
 
 | Element | Duration |
@@ -144,7 +142,7 @@ These `Easing.bezier` functions are for `withTiming` and layout-animation `.easi
 | Sheet, modal, drawer | spring, ~300ms perceived |
 | Screen transition | the platform default — don't override it |
 
-Keep custom timing transitions at or below 300ms. The spring presets above use a different duration model: Reanimated 4 defines `duration` as perceptual, with actual duration 1.5 times that value (see [withSpring](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring/)). Preserve platform-managed navigation and sheet timing.
+Mobile UI animations stay under 300ms, same as web. The platform's own transitions are longer (iOS push is 350ms); match the platform for navigation, beat it everywhere else.
 
 ### 6. Keep it off the JS thread
 
@@ -161,8 +159,8 @@ This is the mobile-specific craft, and it's where most React Native motion dies.
 Every hover affordance from the web has to be redesigned, not ported.
 
 - **Feedback on press-in, commit on press-out.** Waiting for the tap to complete before showing anything feels dead — this is the latency the user actually perceives.
-- **Custom buttons may dim or scale to `0.97` in 100–150ms**, according to the app's existing feedback style. For scale, use `Pressable` + a Reanimated CSS transition on an animated child. Full-width rows highlight their background; native controls retain built-in feedback. Respect reduced motion in the scale recipe.
-- **44×44pt minimum touch target** (48dp Android). Use padding or minimum dimensions; `hitSlop` can extend a smaller visual only within its parent bounds and without overlapping neighboring targets.
+- **`scale: 0.97` in 100–150ms** on any button-like pressable, `Pressable` + a CSS transition. `scale` takes the label and icons with it, which is what makes it read as physical. Full-width list rows are the exception: they highlight their background instead — a scaling row reads as the whole screen squishing.
+- **44×44pt minimum touch target** (48dp Android). If the visual is smaller, add `hitSlop` — don't grow the visual.
 - **`pressRetentionOffset`** so a finger drifting a few pixels doesn't cancel a press the user meant.
 - **Android ripple only in a Material-styled app.** In a custom-designed app, the same scale on both platforms is more coherent than a ripple on one.
 
