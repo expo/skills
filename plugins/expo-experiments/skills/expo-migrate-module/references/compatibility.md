@@ -112,7 +112,7 @@ Its JSON output is versioned and reports each detected module's access level. It
 
 The intent is that `expo-modules-autolinking` detects `@ExpoModule` classes automatically, replacing the `expo-module.config.json` module list. **The scanner shipped ahead of that consumer**, so until autolinking actually calls it, discovery is not active. Consequences for a migration:
 
-- Keep the module's existing `expo-module.config.json` declarations. Do not delete them on the assumption that autolinking discovers the class.
+- Keep the module's existing `expo-module.config.json` declarations, and verify they are correct before you finish. Listing every module class under `apple.modules` is a 1.0 requirement that still applies on SDK 57; 2.0 does not lift it. The entries are bare Swift class names with no compile-time link to the class, so a rename during migration silently detaches the module: it builds, and then is absent at runtime. SDK 58 adds auto-discovery, at which point these entries can be removed.
 - A migrated `@ExpoModule` class must be `public` or `open` to be linkable from the app target. The scanner reports each class's access level so inaccessible ones can be skipped with a diagnostic.
 - Product sources kept under a pruned directory name are invisible to the scanner. A package in that layout stays on `expo-module.config.json`, which opts it out of scanning.
 - You can run `scan-modules` yourself as a migration check: it lists which classes the macro attribute is actually detected on, which catches an `@ExpoModule` that landed in a conditional block or a non-public class.

@@ -29,7 +29,7 @@ SDK 57 ships the macros as **experimental and undocumented**, with the official 
 
 ### 1. Establish the contract
 
-Inspect repository instructions and the worktree before editing. Locate the Swift module classes, records, shared objects, native views, JS/TS bindings, tests, example app, podspec, and installed or checked-out `expo-modules-core`.
+Inspect repository instructions and the worktree before editing. Locate the Swift module classes, records, shared objects, native views, JS/TS bindings, tests, example app, podspec, `expo-module.config.json`, and installed or checked-out `expo-modules-core`.
 
 Inventory every exported item before rewriting it:
 
@@ -68,7 +68,7 @@ Follow these invariants:
 - Do not migrate queue-pinned DSL functions as-is; restructure onto Swift Concurrency or dispatch to the original queue via a continuation.
 - Do not migrate views, unions, or synchronous events without verified support. `@Union` and `@JS(.concurrent)` shipped in macros plugin `0.10.0`, but each needs a paired declaration in core, which has lagged the plugin on every 2.0 feature. Check the checked-out core, not the plugin version.
 - Shared-object static members bind through a different core hook than instance members, and core has shipped the instance one well ahead of it. Verify before migrating one; otherwise keep `StaticFunction`/`StaticAsyncFunction` entries in the 1.0 `Class(...)` block and migrate the constructor and instance members around them.
-- Keep the module's `expo-module.config.json` declarations. Automatic `@ExpoModule` discovery via the plugin's `scan-modules` command is not wired into `expo-modules-autolinking` yet, and a migrated module class must stay `public` or `open` to link from the app target.
+- Check `expo-module.config.json` lists every module class under `apple.modules`, and keep it listed. This is a 1.0 requirement that 2.0 does not lift on SDK 57, and it is easy to break: the entries are bare Swift class names, so renaming a class during migration leaves the config pointing at nothing and the module silently stops loading. SDK 58 adds auto-discovery of `@ExpoModule` classes, at which point the entries can go; until then a migrated class must also stay `public` or `open` to link from the app target.
 - Free-form `Any`, `[Any]`, and `[String: Any]` work only as `@JS` argument types, and only when the checked-out core supports decoding them. They are compile errors as return types and properties. Prefer `[String: JavaScriptValue]` when the JS contract allows it.
 - Do not change Kotlin, JS wrappers, or public `.d.ts` files unless the user requested an API change.
 - Never write macro-generated symbols into the module's source. The macro emits them; hand-writing or overriding them is not part of a migration.
@@ -101,8 +101,9 @@ Run the narrowest available checks first, then the real integration surface:
 1. Build or type-check the Apple module against the target `expo-modules-core`.
 2. Run native unit tests and JS/TS tests.
 3. Build and launch the example app when the repository provides one.
-4. Compare the final exported surface with the inventory from step 1.
-5. Search for stale `Name`, migrated `Function`/`AsyncFunction`/`StaticFunction`/`StaticAsyncFunction`/`Property`/`Constant`/`Events` entries, old `sendEvent` calls, `@Field`, and duplicate registrations. Search the source you wrote, not macro expansion output.
+4. Confirm `expo-module.config.json` still names every module class under `apple.modules`, matching the Swift class names as they now stand. A stale entry builds clean and fails only at runtime, so the example app must actually resolve the module, not merely compile.
+5. Compare the final exported surface with the inventory from step 1.
+6. Search for stale `Name`, migrated `Function`/`AsyncFunction`/`StaticFunction`/`StaticAsyncFunction`/`Property`/`Constant`/`Events` entries, old `sendEvent` calls, `@Field`, and duplicate registrations. Search the source you wrote, not macro expansion output.
 
 Expansion tests alone are insufficient: generated macro code can look correct while failing to link or run against a mismatched core. If dependencies changed or macro plugin flags are missing, reinstall JS dependencies as appropriate, run the repository's CocoaPods installation workflow, and restart Xcode before diagnosing plugin communication failures.
 
