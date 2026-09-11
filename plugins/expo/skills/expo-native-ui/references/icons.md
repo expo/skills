@@ -2,7 +2,7 @@
 
 `SymbolView` from [`expo-symbols`](https://docs.expo.dev/versions/latest/sdk/symbols/) uses SF Symbols on iOS and Material Symbols on Android/web. Pass each platform's name in `name={{ ios, android, web }}`. Never use FontAwesome, Ionicons, or emoji as icons.
 
-[`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/#source) with `source="sf:name"` works only on iOS. Keep `SymbolView` for Android/web support.
+[`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/#source) renders images on iOS, Android, and web. Its `source="sf:name"` syntax loads Apple's SF Symbols on iOS only. Keep cross-platform `SymbolView` icons.
 
 In SDK 57+, [`Icon` from `@expo/ui`](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/icon/) supports iOS and Android. Use `Icon.select({ ios, android })` with an iOS SF Symbol name and an Android XML drawable from `@expo/material-symbols`. See the `expo-ui` skill for setup.
 

@@ -19,7 +19,7 @@ Consult these resources as needed:
 references/
   controls.md            Native iOS: Switch, Slider, SegmentedControl, DateTimePicker, Picker
   gradients.md           CSS gradients via experimental_backgroundImage (New Arch only)
-  icons.md               expo-symbols across iOS/Android/web, iOS-only expo-image, native @expo/ui icons
+  icons.md               expo-symbols across platforms, expo-image sf: on iOS, @expo/ui Icon
   media.md               Camera, audio, video, and file saving
   storage.md             SQLite, AsyncStorage, SecureStore
   visual-effects.md      Blur (expo-blur) and liquid glass (expo-glass-effect)
@@ -71,7 +71,7 @@ Expo Go supports a wide range of features out of the box:
 - `expo-audio` not `expo-av`
 - `expo-video` not `expo-av`
 - `SymbolView` from `expo-symbols` with `name={{ ios, android, web }}` for SF Symbols on iOS and Material Symbols on Android/web. See `references/icons.md` for examples, NativeTabs icons, and SDK 57+ `@expo/ui` Icon support.
-- `expo-image` with `source="sf:name"` renders only on iOS. Keep `expo-symbols` icons when the app also targets Android or web.
+- `expo-image` renders images across platforms. Its `source="sf:name"` syntax loads SF Symbols on iOS only. Keep cross-platform `expo-symbols` icons.
 - `react-native-safe-area-context` not react-native SafeAreaView
 - `process.env.EXPO_OS` not `Platform.OS`
 - `React.use` not `React.useContext`
