@@ -1,10 +1,10 @@
 # Icons across platforms
 
-Use SF Symbols on iOS and Material Symbols on Android/web. [`expo-symbols`](https://docs.expo.dev/versions/latest/sdk/symbols/) renders both through `SymbolView` with per-platform names. Never use FontAwesome or Ionicons on either platform, and never emoji as icons.
+`SymbolView` from [`expo-symbols`](https://docs.expo.dev/versions/latest/sdk/symbols/) uses SF Symbols on iOS and Material Symbols on Android/web. Pass each platform's name in `name={{ ios, android, web }}`. Never use FontAwesome, Ionicons, or emoji as icons.
 
-[`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/#source) with `source="sf:name"` renders SF Symbols on iOS only, with no Android/web equivalent for `sf:` sources. Of these two libraries, only `expo-symbols` renders Material Symbols on Android/web. Keep working cross-platform `SymbolView` code.
+[`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/#source) with `source="sf:name"` works only on iOS. Keep `SymbolView` for Android/web support.
 
-For native UI in SDK 57+, [`Icon` from `@expo/ui`](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/icon/) also pairs iOS SF Symbols with Android XML drawables from `@expo/material-symbols` using `Icon.select({ ios, android })`. It supports iOS and Android; use the `expo-ui` skill for setup.
+In SDK 57+, [`Icon` from `@expo/ui`](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/icon/) supports iOS and Android. Use `Icon.select({ ios, android })` with an iOS SF Symbol name and an Android XML drawable from `@expo/material-symbols`. See the `expo-ui` skill for setup.
 
 ## Basic Usage
 
@@ -20,11 +20,11 @@ import { colors } from "@/theme/colors";
 />;
 ```
 
-A string `name="square.and.arrow.down"` renders only on iOS. Android/web need their own Material Symbol names; without a name for the current platform, `SymbolView` renders its `fallback`, or nothing if none is provided.
+A string `name="square.and.arrow.down"` renders only on iOS. If the current platform has no name, `SymbolView` renders `fallback`. Without a fallback, it renders nothing.
 
 ## Props
 
-The following SF Symbol props and examples apply to iOS. `animationSpec`, `scale`, `type`, and `resizeMode` are iOS-only. For Android/web weights, follow the `expo-symbols` documentation linked above.
+These SF Symbol examples apply to iOS. `animationSpec`, `scale`, `type`, and `resizeMode` are iOS-only. See the `expo-symbols` documentation above for Android/web weights.
 
 ```tsx
 <SymbolView
@@ -206,12 +206,12 @@ Some symbols support multiple colors:
 />
 ```
 
-## Android: Material Symbols
+## Android Material Symbols
 
 On Android an SF Symbol source renders nothing - an app that ships SF-only iconography ships blank icons. Give every icon a Material source:
 
 - **Tab bars**: pass `md` (Material Symbol name) beside `sf` on NativeTabs triggers - `<NativeTabs.Trigger.Icon sf="gear" md="settings" />` (SDK 55+, see the `expo-router` skill).
-- **In screens**: pass the Material Symbol name directly to `SymbolView` for Android and web:
+- In screens, pass Android and web Material Symbol names to `SymbolView`:
 
 ```tsx
 import { SymbolView } from "expo-symbols";

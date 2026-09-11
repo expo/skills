@@ -70,8 +70,8 @@ Expo Go supports a wide range of features out of the box:
 - Never use legacy expo-permissions
 - `expo-audio` not `expo-av`
 - `expo-video` not `expo-av`
-- `expo-symbols` `SymbolView` with `name={{ ios, android, web }}` for SF Symbols on iOS and Material Symbols on Android/web. See `references/icons.md` for platform names, NativeTabs icons, and the SDK 57+ `@expo/ui` Icon option.
-- `expo-image` with `source="sf:name"` is an iOS-only SF Symbols option. It has no Android/web equivalent for `sf:` sources; keep working cross-platform `expo-symbols` icons.
+- `SymbolView` from `expo-symbols` with `name={{ ios, android, web }}` for SF Symbols on iOS and Material Symbols on Android/web. See `references/icons.md` for examples, NativeTabs icons, and SDK 57+ `@expo/ui` Icon support.
+- `expo-image` with `source="sf:name"` renders only on iOS. Keep `expo-symbols` icons when the app also targets Android or web.
 - `react-native-safe-area-context` not react-native SafeAreaView
 - `process.env.EXPO_OS` not `Platform.OS`
 - `React.use` not `React.useContext`
@@ -187,7 +187,11 @@ import { colors } from "@/theme/colors";
 
 Use CSS `boxShadow` style prop. NEVER use legacy React Native shadow or elevation styles.
 
-When converting legacy iOS shadows, double `shadowRadius` to get `blurRadius`: `blurRadius = 2 * shadowRadius`. Fold `shadowOpacity` into the shadow color's alpha, multiplying any existing alpha, because `boxShadow` has no opacity field. Map `shadowOffset.width` and `.height` to `offsetX` and `offsetY`.
+To convert a legacy iOS shadow to `boxShadow`:
+
+- Set `blurRadius` to `2 * shadowRadius`.
+- Multiply the shadow color's alpha by `shadowOpacity`. `boxShadow` has no separate opacity field.
+- Map `shadowOffset.width` and `.height` to `offsetX` and `offsetY`.
 
 ```tsx
 // From shadowRadius: 8, shadowOpacity: 0.4,
