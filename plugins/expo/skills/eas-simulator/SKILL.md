@@ -38,10 +38,15 @@ fi
 - **Run every `eas` command via `npx --yes eas-cli@latest …`** — guarantees a CLI new enough to have `simulator:*` (a global `eas` is often too old), and `--yes` skips npx's prompt. (Bare `eas` is fine if `eas --version` is current.)
 - **Authenticated.** Interactive machine → `npx --yes eas-cli@latest login`. **Cloud sandbox / CI / headless agent has no browser login — set `EXPO_TOKEN`** (expo.dev → Account → Access Tokens) in the env instead. Verify either way with `npx --yes eas-cli@latest whoami`.
 - Run from an Expo **project directory.** A fresh app needs one-time setup: `npx --yes eas-cli@latest init` to create/link the project (when there's no `projectId`), and **set `ios.bundleIdentifier`** in app config if it's missing — a fresh `create-expo-app` often has none, and `prebuild`/`eas build` need it (they prompt or fail without it; e.g. `dev.<owner>.<slug>`). Read current config with `npx expo config --json` (it may live in `app.config.js`). The first Mode-C run is slow (native build); later runs reuse it.
-- A controller to drive the device. This skill uses **agent-device** (open source, MIT), run on demand via `npx agent-device@latest` — nothing globally installed. **argent** is an alternative (`--type argent` in `simulator:start`); see [references/controllers.md](./references/controllers.md).
+- A controller to drive the device. This skill uses **agent-device** (open source, MIT), run on demand via `npx agent-device@latest` — nothing globally installed. **Appium** and **argent** are alternative automation interfaces; `web-preview-only` has no automation interface. See [references/controllers.md](./references/controllers.md).
 - **`.env.eas-simulator`** is written/managed by eas-cli (not this skill): it holds the session id (`EAS_SIMULATOR_SESSION_ID`) + the daemon URL/**token**, so `get`/`stop`/`exec` default to that session (usually **omit `--id`**; pass `--id <id>` to target another). It carries a **token → keep it gitignored** (eas-cli marks it "do not commit" but may not add the ignore rule, and a fresh app's `.gitignore` won't cover it — add `.env.eas-simulator` if missing).
-- `--max-duration-minutes` is paid-plan only; otherwise a default applies.
 - **The command blocks assume a POSIX shell** (bash/zsh) — `printf`, `lsof`, `$(seq …)` loops won't run in cmd/PowerShell. On Windows, run them in WSL or Git Bash, or translate as you go (the `eas-cli`/`agent-device` invocations themselves are cross-platform).
+
+## Session lifetime
+
+- `--max-duration-minutes N` is the hard automatic-stop deadline. Customizing it is paid-plan only; omit it to use the plan/job default.
+- `--max-idle-time-minutes N` stops a session after that many inactive minutes. Omitted means **no idle timeout**: the session runs until its maximum duration or an explicit stop.
+- **Only activity reported through `agent-device` and `argent` resets the idle timer.** Appium commands and browser-preview activity do not reset it. For Appium or a user-driven browser preview, rely on the maximum duration—not idle time—to bound the session; customize it with `--max-duration-minutes` when the plan permits.
 
 ## Check availability first
 
@@ -65,7 +70,8 @@ A session is: **start → (install your app) → drive → stop.** `eas-cli` own
 
 ```bash
 # 1. Start a session (boots the remote sim + agent-device daemon; writes .env.eas-simulator).
-printf '# managed by eas-cli\n' > .env.eas-simulator   # clear any stale session first
+# If the dotenv names a session, inspect it with simulator:get --json first; stop it if still live.
+printf '# managed by eas-cli\n' > .env.eas-simulator   # clear only after resolving any live session
 npx --yes eas-cli@latest simulator:start --platform ios --type agent-device --non-interactive \
   --name "Checkout flow screenshots"   # always name it — see 'Always name the session'
 #    Then confirm it's live: simulator:get --json → status IN_PROGRESS (bounded poll in run-your-app.md).
@@ -82,11 +88,11 @@ npx --yes eas-cli@latest simulator:stop
 printf '# managed by eas-cli\n' > .env.eas-simulator
 ```
 
-To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (an `--type agent-device` iOS session runs serve-sim alongside the daemon, so it emits one — agent control *and* a browser preview in one session; Android has no preview, and `--type serve-sim` is preview-only). **This URL is for the *user's* browser — you cannot open it for them, and it must never touch the sim:**
+To **watch** it live, hand the user the `webPreviewUrl` that `start` prints. All current session types include a browser preview; `agent-device`, `appium`, and `argent` also provide automation, while `web-preview-only` provides no automation interface. **This URL is for the *user's* browser — you cannot open it for them, and it must never touch the sim:**
 - **"Open it here" (Cursor/VS Code)** → print the URL on its own line and tell the user to open Simple Browser (`Cmd/Ctrl+Shift+P` → "Simple Browser: Show") and paste it. Then **stop**: do not shell out to a system browser or a Cursor/VS Code URL handler, and do not ask "did a tab appear?" — you can't confirm it, the handoff is done.
 - **Never `open` the `webPreviewUrl` on the sim.** It's a browser preview, not a deep link and not an `agent-device open` argument; routing it to the device renders a browser-in-a-browser (a real past failure).
 - **Headless agent** (no display) → just return the URL as the deliverable.
-- **Keeping it alive for the user to drive** → bound it: start with `--max-duration-minutes N` so it auto-stops; tell them it bills until stopped and when it auto-stops; offer to reopen/extend when it ends. (This is the one case where "stop right away" doesn't apply; one-shot `screenshot`/`get` runs still stop immediately.)
+- **Keeping it alive for the user to drive** → bound it with `--max-duration-minutes N`; browser activity does not reset `--max-idle-time-minutes`. Tell them it bills until stopped and when it auto-stops; offer to reopen/extend when it ends. (This is the one case where "stop right away" doesn't apply; one-shot `screenshot`/`get` runs still stop immediately.)
 
 `start` also prints a job-run URL.
 
@@ -115,13 +121,17 @@ Rules:
 
 ## Commands at a glance
 
+Read [references/cli-reference.md](./references/cli-reference.md) before using non-default start flags, machine-readable/config output, list filters, or session events. It covers every public flag and their constraints.
+
 | Command | Purpose |
 |---|---|
-| `npx --yes eas-cli@latest simulator:start --platform ios\|android --name "<description>" [--type agent-device\|argent\|serve-sim] [--package-version X] [--max-duration-minutes N] [--non-interactive] [--json]` | Create a session; boot the sim + controller; write `.env.eas-simulator`; print `webPreviewUrl` + job-run URL. **Always pass `--name`** (see *Always name the session*). **`--json` suppresses the `.env.eas-simulator` write** — omit it for the `exec` flow, or set the env yourself from `remoteConfig`. |
+| `npx --yes eas-cli@latest simulator:availability [--json] [--non-interactive]` | Check access without starting or billing a session. |
+| `npx --yes eas-cli@latest simulator:start --platform ios\|android --name "<description>" [flags]` | Create a session; boot the sim + selected interface; write `.env.eas-simulator` by default; print the preview + job-run URLs. **Always pass `--name`**. `--json` does not suppress the dotenv; use `--out-config-type env` when no file should be written. |
 | `npx --yes eas-cli@latest simulator:exec <cmd> [args…]` | Load `.env.eas-simulator`, then run `<cmd>` with that env. The bridge to the controller. |
-| `npx --yes eas-cli@latest simulator:get [--id] [--json]` | Session status + connection details, including the session `--name`. **Use this to confirm readiness** (see *Operating principles*). |
-| `npx --yes eas-cli@latest simulator:list [--status …] [--type …] [--platform …]` | List an app's sessions by name — this is what the `--name` you pass to `start` is for |
-| `npx --yes eas-cli@latest simulator:stop [--id]` | Stop a session (idempotent) |
+| `npx --yes eas-cli@latest simulator:get [--id <id>] [--json] [--non-interactive]` | Session status + connection details, including the session name. **Use this to confirm readiness** (see *Operating principles*). |
+| `npx --yes eas-cli@latest simulator:list [filters] [--limit N] [--after <cursor>] [--json]` | List and paginate project sessions; filter by status, type, platform, name prefix, and tags. |
+| `npx --yes eas-cli@latest simulator:events [--id <id>] [--follow\|--json]` | Show recorded activity events; `--follow` watches until the session ends. |
+| `npx --yes eas-cli@latest simulator:stop [--id <id>] [--json] [--non-interactive]` | Stop a session (idempotent). |
 
 ## Running the user's app — pick a mode
 
@@ -195,6 +205,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 
 - [references/run-your-app.md](./references/run-your-app.md) — full command sequences for modes A, B, and C (read before running a mode).
 - [references/controllers.md](./references/controllers.md) — agent-device verb reference and the `argent` alternative.
+- [references/cli-reference.md](./references/cli-reference.md) — complete public `simulator:*` flag reference; read for non-default start flags, list filters, output configuration, or events.
 - [references/troubleshooting.md](./references/troubleshooting.md) — concrete errors and fixes.
 
 Source of truth: Expo docs and the `eas` / `agent-device` CLIs (`npx --yes eas-cli@latest simulator:* --help`, `agent-device --help`). This skill teaches how to apply them; it doesn't replace them.
