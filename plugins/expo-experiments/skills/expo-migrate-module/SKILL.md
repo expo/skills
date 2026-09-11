@@ -17,11 +17,13 @@ Check the example app's own `package.json` too, not only the module root. The ex
 
 This is a floor, not a guarantee: the exact macro and core surface still varies within `57.x`, so step 2 must still verify the checked-out source.
 
+SDK 57 ships the macros as **experimental and undocumented**, with the official beta in SDK 58. The API can still change under you. Say this to the user before a large migration, and prefer incremental mixed mode over converting a module wholesale.
+
 ## References
 
 - Read `references/migration-map.md` before changing source. It contains the 1.0-to-2.0 mappings, semantic traps, and mixed-mode rules.
 - Read `references/example.md` for a full before/after walkthrough of one module through mixed mode to a complete migration. Consult it when you need to see how the per-member rules compose.
-- Read `references/compatibility.md` when the checked-out `expo-modules-core` version or branch is not known to support every requested macro. It explains how to verify the actual compile-time and runtime surface instead of guessing from an SDK number, and lists what the macros plugin gained through `v0.9.0`.
+- Read `references/compatibility.md` when the checked-out `expo-modules-core` version or branch is not known to support every requested macro. It explains how to verify the actual compile-time and runtime surface instead of guessing from a version number, and lists what the macros plugin gained through `0.10.0`.
 
 ## Workflow
 
@@ -64,10 +66,10 @@ Follow these invariants:
 - Do not migrate same-JS-name overloads unless the checked-out macro groups and dispatches them.
 - Preserve async threading behavior. A 1.0 `AsyncFunction` body ran off the JS thread from its first statement; a 2.0 `async` `@JS` member starts on the JS thread and leaves it only at the first real suspension point. A body with no `await`, or with work ahead of its first `await`, therefore blocks the JS thread after a verbatim migration, with no visible change to the JS signature. Audit each migrated body for what runs before its first `await`, and never leave blocking I/O on the JS actor. `@JS(.concurrent)` (macros plugin `0.10.0`) restores the 1.0 behavior and is the preferred fix where available; otherwise restructure onto Swift Concurrency or dispatch via a continuation, per the async-function rules in `references/migration-map.md`.
 - Do not migrate queue-pinned DSL functions as-is; restructure onto Swift Concurrency or dispatch to the original queue via a continuation.
-- Do not migrate views, unions, or synchronous events without verified support. `@Union` and `@JS(.concurrent)` are in macros plugin `0.10.0`, which was untagged as of 2026-09-09 and needs paired core declarations; verify both sides before using either.
-- Shared-object static members bind through a different hook than instance members, and the released core did not declare it as of 2026-09-09. Verify before migrating one; otherwise keep `StaticFunction`/`StaticAsyncFunction` entries in the 1.0 `Class(...)` block and migrate the constructor and instance members around them.
+- Do not migrate views, unions, or synchronous events without verified support. `@Union` and `@JS(.concurrent)` shipped in macros plugin `0.10.0`, but each needs a paired declaration in core, which has lagged the plugin on every 2.0 feature. Check the checked-out core, not the plugin version.
+- Shared-object static members bind through a different core hook than instance members, and core has shipped the instance one well ahead of it. Verify before migrating one; otherwise keep `StaticFunction`/`StaticAsyncFunction` entries in the 1.0 `Class(...)` block and migrate the constructor and instance members around them.
 - Keep the module's `expo-module.config.json` declarations. Automatic `@ExpoModule` discovery via the plugin's `scan-modules` command is not wired into `expo-modules-autolinking` yet, and a migrated module class must stay `public` or `open` to link from the app target.
-- Free-form `Any`, `[Any]`, and `[String: Any]` work only as `@JS` argument types, and only when the checked-out core supports decoding them (it did not as of 2026-09-09). They are compile errors as return types and properties. Prefer `[String: JavaScriptValue]` when the JS contract allows it.
+- Free-form `Any`, `[Any]`, and `[String: Any]` work only as `@JS` argument types, and only when the checked-out core supports decoding them. They are compile errors as return types and properties. Prefer `[String: JavaScriptValue]` when the JS contract allows it.
 - Do not change Kotlin, JS wrappers, or public `.d.ts` files unless the user requested an API change.
 - Never write macro-generated symbols into the module's source. The macro emits them; hand-writing or overriding them is not part of a migration.
 

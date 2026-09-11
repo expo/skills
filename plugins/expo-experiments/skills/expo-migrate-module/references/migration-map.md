@@ -149,7 +149,13 @@ Two constraints:
 - `.concurrent` is valid only on an `async` function. On anything else it is diagnosed on the `@JS` attribute.
 - You must still write `async` yourself. The macro cannot add it, but the diagnostic for a synchronous function carries a fix-it that inserts it.
 
-**Check availability first.** This needs plugin `0.10.0` together with the matching `JSOptions` type and second `@JS` overload in core; the options-only spelling cannot reuse the unlabeled JS-name slot. Neither had shipped in a release as of 2026-09-09 (`0.9.0` was the latest tag, and the released `@JS` accepts only an optional name string). Confirm the checked-out macro declaration accepts an options argument before using it, and fall back to the explicit patterns below when it does not.
+**Check availability first.** The plugin side shipped in `0.10.0`, but this also needs a `JSOptions` type and a second `@JS` overload in core, because the options-only spelling cannot reuse the unlabeled JS-name slot. Core has lagged the plugin on every 2.0 feature so far, and where it still declares `@JS(_ jsName: String? = nil)` alone, `@JS(.concurrent)` does not compile. Read the checked-out declaration:
+
+```bash
+grep -rn 'public macro JS' <expo-modules-core>
+```
+
+If it takes only a name, use the explicit patterns below instead.
 
 For a queue-pinned function, or when `.concurrent` is unavailable, prefer restructuring the work onto the Swift Concurrency model (structured concurrency, an actor, or a detached task for blocking work). When that is not feasible because the queue itself is the contract, for example a library that must be called from one serial queue, convert to an `async` method that dispatches to that queue inside a checked continuation:
 
@@ -312,7 +318,7 @@ final class Download: SharedObject {
 
 What decides whether any of this works is the binding path: instance members bind onto the class prototype, while `static`/`class` members bind onto the constructor object through a separate, `constructor:`-labeled decoration hook. The two are independent capabilities.
 
-**Support status.** The macros plugin has emitted the `constructor:` binding since `v0.7.0` (2026-07-13), but as of 2026-09-09 the published core declares only the `prototype:` hook. A `@JS static` member therefore expands and then fails to link against a released core. Verify before migrating any static member:
+**Support status.** The macros plugin has emitted the `constructor:` binding since `0.7.0`, but core shipped the `prototype:` overload well ahead of it. Where only `prototype:` is declared, a `@JS static` member expands and then fails to link. Verify before migrating any static member:
 
 ```bash
 grep -rn '_decorateSharedObject' <expo-modules-core>
@@ -393,11 +399,19 @@ A type the union does not carry is a compile error, not a runtime `nil`. A misma
 
 Constraints, each a compile error: a generic enum, no cases, a case with no payload or more than one, a default value on the payload, and two cases with the identical payload spelling.
 
-**Check availability first.** This needs plugin `0.10.0` plus the paired core edits: the `Union` macro declaration and the `UnionCaseMismatch` exception. Neither had shipped in a release as of 2026-09-09. Keep `Either` types on the 1.0 DSL until both exist in the target, and treat adopting `@Union` as an API-shape change to raise with the user rather than a mechanical step, since it renames nothing in JS but does restructure Swift call sites.
+**Check availability first.** The plugin side shipped in `0.10.0`, but this also needs the `Union` macro declaration and the `UnionCaseMismatch` exception in core:
+
+```bash
+grep -rn 'public macro Union\|UnionCaseMismatch' <expo-modules-core>
+```
+
+Keep `Either` types on the 1.0 DSL until both exist in the target. Treat adopting `@Union` as an API-shape change to raise with the user rather than a mechanical step: it renames nothing in JS, but it does restructure Swift call sites.
 
 ## Views and lifecycle
 
-Keep UIKit `View`, `Prop`, view `Events`, and `OnViewDidUpdateProps` DSL entries until the target includes the complete `@ViewProps`/`@ExpoView` core contract. Macro declarations or expansion tests alone do not prove the runtime update path exists.
+Views are not covered by 2.0 yet. Keep UIKit `View`, `Prop`, view `Events`, and `OnViewDidUpdateProps` DSL entries on 1.0. Macro declarations or expansion tests alone do not prove the runtime update path exists.
+
+The planned shape is a class marked `@ExpoView` whose props and event callbacks are declared once in a typed `@ViewProps` struct, instead of split between the native view and a hand-written JS prop type. Until that lands complete, a module with views migrates its non-view members and keeps the view on the DSL. That is a normal mixed-mode result, not a failed migration.
 
 Module lifecycle is core-owned rather than macro-generated. The DSL components map to hook methods with no-op defaults:
 
