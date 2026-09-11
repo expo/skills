@@ -19,7 +19,7 @@ Consult these resources as needed:
 references/
   controls.md            Native iOS: Switch, Slider, SegmentedControl, DateTimePicker, Picker
   gradients.md           CSS gradients via experimental_backgroundImage (New Arch only)
-  icons.md               SF Symbols via expo-symbols SymbolView: names, weights, animations; Material icons on Android
+  icons.md               expo-symbols across iOS/Android/web, iOS-only expo-image, native @expo/ui icons
   media.md               Camera, audio, video, and file saving
   storage.md             SQLite, AsyncStorage, SecureStore
   visual-effects.md      Blur (expo-blur) and liquid glass (expo-glass-effect)
@@ -70,7 +70,8 @@ Expo Go supports a wide range of features out of the box:
 - Never use legacy expo-permissions
 - `expo-audio` not `expo-av`
 - `expo-video` not `expo-av`
-- `expo-symbols` (`SymbolView`) for SF Symbols on iOS, not `@expo/vector-icons` — see `references/icons.md`. SF Symbols are Apple-only: on Android every icon needs a Material source (`md` prop on NativeTabs triggers; in-screen options under "Android: Material Icons" in icons.md), never SF-only iconography
+- `expo-symbols` `SymbolView` with `name={{ ios, android, web }}` for SF Symbols on iOS and Material Symbols on Android/web. See `references/icons.md` for platform names, NativeTabs icons, and the SDK 57+ `@expo/ui` Icon option.
+- `expo-image` with `source="sf:name"` is an iOS-only SF Symbols option. It has no Android/web equivalent for `sf:` sources; keep working cross-platform `expo-symbols` icons.
 - `react-native-safe-area-context` not react-native SafeAreaView
 - `process.env.EXPO_OS` not `Platform.OS`
 - `React.use` not `React.useContext`
@@ -186,8 +187,12 @@ import { colors } from "@/theme/colors";
 
 Use CSS `boxShadow` style prop. NEVER use legacy React Native shadow or elevation styles.
 
+When converting legacy iOS shadows, double `shadowRadius` to get `blurRadius`: `blurRadius = 2 * shadowRadius`. Fold `shadowOpacity` into the shadow color's alpha, multiplying any existing alpha, because `boxShadow` has no opacity field. Map `shadowOffset.width` and `.height` to `offsetX` and `offsetY`.
+
 ```tsx
-<View style={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }} />
+// From shadowRadius: 8, shadowOpacity: 0.4,
+// shadowColor: "rgba(0, 0, 0, 0.5)", shadowOffset: { width: 0, height: 4 }
+<View style={{ boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)" }} />
 ```
 
 'inset' shadows are supported.
