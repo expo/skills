@@ -1,6 +1,10 @@
-# Icons (SF Symbols)
+# Icons across platforms
 
-Use SF Symbols on iOS for native feel. SF Symbols are an Apple asset and never render on Android - every icon needs a Material counterpart (see "Android: Material Icons" below). Never use FontAwesome or Ionicons on either platform, and never emoji as icons.
+`SymbolView` from [`expo-symbols`](https://docs.expo.dev/versions/latest/sdk/symbols/) uses SF Symbols on iOS and Material Symbols on Android/web. Pass each platform's name in `name={{ ios, android, web }}`. Never use FontAwesome, Ionicons, or emoji as icons.
+
+[`expo-image`](https://docs.expo.dev/versions/latest/sdk/image/#source) renders images on iOS, Android, and web. Its `source="sf:name"` syntax loads Apple's SF Symbols on iOS only. Keep cross-platform `SymbolView` icons.
+
+In SDK 57+, [`Icon` from `@expo/ui`](https://docs.expo.dev/versions/v57.0.0/sdk/ui/universal/icon/) supports iOS and Android. Use `Icon.select({ ios, android })` with an iOS SF Symbol name and an Android XML drawable from `@expo/material-symbols`. See the `expo-ui` skill for setup.
 
 ## Basic Usage
 
@@ -11,12 +15,16 @@ import { colors } from "@/theme/colors";
 <SymbolView
   tintColor={colors.label}
   resizeMode="scaleAspectFit"
-  name="square.and.arrow.down"
+  name={{ ios: "square.and.arrow.down", android: "download", web: "download" }}
   style={{ width: 16, height: 16 }}
 />;
 ```
 
+A string `name="square.and.arrow.down"` renders only on iOS. If the current platform has no name, `SymbolView` renders `fallback`. Without a fallback, it renders nothing.
+
 ## Props
+
+These SF Symbol examples apply to iOS. `animationSpec`, `scale`, `type`, and `resizeMode` are iOS-only. See the `expo-symbols` documentation above for Android/web weights.
 
 ```tsx
 <SymbolView
@@ -198,21 +206,21 @@ Some symbols support multiple colors:
 />
 ```
 
-## Android: Material Icons
+## Android Material Symbols
 
 On Android an SF Symbol source renders nothing - an app that ships SF-only iconography ships blank icons. Give every icon a Material source:
 
 - **Tab bars**: pass `md` (Material Symbol name) beside `sf` on NativeTabs triggers - `<NativeTabs.Trigger.Icon sf="gear" md="settings" />` (SDK 55+, see the `expo-router` skill).
-- **In screens**: `@expo/vector-icons` Material families, gated by platform:
+- In screens, pass Android and web Material Symbol names to `SymbolView`:
 
 ```tsx
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { SymbolView } from "expo-symbols";
 
-process.env.EXPO_OS === "ios" ? (
-  <SymbolView name="gear" tintColor={colors.label} style={{ width: 24, height: 24 }} />
-) : (
-  <MaterialIcons name="settings" size={24} color={colors.label} />
-);
+<SymbolView
+  name={{ ios: "gear", android: "settings", web: "settings" }}
+  tintColor={colors.label}
+  size={24}
+/>;
 ```
 
 One icon family per platform - never a mixed set, never SF names on Android or Material glyphs on iOS.
