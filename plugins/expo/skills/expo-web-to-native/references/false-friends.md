@@ -29,7 +29,7 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 
 | Web | Native | Gotcha |
 |---|---|---|
-| `className` / CSS files | `StyleSheet.create` or NativeWind | Plain RN has no className. For Tailwind muscle memory use NativeWind. |
+| `className` / CSS files | React Native styles, or the target app's existing styling library | Browser CSS does not carry over to plain RN. Preserve an existing native styling setup; if adopting NativeWind is requested, follow NativeWind's own version-matched guidance. |
 | CSS cascade & inheritance | none | Styles don't inherit (except a few `Text` props like `color`/`fontSize` to nested `Text`). Style each node. |
 | `display: flex` opt-in, default `row` | flex always on, default **`column`** | Biggest layout surprise: flex is the only layout model and the main axis is vertical by default. |
 | `px`, `rem`, `%` | unitless numbers (dp) | `padding: 16` = density-independent pixels. `%` works in some props; no `rem`/`em`/`vh`. |

@@ -72,7 +72,7 @@ Expo Go supports a wide range of features out of the box:
 - `expo-video` not `expo-av`
 - `expo-symbols` (`SymbolView`) for SF Symbols on iOS, not `@expo/vector-icons` — see `references/icons.md`. SF Symbols are Apple-only: on Android every icon needs a Material source (`md` prop on NativeTabs triggers; in-screen options under "Android: Material Icons" in icons.md), never SF-only iconography
 - `react-native-safe-area-context` not react-native SafeAreaView
-- `process.env.EXPO_OS` not `Platform.OS`
+- Use `process.env.EXPO_OS` for build-time platform branches; `Platform.select` / `Platform.OS` remain valid for platform-specific values in shared components
 - `React.use` not `React.useContext`
 - `expo-image` Image component instead of intrinsic element `img`
 - `expo-glass-effect` for liquid glass backdrops
@@ -90,7 +90,7 @@ Expo Go supports a wide range of features out of the box:
 ## Behavior
 
 - Use expo-haptics conditionally on iOS to make more delightful experiences
-- Use views with built-in haptics like `<Switch />` from React Native and `@react-native-community/datetimepicker`
+- Preserve built-in feedback on native controls selected via `expo-ui`; do not add duplicate press animations or haptics
 - When a Stack route has scrollable content, make the ScrollView (or FlatList) the first component inside the route, with `contentInsetAdjustmentBehavior="automatic"` set
 - Use the `<Text selectable />` prop on text containing data that could be copied
 - Consider formatting large numbers like 1.4M or 38k
@@ -109,8 +109,7 @@ Follow each platform's own design language: Apple Human Interface Guidelines on 
 
 ## General Styling Rules
 
-- Prefer flex gap over margin and padding styles
-- Prefer padding over margin where possible
+- Use `gap` between siblings, `padding` inside a container, and `margin` for space outside it; reuse the app's spacing tokens
 - Always account for safe area, either with stack headers, tabs, or ScrollView/FlatList `contentInsetAdjustmentBehavior="automatic"`
 - Ensure both top and bottom safe area insets are accounted for
 - Inline styles not StyleSheet.create unless reusing styles is faster
@@ -118,7 +117,7 @@ Follow each platform's own design language: Apple Human Interface Guidelines on 
 - Use `{ borderCurve: 'continuous' }` for rounded corners unless creating a capsule shape
 - ALWAYS use a navigation stack title instead of a custom text element on the page
 - When padding a ScrollView, use `contentContainerStyle` padding and gap instead of padding on the ScrollView itself (reduces clipping)
-- CSS and Tailwind are not supported - use inline styles
+- Plain React Native views use `style`, not browser CSS or `className`. Default to React Native styles for new custom UI; preserve an existing styling library and follow its own version-matched guidance for setup. Reanimated's CSS-style animation props are a separate API, covered by `expo-animation`
 
 ## Colors
 

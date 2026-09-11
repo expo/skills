@@ -13,8 +13,9 @@ Sibling skills own the layers around this one:
 
 - `expo-native-ui` - platform styling rules (HIG, semantic colors, controls, shadows syntax). Follow it for **what values look native**; follow this skill for **where values live and how they're reused**.
 - `expo-project-structure` - folder skeleton for new apps.
+- `expo-animation` - whether custom motion is needed, and its timing, springs, and reduced-motion behavior.
 
-For Tailwind projects, keep tokens in `global.css` as CSS variables and follow the styling library's own setup guidance. The scales and naming in this skill still apply; only the storage format changes.
+For an existing styling library, preserve its token names, scale, and storage format; follow that library's version-matched setup guidance. The examples below are defaults for an app without a system, not a migration target.
 
 ## References
 
@@ -35,7 +36,7 @@ In an app that already has screens, the first move is detection, not constructio
 
 1. **Look for a declared system.** Check `package.json` for a styling library - NativeWind/Tailwind, Tamagui, Restyle, Unistyles, styled-components. Then look for a token file: `theme.ts`, `src/theme/`, `constants/theme.ts`, or `constants/Colors.ts` (the create-expo-app default).
 2. **If one exists, it is the source of truth.** Extend it in its own idiom - its names, its scale, its storage format. Audit drift against that system, not against the examples below.
-3. **If only de facto values exist** - the same greys and paddings repeated across screens, no theme file - there is no system yet. Those values are the input to the scales, not the authority: derive tokens from the most frequent ones, snapped to the 4-point grid (`references/audit.md` §5).
+3. **If only de facto values exist** - the same greys and paddings repeated across screens, no theme file - derive tokens from those values. Use a 4-point grid as a starting point for custom layout spacing, not for typography, hairlines, or native control metrics (`references/audit.md` §5).
 4. **Never introduce a second system beside an existing one.** A fresh `src/theme/` next to a Tamagui config is design-system drift, not adoption.
 
 Only when nothing exists do the defaults below apply as written.
@@ -98,15 +99,19 @@ export const colors = {
     android: Color.android.dynamic.primary,
     default: "#007aff",
   })!,
-  // Deliberately fixed: text on a tinted (accent) surface stays white in both modes.
-  onTint: "#ffffff",
+  // Pair Android's dynamic primary with its corresponding foreground.
+  onTint: Platform.select({
+    ios: "#ffffff",
+    android: Color.android.dynamic.onPrimary,
+    default: "#ffffff",
+  })!,
 };
 ```
 
 Add brand colors as explicit light/dark pairs only when the brand requires values the platform doesn't provide:
 
 ```tsx
-// theme/colors.ts (brand additions)
+// theme/brand.ts
 import { useColorScheme } from "react-native";
 
 const brandPalette = {
@@ -126,11 +131,11 @@ Keep the brand set tiny (accent, accentContrast, maybe a tint per feature). Ever
 
 - Semantic/platform colors (`colors` above) are **static-safe**: they resolve on-device, so plain token files like `theme/typography.ts` can import them at module scope.
 - Brand light/dark pairs are **hook-only**: `useBrandColors()` reads the color scheme at render time, so brand colors can only be applied inside components. A static token file cannot call the hook.
-- Never mix the two in one file. If a static style (a `type` ramp step, a `variants` object) needs the brand accent, either apply the brand color in the component at render time, or wrap the pair in a static dynamic color (`DynamicColorIOS` on iOS) so it becomes static-safe.
+- The boundary is evaluation time, not file placement: never call a hook at module scope. If a static style (a `type` ramp step, a `variants` object) needs the brand accent, apply the hook's color in the component at render time. Keep foreground/background pairs together and check their contrast in both modes; fixed white is not a universal foreground for dynamic accents.
 
 ### Spacing
 
-One scale, based on a 4-point grid. Name steps by size, not by use:
+For custom layout in an app without a scale, start with this 4-point grid. Name steps by size, not by use:
 
 ```tsx
 // theme/spacing.ts
@@ -144,14 +149,14 @@ export const spacing = {
 } as const;
 ```
 
-- Use `gap` with spacing tokens for layout rhythm (`expo-native-ui` prefers gap over margin).
+- Use `gap` with spacing tokens between siblings; use padding inside containers and margin outside them.
 - Screen edge padding is `spacing.md` unless the design says otherwise - pick one and keep it.
-- If a layout needs a value between steps, use the nearest step. The grid is the point.
+- Prefer an existing step when it preserves the intended grouping and alignment. Keep native control metrics and safe-area insets intact rather than rounding them to this grid.
 - If the same in-between multiple of 4 keeps recurring (12 and 20 are common), add it to the scale as a named step instead of scattering literals. The audit whitelist must then include it too.
 
 ### Typography
 
-Define named text styles, not raw font sizes. Mirror the platform ramp (Apple text styles) so sizes feel native:
+Define named text roles, not raw font sizes. Prefer native text styles for native controls. This is an iOS-oriented starting ramp for custom React Native text; use the app's Material typography on Android, with platform-specific values behind the same roles when needed. The spacing grid does not constrain font sizes or line heights:
 
 ```tsx
 // theme/typography.ts
@@ -223,26 +228,17 @@ export const shadows = {
 
 ### Motion
 
-Durations and shared spring/easing configs, so animations across the app feel related:
-
-```tsx
-// theme/motion.ts
-export const motion = {
-  fast: 150, // state feedback: press, toggle
-  base: 250, // element transitions: enter/exit
-  slow: 400, // large surfaces: sheets, screens
-} as const;
-```
+Use `expo-animation` to choose motion for the interaction, then store reused timing/spring configs in `theme/motion.ts`. Keep timing durations and spring configs distinct; a generic `slow` duration should not replace a native sheet or navigation transition. Preserve built-in feedback on native controls.
 
 Reanimated caveat: don't pass `Color`/`PlatformColor` token values into Reanimated styles - use static colors there (see `expo-native-ui`).
 
 ## Reusable Components
 
-The theme controls values; components control structure. Shared primitives live in `src/components/` (see `expo-project-structure`).
+The theme controls values; components control structure. Shared primitives live in `src/components/` (see `expo-project-structure`). Check `expo-ui` before creating a custom control; the contract and Button example below apply when a custom React Native primitive is needed.
 
 ### The component contract
 
-Every design-system primitive defines, explicitly:
+Custom interactive primitives define the applicable parts of this contract; text and layout primitives do not need button variants or pressed/loading states:
 
 - **Variants** - visual intent: `primary`, `secondary`, `ghost`, `destructive`. Add a variant only when a real screen needs it.
 - **Sizes** - `sm`, `md`, `lg`. Default `md`. Sizes map to spacing/typography tokens, never to fresh numbers.
@@ -252,7 +248,7 @@ Every design-system primitive defines, explicitly:
 
 ```tsx
 // components/button.tsx
-import { Pressable, ActivityIndicator, ViewStyle, StyleProp } from "react-native";
+import { Pressable, ActivityIndicator, Platform, useColorScheme, ViewStyle, StyleProp } from "react-native";
 import { colors, spacing, radius } from "@/theme";
 import { ThemedText } from "./themed-text";
 
@@ -283,6 +279,7 @@ export function Button({
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
 }) {
+  useColorScheme(); // Re-render Android semantic colors when the OS theme changes.
   return (
     <Pressable
       accessibilityRole="button"
@@ -296,6 +293,9 @@ export function Button({
           borderRadius: radius.md,
           borderCurve: "continuous",
           alignItems: "center",
+          justifyContent: "center",
+          minHeight: Platform.OS === "android" ? 48 : 44,
+          minWidth: Platform.OS === "android" ? 48 : 44,
           opacity: disabled ? 0.4 : pressed ? 0.7 : 1,
           ...sizes[size],
         },
@@ -316,7 +316,7 @@ export function Button({
 
 ### Composition over configuration
 
-When a component's props start describing *content* (`leftIcon`, `subtitle`, `footerText`, `badgeCount`), stop adding props and accept `children` instead. A `Card` that renders `children` with token padding outlives any `Card` with twelve content props. Reserve props for the contract above: variant, size, state, style.
+Use semantic content props when they keep a simple control clear (`title` on Button). When a container starts accumulating slots (`leftIcon`, `subtitle`, `footerText`, `badgeCount`), prefer composition with `children` instead of adding a prop for every layout.
 
 ### When to extract - and when not to
 
