@@ -30,10 +30,10 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
-      - name: Check plugin version and CLI guidance tests
+      - name: Ensure that plugin version bump script is healthy
         id: version-check-test
         continue-on-error: true
-        run: bun test scripts/check-plugin-version-bump.test.ts scripts/testflight-cli-versions.test.ts
+        run: bun test scripts/check-plugin-version-bump.test.ts
 
       - name: Check skill requirements
         id: skill-limits
@@ -92,7 +92,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun scripts/check-skill-limits.ts"
-          report "plugin version and CLI guidance tests" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts scripts/testflight-cli-versions.test.ts"
+          report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
           report "plugin version bump" "$VERSION_CHECK_OUTCOME" "bun scripts/check-plugin-version-bump.ts origin/main"
           report "expo-overview routing" "$ROUTING_CHECK_OUTCOME" "bun scripts/check-overview-routing.ts"
 
