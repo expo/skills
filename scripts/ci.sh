@@ -13,6 +13,7 @@
 # from its menu, so nothing triggers and every trigger score reads 0. Nobody
 # documents this, we hit it in CI. Shared here so both workflows stay in sync.
 export AGENT_MODEL="${AGENT_MODEL:-sonnet[1m]}"
+export AGENT_CLI_VERSION="${AGENT_CLI_VERSION:-2.1.267}"
 
 # Configures the (private, token-scoped) eval-harness submodule fetch and
 # initializes it. Called by every function below that needs eval-harness.
@@ -83,7 +84,10 @@ fingerprint_main_content() {
       --prd-id "${PRD_ID}" \
       --scenario "${SCENARIO}" \
       --agent "${AGENT}" \
-      --model "${AGENT_MODEL}"
+      --model "${AGENT_MODEL}" \
+      --agent-version "${AGENT_CLI_VERSION}" \
+      --prompt-variant "${PROMPT_VARIANT:-baseline}" \
+      --runner-image sdk-57
   )
 }
 
@@ -165,11 +169,7 @@ author_and_evaluate() {
     export SKILL_PLUGIN_DIR="$plugin_dir"
     bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
 
-    AUTHORED_ARTIFACT="$(pwd)/eval-harness" \
-    SCENARIO="$scenario" \
-    OUT_DIR="$out_dir" \
-    PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-    bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+    analyze_authored_app "$scenario" "$out_dir"
   fi
 
   # Warn only: this function swallows failures on purpose (see above), and
@@ -178,7 +178,51 @@ author_and_evaluate() {
     echo "❌ skill-eval wrote no $out_dir/metrics.json -- this job's PR comment cells will all read '?'" >&2
   fi
 
+  # The label-triggered workflow checks out this PR. The candidate Notes job
+  # runs a paired catalog-value
+  # pilot; the main job must not duplicate these 24 attempts.
+  # Keep the report inside the artifact this job already uploads.
+  local focused_status=0
+  if [ "${PRD:-}" = "dataset/prds/notes/prd/mvp.txt" ] && [ "$plugin_dir" = "$(pwd)/plugins/expo" ]; then
+    focused_smoke "$plugin_dir" "$out_dir/focused" || focused_status=$?
+  fi
+
   tar -czf "$tarball" "$out_dir" 2>/dev/null || true
+  return "$focused_status"
+}
+
+# The harness now emits a canonical authored-app tree and restricts its shell
+# analyzer to its canonical report directory. Copy that report into the per-job
+# artifact location expected by the skills repository's existing workflows.
+analyze_authored_app() {
+  (
+    set -euo pipefail
+    local scenario="$1" out_dir="$2"
+    AUTHORED_ARTIFACT="$(pwd)/eval-harness/authored-app" \
+    SCENARIO="$scenario" \
+    OUT_DIR=skill-eval-report \
+    PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
+    bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+    mkdir -p "$out_dir"
+    cp -R eval-harness/skill-eval-report/. "$out_dir/"
+  )
+}
+
+# Small CI-only routing probe, shared by the label workflow and manual runner.
+# Ordinary behavioral misses remain advisory; infrastructure errors fail the job.
+focused_smoke() {
+  (
+    set -euo pipefail
+    local plugin_dir="$1" out_dir="$2"
+    [ -n "${CI:-}" ] || { echo "Focused agent runs require CI" >&2; exit 1; }
+    install_harness_deps
+    if ! command -v claude >/dev/null 2>&1 || [ "$(claude --version | cut -d ' ' -f 1)" != "$AGENT_CLI_VERSION" ]; then
+      npm install -g "@anthropic-ai/claude-code@$AGENT_CLI_VERSION"
+    fi
+    SKILL_EVAL_REMOTE=1 bun eval-harness/eval_harness/evaluator/skill_invocation/focused/main.ts run \
+      --plugin "$plugin_dir" --out "$out_dir" --model "$AGENT_MODEL" \
+      --case pilot --split development --repetitions 3 --skill-mode both
+  )
 }
 
 # Runs author-app.sh then eval-skill-use.sh directly into OUT_DIR -- no
@@ -203,11 +247,7 @@ author_and_evaluate_baseline() {
     export SKILL_PLUGIN_DIR="$plugin_dir"
     bash ./eval-harness/eval_harness/app_builder/scripts/author-app.sh
 
-    AUTHORED_ARTIFACT="$(pwd)/eval-harness" \
-    SCENARIO="$scenario" \
-    OUT_DIR="$out_dir" \
-    PRD_SKILLS="$(pwd)/eval-harness/dataset/prd_skills.json" \
-    bash ./eval-harness/eval_harness/evaluator/skill_invocation/scripts/eval-skill-use.sh
+    analyze_authored_app "$scenario" "$out_dir"
 
     [ -f "$out_dir/metrics.json" ] || {
       echo "❌ skill-eval wrote no $out_dir/metrics.json -- refusing to cache this baseline" >&2

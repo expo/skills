@@ -1,0 +1,53 @@
+# Focused skill routing and source checks. All model calls run on EAS.
+name: skill-eval-focused
+
+defaults:
+  image: sdk-57
+  tools:
+    bun: '1.3.14'
+    node: '22.20.0'
+
+on:
+  workflow_dispatch:
+    inputs:
+      experiment:
+        type: choice
+        options: [catalog-value, catalog-change]
+        default: catalog-value
+        description: With/without Expo skills, or main versus candidate
+      case_id:
+        type: string
+        default: pilot
+        description: Case ID, pilot (four cases), or all in the selected split
+      split:
+        type: choice
+        options: [development, validation, holdout]
+        default: development
+        description: Task-family split; holdout is only for final validation
+      repetitions:
+        type: number
+        default: 3
+        description: Attempts per case on each side; use 3 for a smoke sample
+
+jobs:
+  focused:
+    runs_on: linux-medium
+    environment: production
+    env:
+      FOCUSED_EXPERIMENT: ${{ inputs.experiment }}
+      FOCUSED_CASE: ${{ inputs.case_id }}
+      FOCUSED_SPLIT: ${{ inputs.split }}
+      FOCUSED_REPETITIONS: ${{ inputs.repetitions }}
+      SKILL_EVAL_REMOTE: '1'
+      CI: '1'
+    steps:
+      - uses: eas/checkout
+      - name: Compare focused cases against main
+        run: bash scripts/run-focused-evals.sh
+      - name: Upload reports, manifests, traces and app artifacts
+        if: ${{ always() }}
+        uses: eas/upload_artifact
+        with:
+          type: other
+          name: focused-skill-eval
+          path: focused-skill-eval

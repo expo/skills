@@ -178,3 +178,41 @@ Submission details and telemetry controls live in `expo-skill-feedback`.
 ## License
 
 MIT
+
+## Evaluating skill changes
+
+The existing EAS `skill-eval-ci` workflow compares three complete app-building tasks
+against main. Adding the `eval` label also runs a four-case focused pilot in the Notes PR
+job: three attempts per case with and without Expo skills (24 attempts). Its Notes PR
+artifact includes `focused/report.html`, outcome summaries, raw traces and frozen catalog evidence. No local EAS login is needed to trigger
+this path; it uses the existing GitHub-to-EAS connection.
+
+For focused routing and source-edit cases with configurable splits/repetitions, use:
+
+```sh
+eas workflow:run .eas/workflows/skill-eval-focused.yml
+```
+
+This defaults to the same catalog-value pilot on EAS using the project's `production` credentials.
+Download `focused-skill-eval` and open `report.html` for outcomes, routing, costs and evidence.
+Use `-F experiment=catalog-change` to compare main against the candidate instead; that mode
+also writes `comparison.html` and per-side reports. Advice reviews remain pending, while
+the HTTP cases have executable behavior checks. These are controlled file-edit tasks, not native app validation.
+For a larger development sample, add `-F case_id=all -F repetitions=3`. Validation and
+holdout task families require explicit `-F split=validation` or `-F split=holdout`.
+
+The label workflow uses the PR workflow definition and scripts. Its comment summarizes
+the focused pilot; detailed results remain in the Notes PR artifact.
+
+Agent evaluations run in CI only. Validate cases locally without model calls:
+
+```sh
+git submodule update --init eval-harness
+(cd eval-harness && bun install --frozen-lockfile)
+bun eval-harness/eval_harness/evaluator/skill_invocation/focused/main.ts validate --plugin plugins/expo
+```
+
+Cases, fixtures and evaluator implementation live in the pinned `eval-harness` submodule.
+See its [focused evaluation guide](eval-harness/eval_harness/evaluator/skill_invocation/focused/README.md).
+Harness changes must be committed and pushed there before updating this repo's submodule
+pointer, so remote CI can fetch the exact implementation being reviewed.
