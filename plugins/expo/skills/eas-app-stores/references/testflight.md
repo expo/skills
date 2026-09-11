@@ -18,13 +18,15 @@ Use the project's actual profile name. If `--non-interactive` exposes missing fi
 
 ## Read status without reopening a submission
 
-The following commands were verified with EAS CLI 23.2.0, including read-only checks of a completed iOS submission and its actual TestFlight state:
+The following read-only commands require EAS CLI [21.5.0](https://github.com/expo/eas-cli/releases/tag/v21.5.0) or newer:
 
 ```bash
 eas submit:list --platform ios --json
 eas submit:view SUBMISSION_ID --json
 eas submit:status --platform ios --profile testflight --json --non-interactive
 ```
+
+Alternatively, `eas status --json` shows recent submissions and their build IDs in EAS CLI 24.0.0 or newer.
 
 Use the project's actual profile. `submit:view` reports the EAS job; `submit:status` reads App Store Connect and reports App Store versions and TestFlight processing/internal/external states. The latter needs an App Store Connect API key from the selected profile, environment, or existing EAS credentials. In noninteractive mode, a missing key is a setup error; it does not mean the build failed or does not exist. A beta state alone does not establish that a particular tester has access.
 
