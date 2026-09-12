@@ -23,6 +23,7 @@ const user = JSON.parse(localStorage.getItem("user") ?? "{}");
 | Simple key-value (settings, preferences, small data) | `localStorage` polyfill |
 | Large datasets, complex queries, relational data     | Full `expo-sqlite`      |
 | Sensitive data (tokens, passwords)                   | `expo-secure-store`     |
+| Encrypted, memory-mapped key-value data (dev build)  | `react-native-mmkv`     |
 
 ## Storage with React State
 
@@ -118,4 +119,66 @@ await db.runAsync("INSERT INTO events (title, date) VALUES (?, ?)", [
 const events = await db.getAllAsync("SELECT * FROM events WHERE date > ?", [
   "2024-01-01",
 ]);
+```
+
+## MMKV
+
+Use the `localStorage` polyfill when the app runs in Expo Go, or stores simple settings and preferences.
+
+Use `react-native-mmkv` when the app needs:
+
+- Encrypted key-value storage, with AES-128 or AES-256 per instance
+- Key-value storage backed by memory-mapped files
+- Numbers, booleans, or ArrayBuffers stored without serializing to strings
+
+MMKV requires a development build and does not run in Expo Go. See the [react-native-mmkv docs](https://github.com/margelo/react-native-mmkv).
+
+```bash
+npx expo install react-native-mmkv react-native-nitro-modules
+```
+
+```tsx
+// utils/storage.ts
+import { createMMKV } from "react-native-mmkv";
+
+export const storage = createMMKV();
+
+export const secureStorage = createMMKV({
+  id: "secure-storage",
+  encryptionKey: "hunter2",
+  encryptionType: "AES-256",
+});
+```
+
+Set and get values by type:
+
+```tsx
+import { storage } from "@/utils/storage";
+
+storage.set("user.name", "Marc");
+storage.set("user.age", 21);
+storage.set("user.isPremium", true);
+
+const buffer = new ArrayBuffer(3);
+const dataWriter = new Uint8Array(buffer);
+dataWriter[0] = 1;
+dataWriter[1] = 100;
+dataWriter[2] = 255;
+storage.set("user.thumbnail", buffer);
+
+const name = storage.getString("user.name");
+const age = storage.getNumber("user.age");
+const isPremium = storage.getBoolean("user.isPremium");
+const thumbnail = storage.getBuffer("user.thumbnail");
+```
+
+Hooks re-render when a value changes:
+
+```tsx
+import { useMMKVString } from "react-native-mmkv";
+import { secureStorage } from "@/utils/storage";
+
+function Profile() {
+  const [email, setEmail] = useMMKVString("user.email", secureStorage);
+}
 ```
