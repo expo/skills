@@ -65,6 +65,36 @@ import { Pressable } from "react-native";
 
 - If a required modifier or View is missing in Expo UI, it can be extended via a local Expo module. See: https://docs.expo.dev/guides/expo-ui-swift-ui/extending/index.md. Confirm with the user before extending.
 
+## `RNHostView` sizing with `matchContents`
+
+With `matchContents`, `RNHostView` is a leaf in the Yoga tree — it measures its hosted child itself, and the width its native parent offers never reaches that child. The measure constraints come only from point-valued `minWidth` / `maxWidth` / `minHeight` / `maxHeight` on the hosted child; percentages are ignored and anything unset is unbounded.
+
+So unbounded `<Text>` measures at its full single-line width and does **not** wrap — it runs past the screen edge. Bound the hosted child yourself:
+
+```jsx
+// ✅ wraps at 280
+<RNHostView matchContents>
+  <View style={{ maxWidth: 280 }}>
+    <Text>A long string that has to wrap when the width is limited</Text>
+  </View>
+</RNHostView>
+
+// ❌ measures on one line and overflows
+<RNHostView matchContents>
+  <Text>A long string that has to wrap when the width is limited</Text>
+</RNHostView>
+```
+
+- `maxWidth` is the bound the constraints read — use it when the view should still hug shorter content. A fixed `width` also works, since Yoga resolves it while measuring.
+- Add `minHeight` when the wrapped content must not collapse below a floor.
+- Without `matchContents` the host fills its native parent, so text wraps on its own and needs no bound.
+
+Other `RNHostView` layout rules:
+
+- Only the **first** child is measured and laid out. Wrap several views in one parent `View` and let that view arrange them.
+- With `matchContents`, `alignSelf: 'auto' | 'stretch'` is forced to `flex-start` so the node can hug its content.
+- `onLayout` on `RNHostView` reports the size it settled on — use it to see what `matchContents` actually measured.
+
 ## useNativeState
 
 `useNativeState` creates observable state that updates synchronously on the UI thread via worklets, enabling immediate native state changes without waiting for a React render cycle. Requires `react-native-worklets` — without it updates still go through React and flickering remains. Best for real-time interactions where synchronous updates matter, e.g. a text field that masks or formats input as the user types.
