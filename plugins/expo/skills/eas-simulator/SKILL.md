@@ -12,7 +12,7 @@ allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(npx expo *
 
 EAS Simulator runs a remote iOS simulator or Android emulator on EAS infrastructure that you drive from your machine — from the CLI, from an AI agent (via `agent-device`), and from a browser preview. It's the unlock for **environments that can't run a simulator locally** (Linux boxes, cloud/background agents like Cursor Cloud), and for letting an agent *verify* a change on a real device instead of only reasoning about code.
 
-The `simulator:*` commands are **experimental and hidden**, and need a recent eas-cli (≥ 20.3.0 as of writing) — which is why this skill runs everything via `npx --yes eas-cli@latest`. Flags and verbs may change; if a command fails, **`<cmd> --help` is authoritative.**
+The `simulator:*` commands are **experimental and hidden**, and need a recent eas-cli (≥ 20.3.0 as of writing) — which is why this skill runs everything via `npx --yes eas-cli@latest`. Flags and verbs may change; **the relevant subcommand's `--help` output is authoritative.**
 
 ## When to use
 
@@ -65,7 +65,10 @@ A session is: **start → (install your app) → drive → stop.** `eas-cli` own
 
 ```bash
 # 1. Start a session (boots the remote sim + agent-device daemon; writes .env.eas-simulator).
-# If the dotenv names a session, inspect it with simulator:get --json first; stop it if still live.
+# If the dotenv names a session, inspect it with simulator:get --json first. Reuse it when it
+# belongs to this run; stop it only when it is in scope and no longer needed. An IN_PROGRESS
+# session may be intentionally concurrent, so preserve its id/config before resetting the dotenv.
+# Continue below only after choosing how to handle that existing session.
 printf '# managed by eas-cli\n' > .env.eas-simulator   # clear only after resolving any live session
 npx --yes eas-cli@latest simulator:start --platform ios --type agent-device --non-interactive \
   --name "Checkout flow screenshots"   # always name it — see 'Always name the session'
@@ -116,7 +119,17 @@ Rules:
 
 ## Commands at a glance
 
-Read [references/cli-reference.md](./references/cli-reference.md) before using non-default start flags, machine-readable/config output, list filters, or session events. It covers every public flag and their constraints.
+Query the installed CLI for the complete current flag set before using non-default start
+flags, machine-readable/config output, list filters, or session events:
+
+```bash
+# Replace `start` with the simulator subcommand you are about to run.
+npx --yes eas-cli@latest simulator:start --help
+```
+
+The examples below cover the common workflow; they are intentionally not an exhaustive
+copy of the CLI surface. Keep non-obvious behavioral guidance from this skill—especially
+[Session lifetime](#session-lifetime)—even when constructing the command from `--help`.
 
 | Command | Purpose |
 |---|---|
@@ -204,7 +217,6 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 
 - [references/run-your-app.md](./references/run-your-app.md) — full command sequences for modes A, B, and C (read before running a mode).
 - [references/controllers.md](./references/controllers.md) — agent-device verb reference and the `argent` alternative.
-- [references/cli-reference.md](./references/cli-reference.md) — complete public `simulator:*` flag reference; read for non-default start flags, list filters, output configuration, or events.
 - [references/troubleshooting.md](./references/troubleshooting.md) — concrete errors and fixes.
 
 Source of truth: Expo docs and the `eas` / `agent-device` CLIs (`npx --yes eas-cli@latest simulator:* --help`, `agent-device --help`). This skill teaches how to apply them; it doesn't replace them.

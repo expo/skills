@@ -1,6 +1,6 @@
 # Running your app on the remote sim — tested sequences
 
-The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026; the CLI surface was rechecked against eas-cli 23.2.0. These commands are experimental — if one fails, re-check `<cmd> --help`.)
+The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026. These commands are experimental — check the relevant subcommand's `--help` before using non-default flags.)
 
 In all modes, the session is started the same way and driven through `npx --yes eas-cli@latest simulator:exec`. Replace `dev.example.app` with the app's iOS `bundleIdentifier` (from `app.json` → `ios.bundleIdentifier`), and run from the project directory.
 
@@ -9,8 +9,10 @@ In all modes, the session is started the same way and driven through `npx --yes 
 ## Starting a session (shared by all modes)
 
 ```bash
-# If the dotenv names a session, inspect it first with simulator:get --json. Stop it if IN_PROGRESS;
-# replacing the file does not stop the remote session. Reset only after resolving any live session.
+# If the dotenv names a session, inspect it first with simulator:get --json. Reuse it when it belongs
+# to this run; stop it only when it is in scope and no longer needed. An IN_PROGRESS session may be
+# intentionally concurrent, so preserve its id/config before resetting the dotenv. Replacing the file
+# does not stop the remote session. Reset only after choosing how to handle the existing session.
 printf '# managed by eas-cli\n' > .env.eas-simulator
 
 # Start (the default --out-config-type dotenv writes .env.eas-simulator). It boots the sim + agent-device daemon.
