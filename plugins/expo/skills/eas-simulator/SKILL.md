@@ -26,8 +26,7 @@ The frontmatter `description` carries the trigger phrases. In short: use this to
 
 When the user requests EAS Simulator or a cloud simulator, proceed within that request and
 any stated budget. Explain applicable usage once and carry existing authorization through
-the session. Ask before purchasing or upgrading a plan, exceeding a stated budget, or
-expanding beyond the requested work.
+the session. Ask before exceeding a stated budget or expanding beyond the requested work.
 
 ## Prerequisites
 
