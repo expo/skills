@@ -156,8 +156,6 @@ Use the [Expo lifecycle guide](https://docs.expo.dev/brownfield/lifecycle-listen
 4. Reopen with a fresh request ID and different input. Verify no stale result or duplicate callback. Cancel through both the RN button and native swipe/back dismissal; repeat.
 5. Build/select the Release artifact and host Release configuration. Stop Metro, launch afresh, and repeat the interaction, including any bundled images/fonts. Check the original native screens and relevant lifecycle callbacks.
 
-For runnable examples of both SwiftUI hosts, see the [iOS brownfield playgrounds](https://github.com/expo/skills/tree/main/tests/fixtures/expo-brownfield).
-
 EAS Build/Submit can distribute the host after this integration works; they do not implement the runtime boundary. EAS Update requires an updates-enabled RN runtime and separate brownfield setup, not just an EAS project ID. Consult the [existing-native-app Update guide](https://docs.expo.dev/eas-update/integration-in-existing-native-apps/) if requested; use the chosen toolchain's setup for isolated artifacts. Updates cannot replace compiled Swift code or add a native module absent from the shipped binary.
 
 Select the matching SDK/API using [version compatibility](./version-compatibility.md). Current reference: [Brownfield API](https://docs.expo.dev/versions/latest/sdk/brownfield/); implementation: [Expo SDK 57 brownfield](https://github.com/expo/expo/tree/sdk-57/packages/expo-brownfield).
