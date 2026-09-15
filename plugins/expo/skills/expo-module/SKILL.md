@@ -20,6 +20,20 @@ Complete reference for building native modules and views using the Expo Modules 
 
 To migrate an existing Swift module from the definition DSL to the Expo Modules API 2.0 macros (`@ExpoModule`, `@JS`, `@Event`), use the `expo-migrate-module` skill (from the `expo-experiments` plugin) instead.
 
+## Expo Modules or Nitro Modules
+
+Use Expo Modules (this skill) when:
+
+- Adding Swift or Kotlin code to an Expo app, as a local module scaffolded with `create-expo-module`
+- The module needs config plugins, app or activity lifecycle hooks, or web support
+
+Use [Nitro Modules](https://nitro.margelo.com) when:
+
+- The implementation is C++ shared between iOS and Android
+- Native interfaces should be generated from a TypeScript spec with Nitrogen, so a type mismatch fails the native build
+
+Create a Nitro Module with `npx nitrogen@latest init <name>`. Libraries built with Nitro, such as `react-native-mmkv` and `react-native-vision-camera`, need `react-native-nitro-modules` installed and a development build.
+
 ## References
 
 Consult these resources as needed:
