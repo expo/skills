@@ -15,6 +15,7 @@ The whole layout, assembled from the rules below:
 
 ```
 ├── assets/
+├── public/                       # static web files stay at the repo root
 ├── scripts/
 ├── src/
 │   ├── app/                       # Expo Router routes ONLY — every file is a route
@@ -53,7 +54,7 @@ The whole layout, assembled from the rules below:
 
 ## `src/` and `src/app`
 
-Keep app code under `src/` to separate it from config files. Expo Router supports both `app/` and `src/app/` out of the box — to switch, move the folder and restart the bundler. The default template aliases `@/*` to `./src/*` in `tsconfig.json`.
+Keep app code under `src/` to separate it from config files. Expo Router supports both `app/` and `src/app/` out of the box. If both exist, only `src/app/` is used; the root `app/` is ignored. The default template aliases `@/*` to `./src/*` in `tsconfig.json`.
 
 `src/app` is **routes-only**: every file there becomes a route, so nothing else belongs in it. Everything below lives in sibling folders.
 
@@ -74,7 +75,7 @@ export default function HomeScreen() {
 }
 ```
 
-**Colocate** a screen's private components inside its folder (`screens/home/components/`). A bonus: the same screen can render under multiple routes.
+**Colocate** a screen's private components inside its folder, either beside `index.tsx` as `screens/home/card.tsx` or nested as `screens/home/components/card.tsx`. Both shapes are fine. A bonus: the same screen can render under multiple routes.
 
 ## server/ + app/api/ — separate server code
 
@@ -99,7 +100,7 @@ Small differences: use `Platform.select` / `Platform.OS`. For larger ones, split
 
 ## AI and config files
 
-Agent instructions live at the repo root — `AGENTS.md` / `CLAUDE.md`, with project skills under `.claude/`. Other config and assets stay outside `src/`: `app.json` / `app.config.ts`, `eas.json`, `package.json`, `assets/`, and `scripts/`.
+Agent instructions live at the repo root — `AGENTS.md` / `CLAUDE.md`, with project skills under `.claude/`. Other config and assets stay outside `src/`: `app.json` / `app.config.ts`, `eas.json`, `package.json`, `assets/`, and `scripts/`. The `public/` folder also stays at the repo root, even when routes live in `src/app/`.
 
 ---
 

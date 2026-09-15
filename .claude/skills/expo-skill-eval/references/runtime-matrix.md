@@ -20,6 +20,7 @@ Modes:
 | expo-module | static-only | — | Custom native modules can't load in Expo Go. Gate on TS compile of the module API; native compilation (prebuild + xcodebuild/gradle) is possible but expensive — out of scope for now. |
 | expo-app-clip | static-only | — | App Clip targets require prebuild + Xcode. Assert on config-plugin output instead. |
 | expo-brownfield | static-only | — | Brownfield integration has no Expo Go story. Assert on generated integration files. |
+| expo-project-structure | static-only | — | Assert on folder layout, route boundaries, and import resolution. Screenshots cannot prove folder structure. |
 | expo-dev-client | n/a | — | Output is build/distribution workflow, not renderable app code. |
 | eas-app-stores | n/a | — | Deployment guidance; assert on transcript/config content only. |
 | eas-workflows | n/a | — | Output is `.eas/workflows/` YAML; assert on YAML content (and `workflow_validate` via the Expo MCP if available). |
