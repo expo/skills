@@ -1,285 +1,68 @@
 ---
 name: expo-app-clip
-description: Framework (OSS). Add an iOS App Clip target to an Expo app. Use when the user mentions App Clip, AASA, apple-app-site-association, appclips, smart app banner, or wants to ship a lightweight iOS Clip invoked from a URL alongside their parent app.
+description: "Framework (OSS). Add, configure, test, or ship an iOS App Clip target alongside an Expo app, including Clip-specific URL invocation and website association."
 ---
 
-# Add an App Clip to an Expo App
+# Add an App Clip to an Expo app
 
-> **Requirements.** Adding the App Clip target is open source. Shipping one requires an Apple Developer Program membership and App Store review, and the AASA file must be served over HTTPS on your domain (any HTTPS host works; EAS Hosting is one option). Building via EAS Build or `bunx testflight` uses your EAS plan's build minutes. See https://expo.dev/pricing and https://developer.apple.com/app-clips/.
+> **Requirements.** Target generation is open source. Distribution requires Apple's developer program and review; EAS builds/hosting use the project's plan when chosen. See [Apple App Clips](https://developer.apple.com/app-clips/) and [EAS pricing](https://expo.dev/pricing).
 
-Adds an iOS App Clip target to an Expo project. The Clip lives in `targets/clip/`, ships alongside the parent app, and is invoked from a URL on the app's domain via an Apple App Site Association (AASA) file.
+Match the scope: adding a target, testing URL invocation, or shipping the parent
+app with its Clip. Adding native files does not by itself require a production
+website deployment, account registration, or TestFlight submission.
 
-The parent app's bundle ID becomes `com.<username>.<app-name>` and the Clip's is automatically derived as `<parent>.clip` (e.g. `com.bacon.may20.clip`).
+## Establish identity and target configuration
 
-## 1. Set `bundleIdentifier` and `appleTeamId`
+Preserve the parent app's bundle identifier and Apple team. Derive the Clip's
+identifier from the actual target configuration; never replace existing identities
+with a tutorial's username, team ID, or App Store ID. Reuse the existing Clip target
+if present.
 
-`bun create target` warns if these are missing. Add to `app.json`:
+Use [`@bacons/apple-targets`](https://github.com/EvanBacon/expo-apple-targets)' current
+Clip generator (`bun create target clip`) when creating a target. Inspect the
+installed generator's output and plugin configuration; the usual source location
+is `targets/clip/`, with `expo-target.config.js`, `Info.plist`, and native entry files.
+Keep native edits in the target sources/configuration that survive prebuild.
 
-```json
-{
-  "expo": {
-    "ios": {
-      "bundleIdentifier": "com.<username>.<app-name>",
-      "appleTeamId": "XX57RJ5UTD"
-    }
-  }
-}
-```
+Choose the Clip's smallest useful flow and URL entry point. Check dependencies,
+permissions, deployment target, and size constraints against
+[Apple's App Clip documentation](https://developer.apple.com/documentation/appclip).
+Do not mirror every parent permission or capability: an App Clip has different
+restrictions, and unnecessary features increase its size.
 
-## 2. Add the App Clip target
+## Connect invocation to the website
 
-```sh
-bun create target clip
-```
+Use [Apple's website association guide](https://developer.apple.com/documentation/appclip/associating-your-app-clip-with-your-website)
+for the current entitlement and AASA contract.
 
-This installs [`@bacons/apple-targets`](https://github.com/EvanBacon/expo-apple-targets), adds it to the `plugins` array in `app.json`, and writes:
+- Configure the Clip's `appclips:<domain>` associated-domain entitlement and the parent relationships required by the chosen integration. Add `applinks:` only for the parent universal-link behavior being implemented.
+- Merge the Clip's full application identifier into the AASA `appclips.apps` array. Preserve existing `applinks`, credential-sharing, and other app entries; do not copy sample IDs or grant every route without a reason.
+- Serve the extensionless `/.well-known/apple-app-site-association` over HTTPS with the required JSON response and no redirect. Verify the deployed response, not just the local file. Any compatible HTTPS host can serve it.
+- If adding a Smart App Banner, merge its App Store/Clip identifiers into the existing web HTML shell. Use the project's actual route tree (`app/` or `src/app/`) and preserve existing head content.
+- A correct AASA file is one part of invocation, not proof that the Clip experience is configured or distributed. Follow Apple's local testing and App Store Connect experience setup for the requested stage; allow for association caching when diagnosing devices.
 
-- `targets/clip/expo-target.config.js` — the target's config plugin
-- `targets/clip/Info.plist` — Clip Info.plist
-- `targets/clip/AppDelegate.swift`, `Assets.xcassets`, etc.
+For a local native detection/install-prompt bridge, read
+[the App Clip module recipe](./references/native-module.md). Its `navigator.appClip`
+API is an app-defined wrapper, not a built-in web or Expo API.
 
-Pick a good icon or reuse the existing one defined in the app — check it with `bunx expo config` under the `icon` or `ios.icon` key.
+## Build and distribution, when requested
 
-## 3. Wire up associated domains
+Inspect generated entitlements and Info.plist for both parent and Clip. A custom
+native build is required; Expo Go cannot contain this target. Verify provisioning
+for both targets when preparing a device/store build.
 
-The parent app and the Clip each need the Associated Domains entitlement pointing at the domain that hosts the AASA file.
+Use `eas-app-stores` for an authorized TestFlight/store delivery and `eas-hosting`
+when the chosen site is hosted on EAS. Preserve existing store metadata when pulling
+or editing it. Read the current Apple/EAS metadata schema for experience fields,
+image specifications, and invocation URLs rather than copying a full sample config.
 
-In `app.json`, add both `applinks:` (parent) and `appclips:` (Clip invocation) entries:
+## Completion
 
-```json
-{
-  "expo": {
-    "ios": {
-      "associatedDomains": [
-        "applinks:may20.expo.app",
-        "appclips:may20.expo.app"
-      ]
-    }
-  }
-}
-```
-
-In `targets/clip/expo-target.config.js`, declare the Clip's entitlement:
-
-```js
-/** @type {import('@bacons/apple-targets/app.plugin').ConfigFunction} */
-module.exports = (config) => ({
-  type: "clip",
-  icon: "https://github.com/expo.png",
-  entitlements: {
-    "com.apple.developer.associated-domains": ["appclips:may20.expo.app"],
-  },
-});
-```
-
-> If you skip this, `expo prebuild` will print: `Apple App Clip may require the associated domains entitlement but none were found`.
-
-## 4. Register bundle IDs and create the App Store entry
-
-```sh
-bunx setup-safari
-```
-
-This logs in to the Apple Developer account, registers `com.bacon.may20`, creates the App Store Connect entry, and prints:
-
-- A starter `apple-app-site-association` JSON
-- A `<meta name="apple-itunes-app">` tag with the iTunes app id
-- Team ID, iTunes ID, and Bundle ID
-
-## 5. Host the AASA file
-
-App Clips are invoked when iOS fetches `https://<your-domain>/.well-known/apple-app-site-association` and finds a matching `appclips` entry.
-
-```sh
-mkdir -p public/.well-known
-touch public/.well-known/apple-app-site-association
-```
-
-Paste the JSON `setup-safari` printed, but **add an `appclips` block** for the Clip's full app ID (`<TeamID>.<ClipBundleID>`). The output of `setup-safari` only covers the parent app:
-
-```json
-{
-  "applinks": {
-    "details": [
-      {
-        "appIDs": ["XX57RJ5UTD.com.bacon.may20"],
-        "components": [{ "/": "*", "comment": "Matches all routes" }]
-      }
-    ]
-  },
-  "appclips": {
-    "apps": ["XX57RJ5UTD.com.bacon.may20.clip"]
-  },
-  "activitycontinuation": {
-    "apps": ["XX57RJ5UTD.com.bacon.may20"]
-  },
-  "webcredentials": {
-    "apps": ["XX57RJ5UTD.com.bacon.may20"]
-  }
-}
-```
-
-Notes:
-
-- The file has **no extension** and **no `Content-Type` requirements** beyond being served as-is. Expo Router static export serves files in `public/` verbatim.
-- The `appclips` block is what lets a URL on the domain launch the Clip.
-- `webcredentials` is used for sharing credentials between the website, parent app, and the App Clip.
-- `activitycontinuation` is optional and used for sharing the link between mobile and desktop. Must be used with `Head` from expo-router — see https://docs.expo.dev/router/advanced/apple-handoff/
-- Notation and route-disabling details: https://sosumi.ai/documentation/xcode/supporting-associated-domains
-
-## 6. Add the Smart App Banner meta tag
-
-Create `src/app/+html.tsx` (Expo Router's HTML shell) and add the tag from `setup-safari`. Create the versioned template if it doesn't exist:
-
-```sh
-bunx expo customize src/app/+html.tsx
-```
-
-Add the meta tag to the `<head>`:
-
-```tsx
-import { ScrollViewStyleReset } from "expo-router/html";
-
-export default function Root({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="apple-itunes-app" content="app-id=6771566491" />
-        <ScrollViewStyleReset />
-      </head>
-      <body>{children}</body>
-    </html>
-  );
-}
-```
-
-To make the website show the App Clip card instead of the install card, use:
-
-```html
-<meta
-  name="apple-itunes-app"
-  content="app-id=6771566491, app-clip-bundle-id=com.bacon.may20.clip, app-clip-display=card"
-/>
-```
-
-## 7. Deploy the website
-
-The AASA file must be live before iOS will trust the association. Use [EAS Hosting](https://docs.expo.dev/eas/hosting/):
-
-```sh
-bunx expo export -p web
-eas deploy --prod
-```
-
-This publishes the site (including `/.well-known/apple-app-site-association`) at `https://<slug>.expo.app`. Verify:
-
-```sh
-curl https://may20.expo.app/.well-known/apple-app-site-association
-```
-
-## 8. Mirror permissions
-
-Inspect the parent app's permissions after prebuild:
-
-```sh
-npx expo config --type introspect
-```
-
-Look at the `infoPlist` object — mirror the permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.
-
-Set `deploymentTarget: "17.6"` in the Clip's target config — App Clips have a higher minimum size limit in iOS 17.6.
-
-If the app uses push notifications or location services, add to the App Clip's `Info.plist` to request the necessary permissions:
-
-```xml
-<key>NSAppClip</key>
-<dict>
-  <key>NSAppClipRequestEphemeralUserNotification</key>
-  <false/>
-  <key>NSAppClipRequestLocationConfirmation</key>
-  <true/>
-</dict>
-```
-
-## 9. Build and submit to TestFlight
-
-```sh
-bunx testflight
-```
-
-This will:
-
-1. Generate an `eas.json` if missing.
-2. Set up credentials for **both** targets (parent + Clip). Each gets its own provisioning profile but can share a single Distribution Certificate.
-3. Sync capabilities — note `Enabled: Associated Domains` for the Clip target.
-4. Build, upload, and schedule a TestFlight submission.
-
-## 10. Configure App Clip metadata
-
-Pull existing App Store metadata to local:
-
-```sh
-eas metadata:pull
-```
-
-Add `apple.appClip` to `store.config.json`. Up to 3 invocation URLs can launch the Clip from a web page:
-
-```json
-{
-  "configVersion": 0,
-  "apple": {
-    "appClip": {
-      "defaultExperience": {
-        "action": "PLAY",
-        "releaseWithAppStoreVersion": true,
-        "reviewDetail": {
-          "invocationUrls": ["https://may20.expo.app/", null, null]
-        },
-        "info": {
-          "en-US": {
-            "subtitle": "Instantly native with Expo",
-            "headerImage": "store/apple/app-clip/en-US/asc-app-clip.png"
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-The `headerImage` must be a 1800x1200 PNG with no opacity.
-
-Push back to the store:
-
-```sh
-eas metadata:push
-```
-
-Apple's recommended App Clip metadata guidelines: https://sosumi.ai/documentation/appclip/configuring-the-launch-experience-of-your-app-clip
-
-## What you get
-
-- Parent app target: `com.bacon.may20`
-- App Clip target: `com.bacon.may20.clip`, lives in `targets/clip/`
-- AASA hosted at `https://may20.expo.app/.well-known/apple-app-site-association`
-- Smart App Banner meta tag on every web route
-- Every route linked to its native counterpart
-- TestFlight build of the parent app with the Clip embedded
-
-Once Apple invokes the Clip from a URL on the domain, iOS opens `targets/clip/`'s entry point which loads the React Native app.
-
-## Native detection (optional)
-
-To let JS detect when it's running inside an App Clip and present an install prompt for the full app, create a local Expo module (`bunx create-expo-module --local`) that exposes `navigator.appClip.prompt()`.
-
-See [./references/native-module.md](./references/native-module.md) for the Swift module, TypeScript interface, and usage.
-
-## References
-
-- ./references/native-module.md — Local Expo module to detect App Clip context and present the SKOverlay install prompt
+For target work, verify configuration and the available native build/launch path.
+For invocation work, test the intended URL and delivered Clip flow. For shipping,
+verify the parent embeds the Clip and the requested experience/submission stage is
+configured. Report separately any device, domain, provisioning, or review steps
+that could not be verified.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:

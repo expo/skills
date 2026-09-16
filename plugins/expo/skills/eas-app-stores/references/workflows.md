@@ -1,120 +1,62 @@
-# EAS Workflows
+# Store release workflows
 
-Automate builds, submissions, and PR-preview updates with EAS Workflows. The examples below are store-release-oriented starting points.
+Use `eas-workflows` whenever authoring or changing EAS workflow YAML, including
+when adapting this example. Fetch its current schema and selected job contracts,
+then validate the finished file. This reference adds the store-specific connection
+between build artifacts and submissions; it is not a separate YAML authority.
 
-When you need to write, edit, or validate a workflow YAML file beyond these examples, use the `eas-workflows` skill. For website and API-route deploy workflows (`type: deploy`), see the `eas-hosting` skill.
+## Build and submit the same artifacts
 
-## PR Previews with EAS Update
+Confirm the existing build and submit profiles, signing, store identifiers, and
+release destination first. An EAS submit job transfers the build to the store;
+Apple processing, tester availability, review, and public release remain separate.
 
-Deploy OTA updates for pull requests:
-
-```yaml
-name: PR Preview
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  publish:
-    type: update
-    params:
-      branch: "pr-${{ github.event.pull_request.number }}"
-      message: "PR #${{ github.event.pull_request.number }}"
-```
-
-## Production Release
-
-Complete release workflow for both platforms:
+This manual-trigger example submits the exact outputs of separate iOS and Android
+build jobs. Replace profile names with the project's selected profiles. A workflow
+run starts remote operations; authoring this file alone does not authorize a run.
 
 ```yaml
-name: Release
-
+name: Store submission
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch: {}
 
 jobs:
-  build-ios:
+  build_ios:
     type: build
     params:
       platform: ios
       profile: production
 
-  build-android:
+  build_android:
     type: build
     params:
       platform: android
       profile: production
 
-  submit-ios:
+  submit_ios:
     type: submit
-    needs: [build-ios]
+    needs: [build_ios]
     params:
-      platform: ios
+      build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: production
 
-  submit-android:
+  submit_android:
     type: submit
-    needs: [build-android]
+    needs: [build_android]
     params:
-      platform: android
+      build_id: ${{ needs.build_android.outputs.build_id }}
       profile: production
 ```
 
-## Build on Push
+A build job targets one platform; use separate jobs for iOS and Android. Submit
+jobs receive `build_id` rather than a platform selector. Avoid `--latest`-style
+selection when the workflow already knows the artifact it should submit.
 
-Trigger builds when pushing to specific branches:
-
-```yaml
-name: Build
-
-on:
-  push:
-    branches:
-      - main
-      - release/*
-
-jobs:
-  build:
-    type: build
-    params:
-      platform: all
-      profile: production
-```
-
-## Conditional Jobs
-
-Run jobs based on conditions:
-
-```yaml
-name: Conditional Release
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  check-changes:
-    type: run
-    params:
-      command: |
-        if git diff --name-only HEAD~1 | grep -q "^src/"; then
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-        fi
-
-  build:
-    type: build
-    needs: [check-changes]
-    if: needs.check-changes.outputs.has_changes == 'true'
-    params:
-      platform: all
-      profile: production
-```
-
-## Tips
-
-- Use `workflow_dispatch` for manual production releases
-- Combine PR previews with GitHub status checks
-- Use tags for versioned releases
-- Keep sensitive values in EAS Secrets, not workflow files
+For tag/push/PR triggers, conditions, custom steps, and named job outputs, use the
+[current syntax](https://docs.expo.dev/eas/workflows/syntax/) and
+[job contracts](https://docs.expo.dev/eas/workflows/pre-packaged-jobs/).
+EAS custom jobs use their documented steps/output mechanisms; GitHub Actions
+constructs such as `$GITHUB_OUTPUT` are not interchangeable. For PR OTA previews,
+use `eas-update` to establish the compatible runtime, channel/branch, and EAS
+environment before wiring the update job. Keep credentials in the supported
+credential store or CI secret integration, outside committed YAML.

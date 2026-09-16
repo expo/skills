@@ -1,127 +1,28 @@
-# Lifecycle Hooks Reference
+# Native lifecycle integration
 
-## Module Lifecycle (in module definition)
+Choose the lifecycle that owns the resource: module instance, native view, activity,
+application, or JavaScript runtime. Register once for that owner and release with
+it; avoid restarting an application-wide service on every screen mount.
 
-```swift
-OnCreate {
-  // Module initialized - preferred over class initializers
-}
+Read only the relevant source:
 
-OnDestroy {
-  // Module deallocated - clean up resources
-}
+- [Module API lifecycle hooks](https://docs.expo.dev/modules/module-api/) for module creation/destruction and app/activity events exposed inside the DSL.
+- [iOS AppDelegate subscribers](https://docs.expo.dev/modules/appdelegate-subscribers/) for app-level callbacks without patching AppDelegate directly.
+- [Android lifecycle listeners](https://docs.expo.dev/modules/android-lifecycle-listeners/) for activity/application callbacks outside module definitions.
 
-OnAppContextDestroys {
-  // App context is being deallocated
-}
-```
+## Integration pitfalls
 
-## iOS App Lifecycle (in module definition)
+AppDelegate subscribers require an Expo-compatible host delegate and registration
+in `expo-module.config.json`. A subscriber class existing on disk is insufficient.
+Check callback-result aggregation before returning a value that affects other
+subscribers' handling, especially launch and remote-notification callbacks.
 
-```swift
-OnAppEntersForeground { /* UIApplication.willEnterForegroundNotification */ }
-OnAppEntersBackground { /* UIApplication.didEnterBackgroundNotification */ }
-OnAppBecomesActive { /* UIApplication.didBecomeActiveNotification */ }
-```
+Android listener methods follow the Expo listener interface, not every method on
+Android Activity. Do not assume `onStart`/`onStop` exist merely because Activity has
+them; check the installed interface. Register through the package's listener factory
+and account for activity recreation and a temporarily unavailable current activity.
 
-## Android Activity Lifecycle (in module definition)
-
-```kotlin
-OnActivityEntersForeground { /* Activity resumed */ }
-OnActivityEntersBackground { /* Activity paused */ }
-OnActivityDestroys { /* Activity destroyed */ }
-OnNewIntent { intent -> /* Deep link received */ }
-OnActivityResult { activity, result -> /* startActivityForResult callback */ }
-OnUserLeavesActivity { /* User-initiated background transition */ }
-RegisterActivityContracts { /* Modern activity result contracts */ }
-```
-
----
-
-## iOS AppDelegate Subscribers
-
-For hooking into AppDelegate events without editing AppDelegate directly. Requires app's AppDelegate to extend `ExpoAppDelegate`.
-
-```swift
-import ExpoModulesCore
-
-public class MyAppDelegateSubscriber: ExpoAppDelegateSubscriber {
-  public func applicationDidBecomeActive(_ application: UIApplication) {}
-  public func applicationWillResignActive(_ application: UIApplication) {}
-  public func applicationDidEnterBackground(_ application: UIApplication) {}
-  public func applicationWillEnterForeground(_ application: UIApplication) {}
-  public func applicationWillTerminate(_ application: UIApplication) {}
-
-  public func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-  ) -> Bool {
-    return false  // Return true if handled
-  }
-}
-```
-
-Register in `expo-module.config.json`:
-
-```json
-{
-  "apple": {
-    "appDelegateSubscribers": ["MyAppDelegateSubscriber"]
-  }
-}
-```
-
-Result aggregation:
-- `didFinishLaunchingWithOptions`: Returns `true` if **any** subscriber returns `true`
-- `didReceiveRemoteNotification`: Priority: `failed` > `newData` > `noData`
-
----
-
-## Android Lifecycle Listeners
-
-For hooking into Activity/Application lifecycle outside module definitions. Useful for handling deep links, intents, and app-level initialization.
-
-### ReactActivityLifecycleListener
-
-Supported callbacks: `onCreate`, `onResume`, `onPause`, `onDestroy`, `onNewIntent`, `onBackPressed`.
-
-> Note: `onStart` and `onStop` are **not supported** — the implementation hooks into `ReactActivityDelegate` which lacks these methods.
-
-```kotlin
-class MyPackage : Package {
-  override fun createReactActivityLifecycleListeners(
-    activityContext: Context
-  ): List<ReactActivityLifecycleListener> {
-    return listOf(MyActivityListener())
-  }
-}
-
-class MyActivityListener : ReactActivityLifecycleListener {
-  override fun onCreate(activity: Activity, savedInstanceState: Bundle?) { }
-  override fun onResume(activity: Activity) { }
-  override fun onPause(activity: Activity) { }
-  override fun onDestroy(activity: Activity) { }
-  override fun onNewIntent(intent: Intent?): Boolean { return false }
-  override fun onBackPressed(): Boolean { return false }
-}
-```
-
-### ApplicationLifecycleListener
-
-Supported callbacks: `onCreate`, `onConfigurationChanged`.
-
-```kotlin
-class MyPackage : Package {
-  override fun createApplicationLifecycleListeners(
-    context: Context
-  ): List<ApplicationLifecycleListener> {
-    return listOf(MyAppListener())
-  }
-}
-
-class MyAppListener : ApplicationLifecycleListener {
-  override fun onCreate(application: Application) {
-    // App-level initialization
-  }
-}
-```
+Deep links/intents can arrive on cold start or an already-running activity. Preserve
+existing host handlers and ensure the event reaches the intended JavaScript/native
+consumer once. Test foreground/background, recreation, and cleanup for the resource
+being added; a successful initial launch does not cover those lifetimes.

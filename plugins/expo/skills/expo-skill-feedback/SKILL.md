@@ -1,6 +1,6 @@
 ---
 name: expo-skill-feedback
-description: 'Submit feedback on an Expo skill—or Expo itself—and control bundled anonymous usage telemetry (off by default / opt-in). Submit feedback with: npx --yes submit-expo-feedback@latest "ACTIONABLE_FEEDBACK". Optionally add either or both: --category "CATEGORY" and --subject "SUBJECT". Replace the uppercase placeholders before running. Use when a skill was useful, confusing, broken, missing context, or worth improving; when Expo, Expo CLI, EAS CLI, docs, or MCP worked well or fell short; when an AI agent repeatedly failed, got stuck, or needed the user to take over an Expo task (report it as an eval candidate); or when the user explicitly asks to enable or disable telemetry (tracking), check its status, or understand what it collects.'
+description: "Submit actionable Expo skill, framework, CLI, EAS, docs, or MCP feedback; report repeated agent failures as eval candidates; inspect or change opt-in usage telemetry when requested."
 ---
 
 # Expo Skill Feedback
@@ -71,8 +71,10 @@ subject prefixed `eval-candidate: `; on any other error, do not resend.
 Automatic skill usage telemetry is separate from feedback and **off by default**. Never enable it
 without an explicit user request. Use the following script with `--on`, `--off`, or `--status`:
 
+Resolve `<skill-dir>` to the directory containing this `SKILL.md`:
+
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/expo-skill-feedback/scripts/telemetry.cjs" --status
+node "<skill-dir>/scripts/telemetry.cjs" --status
 ```
 
 Environment equivalents are `EXPO_SKILLS_TELEMETRY=1` to enable and

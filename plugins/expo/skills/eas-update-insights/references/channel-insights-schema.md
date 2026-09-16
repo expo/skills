@@ -1,47 +1,18 @@
-# `eas channel:insights` JSON schema
+# Channel field notes
 
-Complete JSON output shape returned by `eas channel:insights --channel <name> --runtime-version <version> --json --non-interactive`.
+Use actual `eas channel:insights --channel <name> --runtime-version <version> --json`
+output and [CLI source](https://github.com/expo/eas-cli/tree/main/packages/eas-cli/src/commands/channel)
+for the installed command contract. The following are known field names and
+interpretation traps, not a complete versioned schema.
 
-```json
-{
-  "channel": "production",
-  "runtimeVersion": "1.0.6",
-  "timespan": { "start": "...", "end": "...", "daysBack": 7 },
-  "embeddedUpdateTotalUniqueUsers": 2401,
-  "otaTotalUniqueUsers": 8312,
-  "mostPopularUpdates": [
-    {
-      "rank": 1,
-      "groupId": "abc123",
-      "message": "Fix checkout crash",
-      "platform": "ios",
-      "totalUniqueUsers": 4210
-    }
-  ],
-  "cumulativeMetricsAtLastTimestamp": [
-    { "id": "...", "label": "Embedded update", "data": 12345 },
-    { "id": "...", "label": "Embedded update failed installs", "data": 0 }
-  ],
-  "uniqueUsersOverTime": { "labels": ["..."], "datasets": [ { "id": "...", "label": "...", "data": [100, 200] } ] },
-  "cumulativeMetricsOverTime": { "labels": ["..."], "datasets": [ { "id": "...", "label": "...", "data": [10, 20] } ] }
-}
-```
+- `channel`, `runtimeVersion`, `timespan`: confirm all three match the requested cohort. An empty result for one runtime does not characterize the whole channel.
+- `embeddedUpdateTotalUniqueUsers`: the service's embedded-update user count within this scope.
+- `mostPopularUpdates[]`: ranked update/group/platform entries with `totalUniqueUsers`. Check the number of entries and whether the server truncates this list.
+- `otaTotalUniqueUsers`: has been computed as a sum over `mostPopularUpdates`. Verify that behavior before calculating adoption; a top-N sum may omit active updates, and overlapping users may be counted more than once.
+- `uniqueUsersOverTime`, `cumulativeMetricsOverTime`: chart-shaped labels/datasets. Align date buckets and distinguish interval values from cumulative values before comparing or summing them.
+- `cumulativeMetricsAtLastTimestamp`: labeled endpoint totals. Do not guess meanings from array position or assume a missing series is zero.
 
-## Field reference
-
-| Path | Meaning |
-|---|---|
-| `channel` | The channel queried. |
-| `runtimeVersion` | The runtime version filter used. Channel insights are always scoped to a single runtime. |
-| `timespan.start` / `.end` / `.daysBack` | Window bounds (UTC ISO) and size in days. |
-| `embeddedUpdateTotalUniqueUsers` | Distinct users running the embedded (binary-bundled) build in the window. |
-| `otaTotalUniqueUsers` | Sum of `totalUniqueUsers` across `mostPopularUpdates`. May undercount if more than top-N updates are active (see caveat below). |
-| `mostPopularUpdates[]` | Top-N updates ranked by `totalUniqueUsers`. Each entry has `rank`, `groupId`, `message`, `platform`, `totalUniqueUsers`. |
-| `cumulativeMetricsAtLastTimestamp[]` | Snapshot totals at the end of the window, labelled (e.g., "Embedded update", "Embedded update failed installs"). |
-| `uniqueUsersOverTime` | Chart-shaped object with `labels` (dates) and `datasets` for plotting unique users over time. |
-| `cumulativeMetricsOverTime` | Chart-shaped object for plotting cumulative metrics over time. |
-
-## Caveats
-
-- `otaTotalUniqueUsers` is a sum of `mostPopularUpdates[].totalUniqueUsers`. If more OTA updates are active than the top-N the server returns, this figure undercounts true OTA reach.
-- A user running the same publish on both iOS and Android may be counted on each platform. Don't treat `uniqueUsers` as cross-platform-deduped.
+Report embedded and OTA values with their actual counting scope. Without proof of
+coverage and deduplication, their sum is not a unique-user population denominator.
+Zero/empty data can reflect filters, delayed reporting, or absent observations;
+confirm before claiming that every user remains on the embedded build.

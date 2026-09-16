@@ -1,79 +1,26 @@
-# New Architecture
+# New Architecture compatibility
 
-The New Architecture is enabled by default in Expo SDK 53+. It replaces the legacy bridge with a faster, synchronous communication layer between JavaScript and native code.
+Use the [Expo New Architecture guide](https://docs.expo.dev/guides/new-architecture/)
+and the target SDK's release notes for supported architectures. Defaults, opt-out
+support, and Expo Go compatibility have changed between releases; do not copy a
+`newArchEnabled: false` workaround into an SDK that no longer supports it.
 
-## Documentation
+Inspect the installed native dependencies, their supported versions, and doctor
+results. Verify a suspected library incompatibility against its maintained docs or
+source before replacing it. For Reanimated/Worklets, install the versions required
+by the selected Expo SDK and Reanimated major, not an arbitrary latest pair.
 
-Full guide: https://docs.expo.dev/guides/new-architecture/
+## Diagnose the actual failure
 
-## What Changed
+Distinguish dependency/autolinking, native compilation, runtime initialization, and
+layout/gesture behavior. A private JavaScript global is not a portable architecture
+check; prefer the SDK's documented build configuration and native diagnostics.
 
-- **JSI (JavaScript Interface)** — Direct synchronous calls between JS and native
-- **Fabric** — New rendering system with concurrent features
-- **TurboModules** — Lazy-loaded native modules with type safety
+After changing native configuration/dependencies, rebuild the matching development
+or release binary. Use clean prebuild only for native output confirmed to be
+disposable CNG-generated code. Preserve hand-maintained iOS/Android projects and
+apply their native changes explicitly. Clear a relevant cache only when evidence
+suggests stale output; it cannot fix an incompatible library.
 
-## SDK Compatibility
-
-| SDK Version | New Architecture Status |
-| ----------- | ----------------------- |
-| SDK 53+     | Enabled by default      |
-| SDK 52      | Opt-in via app.json     |
-| SDK 51-     | Experimental            |
-
-## Configuration
-
-New Architecture is enabled by default. To explicitly disable (not recommended):
-
-```json
-{
-  "expo": {
-    "newArchEnabled": false
-  }
-}
-```
-
-## Expo Go
-
-Expo Go only supports the New Architecture as of SDK 53. Apps using the old architecture must use development builds.
-
-## Common Migration Issues
-
-### Native Module Compatibility
-
-Some older native modules may not support the New Architecture. Check:
-
-1. Module documentation for New Architecture support
-2. GitHub issues for compatibility discussions
-3. Consider alternatives if module is unmaintained
-
-### Reanimated
-
-React Native Reanimated requires `react-native-worklets` in SDK 54+:
-
-```bash
-npx expo install react-native-worklets
-```
-
-### Layout Animations
-
-Some layout animations behave differently. Test thoroughly after upgrading.
-
-## Verifying New Architecture
-
-Check if New Architecture is active:
-
-```tsx
-import { Platform } from "react-native";
-
-// Returns true if Fabric is enabled
-const isNewArch = global._IS_FABRIC !== undefined;
-```
-
-Verify from the command line if the currently running app uses the New Architecture: `bunx xcobra expo eval "_IS_FABRIC"` -> `true`
-
-## Troubleshooting
-
-1. **Clear caches** — `npx expo start --clear`
-2. **Clean prebuild** — `npx expo prebuild --clean`
-3. **Check native modules** — Ensure all dependencies support New Architecture
-4. **Review console warnings** — Legacy modules log compatibility warnings
+Verify the affected native surfaces, including layout and animation paths changed
+by the upgrade. State any platform builds or device checks that remain unavailable.

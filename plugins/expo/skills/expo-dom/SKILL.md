@@ -1,420 +1,48 @@
 ---
 name: expo-dom
-description: Framework (OSS). Use Expo DOM components to run web code in a webview on native and as-is on web. Migrate web code to native incrementally. For the end-to-end migration of a whole web app, use the expo-web-to-native skill.
-version: 1.0.0
+description: "Framework (OSS). Embed browser-dependent React components in an Expo native app with use dom, or debug their props, native actions, routing, assets, and sizing. For whole-app migration, use expo-web-to-native."
+version: 1.0.1
 license: MIT
 ---
 
-## What are DOM Components?
-
-DOM components allow web code to run verbatim in a webview on native platforms while rendering as-is on web. This enables using web-only libraries like `recharts`, `react-syntax-highlighter`, or any React web library in your Expo app without modification.
-
-## When to Use DOM Components
-
-Use DOM components when you need:
-
-- **Web-only libraries** — Charts (recharts, chart.js), syntax highlighters, rich text editors, or any library that depends on DOM APIs
-- **Migrating web code** — Bring existing React web components to native without rewriting
-- **Complex HTML/CSS layouts** — When CSS features aren't available in React Native
-- **iframes or embeds** — Embedding external content that requires a browser context
-- **Canvas or WebGL** — Web graphics APIs not available natively
-
-## When NOT to Use DOM Components
-
-Avoid DOM components when:
-
-- **Native performance is critical** — Webviews add overhead
-- **Simple UI** — React Native components are more efficient for basic layouts
-- **Deep native integration** — Use local modules instead for native APIs
-- **Layout routes** — `_layout` files cannot be DOM components
-
-## Basic DOM Component
-
-Create a new file with the `'use dom';` directive at the top:
-
-```tsx
-// components/WebChart.tsx
-"use dom";
-
-export default function WebChart({
-  data,
-}: {
-  data: number[];
-  dom: import("expo/dom").DOMProps;
-}) {
-  return (
-    <div style={{ padding: 20 }}>
-      <h2>Chart Data</h2>
-      <ul>
-        {data.map((value, i) => (
-          <li key={i}>{value}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-```
-
-## Rules for DOM Components
-
-1. **Must have `'use dom';` directive** at the top of the file
-2. **Single default export** — One React component per file
-3. **Own file** — Cannot be defined inline or combined with native components
-4. **Serializable props only** — Strings, numbers, booleans, arrays, plain objects
-5. **Include CSS in the component file** — DOM components run in isolated context
-
-## The `dom` Prop
-
-Every DOM component receives a special `dom` prop for webview configuration. Always type it in your props:
-
-```tsx
-"use dom";
-
-interface Props {
-  content: string;
-  dom: import("expo/dom").DOMProps;
-}
-
-export default function MyComponent({ content }: Props) {
-  return <div>{content}</div>;
-}
-```
-
-### Common `dom` Prop Options
-
-```tsx
-// Disable body scrolling
-<DOMComponent dom={{ scrollEnabled: false }} />
-
-// Flow under the notch (disable safe area insets)
-<DOMComponent dom={{ contentInsetAdjustmentBehavior: "never" }} />
-
-// Control size manually
-<DOMComponent dom={{ style: { width: 300, height: 400 } }} />
-
-// Combine options
-<DOMComponent
-  dom={{
-    scrollEnabled: false,
-    contentInsetAdjustmentBehavior: "never",
-    style: { width: '100%', height: 500 }
-  }}
-/>
-```
-
-## Exposing Native Actions to the Webview
-
-Pass async functions as props to expose native functionality to the DOM component:
-
-```tsx
-// app/index.tsx (native)
-import { Alert } from "react-native";
-import DOMComponent from "@/components/dom-component";
-
-export default function Screen() {
-  return (
-    <DOMComponent
-      showAlert={async (message: string) => {
-        Alert.alert("From Web", message);
-      }}
-      saveData={async (data: { name: string; value: number }) => {
-        // Save to native storage, database, etc.
-        console.log("Saving:", data);
-        return { success: true };
-      }}
-    />
-  );
-}
-```
-
-```tsx
-// components/dom-component.tsx
-"use dom";
-
-interface Props {
-  showAlert: (message: string) => Promise<void>;
-  saveData: (data: {
-    name: string;
-    value: number;
-  }) => Promise<{ success: boolean }>;
-  dom?: import("expo/dom").DOMProps;
-}
-
-export default function DOMComponent({ showAlert, saveData }: Props) {
-  const handleClick = async () => {
-    await showAlert("Hello from the webview!");
-    const result = await saveData({ name: "test", value: 42 });
-    console.log("Save result:", result);
-  };
-
-  return <button onClick={handleClick}>Trigger Native Action</button>;
-}
-```
-
-## Using Web Libraries
-
-DOM components can use any web library:
-
-```tsx
-// components/syntax-highlight.tsx
-"use dom";
-
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
-
-interface Props {
-  code: string;
-  language: string;
-  dom?: import("expo/dom").DOMProps;
-}
-
-export default function SyntaxHighlight({ code, language }: Props) {
-  return (
-    <SyntaxHighlighter language={language} style={docco}>
-      {code}
-    </SyntaxHighlighter>
-  );
-}
-```
-
-```tsx
-// components/chart.tsx
-"use dom";
-
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
-
-interface Props {
-  data: Array<{ name: string; value: number }>;
-  dom: import("expo/dom").DOMProps;
-}
-
-export default function Chart({ data }: Props) {
-  return (
-    <LineChart width={400} height={300} data={data}>
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="name" />
-      <YAxis />
-      <Tooltip />
-      <Line type="monotone" dataKey="value" stroke="#8884d8" />
-    </LineChart>
-  );
-}
-```
-
-## CSS in DOM Components
-
-CSS imports must be in the DOM component file since they run in isolated context:
-
-```tsx
-// components/styled-component.tsx
-"use dom";
-
-import "@/styles.css"; // CSS file in same directory
-
-export default function StyledComponent({
-  dom,
-}: {
-  dom: import("expo/dom").DOMProps;
-}) {
-  return (
-    <div className="container">
-      <h1 className="title">Styled Content</h1>
-    </div>
-  );
-}
-```
-
-Or use inline styles / CSS-in-JS:
-
-```tsx
-"use dom";
-
-const styles = {
-  container: {
-    padding: 20,
-    backgroundColor: "#f0f0f0",
-  },
-  title: {
-    fontSize: 24,
-    color: "#333",
-  },
-};
-
-export default function StyledComponent({
-  dom,
-}: {
-  dom: import("expo/dom").DOMProps;
-}) {
-  return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Styled Content</h1>
-    </div>
-  );
-}
-```
-
-## Expo Router in DOM Components
-
-The expo-router `<Link />` component and router API work inside DOM components:
-
-```tsx
-"use dom";
-
-import { Link, useRouter } from "expo-router";
-
-export default function Navigation({
-  dom,
-}: {
-  dom: import("expo/dom").DOMProps;
-}) {
-  const router = useRouter();
-
-  return (
-    <nav>
-      <Link href="/about">About</Link>
-      <button onClick={() => router.push("/settings")}>Settings</button>
-    </nav>
-  );
-}
-```
-
-### Router APIs That Require Props
-
-These hooks don't work directly in DOM components because they need synchronous access to native routing state:
-
-- `useLocalSearchParams()`
-- `useGlobalSearchParams()`
-- `usePathname()`
-- `useSegments()`
-- `useRootNavigation()`
-- `useRootNavigationState()`
-
-**Solution:** Read these values in the native parent and pass as props:
-
-```tsx
-// app/[id].tsx (native)
-import { useLocalSearchParams, usePathname } from "expo-router";
-import DOMComponent from "@/components/dom-component";
-
-export default function Screen() {
-  const { id } = useLocalSearchParams();
-  const pathname = usePathname();
-
-  return <DOMComponent id={id as string} pathname={pathname} />;
-}
-```
-
-```tsx
-// components/dom-component.tsx
-"use dom";
-
-interface Props {
-  id: string;
-  pathname: string;
-  dom?: import("expo/dom").DOMProps;
-}
-
-export default function DOMComponent({ id, pathname }: Props) {
-  return (
-    <div>
-      <p>Current ID: {id}</p>
-      <p>Current Path: {pathname}</p>
-    </div>
-  );
-}
-```
-
-## Detecting DOM Environment
-
-Check if code is running in a DOM component:
-
-```tsx
-"use dom";
-
-import { IS_DOM } from "expo/dom";
-
-export default function Component({
-  dom,
-}: {
-  dom?: import("expo/dom").DOMProps;
-}) {
-  return <div>{IS_DOM ? "Running in DOM component" : "Running natively"}</div>;
-}
-```
-
-## Assets
-
-Prefer requiring assets instead of using the public directory:
-
-```tsx
-"use dom";
-
-// Good - bundled with the component
-const logo = require("../assets/logo.png");
-
-export default function Component({
-  dom,
-}: {
-  dom: import("expo/dom").DOMProps;
-}) {
-  return <img src={logo} alt="Logo" />;
-}
-```
-
-## Usage from Native Components
-
-Import and use DOM components like regular components:
-
-```tsx
-// app/index.tsx
-import { View, Text } from "react-native";
-import WebChart from "@/components/web-chart";
-import CodeBlock from "@/components/code-block";
-
-export default function HomeScreen() {
-  return (
-    <View style={{ flex: 1 }}>
-      <Text>Native content above</Text>
-
-      <WebChart data={[10, 20, 30, 40, 50]} dom={{ style: { height: 300 } }} />
-
-      <CodeBlock
-        code="const x = 1;"
-        language="javascript"
-        dom={{ scrollEnabled: true }}
-      />
-
-      <Text>Native content below</Text>
-    </View>
-  );
-}
-```
-
-## Platform Behavior
-
-| Platform | Behavior                            |
-| -------- | ----------------------------------- |
-| iOS      | Rendered in WKWebView               |
-| Android  | Rendered in WebView                 |
-| Web      | Rendered as-is (no webview wrapper) |
-
-On web, the `dom` prop is ignored since no webview is needed.
-
-## Tips
-
-- DOM components hot reload during development
-- Keep DOM components focused — don't put entire screens in webviews
-- Use native components for navigation chrome, DOM components for specialized content
-- Test on all platforms — web rendering may differ slightly from native webviews
-- Large DOM components may impact performance — profile if needed
-- The webview has its own JavaScript context — cannot directly share state with native
+# Expo DOM components
+
+Use a DOM component to reuse browser-dependent React content inside a native
+screen. For an entire app migration, use `expo-web-to-native`. Keep native
+navigation and interaction-heavy native controls outside the DOM boundary when
+that fits the requested design; a whole DOM screen can be an intentional migration
+stage, not an automatic error.
+
+## Source and compatibility
+
+Read the relevant section of [DOM components](https://docs.expo.dev/guides/dom-components/)
+when implementing the boundary: usage, props, native actions, routing, assets,
+sizing, and known limitations. Verify the installed Expo SDK and `expo/dom` types
+before applying version-dependent examples; use the relevant
+[project setup rules](../expo-overview/references/project-setup.md) for package changes.
+Check the docs and installed build for DOM/Expo Go and OTA support rather than
+assuming every SDK has the same packaging behavior.
+
+## Boundary rules
+
+- Put `'use dom'` first in a separate component module with a default React export. Keep native route/layout ownership outside it.
+- The native side and the DOM side run in separate JavaScript contexts. Do not rely on shared React context, module globals, synchronous state, or direct native-module imports crossing the boundary.
+- Pass serializable data. Native actions are an explicit exception: top-level async function props with serializable arguments/results. Do not nest functions in data props.
+- Type webview configuration with `dom?: import('expo/dom').DOMProps`. Import the component's CSS in its DOM module; native/global styles do not automatically cross the isolated context.
+- Read synchronous Router state (params, pathname, segments, back/dismiss availability) in the native parent and pass the needed values/actions down. Consult the routing section for supported Link/router operations inside DOM.
+- Give embedded content an intentional size and scrolling owner. For dynamic height, use the documented measurement path; avoid nested scroll containers fighting for gestures.
+- Prefer bundled assets when updateability matters. Check the documented restrictions on public assets and DOM bundles for the SDK/update path being used.
+
+For a boundary example, adapt the documentation's native-action example to the
+actual feature. Do not port unrelated chart, editor, or CSS tutorials into the
+project just because the skill mentions those use cases.
+
+## Verify the integration
+
+Run the affected native route and check rendered content, data/param changes,
+native actions, scrolling, keyboard behavior if relevant, and assets in the target
+build. Check web too when it is a supported target: web rendering alone cannot
+prove the native webview works. Record any unavailable platform/build checks.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:

@@ -1,70 +1,37 @@
 ---
 name: eas-workflows
-description: EAS service (paid). Helps understand and write EAS workflow YAML files for Expo projects. Use this skill when the user asks about CI/CD or workflows in an Expo or EAS context, mentions .eas/workflows/, or wants help with EAS build pipelines or deployment automation.
+description: "EAS service (paid). Create, debug, or explain EAS Workflows YAML in .eas/workflows/, including EAS build and deployment automation. Use for EAS Workflows adoption, not unrelated CI configuration."
 allowed-tools: "Read,Write,Bash(node:*),Bash(npx *eas-cli@*)"
-version: 1.0.0
+version: 1.0.1
 license: MIT License
 ---
 
 # EAS Workflows Skill
 
-> **EAS service - costs apply.** EAS Workflows run on Expo Application Services, a paid product with free-tier limits. Each workflow job consumes your plan's build/compute minutes, and jobs that build or submit also need paid Apple Developer and Google Play accounts. Review https://expo.dev/pricing before triggering runs.
+> **EAS service - costs apply.** EAS Workflows run on Expo Application Services, a paid product with free-tier limits. Each workflow job consumes your plan's build/compute minutes; store distribution can also require Apple Developer or Google Play accounts. Review https://expo.dev/pricing before triggering runs.
 
 Help developers write and edit EAS CI/CD workflow YAML files.
 
 ## Reference Documentation
 
-Fetch these resources before generating or editing workflow files, or when answering syntax questions. First resolve this skill's directory, then use the fetch script in its `scripts/` directory. It is implemented using Node.js and caches responses using ETags for efficiency:
+For authoring or syntax changes, fetch the current schema with the bundled Node
+helper; it caches responses with ETags. Resolve this skill's directory first:
 
 ```bash
-# Fetch resources
-node <skill-dir>/scripts/fetch.js <url>
+node <skill-dir>/scripts/fetch.js https://api.expo.dev/v2/workflows/schema
 ```
 
-1. **JSON Schema** — https://api.expo.dev/v2/workflows/schema
-   - It is NECESSARY to fetch this schema
-   - Source of truth for the workflow YAML structure; EAS CLI remains the authoritative final validator
-   - All job types and their required/optional parameters
-   - Trigger types and configurations
-   - Runner types, VM images, and all enums
+- **[Schema](https://api.expo.dev/v2/workflows/schema):** current structure, job parameters, required fields, enums, and limits. Required when generating or changing workflow YAML.
+- **[Syntax](https://docs.expo.dev/eas/workflows/syntax/):** read for expressions, contexts, and trigger semantics relevant to the task.
+- **[Pre-packaged jobs](https://docs.expo.dev/eas/workflows/pre-packaged-jobs/):** read the selected jobs' input/output contracts when wiring them together.
 
-2. **Syntax Documentation** — https://raw.githubusercontent.com/expo/expo/refs/heads/main/docs/pages/eas/workflows/syntax.mdx
-   - Overview of workflow YAML syntax
-   - Examples and English explanations
-   - Expression syntax and contexts
-
-3. **Pre-packaged Jobs** — https://raw.githubusercontent.com/expo/expo/refs/heads/main/docs/pages/eas/workflows/pre-packaged-jobs.mdx
-   - Documentation for supported pre-packaged job types
-   - Job-specific parameters and outputs
-
-Do not rely on memorized values; these resources evolve as new features are added.
+Reuse applicable evidence already fetched for the task. A high-level explanation
+does not require every source. If live sources are unavailable, inspect local
+examples/help and clearly identify unverified fields; do not invent schema values.
 
 ## Workflow File Location
 
 Workflows live in `.eas/workflows/*.yml` (or `.yaml`). Each file must be 16 KiB or smaller.
-
-## Top-Level Structure
-
-A workflow file has these top-level keys:
-
-- `name` — Display name for the workflow
-- `on` — Triggers that start the workflow (at least one required)
-- `jobs` — Job definitions (required)
-- `defaults` — Shared defaults for all jobs
-- `concurrency` — Control parallel workflow runs
-
-Consult the schema for the full specification of each section.
-
-## Expressions
-
-Use `${{ }}` syntax for dynamic values. The schema defines available contexts:
-
-- `github.*` — GitHub repository and event information
-- `inputs.*` — Values from `workflow_dispatch` inputs
-- `needs.*` — Outputs and status from dependent jobs
-- `jobs.*` — Job outputs (alternative syntax)
-- `steps.*` — Step outputs within custom jobs
-- `workflow.*` — Workflow metadata
 
 ## Generating Workflows
 
@@ -85,6 +52,12 @@ npx -y eas-cli@latest workflow:validate .eas/workflows/<workflow.yml> --non-inte
 ```
 
 Run the command separately for each changed workflow file. It requires a logged-in EAS CLI session and a linked Expo project. Unlike schema-only validation, it also checks build profile references against the project's `eas.json` and performs EAS server-side validation. Fix every reported error and rerun the command until it prints `Workflow configuration YAML is valid.` Do not replace this command with a local YAML or JSON Schema validator.
+
+If authentication, project linking, or EAS availability blocks validation, finish
+independently checkable YAML work and report EAS CLI validation as incomplete.
+Do not initiate login, create a project, or run a workflow solely to complete an
+authoring request without authorization. Local checks can catch errors while
+blocked, but do not establish that EAS validation passed.
 
 ## Answering Questions
 

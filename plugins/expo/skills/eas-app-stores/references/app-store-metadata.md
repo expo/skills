@@ -158,7 +158,7 @@ Hidden from users but crucial for discoverability. Use comma-separated keywords 
 - No duplicates from title/subtitle
 - Include singular forms (Apple handles plurals)
 - Add synonyms and alternate spellings
-- Include competitor brand names (carefully)
+- Use accurate feature/category terms; do not include competing app names or unauthorized trademarks. Follow [Apple's search guidance](https://developer.apple.com/app-store/search/).
 - Use digits instead of spelled numbers ("5" not "five")
 - Skip articles and prepositions
 

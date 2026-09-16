@@ -1,79 +1,21 @@
-# React 19
+# React 19 during an Expo upgrade
 
-React 19 is included in Expo SDK 54. This release simplifies several common patterns.
+Check the React version selected by the target Expo SDK. Follow the relevant
+[React upgrade guide](https://react.dev/blog/2024/04/25/react-19-upgrade-guide) for
+breaking changes and [React 19 release notes](https://react.dev/blog/2024/12/05/react-19)
+for new capabilities; do not install a different React major independently of Expo.
 
-## Context Changes
+New syntax is not an obligatory migration. React 19 supports reading context with
+`use`, rendering a context provider directly, and receiving `ref` as a prop. Existing
+`useContext`, `.Provider`, and `forwardRef` usage need not be rewritten just to
+complete an SDK upgrade. Adopt new syntax when it helps the requested change and
+all supported consumers can use it.
 
-### useContext → use
+Separate React features from React DOM features. Web form actions, document metadata,
+and DOM-specific hooks do not become native controls or navigation APIs. Keep the
+app's existing data/mutation layer unless changing it is part of the task.
 
-The `use` hook replaces `useContext`:
-
-```tsx
-// Before (React 18)
-import { useContext } from "react";
-const value = useContext(MyContext);
-
-// After (React 19)
-import { use } from "react";
-const value = use(MyContext);
-```
-
-- The `use` hook can also read promises, enabling Suspense-based data fetching.
-- `use` can be called conditionally, this simplifies components that consume multiple contexts.
-
-### Context.Provider → Context
-
-Context providers no longer need the `.Provider` suffix:
-
-```tsx
-// Before (React 18)
-<ThemeContext.Provider value={theme}>
-  {children}
-</ThemeContext.Provider>
-
-// After (React 19)
-<ThemeContext value={theme}>
-  {children}
-</ThemeContext>
-```
-
-## ref as a Prop
-
-### Removing forwardRef
-
-Components can now receive `ref` as a regular prop. `forwardRef` is no longer needed:
-
-```tsx
-// Before (React 18)
-import { forwardRef } from "react";
-
-const Input = forwardRef<TextInput, Props>((props, ref) => {
-  return <TextInput ref={ref} {...props} />;
-});
-
-// After (React 19)
-function Input({ ref, ...props }: Props & { ref?: React.Ref<TextInput> }) {
-  return <TextInput ref={ref} {...props} />;
-}
-```
-
-### Migration Steps
-
-1. Remove `forwardRef` wrapper
-2. Add `ref` to the props destructuring
-3. Update the type to include `ref?: React.Ref<T>`
-
-## Other React 19 Features
-
-- **Actions** — Functions that handle async transitions
-- **useOptimistic** — Optimistic UI updates
-- **useFormStatus** — Form submission state (web)
-- **Document Metadata** — Native `<title>` and `<meta>` support (web)
-
-## Cleanup Checklist
-
-When upgrading to SDK 54:
-
-- [ ] Replace `useContext` with `use`
-- [ ] Remove `.Provider` from Context components
-- [ ] Remove `forwardRef` wrappers, use `ref` prop instead
+When a type or runtime error appears, inspect the matching React/type package
+versions and the actual breaking change. For ref edits, verify the ref reaches the
+underlying native component and still supports focus/measurement or other expected
+imperative behavior. Avoid broad codemods for optional modernization.

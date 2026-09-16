@@ -1,146 +1,58 @@
 ---
 name: expo-module
-description: Framework (OSS). Guide for creating and writing Expo native modules and views using the Expo Modules API (Swift, Kotlin, TypeScript). Covers module definition DSL, native views, shared objects, config plugins, lifecycle hooks, autolinking, and type system. Use when building or modifying native modules for Expo. Not for migrating an existing Swift module from the definition DSL to the Expo Modules API 2.0 macros; use expo-migrate-module (from the expo-experiments plugin) for that.
-version: 1.0.0
+description: "Framework (OSS). Create or extend Expo native modules and views in Swift, Kotlin, and TypeScript, including scaffolding, autolinking, lifecycle, and config plugins."
+version: 1.0.1
 license: MIT
 ---
 
-# Writing Expo Modules
+# Build an Expo native module
 
-Complete reference for building native modules and views using the Expo Modules API. Covers Swift (iOS), Kotlin (Android), and TypeScript.
+Use the Expo Modules API for native functionality or views in an Expo app. Preserve
+the existing module style and supported platforms. Migrating an existing Swift DSL
+module to API 2.0 macros is a separate task covered by `expo-migrate-module` in the
+`expo-experiments` plugin, when available; do not silently convert it while adding a method.
 
-## When to Use
+## Scaffold or extend
 
-- Creating a new Expo native module or native view
-- Adding native functionality (camera, sensors, system APIs) to an Expo app
-- Wrapping platform SDKs for React Native consumption
-- Building config plugins that modify native project files
-- Adding Android, Apple, or web support to an existing Expo module
-- Editing `expo-module.config.json`, config plugins, or lifecycle hooks
+Choose a **local module** for one app or a **standalone module** for reuse/publishing.
+Use `create-expo-module` for new modules and its `add-platform-support` command when
+adding a platform to an existing module. Inspect existing files before scaffolding
+so generated samples do not overwrite real implementation.
 
-To migrate an existing Swift module from the definition DSL to the Expo Modules API 2.0 macros (`@ExpoModule`, `@JS`, `@Event`), use the `expo-migrate-module` skill (from the `expo-experiments` plugin) instead.
+Read [scaffolding](./references/create-expo-module.md) for the installed generator's
+flags and known quirks. Pass the intended slug/path, platforms, and needed feature
+samples explicitly. `--name` names the native class, not the local folder;
+`ViewEvent` implies `View`; local modules do not generate a barrel by default.
+Respect `expo.autolinking.nativeModulesDir` rather than assuming `modules/`.
 
-## References
+## Implement the native boundary
 
-Consult these resources as needed:
+- Keep the JavaScript module name aligned with native `Name(...)` and the TypeScript binding. In `expo-module.config.json`, Apple registration uses the class name; Android uses the fully qualified class name.
+- Select sync vs async methods by work and thread requirements. Avoid blocking JavaScript with IO; UI changes belong on the platform's UI thread. Define errors and cancellation/lifetime behavior for long-running work.
+- Use typed inputs and events; account for nullability, numeric conversion, and platform differences. Release listeners/resources with their owning module/view/activity.
+- Use a config plugin for repeatable generated native configuration. Preserve manually maintained native host code and existing plugin behavior.
+- Replace scaffold examples with the requested functionality. Do not add unused native features or pretend an unsupported platform works with an empty implementation.
 
-```
-references/
-  create-expo-module.md      Scaffolding and add-platform-support workflow, defaults, and quirks
-  native-module.md           Module definition DSL: Name, Function, AsyncFunction, Property, Constant, Events, type system, shared objects
-  native-view.md             Native view components: View, Prop, EventDispatcher, view lifecycle, ref-based functions
-  lifecycle.md               Lifecycle hooks: module, iOS app/AppDelegate, Android activity/application listeners
-  config-plugin.md           Config plugins: modifying Info.plist, AndroidManifest.xml, reading values in native code
-  module-config.md           expo-module.config.json fields, file placement, and autolinking behavior
-```
+Read only the relevant reference:
 
-## Quick Start
+- [Module methods, events, properties, shared objects](./references/native-module.md).
+- [Native views and view events](./references/native-view.md).
+- [Module/application lifecycle](./references/lifecycle.md).
+- [Config plugins](./references/config-plugin.md).
+- [Registration and autolinking](./references/module-config.md).
 
-Prefer `create-expo-module` over manually creating native module files and directories. In practice, the best path is usually to create the scaffold first and then build on top of it. The scaffold sets up the expected layout, `expo-module.config.json`, podspec or Gradle files, TypeScript bindings, and the standalone example app flow.
+For current signatures and supported features, consult the installed Expo Modules
+Core version and [Modules API documentation](https://docs.expo.dev/modules/overview/).
+Bundled examples explain integration, not a guarantee that every API exists in an
+older SDK.
 
-If an existing Expo module only needs another platform, use `create-expo-module add-platform-support` instead of manually copying native directories.
+## Verify
 
-See [references/create-expo-module.md](references/create-expo-module.md) before scaffolding or extending a module. It covers:
-
-- local vs standalone modules
-- `--platform`, `--features`, `--barrel`, `--package-manager`, and non-interactive mode
-- `expo.autolinking.nativeModulesDir`
-- `add-platform-support` behavior and quirks
-
-## Recommended Workflow
-
-1. Choose the scaffold type first:
-   - **Local module** for one app
-   - **Standalone module** for reuse, monorepos, or publishing
-2. Determine native `expo-module` features that you will need.
-   - Based on the user's instructions determine which feature scaffolding will be useful.
-   - Available features: `Constant`, `Function`, `AsyncFunction`, `Event`, `View`, `ViewEvent`, `SharedObject`
-3. Scaffold deliberately:
-   - pass an explicit slug or path
-   - choose `--platform` intentionally instead of relying on defaults
-   - use `--features` to choose code samples which you will modify in the next step to match the real implementation.
-4. Replace generated example code with the real implementation.
-5. If you add a new platform later, prefer `add-platform-support` over manual file copying.
-
-## Practical Scaffolding Rules
-
-- Feature examples are **opt-in**. A newly scaffolded module may be minimal if no features were selected.
-- `ViewEvent` implies `View`.
-- Local modules do **not** generate an `index.ts` barrel by default. Use `--barrel` only if you want one.
-- In non-interactive local scaffolding, pass the positional slug or path explicitly. `--name` changes the native class name, not the folder name.
-- Local modules live in `expo.autolinking.nativeModulesDir` when configured, otherwise in `modules/`.
-- Standalone modules have their own package metadata, scripts, and usually an example app. Local modules use the host app's tooling instead.
-
-## Core File Shapes
-
-The Swift and Kotlin DSL share the same structure. Swift is usually the clearest primary example; consult the references for feature-specific details.
-
-## Module Structure Reference
-
-The Swift and Kotlin DSL share the same structure. Both platforms are shown here for reference — in other reference files, Swift is shown as the primary language unless the Kotlin pattern meaningfully differs.
-
-**Swift (iOS):**
-
-```swift
-import ExpoModulesCore
-
-public class MyModule: Module {
-  public func definition() -> ModuleDefinition {
-    Name("MyModule")
-
-    Function("hello") { (name: String) -> String in
-      return "Hello \(name)!"
-    }
-  }
-}
-```
-
-**Kotlin (Android):**
-
-```kotlin
-package expo.modules.mymodule
-
-import expo.modules.kotlin.modules.Module
-import expo.modules.kotlin.modules.ModuleDefinition
-
-class MyModule : Module() {
-  override fun definition() = ModuleDefinition {
-    Name("MyModule")
-
-    Function("hello") { name: String ->
-      "Hello $name!"
-    }
-  }
-}
-```
-
-**TypeScript:**
-
-```typescript
-import { requireNativeModule } from "expo";
-
-const MyModule = requireNativeModule("MyModule");
-
-export function hello(name: string): string {
-  return MyModule.hello(name);
-}
-```
-
-### expo-module.config.json
-
-```json
-{
-  "platforms": ["android", "apple"],
-  "apple": {
-    "modules": ["MyModule"]
-  },
-  "android": {
-    "modules": ["expo.modules.mymodule.MyModule"]
-  }
-}
-```
-
-Note: iOS uses just the class name; Android uses the fully-qualified class name (package + class). See `references/module-config.md` for all fields.
+Build the affected native platforms in the host/example app; JavaScript reload
+alone cannot add native code to an existing binary. Check module resolution, the
+real method/view, and its relevant error/event/cleanup path. For config changes,
+inspect generated configuration and ensure repeated generation preserves the result.
+Report unavailable platform builds or device-only behavior explicitly.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:

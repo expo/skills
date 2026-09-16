@@ -266,12 +266,18 @@ import { NativeTabs } from "expo-router/unstable-native-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 <NativeTabs.Trigger name="home">
-  <NativeTabs.Trigger.VectorIcon vector={Ionicons} name="home" />
+  <NativeTabs.Trigger.Icon
+    src={<NativeTabs.Trigger.VectorIcon family={Ionicons} name="home" />}
+  />
   <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
 </NativeTabs.Trigger>
 ```
 
 **Prefer SF Symbols + `md` prop over vector icons for native feel.**
+
+`VectorIcon` provides the `Icon` source; it is not a standalone Trigger icon.
+See the [SDK 55 NativeTabs API](https://docs.expo.dev/versions/v55.0.0/sdk/router/native-tabs/#nativetabstriggervectoricon)
+and use the installed SDK's contract when adapting this example.
 
 If you are using SDK 55 and later **use the md prop to specify Material Symbols used on Android**.
 

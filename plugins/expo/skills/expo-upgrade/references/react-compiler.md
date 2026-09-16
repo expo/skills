@@ -1,10 +1,18 @@
-# React Compiler
+# React Compiler adoption
 
-React Compiler is stable in Expo SDK 54 and later. It automatically memoizes components and hooks, eliminating the need for manual `useMemo`, `useCallback`, and `React.memo`.
+Use this when compiler adoption is requested or when debugging a project that
+already enables it. An SDK upgrade does not require adopting the compiler or
+removing existing memoization.
 
-## Enabling React Compiler
+Follow the [Expo React Compiler guide](https://docs.expo.dev/guides/react-compiler/)
+for the installed SDK. For the SDK 54+ opt-in setup, install the compiler package
+as well as enabling the app-config flag:
 
-Add to `app.json`:
+```bash
+npx expo install babel-plugin-react-compiler --dev
+```
+
+Merge into the existing app config:
 
 ```json
 {
@@ -16,44 +24,19 @@ Add to `app.json`:
 }
 ```
 
-## What React Compiler Does
+Keep the project's existing Babel customizations and use the SDK's supported
+`babel-preset-expo` integration. Older SDKs can require different setup. The
+compiler is a build-time React transform, not a reason by itself to change the
+app's native architecture.
 
-- Automatically memoizes components and values
-- Eliminates unnecessary re-renders
-- Removes the need for manual `useMemo` and `useCallback`
-- Works with existing code without modifications
+Existing `useMemo`, `useCallback`, and `React.memo` can remain. The compiler only
+optimizes code it can safely transform; enabling it does not guarantee every
+component is optimized or eliminate every re-render. Use the
+[React incremental-adoption guidance](https://react.dev/learn/react-compiler/incremental-adoption)
+for exclusions and targeted migration rather than blanket cleanup.
 
-## Cleanup After Enabling
-
-Once React Compiler is enabled, you can remove manual memoization:
-
-```tsx
-// Before (manual memoization)
-const memoizedValue = useMemo(() => computeExpensive(a, b), [a, b]);
-const memoizedCallback = useCallback(() => doSomething(a), [a]);
-const MemoizedComponent = React.memo(MyComponent);
-
-// After (React Compiler handles it)
-const value = computeExpensive(a, b);
-const callback = () => doSomething(a);
-// Just use MyComponent directly
-```
-
-## Requirements
-
-- Expo SDK 54 or later
-- New Architecture enabled (default in SDK 54+)
-
-## Verifying It's Working
-
-React Compiler runs at build time. Check the Metro bundler output for compilation messages. You can also use React DevTools to verify components are being optimized.
-
-## Troubleshooting
-
-If you encounter issues:
-
-1. Ensure New Architecture is enabled
-2. Clear Metro cache: `npx expo start --clear`
-3. Check for incompatible patterns in your code (rare)
-
-React Compiler is designed to work with idiomatic React code. If it can't safely optimize a component, it skips that component without breaking your app.
+Restart Metro after configuration changes. Check compilation with the guide's
+React DevTools verification, then exercise the affected interactions. For a
+regression, isolate the component or configuration and use supported compiler
+diagnostics/opt-outs; changing native architecture or deleting all caches is not
+the default troubleshooting step.

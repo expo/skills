@@ -1,145 +1,63 @@
 ---
 name: expo-upgrade
-description: Framework (OSS). Guidelines for upgrading Expo SDK versions and fixing dependency issues
-version: 1.0.0
+description: "Framework (OSS). Upgrade an Expo SDK or resolve SDK dependency incompatibilities, including release-specific migrations and generated versus maintained native projects."
+version: 1.0.1
 license: MIT
 ---
 
-## References
+# Upgrade an Expo SDK
 
-- ./references/react-19.md -- SDK +54: React 19 changes (useContext → use, Context.Provider → Context, forwardRef removal)
-- ./references/new-architecture.md -- SDK +53: New Architecture migration guide
-- ./references/react-compiler.md -- SDK +54: React Compiler setup and migration guide
-- ./references/native-tabs.md -- SDK +55: Native tabs changes (Icon/Label/Badge now accessed via NativeTabs.Trigger.\*)
-- ./references/expo-av-to-audio.md -- SDK +55: Migrate audio playback and recording from expo-av to expo-audio
-- ./references/expo-av-to-video.md -- SDK +55: Migrate video playback from expo-av to expo-video
-- ./references/react-navigation-to-expo-router.md -- SDK +56: Migrate `@react-navigation/*` imports to `expo-router` entry points (codemod + manual mapping)
+Establish the current SDK, the requested target, package manager, and native project
+ownership. Follow the [upgrade guide](https://docs.expo.dev/workflow/upgrading-expo-sdk-walkthrough/)
+and the target SDK's [release notes](https://expo.dev/changelog). Use stable releases
+unless a preview is requested or needed for the agreed task; `latest` is not a
+substitute for an explicit target.
 
-## Beta/Preview Releases
+## Apply the upgrade
 
-Beta versions use `.preview` suffix (e.g., `55.0.0-preview.2`), published under `@next` tag.
+1. Inspect dependency versions, config plugins, patches, and install exclusions that affect the target SDK. Identify CNG-generated native folders versus manually maintained native projects; folder presence alone does not distinguish them.
+2. Install the selected `expo` version using the existing package manager, then align compatible dependencies with `npx expo install --fix` and run `npx expo-doctor`. Preserve required peers, including `expo-constants` when required by Expo Router.
+3. Apply the release notes' relevant source and config migrations. Resolve breaking changes in the APIs the app actually uses; do not combine the upgrade with unrelated styling, storage, or architecture migrations.
+4. Update native projects by their ownership model. Regenerate disposable CNG output when needed; apply native upgrade changes and pods to manually maintained projects. Do not run `prebuild --clean` over hand-maintained native work.
+5. Run the project's affected checks and build/run the target platforms. Rebuild a development client after native changes; Expo Go success alone does not verify autolinking in a custom build.
 
-Check if latest is beta: https://exp.host/--/api/v2/versions (look for `-preview` in `expoVersion`)
+Incremental SDK upgrades usually make breakages easier to isolate. Check current
+release notes for exceptions and known-bad versions before selecting intermediate
+releases. A previously documented Hermes V1 memory regression affected SDK 55 with
+V1 enabled, SDK 56, and SDK 57 before `expo@57.0.9` when importing Worklets/Reanimated.
+Treat that range as a specific compatibility warning, not a permanent instruction
+to jump every project to SDK 57. Verify the current fix/release guidance when this
+case applies. Do not propose experimental Worklets Bundle Mode or a Hermes-version
+override as a routine production workaround.
 
-```bash
-npx expo install expo@next --fix  # install beta
-```
+## Conditional migrations
 
-## Step-by-Step Upgrade Process
+Load only the references relevant to installed APIs and the target release:
 
-> If upgrading from SDK 55 or earlier, skip SDK 56 and upgrade directly to SDK 57. Don't use `expo@57.0.8` or below. SDK 55 with Hermes V1 enabled, SDK 56, and older SDK 57 releases contain a Hermes V1 memory regression that can drastically increase memory usage when using `react-native-worklets` or `react-native-reanimated`.
+- [React 19](./references/react-19.md): compatibility and optional syntax changes; existing `useContext`, providers, and `forwardRef` are not automatically broken.
+- [New Architecture](./references/new-architecture.md): native dependency readiness and release-specific constraints.
+- [React Compiler](./references/react-compiler.md): when compiler adoption is part of the task; it is not a prerequisite for every SDK upgrade.
+- [Native tabs](./references/native-tabs.md): Router's changing component API.
+- [expo-av audio](./references/expo-av-to-audio.md) or [video](./references/expo-av-to-video.md): when replacing those removed/deprecated APIs.
+- [React Navigation imports](./references/react-navigation-to-expo-router.md): SDK 56+ Router entry-point migration.
 
-1. Upgrade Expo and dependencies
+A maintained community package is not deprecated just because Expo offers another
+option. Do not replace AsyncStorage, vector icons, or LinearGradient solely to
+follow a preference table. Check each package's support for the selected SDK.
 
-```bash
-npx expo install expo@latest
-npx expo install --fix
-```
+Remove patches, exclusions, or Babel/Metro options only after establishing that
+the target no longer needs them and the project has no custom behavior relying on
+them. Clear only relevant caches when diagnosing a stale-cache failure; avoid
+blanket dependency deletion and global Watchman resets as routine upgrade steps.
+Update versioned documentation pointers only where they describe the upgraded app,
+not historical fixtures or compatibility examples.
 
-2. Run diagnostics: `npx expo-doctor`
+## Completion
 
-3. Clear caches and reinstall
-
-```bash
-npx expo export -p ios --clear
-rm -rf node_modules .expo
-watchman watch-del-all
-```
-
-## Breaking Changes Checklist
-
-- Check for removed APIs in release notes
-- Update import paths for moved modules
-- Review native module changes requiring prebuild
-- Test all camera, audio, and video features
-- Verify navigation still works correctly
-
-## Prebuild for Native Changes
-
-**First check if `ios/` and `android/` directories exist in the project.** If neither directory exists, the project uses Continuous Native Generation (CNG) and native projects are regenerated at build time — skip this section and "Clear caches for bare workflow" entirely.
-
-If upgrading requires native changes:
-
-```bash
-npx expo prebuild --clean
-```
-
-This regenerates the `ios` and `android` directories. Ensure the project is not a bare workflow app before running this command.
-
-## Clear caches for bare workflow
-
-These steps only apply when `ios/` and/or `android/` directories exist in the project:
-
-- Clear the cocoapods cache for iOS: `cd ios && pod install --repo-update`
-- Clear derived data for Xcode: `npx expo run:ios --no-build-cache`
-- Clear the Gradle cache for Android: `cd android && ./gradlew clean`
-
-## Housekeeping
-
-- Review release notes for the target SDK version at https://expo.dev/changelog
-- Update versioned docs links in agent instruction files (`AGENTS.md`). The default template links to `https://docs.expo.dev/versions/v<version>/`. Search for `docs.expo.dev/versions/` and bump each link to the new SDK version.
-- If using Expo SDK 54 or later, ensure react-native-worklets is installed — this is required for react-native-reanimated to work.
-- Enable React Compiler in SDK 54+ by adding `"experiments": { "reactCompiler": true }` to app.json — it's stable and recommended
-- Delete sdkVersion from `app.json` to let Expo manage it automatically
-- Review formerly implicit packages such as `@babel/core`, `babel-preset-expo`, and `expo-constants` individually instead of removing them wholesale. Keep any package that an installed dependency declares as a required peer.
-- Keep `expo-constants` as a direct dependency whenever `expo-router` is installed. Expo Router imports it and declares it as a required peer; relying on a transitive copy can break native autolinking outside Expo Go.
-- After removing any dependency, immediately run `npx expo-doctor` and restore anything it reports as a missing required peer.
-- If the babel.config.js only contains 'babel-preset-expo', delete the file
-- If the metro.config.js only contains expo defaults, delete the file
-
-## Deprecated Packages
-
-| Old Package          | Replacement                                          |
-| -------------------- | ---------------------------------------------------- |
-| `expo-av`            | `expo-audio` and `expo-video`                        |
-| `expo-permissions`   | Individual package permission APIs                   |
-| `@expo/vector-icons` | `expo-symbols` (for SF Symbols)                      |
-| `AsyncStorage`       | `expo-sqlite/localStorage/install`                   |
-| `expo-app-loading`   | `expo-splash-screen`                                 |
-| expo-linear-gradient | experimental_backgroundImage + CSS gradients in View |
-
-When migrating deprecated packages, update all code usage before removing the old package. For expo-av, consult the migration references to convert Audio.Sound to useAudioPlayer, Audio.Recording to useAudioRecorder, and Video components to VideoView with useVideoPlayer.
-
-## expo.install.exclude
-
-Check if package.json has excluded packages:
-
-```json
-{
-  "expo": { "install": { "exclude": ["react-native-reanimated"] } }
-}
-```
-
-Exclusions are often workarounds that may no longer be needed after upgrading. Review each one.
-
-## Removing patches
-
-Check if there are any outdated patches in the `patches/` directory. Remove them if they are no longer needed.
-
-## Postcss
-
-- `autoprefixer` isn't needed in SDK +53. Remove it from dependencies and check `postcss.config.js` or `postcss.config.mjs` to remove it from the plugins list.
-- Use `postcss.config.mjs` in SDK +53.
-
-## Metro
-
-Remove redundant metro config options:
-
-- resolver.unstable_enablePackageExports is enabled by default in SDK +53.
-- `experimentalImportSupport` is enabled by default in SDK +54.
-- `EXPO_USE_FAST_RESOLVER=1` is removed in SDK +54.
-- cjs and mjs extensions are supported by default in SDK +50.
-- Expo webpack is deprecated, migrate to [Expo Router and Metro web](https://docs.expo.dev/router/migrate/from-expo-webpack/).
-
-## Hermes engine v1
-
-Hermes V1 is the default on SDK 56 and later. SDK 55 apps using Hermes V1, all SDK 56 apps, and SDK 57 apps before `expo@57.0.9` may encounter a memory regression when importing `react-native-worklets` or `react-native-reanimated`. Upgrade directly to SDK 57 and `expo@57.0.9` or later. Do not recommend Worklets Bundle Mode as a production workaround; it is unsupported and experimental and may not work as expected.
-
-Do not guide users to opt in to or out of Hermes V1. Changing the Hermes version from the SDK default is unsupported and has significant build and dependency-management caveats.
-
-## New Architecture
-
-The new architecture is enabled by default, the app.json field `"newArchEnabled": true` is no longer needed as it's the default. Expo Go only supports the new architecture as of SDK +53.
+Report the source/target versions, meaningful migrations, validation performed,
+and remaining native/device checks. Keep upgrading and fixing failures within the
+requested scope; an installed package and passing doctor check alone do not prove
+the application works.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:

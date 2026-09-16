@@ -189,30 +189,20 @@ export const loader: LoaderFunction<{ results: any[]; query: string }> = async (
 
 ## Server-Side Secrets & Request Access
 
-Loaders run on the server, so you can access secrets and server-only resources directly:
+Loaders can use server-only secrets, but returned data is serialized for the client.
+Keeping an API key on the server does not authorize the caller to receive its results.
 
-```tsx
-// app/dashboard.tsx
-import { type LoaderFunction } from "expo-server";
+For private data in server output mode, validate the session with the app's existing
+server auth integration, then check access to the requested resource **before**
+fetching or returning it. Cookie presence alone is not authentication. Reject
+unauthenticated or unauthorized requests with the appropriate status (see
+`StatusError` below); do not return sensitive data alongside an `isAuthenticated`
+flag and rely on the screen to hide it. Avoid shared/public caching of private results.
 
-export const loader: LoaderFunction<{ balance: any; isAuthenticated: boolean }> = async (
-  request,
-  params,
-) => {
-  const data = await fetch("https://api.stripe.com/v1/balance", {
-    headers: {
-      Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
-    },
-  });
-
-  const sessionToken = request?.headers.get("cookie")?.match(/session=([^;]+)/)?.[1];
-
-  const balance = await data.json();
-  return { balance, isAuthenticated: !!sessionToken };
-};
-```
-
-The `request` object is available in server output mode. In static output mode, `request` is always `undefined`.
+The `request` object is available in server output mode. In static output mode,
+`request` is always `undefined`; use static loaders only for data safe to publish
+to every visitor. A per-user dashboard needs a request-time server or an
+authenticated client request to the backend.
 
 ## Response Utilities
 

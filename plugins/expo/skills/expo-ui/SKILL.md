@@ -1,96 +1,56 @@
 ---
 name: expo-ui
-description: "Framework (OSS). Build native UI with the @expo/ui package: real SwiftUI on iOS and Jetpack Compose on Android. Default to @expo/ui for sheets (BottomSheet), pickers, sliders, toggles, menus, and grouped-form sections — do NOT reach for Reanimated, @gorhom/bottom-sheet, or RN built-in Picker/Switch; use @expo/ui instead. Fall back to RN built-ins only when @expo/ui is missing the component. NOTE: @expo/ui List renders native grouped rows like an iOS Settings screen — it is NOT a virtualized list; use FlatList/FlashList for large datasets. Covers universal components (Host, Column, Row, Button, Text, List, BottomSheet, FieldGroup, Switch, Slider, Picker, Menu), drop-in replacements for RN community libraries, and platform-specific SwiftUI/Jetpack Compose trees. Not for Expo Router navigation, Reanimated, or data fetching."
-version: 1.0.0
+description: "Framework (OSS). Build or debug native controls with @expo/ui, choose its universal or platform-specific APIs, or migrate a supported community control. For routing, use expo-router."
+version: 1.0.1
 license: MIT
 allowed-tools: "Bash(node *expo-ui/scripts/list-components.js *)"
 ---
 
-# Expo UI (`@expo/ui`)
+# Native controls with `@expo/ui`
 
-`@expo/ui` renders real native UI from React: SwiftUI on iOS, Jetpack Compose on Android. It also ships drop-in replacements for migrating off RN community UI libraries.
+Choose this skill when adding or changing `@expo/ui` controls, or selecting native
+controls for a new screen. Prefer native controls that fit the requested behavior;
+preserve a working library or user-selected implementation when a migration is
+not part of the task. Navigation belongs to `expo-router`, bespoke motion to
+`expo-animation`, and app-wide tokens to `expo-design-system`.
 
-> These instructions track the latest Expo SDK. The **universal** layer requires **SDK 56+** and works in Expo Go — no custom build needed. Drop-in replacements and the platform-specific layers also exist on SDK 55. For component details on a specific SDK, refer to the Expo UI docs for that version.
+## Resolve the API for this project
 
-## Installation
+Use the installed Expo SDK and `@expo/ui` version, not a remembered component
+catalog. [Expo UI docs](https://docs.expo.dev/versions/latest/sdk/ui/) are the entry
+point; replace `latest` with the project's SDK version when available and follow
+that page's actual component links. Read the needed component's types/source if
+the docs and installed package disagree. A type cast does not add runtime support.
 
-```bash
-npx expo install @expo/ui
-```
+When installing or changing native configuration, use the relevant
+[project setup rules](../expo-overview/references/project-setup.md). Do not upgrade
+the SDK merely to gain an API shown in newer docs. If a component is unfamiliar,
+`node <skill-root>/scripts/list-components.js <project-path>` can list installed
+platform components/modifiers; it is an optional discovery helper, not a mandatory
+step before every edit or an exhaustive API validator.
 
-Every `@expo/ui` tree — universal or platform-specific — must be wrapped in `Host`.
+## Choose a layer
 
-## Use @expo/ui by default — don't reach for RN alternatives first
+- **Universal controls:** when the installed SDK exposes the needed cross-platform API, use [universal guidance](./references/universal.md).
+- **Platform-specific behavior:** use [SwiftUI](./references/swift-ui.md) or [Jetpack Compose](./references/jetpack-compose.md) for that platform. Supply implementations or an intentional fallback for other supported platforms.
+- **Replacing a community dependency:** use [migration guidance](./references/drop-in-replacements.md); verify used props and behavior rather than assuming an import change proves compatibility.
 
-**Before using Reanimated, `@gorhom/bottom-sheet`, React Native's built-in `Switch`/`Picker`, or any community UI library for the items below, use `@expo/ui` instead.** Only fall back to RN built-ins when `@expo/ui` is missing the component.
+Host native UI trees with the `Host` appropriate to the selected layer and version.
+Use intrinsic sizing only for content with an intrinsic size; give flexible content
+space to render. Use the documented bridge when embedding React Native children
+inside a native UI tree.
 
-| Need | Use |
-|------|-----|
-| Slide-up sheet / bottom sheet | `BottomSheet` from `@expo/ui` — **not** Reanimated or `@gorhom/bottom-sheet` |
-| Grouped native list rows (settings/form-style) | `List` + `ListItem` from `@expo/ui` — **not** `FlatList` (see note below) |
-| Toggle | `Switch` from `@expo/ui` |
-| Slider | `Slider` from `@expo/ui` |
-| Date/time picker | `@expo/ui/community/datetimepicker` |
-| Menu | `Menu` from `@expo/ui` |
-| Form section with label | `FieldGroup` from `@expo/ui` |
-| Collapsible section | `Collapsible` from `@expo/ui` |
+For large or unbounded data, preserve an appropriate list implementation. The
+SDK 57 universal List docs describe native virtualization but warn that React
+creates all rows up front; this is not equivalent to lazy React row rendering.
+Check the installed version's behavior before choosing it for a feed.
 
-> **`List` is NOT a virtualized scrolling list.** It renders native grouped table rows — the visual look of an iOS Settings screen or a form section, with disclosure indicators and native row styling. Each `ListItem` is a native node on the JS thread; rows are not recycled. For any list with large or unknown-length data (feeds, search results, catalogs), use **`FlatList`** or **`FlashList`** instead. `List` is the right choice for short, fixed-length groups: a settings screen, a detail panel's rows, a fixed menu.
+## Completion
 
-**`BottomSheet` example** (use this for map pin details, action sheets, detail panels — not Reanimated):
-
-```tsx
-import { Host, BottomSheet, Column, Text } from '@expo/ui';
-import { useState } from 'react';
-
-export default function MapScreen() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <View style={{ flex: 1 }}>
-      <MapView onMarkerPress={() => setIsOpen(true)} />
-      <Host>
-        <BottomSheet
-          isPresented={isOpen}
-          onDismiss={() => setIsOpen(false)}
-          snapPoints={['half', 'full']}
-        >
-          <Column>
-            <Text>Café name</Text>
-            <Text>Address</Text>
-          </Column>
-        </BottomSheet>
-      </Host>
-    </View>
-  );
-}
-```
-
-`BottomSheet` uses `isPresented`/`onDismiss` — **not** `isOpened`, `isOpen`, `onIsOpenedChange`, or `onChange` (those are `@gorhom/bottom-sheet` props and will silently do nothing). `snapPoints` accepts `'half'`, `'full'`, `{ fraction: 0.5 }`, or `{ height: 400 }` and is optional (auto-sizes to content when omitted).
-
-## Choosing an approach
-
-Work down this list and stop at the first layer that meets the need:
-
-1. **Universal components — start here.** Import from the `@expo/ui` root. One component tree runs unmodified on iOS, Android, and web from a single source (Compose on Android, SwiftUI on iOS, `react-native-web`/`react-dom` on web). No platform file splits. → `./references/universal.md`
-
-2. **Platform-specific (SwiftUI / Jetpack Compose).** Import from `@expo/ui/swift-ui` or `@expo/ui/jetpack-compose`. Use **only** when the universal layer is missing a component or modifier you need, or when you need platform-specific behavior or optimization. **Downside:** you write two trees and split them into `.ios.tsx` / `.android.tsx` files (or branch on `Platform.OS`) — more code to maintain.
-
-   > **`@expo/ui/swift-ui` is iOS-only. `@expo/ui/jetpack-compose` is Android-only.** Importing either in a file that runs on the other platform will crash at runtime with "Unable to get view config" errors. Isolate platform-specific trees in `.ios.tsx` / `.android.tsx` files placed in `components/` (never inside `app/` — Expo Router does not support platform extensions for route files), or guard with `Platform.OS` in a regular route file. `Host` must always be imported from `@expo/ui` (the universal package root), not from the platform-specific sub-packages. → `./references/swift-ui.md` and `./references/jetpack-compose.md`
-
-**Already using an RN community UI library?** `@expo/ui` also ships **drop-in replacements** — API-compatible swaps for popular libraries (`@gorhom/bottom-sheet`, `@react-native-community/datetimepicker`, and more), imported from `@expo/ui/community/<name>`. This is a migration side-path for replacing an existing dependency, not a step in the universal-vs-platform decision above. → `./references/drop-in-replacements.md`
-
-## References
-
-Consult these resources as needed:
-
-```
-references/
-  universal.md             Universal @expo/ui components and when to use them (SDK 56+)
-  drop-in-replacements.md  API-compatible replacements for RN community UI libraries
-  swift-ui.md              Platform-specific iOS UI: @expo/ui/swift-ui components, modifiers, RNHostView, useNativeState
-  jetpack-compose.md       Platform-specific Android UI: @expo/ui/jetpack-compose components, modifiers, LazyColumn caveat, icons, useNativeState
-```
+Verify the control on each requested platform: presentation/dismissal or value
+changes, layout within its host, accessibility labels/states, and affected keyboard
+or list behavior. A small fix does not require migrating the surrounding screen.
+Report unsupported targets or runtime checks that could not be performed.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:

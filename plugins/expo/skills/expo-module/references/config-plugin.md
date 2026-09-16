@@ -1,90 +1,19 @@
-# Config Plugins Reference
+# Repeatable native configuration
 
-Config plugins customize native Android and iOS projects generated with `npx expo prebuild`. They are synchronous functions that accept an `ExpoConfig` and return a modified version.
+Use [config plugin development](https://docs.expo.dev/config-plugins/development-and-debugging/)
+for the plugin/mod lifecycle and [the config-plugin tutorial](https://docs.expo.dev/modules/config-plugin-and-native-module-tutorial/)
+for a complete implementation. Follow the package's generated build scripts and
+`app.plugin.js` entry point; do not assume a generic build command exists.
 
-## Plugin Structure
+## Integration rules
 
-```
-my-module/
-  plugin/
-    tsconfig.json
-    src/
-      index.ts
-  app.plugin.js         # Entry: module.exports = require('./plugin/build');
-```
+- Use structured mods for Info.plist, AndroidManifest, and other supported files. Preserve existing entries and compose with other plugins; repeated prebuild must not duplicate values.
+- Keep plugin configuration separate from native mod execution. Follow the current API's sync/async contract rather than making every stage async or assuming all native work runs when app config is read.
+- Treat values embedded in Info.plist, AndroidManifest, app config, or a JavaScript bundle as inspectable by app users. These locations can carry public SDK identifiers, not server secrets.
+- Validate required options and target-platform assumptions. Do not enable a permission/capability merely because a tutorial demonstrates it.
+- In CNG apps, make changes in the plugin/config inputs that survive regeneration. In a manually maintained native host, preserve ownership and integrate the necessary native changes explicitly.
 
-## Writing a Plugin
-
-Plugin functions follow the `with` prefix naming convention.
-
-```typescript
-import {
-  ConfigPlugin,
-  withInfoPlist,
-  withAndroidManifest,
-  AndroidConfig,
-} from "expo/config-plugins";
-
-const withMyConfig: ConfigPlugin<{ apiKey: string }> = (config, { apiKey }) => {
-  // iOS: modify Info.plist
-  config = withInfoPlist(config, (config) => {
-    config.modResults["MY_API_KEY"] = apiKey;
-    return config;
-  });
-
-  // Android: modify AndroidManifest.xml
-  config = withAndroidManifest(config, (config) => {
-    const mainApp =
-      AndroidConfig.Manifest.getMainApplicationOrThrow(config.modResults);
-    AndroidConfig.Manifest.addMetaDataItemToMainApplication(
-      mainApp,
-      "MY_API_KEY",
-      apiKey
-    );
-    return config;
-  });
-
-  return config;
-};
-
-export default withMyConfig;
-```
-
-## Using in app.json
-
-```json
-{
-  "expo": {
-    "plugins": [["my-module", { "apiKey": "secret_key" }]]
-  }
-}
-```
-
-## Reading Config Values in Native Code
-
-**Swift:**
-
-```swift
-Function("getApiKey") {
-  return Bundle.main.object(forInfoDictionaryKey: "MY_API_KEY") as? String
-}
-```
-
-**Kotlin:**
-
-```kotlin
-Function("getApiKey") {
-  val appInfo = appContext?.reactContext?.packageManager?.getApplicationInfo(
-    appContext?.reactContext?.packageName.toString(),
-    PackageManager.GET_META_DATA
-  )
-  return@Function appInfo?.metaData?.getString("MY_API_KEY")
-}
-```
-
-## Key Rules
-
-- Plugins must be synchronous; return values must be serializable (except `mods`)
-- `Mods` are async functions invoked during the prebuild "syncing" phase
-- Use `npm run build plugin` to compile TypeScript plugins
-- Test with `npx expo prebuild --clean`
+Inspect the generated values and run generation twice in a disposable fixture or
+known-regenerable native project to check idempotence. Do not use `prebuild --clean`
+as a generic test against hand-maintained native directories. Native behavior still
+requires a matching build and relevant runtime check.

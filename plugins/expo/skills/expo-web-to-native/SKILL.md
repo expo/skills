@@ -1,36 +1,41 @@
 ---
 name: expo-web-to-native
-description: Framework (OSS). Migrate an existing web React app to a native iOS/Android app with Expo. Use when the user wants to turn a website into a mobile app, port a Next.js/Vite/CRA React codebase to React Native, reuse web code on native incrementally, or asks how web idioms (the DOM, CSS, React Router, localStorage, window) map to native. This is the end-to-end migration guide; use the `expo-dom` skill for the DOM-component mechanism itself.
-version: 1.0.0
+description: "Framework (OSS). Migrate an existing web React app to native iOS or Android with Expo, screen by screen. Use for porting a Next.js, Vite, or CRA app; use expo-dom for embedding an individual web component."
+version: 1.0.1
 license: MIT
 ---
 
 # Web to Native
 
-A web React app does not *convert* to native — there is no transpiler. It **migrates**, screen by screen, the way a strangler fig grows around a tree and slowly replaces it: stand up a native shell, run the whole web UI inside it on day one, then strangle each screen into native in priority order. This skill is the spine that orders the work; each step hands off to an existing Expo skill rather than re-explaining it. It operationalizes Expo's [From Web to Native with React](https://expo.dev/blog/from-web-to-native-with-react) — read that for the why.
-
-```mermaid
-flowchart TD
-    A1[1 · Assess: write the worklist] --> A2[2 · Scaffold Expo shell]
-    A2 --> A3[3 · DOM-component shell<br/>· expo-dom · SHIP DAY ONE]
-    A3 --> A4[4 · Strangle screens to native<br/>highest-value first · expo-router]
-    A4 -->|more screens| A4
-    A4 --> A5[5 · Wire data / auth / storage<br/>· expo-data-fetching]
-    A5 --> A6[6 · Ship · eas-app-stores]
-```
+Migrate web React screens incrementally into an Expo app, preserving their content
+and behavior while adapting native navigation and interactions. Reuse an existing
+Expo shell; DOM components can bridge web screens during a larger migration.
+This guide draws on Expo's [From Web to Native with React](https://expo.dev/blog/from-web-to-native-with-react).
 
 ## Principles
 
-- **Migrate, don't rewrite.** Never big-bang it; every step keeps the app shippable.
-- **Ship on day one.** The web UI runs in a DOM-component shell (step 3) before anything is nativized — that's the milestone; everything after is polish.
-- **Strangle by value.** Nativize the hot screens; leave the rest in the webview. Each DOM screen carries a ~2 MB web runtime — reason enough not to ship everything as DOM.
-- **Nativize means redesign, not reskin.** A strangled screen should look like Apple/Google shipped it, not the web page reskinned. **Reach for `@expo/ui` first** - it renders real SwiftUI/Compose, so it feels *exactly* like the OS; styled RN primitives are the fallback for custom layouts only. Plus platform navigation (`expo-router`: NativeTabs, large titles), liquid glass and native components via `@expo/ui`, and mobile UX (sheets, swipe, haptics). The web→native pattern map is [`./references/native-patterns.md`](./references/native-patterns.md). If it still feels like a website, you ported instead of redesigned.
-- **Verify by running, not compiling.** A clean build proves nothing (a blank webview compiles fine). Run each screen — but judge *content and behavior* against the web original, not pixels (a nativized screen should look more native, not identical).
-- **Orchestrate, don't reinvent.** Each step routes into an existing skill. The value here is the *order* and the *gotchas* — the idiom-by-idiom mappings live in [`./references/false-friends.md`](./references/false-friends.md).
+- **Migrate incrementally.** Keep working routes usable while migrating the selected scope.
+- **Use a DOM shell when it helps.** It can make a large migration runnable early. A small native rewrite or an existing shell can go directly to the selected screens; follow the user's chosen approach.
+- **Prioritize by value.** Nativize the selected high-value screens first; record retained web or hybrid screens explicitly in the worklist.
+- **Adapt interactions deliberately.** Preserve content and brand while choosing navigation, controls, layout, and touch behavior suited to the target platforms. Use the [native pattern guide](./references/native-patterns.md) for those decisions; a migration does not require making every screen resemble an OS app.
+- **Verify runtime behavior.** Run the affected screens and compare their content and behavior with the web original. A clean bundle alone does not establish that a screen works.
+- **Load guidance as needed.** Use the relevant Expo skill for each part of the work; consult [`./references/false-friends.md`](./references/false-friends.md) for web-to-native idiom mappings.
 
-## Run it as a loop (recommended)
+## Scope and completion
 
-The migration is a long repeat-until-done loop, so the first move is to **write the goal objective and launch it** — not to grind screens by hand. Fill the objective in [`./references/run-as-goal.md`](./references/run-as-goal.md) for this app and present it; it **re-reads this skill every iteration**, so each `/goal` turn reloads the playbook + worklist and drives the next screen (it even self-bootstraps the assess step). Then run `/goal` with it — or, if the harness can't loop, write it to `migration-goal.md` and have the user launch it. The steps below are what each iteration does; run them by hand only if you're not looping.
+Use the requested scope: a whole app, a subset of routes, or a migration plan.
+For implementation, keep `migration-progress.md` with the selected routes,
+prerequisites, and verification status. Continue through setup, implementation,
+and verification for those routes. A planning request ends with the plan.
+
+A goal loop is optional, only when requested and supported by the harness; see
+[run as a goal](./references/run-as-goal.md). Otherwise work directly from the
+worklist. Reuse context already read, loading references for the current step or
+when recovering missing context. Do not require the user to launch a loop to
+continue authorized work.
+
+Before scaffolding or installing dependencies, consult the relevant
+[project setup rules](../expo-overview/references/project-setup.md).
 
 ## The migration
 
@@ -38,48 +43,59 @@ The migration is a long repeat-until-done loop, so the first move is to **write 
 
 ### 1. Assess → write the worklist
 
-Read the repo and produce `migration-progress.md`, the durable worklist the rest of the migration checks off. Make two cuts:
+Inspect the relevant routes and record their migration work in `migration-progress.md`. Reuse an existing worklist. Make two cuts:
 
 - **Screens vs backend.** Page routes (`page.tsx`) are screens you migrate; server routes (`route.ts`), the ORM, and auth handlers stay server-side. Decide the backend once: keep it deployed (the native app becomes an HTTP client) or move it to EAS Hosting (`eas-hosting`).
 - **Bucket each screen** by how it should land: **port-as-is** (presentational → ships in a DOM webview), **nativize-now** (hot, or needs native feel — gestures, lists, keyboard), **nativize-later**, or **hybrid** (a native shell around a web sub-tree, e.g. a chat list wrapping a markdown renderer).
 
-Note the framework signals as you read — RSC vs client, Tailwind/shadcn, where data is fetched — since they decide how each screen ports (false-friends has the mappings; async Server Components in particular must be split into a client fetch + a presentational component before they can move). **Flag third-party services/SDKs too** — browser SDKs don't carry over (`false-friends` → *Services & SDKs*); payments especially is a *fork, not a swap* (in-app digital goods must use store IAP via RevenueCat, ~30% — not Stripe), a business-model call to make now, not at App Store review. The worklist is only trustworthy once every route is sorted and every screen bucketed.
+Inspect framework boundaries: server-only rendering/data access, browser libraries, styling, and auth. Keep server work on the backend and expose the data needed by native screens. Check third-party native integrations, especially purchase flows whose requirements depend on store rules and product/region. See the relevant rows in [false friends](./references/false-friends.md). Classify the requested routes and shared dependencies before implementing them.
 
 ### 2. Scaffold the shell
 
-`create-expo-app`, then mirror the web routes in Expo Router — Next's tree maps almost 1:1 (note `[id]/page.tsx` → `[id].tsx`, and routes may live in `src/app/`). Empty screens, one per route.
+If a native shell is needed, use `npx create-expo-app@latest`, then map the selected web routes in Expo Router — Next's tree maps almost 1:1 (note `[id]/page.tsx` → `[id].tsx`, and routes may live in `src/app/`). Reuse an existing Expo shell and its route layout when present.
 
-### 3. Shell it in DOM components — the day-one milestone
+### 3. Add DOM components where selected
 
-Bring every screen over as a DOM component (`'use dom'`, per the `expo-dom` skill) rendered by its native route, so the whole app runs on a phone before anything is nativized. Expect per-screen edits - unwrapping Server Components, swapping framework imports (`next/link`), carrying the styling over - all covered in false-friends. Then verify by running (below); this is shippable to TestFlight as-is.
+For routes assigned to the DOM-shell approach, bring each screen over as a DOM component (`'use dom'`, per the `expo-dom` skill) rendered by its native route, so those screens can run on a phone while migration continues. Expect per-screen edits - unwrapping Server Components, swapping framework imports (`next/link`), carrying the styling over - all covered in false-friends. Then verify those routes by running them (below).
 
-### 4. Strangle screens to native — by value
+### 4. Implement selected native screens
 
-Walk `migration-progress.md` top-down. For each screen, *redesign* it native - don't port the web layout. Reach for **`@expo/ui` first** (real SwiftUI/Compose - buttons, lists, sheets, pickers, sliders; [`./references/native-patterns.md`](./references/native-patterns.md) maps which web pattern becomes which native component), then platform navigation (`expo-router` - NativeTabs, large titles) and mobile UX (swipe, haptics, momentum/inverted scroll); RN primitives only for custom layouts. Consult [`./references/false-friends.md`](./references/false-friends.md) for each idiom. `@expo/ui` and DOM components both run in **Expo Go** (SDK 56+) - a dev build (the `expo-dev-client` skill) is only needed for *custom* native modules. Verify *content and behavior* against the running web original (the look should become more native), then check it off. One screen per pass, app shippable throughout. It's a loop over a durable worklist, so it can run unattended - hand it to a goal loop ([`./references/run-as-goal.md`](./references/run-as-goal.md)).
+Work through the selected native screens using the app's existing visual system and supported components. Use `expo-ui` when selecting SwiftUI/Compose controls, `expo-router` for navigation, and [native patterns](./references/native-patterns.md) for interaction choices. Preserve working libraries and check the installed SDK's availability; a development build is needed for native dependencies/configuration absent from the current binary, not only custom modules. Verify content and behavior against the web original and record the result. Keep the app runnable while completing the selected worklist.
 
 ### 5. Wire data, auth, and storage
 
-The web data layer doesn't survive the move - relative fetches, cookie sessions, `localStorage`, and env vars all change (swaps in false-friends). Use `expo-data-fetching` for requests and caching; add `eas-hosting` if the backend moved to EAS Hosting.
+Check relative fetches, cookie sessions, `localStorage`, and environment variables for native compatibility (swaps in false-friends). Wire these dependencies as each selected screen needs them. Use `expo-data-fetching` for requests and caching; add `eas-hosting` if the backend moved to EAS Hosting.
 
-### 6. Ship
+### 6. Distribute when requested
 
-`eas-app-stores` for the store builds (App Store / Play / TestFlight), EAS Update for OTA pushes after.
+When distribution is part of the request, use `eas-app-stores` for store builds (App Store / Play / TestFlight), or `eas-update` for compatible OTA updates. Migration alone does not authorize publishing or a paid remote build.
 
 ## Verify by running, not compiling
 
-A green `expo export` proves a screen *bundles*, not that it *renders* — a screen can build and still render blank or mis-render. So after the shell and after every nativized screen, compare the two **running** apps for the same route:
+A successful export checks bundling; a screen may still render blank or behave
+incorrectly. Run the selected routes on native and compare them with the web
+original using equivalent data and navigation parameters. Check content and
+behavior, adapting the layout and interactions to native conventions. For a DOM
+shell, also check that the web UI renders correctly inside its native container.
 
-- **Web original** — capture it with **`agent-browser`** (vercel-labs CLI): `open` the route, `snapshot --json` the accessibility tree, `screenshot`.
-- **Native** — drive the simulator with **`argent`**: `describe` / `debugger-component-tree` for structure, `flow` to replay the check each pass.
+Use available browser and device tools. `agent-browser` and `argent` are examples,
+not prerequisites; equivalent browser automation, `agent-device`, `simctl`, `adb`,
+or manual on-device evidence can support the check. Screenshots support visual
+checks; exercise interactions, and use recordings when assessing motion.
+See [verification on device](./references/verify-on-device.md) for a concrete recipe.
 
-Pass on parity of **content and behavior** — not pixels: a nativized screen should look *more* native than the web, never identical (the DOM-shell stage is the exception — there it *is* the web UI, so it should match). Feel is part of native and can't be screenshotted — for screens with transitions or gestures, capture a short recording, not just a still (see `native-patterns.md` → Feel). This loop is **opinionated about its tooling**: if `agent-browser` or `argent` isn't installed, ask the user and install it before proceeding — don't fall back to manual screenshots. Full recipe and setup in [`./references/verify-on-device.md`](./references/verify-on-device.md).
+Finish when the selected routes and required data/auth/storage integration are
+implemented and verified, with failures caused by the migration fixed. If a
+backend, credential, or device prevents a check, record what is unverified and
+what would unblock it, then continue independent work. Blocked items remain
+incomplete; report them explicitly when no further independent work is possible.
 
 ## References
 
 - [`./references/false-friends.md`](./references/false-friends.md) — web idiom → native equivalent + the gotcha for each. The lookup for steps 3–5, and for any web dev unlearning idioms.
-- [`./references/native-patterns.md`](./references/native-patterns.md) — web UX *pattern* → native redesign (`@expo/ui`-first). The step-4 redesign playbook so screens feel OS-native, not reskinned.
-- [`./references/verify-on-device.md`](./references/verify-on-device.md) — the two-agent parity recipe: drive the web app (browser agent) and the native app (argent), open the same route, compare.
-- [`./references/run-as-goal.md`](./references/run-as-goal.md) — a ready-shaped, migration-specific goal objective for driving step 4 unattended (re-reads this skill each iteration).
+- [`./references/native-patterns.md`](./references/native-patterns.md) — web UX patterns and native interaction decisions for step 4.
+- [`./references/verify-on-device.md`](./references/verify-on-device.md) — a web/native parity recipe with browser and device tooling alternatives.
+- [`./references/run-as-goal.md`](./references/run-as-goal.md) — an optional goal objective for a requested, supported migration loop.
 - [Expo — From Web to Native with React](https://expo.dev/blog/from-web-to-native-with-react) — the canonical guide this skill operationalizes.
 
 ## Submitting Feedback

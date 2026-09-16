@@ -1,177 +1,52 @@
 ---
 name: expo-dev-client
-description: Framework (OSS). Build and distribute Expo development clients locally or via TestFlight for internal testing. For production TestFlight releases and store submission, use the eas-app-stores skill.
-version: 1.1.0
+description: "Framework (OSS). Create, install, or debug Expo development builds and Metro connections for native features beyond Expo Go. Use eas-app-stores for store signing and submission."
+version: 1.1.1
 license: MIT
 ---
 
-Use EAS Build to create development clients for testing native code changes on physical devices. Use this for creating custom Expo Go clients for testing branches of your app.
+# Expo development builds
 
-> **Free locally; cloud builds are paid.** `expo-dev-client` itself is open source and building locally is free. Building or distributing via EAS Build/TestFlight uses your EAS plan's build minutes and needs a paid Apple Developer account for device/TestFlight distribution. See https://expo.dev/pricing.
+> **Free locally; cloud builds can incur costs.** `expo-dev-client` is open source. EAS builds use the project's plan, and signed Apple distribution can require a paid Apple account. See [pricing](https://expo.dev/pricing).
 
-## Important: When Development Clients Are Needed
+Use a development build when the task needs native code/configuration unavailable
+in Expo Go, or when the project already uses one. Keep a working development build
+and its distribution path; do not force an Expo Go trial or a cloud rebuild for
+every JavaScript edit.
 
-**Development clients are the recommended setup for any real or production app.** Expo Go is a playground for learning and quick experiments with the native libraries it bundles; most apps outgrow it and move to a development client. See [Expo Go vs. development builds](https://docs.expo.dev/develop/development-builds/introduction/) for the full reasoning.
+## Choose the build and destination
 
-You need a dev client ONLY when using:
+Read [development builds](https://docs.expo.dev/develop/development-builds/introduction/)
+for setup and supported local/EAS paths; read [using a development build](https://docs.expo.dev/develop/development-builds/use-development-builds/)
+for launcher and rebuild behavior. For configuration/dependencies, use the relevant
+[project setup rules](../expo-overview/references/project-setup.md).
 
-- Local Expo modules (custom native code)
-- Apple targets (widgets, app clips, extensions)
-- Third-party native modules not in Expo Go
-- Config plugins, or testing remote push notifications and App/Universal Links
+- **Local iteration:** install `expo-dev-client` with `npx expo install` when needed;
+  use `npx expo run:ios` or `npx expo run:android` with the appropriate local toolchain.
+- **EAS build:** use the existing development profile, or add the minimal
+  `developmentClient: true` settings for the target. Preserve production profiles,
+  signing choices, version-number ownership, and distribution settings. Use EAS
+  only when the requested build path calls for it.
+- **Artifact target:** distinguish simulator `.app`, signed iOS device artifacts,
+  and installable Android artifacts. An iOS device build is not a simulator build.
+- **TestFlight/store distribution:** use `eas-app-stores` for the requested artifact
+  and signing/submission path. Do not assume an internal development profile can
+  be submitted unchanged or combine building and submission without that scope.
 
-## EAS Configuration
+## Connect and verify
 
-Ensure `eas.json` has a development profile:
+Start Metro with `npx expo start --dev-client` and open the intended app/build.
+Verify the connection and the native capability behind the request. Rebuild when
+the native runtime/configuration changes; ordinary JS edits use the dev server.
+A release binary cannot gain Fast Refresh by reconnecting it to Metro.
 
-```json
-{
-  "cli": {
-    "version": ">= 16.0.1",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "production": {
-      "autoIncrement": true
-    },
-    "development": {
-      "autoIncrement": true,
-      "developmentClient": true
-    }
-  },
-  "submit": {
-    "production": {},
-    "development": {}
-  }
-}
-```
+For failures, inspect the relevant build or launcher logs, artifact target,
+signing, and Metro reachability before clearing caches or rebuilding. Checking a
+CLI version is read-only (`eas --version`); `eas update` publishes OTA code and is
+not a CLI upgrade command.
 
-Key settings:
-
-- `developmentClient: true` - Bundles expo-dev-client for development builds
-- `autoIncrement: true` - Automatically increments build numbers
-- `appVersionSource: "remote"` - Uses EAS as the source of truth for version numbers
-
-## Building for TestFlight
-
-Build iOS dev client and submit to TestFlight in one command:
-
-```bash
-eas build -p ios --profile development --submit
-```
-
-This will:
-
-1. Build the development client in the cloud
-2. Automatically submit to App Store Connect
-3. Send you an email when the build is ready in TestFlight
-
-After receiving the TestFlight email:
-
-1. Download the build from TestFlight on your device
-2. Launch the app to see the expo-dev-client UI
-3. Connect to your local Metro bundler or scan a QR code
-
-## Building Locally
-
-Build a development client on your machine:
-
-```bash
-# iOS (requires Xcode)
-eas build -p ios --profile development --local
-
-# Android
-eas build -p android --profile development --local
-```
-
-Local builds output:
-
-- iOS: `.ipa` file
-- Android: `.apk` or `.aab` file
-
-## Installing Local Builds
-
-Install iOS build on simulator:
-
-```bash
-# Find the .app in the .tar.gz output
-tar -xzf build-*.tar.gz
-xcrun simctl install booted ./path/to/App.app
-```
-
-Install iOS build on device (requires signing):
-
-```bash
-# Use Xcode Devices window or ideviceinstaller
-ideviceinstaller -i build.ipa
-```
-
-Install Android build:
-
-```bash
-adb install build.apk
-```
-
-## Building for Specific Platform
-
-```bash
-# iOS only
-eas build -p ios --profile development
-
-# Android only
-eas build -p android --profile development
-
-# Both platforms
-eas build --profile development
-```
-
-## Checking Build Status
-
-```bash
-# List recent builds
-eas build:list
-
-# View build details
-eas build:view
-```
-
-## Using the Dev Client
-
-Once installed, the dev client provides:
-
-- **Development server connection** - Enter your Metro bundler URL or scan QR
-- **Build information** - View native build details
-- **Launcher UI** - Switch between development servers
-
-Connect to local development:
-
-```bash
-# Start Metro bundler
-npx expo start --dev-client
-
-# Scan QR code with dev client or enter URL manually
-```
-
-## Troubleshooting
-
-**Build fails with signing errors:**
-
-```bash
-eas credentials
-```
-
-**Clear build cache:**
-
-```bash
-eas build -p ios --profile development --clear-cache
-```
-
-**Check EAS CLI version:**
-
-```bash
-eas --version
-eas update
-```
+Report the installed/built artifact and verified behavior. If distribution or
+runtime access is blocked, finish independent setup and identify what remains.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
