@@ -51,15 +51,9 @@ EAS product** (EAS Build, Submit, Hosting, Update, Workflows, Observe, Simulator
 - Litmus test: *can a developer get the main value of this skill without paying Expo?*
   Yes → framework (`expo-*`). No → paid (`eas-*`).
 
-### 4. Prefix the description, and add a costs note for paid skills
+### 4. Add a costs note for paid skills
 
-Every `description` opens with its category label, except the cross-cutting
-`expo-skill-feedback` skill, which accepts feedback across framework, EAS, docs, CLI, and MCP:
-
-- Framework: `Framework (OSS). <what it does and when to use it>`
-- Paid: `EAS service (paid). <what it does and when to use it>`
-
-Paid skills also open the `SKILL.md` **body** with a short callout:
+Paid skills open the `SKILL.md` **body** with a short callout:
 
 ```markdown
 > **EAS service - costs apply.** <one line on what consumes the plan>. See https://expo.dev/pricing.
@@ -150,15 +144,15 @@ bun scripts/check-plugin-version-bump.ts origin/main
 Also run `python3 -m json.tool <file>` on any JSON you edited, and if the skill ships `scripts/`,
 run that skill's own validation.
 
-`check-skill-limits.ts` enforces more than the size caps: the naming rule (step 2), the category
-prefixes and paid costs callout (step 4), the Codex agent file and its paid prefix (step 7), the
+`check-skill-limits.ts` enforces more than the size caps: the naming rule (step 2), the paid
+costs callout (step 4), the Codex agent file and its paid prefix (step 7), the
 `skills.sh.json` grouping (step 8), and the feedback block (step 9) all fail CI when violated.
 
 ### Syncing `expo-animation`
 
 `expo-animation` mirrors `skills/animate-expo` from `emilkowalski/skills`. Pull upstream changes
 with `bun scripts/sync-animate-expo.ts`; use `--check` to detect drift without writing. The script
-preserves this repository's skill name, category metadata, collaboration notice, and feedback block.
+preserves this repository's skill name, collaboration notice, and feedback block.
 
 ### Conventions
 

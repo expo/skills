@@ -1,6 +1,6 @@
 # Expo Skills Index
 
-Every skill in this directory is a sibling folder containing a `SKILL.md`. Skills are discovered **one level deep** - `skills/<skill-name>/SKILL.md` - so this index groups them for humans; the filesystem stays flat. Each skill's frontmatter `description` is prefixed with its category so agents can see the free vs paid boundary in the always-loaded metadata, except the cross-cutting `expo-skill-feedback` skill.
+Every skill in this directory is a sibling folder containing a `SKILL.md`. Skills are discovered **one level deep** - `skills/<skill-name>/SKILL.md` - so this index groups them for humans; the filesystem stays flat.
 
 ## Start Here
 
@@ -12,7 +12,7 @@ Load this first for any Expo/EAS task, then route to the specific skill below.
 
 ## Framework (open source)
 
-Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `Framework (OSS).`, except `expo-skill-feedback`, which accepts feedback across Expo surfaces.
+Free, open-source Expo SDK and React Native skills.
 
 | Skill | Use it for |
 | --- | --- |
@@ -35,7 +35,7 @@ Free, open-source Expo SDK and React Native skills. Descriptions are prefixed `F
 
 ## Services & paid distribution
 
-Skills whose core purpose uses paid Expo Application Services (EAS). Descriptions are prefixed `EAS service (paid).`, and each `SKILL.md` opens with a costs/plan-limits callout.
+Skills whose core purpose uses paid Expo Application Services (EAS). Each `SKILL.md` opens with a costs/plan-limits callout.
 
 | Skill | Use it for | Paid dependency |
 | --- | --- | --- |
@@ -50,7 +50,7 @@ Skills whose core purpose uses paid Expo Application Services (EAS). Description
 ## Adding a skill
 
 1. Create `skills/<skill-name>/SKILL.md` (one level deep - do not nest under a category folder, or it will not be discovered).
-2. Prefix the frontmatter `description` with the category label (`Framework (OSS).` or `EAS service (paid).`); `expo-skill-feedback` is the sole cross-cutting exception.
+2. Write a frontmatter `description` that says what the skill does and when to use it.
 3. For a services skill, open the body with a costs/plan-limits callout right after the H1.
 4. Add the skill to the table above, to `skills.sh.json`, and to the root and plugin `README.md` lists.
-5. Bump the version in all three plugin manifests (see `CONTRIBUTING.md`).
+5. Bump the version in all four plugin manifests (see `CONTRIBUTING.md`).
