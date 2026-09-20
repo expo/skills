@@ -18,6 +18,7 @@ Consult these resources as needed:
 ```
 references/
   controls.md            Native iOS: Switch, Slider, SegmentedControl, DateTimePicker, Picker
+  filament.md            3D models (glTF/GLB) with physically based lighting via react-native-filament
   gradients.md           CSS gradients via experimental_backgroundImage (New Arch only)
   icons.md               SF Symbols via expo-symbols SymbolView: names, weights, animations; Material icons on Android
   media.md               Camera, audio, video, and file saving
