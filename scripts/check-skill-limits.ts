@@ -5,12 +5,9 @@ import { dirname, join } from "node:path";
 
 const MAX_DESCRIPTION = 1024;
 const MAX_BODY_LINES = 500;
-const FRAMEWORK_PREFIX = "Framework (OSS).";
-const PAID_PREFIX = "EAS service (paid).";
 const PAID_CALLOUT = "**EAS service - costs apply.**";
 const PAID_PRICING_LINK = "expo.dev/pricing";
 const PAID_CODEX_PREFIX = "Paid EAS service.";
-const CATEGORY_PREFIX_EXEMPT_SKILLS = new Set(["expo-skill-feedback"]);
 const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
 const FEEDBACK_HEADING = "## Submitting Feedback";
 
@@ -108,12 +105,6 @@ for (const path of skills) {
   if (!body.trimEnd().endsWith(feedbackBlock(name)))
     errors.push(`${rel}: missing canonical feedback block; run "bun scripts/check-skill-limits.ts --fix-feedback"`);
 
-  // Category prefix on the always-loaded description. The cross-cutting feedback skill
-  // spans framework, EAS, docs, CLI, and MCP feedback, so it has no category label.
-  const expectedPrefix = isPaid ? PAID_PREFIX : FRAMEWORK_PREFIX;
-  if (!CATEGORY_PREFIX_EXEMPT_SKILLS.has(name) && !description.startsWith(expectedPrefix))
-    errors.push(`${rel}: description must start with "${expectedPrefix}"`);
-
   // paid skills disclose costs up front (dash style varies: em dash or hyphen)
   const normalizedBody = body.replace(/—/g, "-");
   if (isPaid && (!normalizedBody.includes(PAID_CALLOUT) || !normalizedBody.includes(PAID_PRICING_LINK)))
@@ -131,7 +122,7 @@ for (const path of skills) {
   }
 
   // catalog sync with skills.sh.json groups; the experimental group accepts either
-  // prefix - the description label still enforces the free vs paid boundary
+  // expo-* or eas-* names
   const group = catalogGroups.get(dirName);
   if (!group) errors.push(`${rel}: skill is not listed in skills.sh.json`);
   else if (group !== "experimental" && group !== (isPaid ? "paid" : "framework"))
@@ -144,7 +135,7 @@ for (const [skill] of catalogGroups) {
 }
 
 if (errors.length === 0) {
-  console.log("✓ All skills pass limits, naming, feedback, category labels, paid callouts, Codex metadata, and catalog sync.");
+  console.log("✓ All skills pass limits, naming, feedback, paid callouts, Codex metadata, and catalog sync.");
   process.exit(0);
 } else {
   console.log("✗ Skill check violations:\n");

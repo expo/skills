@@ -1,6 +1,6 @@
 ---
 name: expo-dev-client
-description: Framework (OSS). Build and distribute Expo development clients locally or via TestFlight for internal testing. For production TestFlight releases and store submission, use the eas-app-stores skill.
+description: Build and distribute Expo development clients locally or via TestFlight for internal testing. For production TestFlight releases and store submission, use the eas-app-stores skill.
 version: 1.1.0
 license: MIT
 ---
