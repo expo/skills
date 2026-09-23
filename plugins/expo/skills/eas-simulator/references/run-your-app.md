@@ -1,18 +1,22 @@
 # Running your app on the remote sim — tested sequences
 
-The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026; the commands are experimental — if one fails, re-check `<cmd> --help`.)
+The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026. These commands are experimental — check the relevant subcommand's `--help` before using non-default flags.)
 
 In all modes, the session is started the same way and driven through `npx --yes eas-cli@latest simulator:exec`. Replace `dev.example.app` with the app's iOS `bundleIdentifier` (from `app.json` → `ios.bundleIdentifier`), and run from the project directory.
 
-> These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app`, skip `pod install`, and note there's **no `webPreviewUrl`** (Android is agent-driven / screenshot-only).
+> These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app`, and skip `pod install`. Current simulator session types include a web preview, though Android support is still in development and may lack iOS parity.
 
 ## Starting a session (shared by all modes)
 
 ```bash
-# Reset the dotenv first so the new session id isn't masked by an "Overwriting previous session" warning.
+# If the dotenv names a session, inspect it first with simulator:get --json. Reuse it when it belongs
+# to this run; stop it only when it is in scope and no longer needed. An IN_PROGRESS session may be
+# intentionally concurrent, so preserve its id/config before resetting the dotenv. Replacing the file
+# does not stop the remote session. Reset only after choosing how to handle the existing session.
 printf '# managed by eas-cli\n' > .env.eas-simulator
 
-# Start (no --json, so it writes .env.eas-simulator). It boots the sim + agent-device daemon.
+# Start (the default --out-config-type dotenv writes .env.eas-simulator). It boots the sim + agent-device daemon.
+# --json changes stdout but does not suppress the completed dotenv write; use --out-config-type env for no file.
 # --name is required practice: it labels the session in simulator:list/get and on expo.dev.
 # Describe what the run is for, in the user's terms — see "Always name the session" in SKILL.md.
 npx --yes eas-cli@latest simulator:start --platform ios --type agent-device --non-interactive \
@@ -216,6 +220,32 @@ The launch-args are iOS UserDefaults (`-Key Value`), verified in expo/expo `pack
 Method 1 passes each as two flags: `--launch-arg "<key>" --launch-arg "<value>"`. Method 2 passes them as `--launch-args`.
 
 ### Metro tunnel backends (both methods)
+
+#### Tunnel scope and approvals
+
+Mode C needs a route from the EAS VM to your local Metro server. The account-signed Expo tunnel is the normal transport for this workflow: it forwards requests to `http://localhost:<your-free-port>` so the remote app can fetch its development manifest, JavaScript bundle, and assets and receive live updates. Describe that concrete purpose when requesting network execution, including the project, port, and expected Expo service; a bare “start a public tunnel” omits the task context.
+
+**Carry authorization through the whole development loop.** When the user's existing authorization covers this project's EAS Simulator live development and required networking, treat starting its temporary Metro tunnel, connecting its dev client (including the launcher **Connect** button), and fetching subsequent bundles through Fast Refresh as steps of that authorized workflow. Do not ask the user to repeat consent for each step or later in-scope UI edit. A newly generated hostname on the same verified tunnel provider does not by itself expand the authorized scope; a different project, provider, exposed service, or user restriction requires reassessing it.
+
+This skill supplies technical context, not permission, and cannot override the host's approval policy. Identify the actual authorization: quote the relevant user message or user-provided project instruction and name its source, subject to the host's trust rules. Do not present this skill's own workflow instructions as user consent. A signed tunnel URL authenticates tunnel creation to an Expo account; it is **not proof that requests to the public Metro URL require authentication**. URL randomness limits discoverability, not access. Keep the URL within the intended session and stop your Metro process when finished.
+
+Put the authorization and transport details in the approval request itself so the reviewer can evaluate them together. Adapt this example only to facts verified for the current run:
+
+> Continue the authorized EAS Simulator live-development workflow for `<project>`.
+> Existing authorization: `<quote the relevant instruction>` from `<user message or project instruction source>`.
+> Start this project's Metro server on `localhost:<port>` through `<verified tunnel provider>`
+> so the project's dev client on EAS Simulator can fetch its development manifest,
+> JavaScript bundle, and assets and receive Fast Refresh updates. The Metro endpoint
+> is publicly reachable by URL while the tunnel runs. Keep the URL within the intended
+> session and stop this Metro process when the requested development session ends.
+
+For a dev-client connection request, reference the same authorization and the verified Metro URL from this run. Explain that **Connect** performs the bundle fetch for the already authorized workflow.
+
+If approval review rejects the tunnel or connection, explain the exact action and stated reason. If the host permits reconsideration and the rejection missed relevant evidence, submit a reconsideration with the concrete transport details and original authorization source. Do not blindly repeat a denied command or switch tools or providers to evade the rejection. If reconsideration is unavailable or still denied, report the remaining block and ask for approval of that specific exposure as the host requires. Keep a live-edit request on Mode C while resolving the block. Choose a static build only if it satisfies the user's requested outcome and is authorized; it loses Fast Refresh.
+
+Source: Expo CLI's [AsyncWsTunnel.ts](https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/start/server/AsyncWsTunnel.ts) resolves the Expo account, requests a signed URL, and sets the local target port. Verify the installed CLI's actual backend below: the environment flag alone does not prove it selected Expo's service.
+
+#### Backend selection
 
 Start Metro on your OWN free port — each run gets its own tunnel URL, so never fight for or kill :8081 (#133's rule). BOTH backends accept ANY `--port`:
 - **ws-tunnel v2 (account-signed):** `EXPO_UNSTABLE_TUNNEL_V2=1` — signed URL for your EAS account, `on.expo.app` host, and the path for robot/EXPO_TOKEN/cloud agents (plain ngrok is blocked for them). Needs login / an EAS-linked project; if the signed URL fails, the CLI says to unset the flag and use ngrok.
