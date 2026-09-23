@@ -26,7 +26,11 @@ case "$API" in *\?*) API_QUERY="${API#*\?}" ;; *) API_QUERY="" ;; esac
 EVENTS="${TMPDIR:-/tmp}/eas-sim-crashes-${API_BASE##*//}"  # files for the log hold below
 
 # sim_api <path> [extra query]: call a preview route, keeping the token query.
-sim_api() { curl -sS --fail-with-body --max-time 20 "${API_BASE:?no preview API}$1?$API_QUERY${2:+&$2}"; }
+# printf is a shell builtin, so the URL goes to curl on stdin and stays out of `ps`.
+sim_api() {
+  : "${API_BASE:?no preview API}"
+  printf 'url = "%s"\n' "$API_BASE$1?$API_QUERY${2:+&$2}" | curl -sS --fail-with-body --max-time 20 -K -
+}
 ```
 
 If your shell does not keep variables between commands, repeat these lines at the start of each command. Each repeat runs `simulator:get` again, which takes a few seconds, so put related reads in one command. Only call `/crashes`, `/crashes/<id>`, and `/logs`. Don't call `/api`: its response includes the exec token. Calls to the preview server do not reset the session's idle timer.
@@ -36,8 +40,8 @@ If your shell does not keep variables between commands, repeat these lines at th
 The device log only runs while something holds it, so **start holding it before you reproduce the crash.** A crash that happens while nothing holds the log still gets a report, but its tail is empty. Hold it with a `/crashes` stream opened with `?tail=1`, which also writes each crash event to `$EVENTS.log`:
 
 ```bash
-curl -sSN --fail-with-body --max-time 300 -H 'Accept: text/event-stream' \
-  "$API_BASE/crashes?$API_QUERY&tail=1" > "$EVENTS.log" 2> "$EVENTS.err" &
+printf 'url = "%s"\n' "$API_BASE/crashes?$API_QUERY&tail=1" |
+  curl -sSN --fail-with-body --max-time 300 -H 'Accept: text/event-stream' -K - > "$EVENTS.log" 2> "$EVENTS.err" &
 echo $! > "$EVENTS.pid"
 for i in $(seq 1 20); do
   grep -q '^data:' "$EVENTS.log" && break
@@ -75,7 +79,7 @@ The detail returns `{record, occurrence, report, reportError}`:
   - `app-windowed`: lines found.
   - `buffer-rolled-past`: the buffer no longer reached back that far, or nothing held the log when the crash happened.
   - `no-app-lines`: the window was there, but the app logged nothing.
-  - `none`: nothing was buffered for the device, usually because nothing held the log.
+  - `none`: nothing was buffered for the device, usually because nothing held the log. It is also `none` when the report has no timestamp or process name.
 - `occurrence.appVersion`, `buildVersion`, and `faultingQueue` are per occurrence.
 - `report` is the full `.ips` text. When it is `null`, `reportError` says why. The detail can be large, so print only the fields you need.
 
@@ -86,7 +90,7 @@ sim_api /logs "snapshot=1&follow=1&limit=500"             # newest 500 lines, ke
 sim_api /logs "snapshot=1&follow=1&since=<latestSeq>"     # only lines after a previous read
 ```
 
-The JSON has `lines` (`{seq, raw}`, where `raw` is one NDJSON log entry with `processImagePath`, `processID`, `eventMessage`, and `messageType`), `latestSeq`, `oldestSeq`, and `status` (`streaming`, `restarting`, or `stopped`). Keep `snapshot=1`: without it, `/logs` is an event stream that does not end. Without `follow=1`, `/logs` only reads what is already buffered, and `stopped` means nothing is holding the log. The first `follow=1` read after the log was idle can return no lines, so read again after a second or two.
+The JSON has `lines` (`{seq, at, raw}`, where `raw` is one NDJSON log entry with `processImagePath`, `processID`, `eventMessage`, and `messageType`), `latestSeq`, `oldestSeq`, and `status` (`streaming`, `restarting`, or `stopped`). `streamError` keeps the last stream error, so it can be set while `status` is `streaming`. Keep `snapshot=1`: without it, `/logs` is an event stream that does not end. Without `follow=1`, `/logs` only reads what is already buffered, and `stopped` means nothing is holding the log. The first `follow=1` read after the log was idle can return no lines, so read again after a second or two.
 
 To keep only the user's app, match `processImagePath` ending in the app's executable name (its `CFBundleExecutable`; app paths contain `/Containers/Bundle/Application/`), or `processID` for one launch.
 

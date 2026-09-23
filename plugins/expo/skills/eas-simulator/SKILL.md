@@ -189,7 +189,7 @@ For the full verb set and the `argent` controller alternative, see [references/c
 
 ## When the app crashes: device logs and crash reports (iOS)
 
-When the app crashes or closes on launch, read what the device recorded before guessing from screenshots. An iOS session keeps each crash report with its stack and the app's last log lines, plus a buffer of the device log. Read them from the preview API URL in `simulator:get --json`. That URL carries the session token, so never print it.
+When the app crashes or closes on launch, read the iOS session's crash reports and device log before guessing from screenshots. Read them from the preview API URL in `simulator:get --json`. That URL carries the session token, so never print it.
 
 **Hold the device log before you reproduce the crash.** Without the hold, the crash gets a report but an empty log tail. Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
 
@@ -223,7 +223,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 
 - [references/run-your-app.md](./references/run-your-app.md) — full command sequences for modes A, B, and C (read before running a mode).
 - [references/controllers.md](./references/controllers.md) — agent-device verb reference and the `argent` alternative.
-- [references/logs-and-crashes.md](./references/logs-and-crashes.md) - device logs and crash reports from an iOS session (read when the app crashes or misbehaves).
+- [references/logs-and-crashes.md](./references/logs-and-crashes.md) — device logs and crash reports from an iOS session (read when the app crashes or misbehaves).
 - [references/troubleshooting.md](./references/troubleshooting.md) — concrete errors and fixes.
 
 Source of truth: Expo docs and the `eas` / `agent-device` CLIs (`npx --yes eas-cli@latest simulator:* --help`, `agent-device --help`). This skill teaches how to apply them; it doesn't replace them.
