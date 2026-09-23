@@ -6,52 +6,39 @@ This covers iOS sessions. If the session's preview server predates these routes,
 
 ## Reach the preview API
 
-`simulator:get --json` returns `remoteConfig.previewApiUrl`, the preview server's API URL with the session token already in its query. Keep it in a shell variable and don't print it: the token grants control of the session.
+Use the skill's script instead of building URLs by hand. Run it from the Expo project directory, like `simulator:exec`; it reads the session's `previewApiUrl` from `simulator:get --json`. That URL carries the session token, so the script keeps it inside and never prints it. Don't print or share the URL yourself either: the token grants control of the session.
 
 ```bash
-API=$(npx --yes eas-cli@latest simulator:get --json | node -e '
-  let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
-    const url = JSON.parse(s).remoteConfig?.previewApiUrl;
-    if (!url) process.exit(1);
-    process.stdout.write(url);
-  });') || echo "this session has no preview API"
-
-API_BASE="${API%%\?*}"; API_BASE="${API_BASE%/}"
-case "$API" in *\?*) API_QUERY="${API#*\?}" ;; *) API_QUERY="" ;; esac
-
-# sim_api <path> [extra query]: call a preview route, keeping the token query.
-sim_api() { curl -fsS "$API_BASE$1?$API_QUERY${2:+&$2}"; }
+node <skill-dir>/scripts/preview-api.js get /crashes                        # the dotenv session
+node <skill-dir>/scripts/preview-api.js get /crashes --id <session-id>      # another session
 ```
 
-Every route takes `?device=<udid>` and falls back to the session's simulator without it, which is what you want on an EAS session. Calls to the preview server count as browser-preview activity, which does not reset the session's idle timer.
+`<skill-dir>` is this skill's directory. Every route takes `?device=<udid>` and falls back to the session's simulator without it, which is what you want on an EAS session. Calls to the preview server count as browser-preview activity, which does not reset the session's idle timer.
 
 ## Catch a crash with its log tail
 
-The device log only runs while something holds it, so **start holding it before you reproduce the crash.** A crash that happens while nothing holds the log still gets a report, but its tail is empty. Hold it with a `/crashes` stream opened with `?tail=1`, which also prints each crash as it lands:
+The device log only runs while something holds it, so **start holding it before you reproduce the crash.** A crash that happens while nothing holds the log still gets a report, but its tail is empty. `watch` holds it with a `/crashes?tail=1` stream and prints each frame as one JSON line, including every crash as it lands:
 
 ```bash
-curl -fsSN -H 'Accept: text/event-stream' "$API_BASE/crashes?$API_QUERY&tail=1" \
-  > crash-events.log 2>/dev/null &
-HOLD=$!
+# In the background (a trailing `&`, or your agent's background-command option):
+node <skill-dir>/scripts/preview-api.js watch --seconds 120 > crash-events.jsonl
 
 # ... reproduce the crash with agent-device (open the app, press through the flow) ...
 
-sleep 8   # a report lands a few seconds after the process dies
-sim_api /crashes                        # {meta, crashes}: one record per distinct crash
-kill "$HOLD"
+node <skill-dir>/scripts/preview-api.js get /crashes   # {meta, crashes}: one record per distinct crash
 ```
 
-Alternatively, poll `sim_api /logs "snapshot=1&follow=1&limit=1"` at least every 8 seconds: the log stops 8 seconds after its last reader.
+Each crash shows up in `crash-events.jsonl` as a `{"type":"crash"}` (or `"recurred"`) line a few seconds after the process dies; read the file for it before fetching the crash. `watch` exits on its own after `--seconds`, or when interrupted. Alternatively, poll `get /logs "snapshot=1&follow=1&limit=1"` at least every 8 seconds: the log stops 8 seconds after its last reader.
 
-Right after a session boots, the device logs heavily for a minute or two, and that can roll the buffer past a crash before its report lands (`logTailSource: "buffer-rolled-past"`, no lines). If that happens, reproduce again once logging settles; the new occurrence gets its tail.
+Right after a session boots, the device logs heavily for a minute or two, and a crash in that window can come back without its tail (`logTailSource` of `buffer-rolled-past` or `no-app-lines`, no lines). If that happens, reproduce again once logging settles; the new occurrence gets its tail.
 
 An empty `crashes` array right after a crash means "not yet", not "nothing happened". `meta.reportDelaySeconds` estimates the delay, and `meta.status` says whether collection is running (`watching`) at all.
 
 ## Read a crash
 
 ```bash
-sim_api "/crashes/<id>"                 # newest occurrence of that crash
-sim_api "/crashes/<id>" "key=<key>"     # a specific occurrence, by a key from occurrenceTimes
+node <skill-dir>/scripts/preview-api.js get /crashes/<id>            # newest occurrence of that crash
+node <skill-dir>/scripts/preview-api.js get /crashes/<id> key=<key>  # an occurrence, by a key from occurrenceTimes
 ```
 
 The list gives one record per crash signature, with `signal`, `exceptionType`, `culpritFrame`, `bundleId`, `pid`, `count`, and `occurrenceTimes` (each retained occurrence's `key`, oldest first). Repeats of the same crash collapse into one record with a higher `count`.
@@ -70,8 +57,8 @@ The detail returns `{record, occurrence, report, reportError}`:
 ## Read the device log
 
 ```bash
-sim_api /logs "snapshot=1&follow=1&limit=500"      # newest 500 lines, and keep the log running
-sim_api /logs "snapshot=1&since=<latestSeq>"       # only lines after a cursor from a previous read
+node <skill-dir>/scripts/preview-api.js get /logs "snapshot=1&follow=1&limit=500"  # newest 500 lines, keep the log running
+node <skill-dir>/scripts/preview-api.js get /logs "snapshot=1&since=<latestSeq>"   # only lines after a previous read
 ```
 
 The JSON has `lines` (`{seq, raw}`, where `raw` is one NDJSON log entry with `processImagePath`, `processID`, `eventMessage`, and `messageType`), `latestSeq`, `oldestSeq`, and `status` (`streaming`, `restarting`, or `stopped`). To keep only the user's app, match `processImagePath` ending in the app's executable name, or `processID` for one launch.

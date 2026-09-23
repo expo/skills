@@ -3,7 +3,7 @@ name: eas-simulator
 description: "EAS service (paid). Run and control a user's app on a remote iOS/Android simulator hosted on EAS cloud. Read before running any `eas simulator:*` commands - it has the current syntax for this experimental API. Use whenever the user needs a simulator they can't run locally - 'run my app on a cloud simulator', 'use eas simulator to run/install/screenshot my app', 'I'm on Linux/Cursor and need an iOS device', 'no sim on this box / headless CI', 'let an agent click through my app and screenshot it', 'test my dev build on a remote sim with live reload', 'stream a sim to my browser', 'why did my app crash' - even when they don't say 'EAS Simulator' or 'cloud'. On a host WITHOUT a local simulator (Linux, CI, cloud sandbox) it's the default; on macOS, do NOT auto-trigger for a plain 'run on the simulator' - use it only for a cloud/remote/shareable sim, an iOS version they lack, or an agent-driven session. NOT for local sims (expo run:ios, Xcode, Android Studio), EAS Build/Update, web preview, or physical devices."
 version: 1.0.0
 license: MIT
-allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(npx expo *), Bash(eas *), Bash(expo *), Bash(xcodebuild*), Bash(pod*), Bash(argent *), Bash(ffmpeg*)"
+allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(node *eas-simulator/scripts/preview-api.js *), Bash(npx expo *), Bash(eas *), Bash(expo *), Bash(xcodebuild*), Bash(pod*), Bash(argent *), Bash(ffmpeg*)"
 ---
 
 # EAS Simulator
@@ -189,9 +189,9 @@ For the full verb set and the `argent` controller alternative, see [references/c
 
 ## When the app crashes: device logs and crash reports (iOS)
 
-When the app crashes, closes on launch, or misbehaves, read what the device recorded before guessing from screenshots. An iOS session's preview server collects each crash report with its stack and the app's own log lines from just before the crash, and keeps a buffer of the device log. Reach it through `remoteConfig.previewApiUrl` from `simulator:get --json`, which already carries the session token, so never print it.
+When the app crashes, closes on launch, or misbehaves, read what the device recorded before guessing from screenshots. An iOS session's preview server collects each crash report with its stack and the app's own log lines from just before the crash, and keeps a buffer of the device log. Read it with `node <skill-dir>/scripts/preview-api.js get <route>`, run from the project directory; the script finds the session's preview URL and keeps its token out of your output.
 
-**Start holding the device log before you reproduce the crash** (a `/crashes` stream with `?tail=1`); a crash with nothing holding the log gets a report but an empty log tail. Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
+**Start holding the device log before you reproduce the crash** (`preview-api.js watch`); a crash with nothing holding the log gets a report but an empty log tail. Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
 
 ## Operating principles
 
