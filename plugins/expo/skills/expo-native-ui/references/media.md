@@ -76,6 +76,84 @@ function Camera({ onPicture }: { onPicture: (uri: string) => Promise<void> }) {
 }
 ```
 
+## VisionCamera
+
+Use `expo-camera` when the app runs in Expo Go or on web, or needs standard photo, video, or barcode capture.
+
+Use `react-native-vision-camera` when the app needs:
+
+- Realtime frame processing in a JS worklet, or drawing onto the camera with Skia
+- Depth data, RAW photos, or photo/video HDR
+- Manual controls: AE/AF/AWB locking, exposure bias, configurable FPS, specific lens selection
+- Multi-camera or external camera devices
+- Custom native camera outputs or native frame processor plugins
+
+VisionCamera requires a development build and does not run in Expo Go or on web. See the [VisionCamera docs](https://visioncamera.margelo.com/docs) and [VisionCamera vs Expo Camera](https://visioncamera.margelo.com/docs/visioncamera-vs-expo-camera).
+
+```bash
+npx expo install react-native-vision-camera react-native-nitro-modules react-native-nitro-image
+```
+
+Add permissions to `app.json`, then run `npx expo prebuild`:
+
+```json
+{
+  "ios": {
+    "infoPlist": {
+      "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera to capture photos and videos.",
+      "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone to record audio for video recordings."
+    }
+  },
+  "android": {
+    "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"]
+  }
+}
+```
+
+[Frame outputs](https://visioncamera.margelo.com/docs/frame-output) also need `react-native-vision-camera-worklets` and `react-native-worklets`. Select a lens with [Camera Devices](https://visioncamera.margelo.com/docs/devices):
+
+```tsx
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { Camera, useCameraDevice, useCameraPermission, useFrameOutput } from "react-native-vision-camera";
+
+function FrameCamera() {
+  const { hasPermission, requestPermission } = useCameraPermission();
+  const [position, setPosition] = useState<"front" | "back">("back");
+  const device = useCameraDevice(position, {
+    physicalDevices: ["ultra-wide-angle", "wide-angle", "telephoto"],
+  });
+  const frameOutput = useFrameOutput({
+    onFrame(frame) {
+      "worklet";
+      console.log(`${frame.width}x${frame.height}`);
+      frame.dispose();
+    },
+  });
+
+  if (!hasPermission) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Pressable onPress={requestPermission}>
+          <Text>Grant Permission</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (device == null) return null;
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Camera style={{ flex: 1 }} isActive device={device} outputs={[frameOutput]} />
+      <Pressable onPress={() => setPosition((p) => (p === "back" ? "front" : "back"))}>
+        <Text>{device.localizedName}</Text>
+      </Pressable>
+    </View>
+  );
+}
+```
+
 ## Audio Playback
 
 Use `expo-audio` not `expo-av`:

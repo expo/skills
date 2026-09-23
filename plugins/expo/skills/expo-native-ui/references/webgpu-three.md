@@ -2,6 +2,8 @@
 
 **Use this skill for ANY 3D graphics, games, GPU compute, or Three.js features in React Native.**
 
+For rendering glTF/GLB models with physically based lighting, skeletal animation, and shadows, see `references/filament.md`.
+
 ## Locked Versions (Tested & Working)
 
 ```json
