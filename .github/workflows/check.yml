@@ -35,6 +35,11 @@ jobs:
         continue-on-error: true
         run: bun test scripts/check-plugin-version-bump.test.ts
 
+      - name: Test the eas-simulator preview-api script
+        id: preview-api-test
+        continue-on-error: true
+        run: bun test scripts/eas-simulator-preview-api.test.ts
+
       - name: Check skill requirements
         id: skill-limits
         continue-on-error: true
@@ -64,6 +69,7 @@ jobs:
           VERSION_CHECK_TEST_OUTCOME: ${{ steps.version-check-test.outcome }}
           VERSION_CHECK_OUTCOME: ${{ steps.version-check.outcome }}
           ROUTING_CHECK_OUTCOME: ${{ steps.routing-check.outcome }}
+          PREVIEW_API_TEST_OUTCOME: ${{ steps.preview-api-test.outcome }}
         run: |
           failed=0
 
@@ -95,6 +101,7 @@ jobs:
           report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
           report "plugin version bump" "$VERSION_CHECK_OUTCOME" "bun scripts/check-plugin-version-bump.ts origin/main"
           report "expo-overview routing" "$ROUTING_CHECK_OUTCOME" "bun scripts/check-overview-routing.ts"
+          report "eas-simulator preview-api script" "$PREVIEW_API_TEST_OUTCOME" "bun test scripts/eas-simulator-preview-api.test.ts"
 
           echo "" >> "$GITHUB_STEP_SUMMARY"
 

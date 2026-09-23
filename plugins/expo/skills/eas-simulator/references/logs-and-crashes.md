@@ -6,29 +6,29 @@ This covers iOS sessions. If the session's preview server predates these routes,
 
 ## Reach the preview API
 
-Use the skill's script instead of building URLs by hand. Run it from the Expo project directory, like `simulator:exec`; it reads the session's `previewApiUrl` from `simulator:get --json`. That URL carries the session token, so the script keeps it inside and never prints it. Don't print or share the URL yourself either: the token grants control of the session.
+Use the skill's script instead of building URLs by hand. Run it from the Expo project directory, like `simulator:exec`; it reads the session's `previewApiUrl` from `simulator:get --json`. That URL carries the session token, so the script keeps it inside and never prints it. Don't print or share the URL yourself either: the token grants control of the session. The script only reaches `/crashes`, `/crashes/<id>`, and `/logs`.
 
 ```bash
 node <skill-dir>/scripts/preview-api.js get /crashes                        # the dotenv session
 node <skill-dir>/scripts/preview-api.js get /crashes --id <session-id>      # another session
 ```
 
-`<skill-dir>` is this skill's directory. Every route takes `?device=<udid>` and falls back to the session's simulator without it, which is what you want on an EAS session. Calls to the preview server count as browser-preview activity, which does not reset the session's idle timer.
+`<skill-dir>` is this skill's directory. Calls to the preview server do not reset the session's idle timer.
 
 ## Catch a crash with its log tail
 
-The device log only runs while something holds it, so **start holding it before you reproduce the crash.** A crash that happens while nothing holds the log still gets a report, but its tail is empty. `watch` holds it with a `/crashes?tail=1` stream and prints each frame as one JSON line, including every crash as it lands:
+The device log only runs while something holds it, so **start holding it before you reproduce the crash.** A crash that happens while nothing holds the log still gets a report, but its tail is empty. `watch` holds the log and prints each crash event as one JSON line:
 
 ```bash
-# In the background (a trailing `&`, or your agent's background-command option):
-node <skill-dir>/scripts/preview-api.js watch --seconds 120 > crash-events.jsonl
+# Run with your agent's background-command option, so you can read its output later:
+node <skill-dir>/scripts/preview-api.js watch --seconds 120
 
-# ... reproduce the crash with agent-device (open the app, press through the flow) ...
+# Wait for "holding the device log" on stderr, then reproduce the crash with agent-device.
 
 node <skill-dir>/scripts/preview-api.js get /crashes   # {meta, crashes}: one record per distinct crash
 ```
 
-Each crash shows up in `crash-events.jsonl` as a `{"type":"crash"}` (or `"recurred"`) line a few seconds after the process dies; read the file for it before fetching the crash. `watch` exits on its own after `--seconds`, or when interrupted. Alternatively, poll `get /logs "snapshot=1&follow=1&limit=1"` at least every 8 seconds: the log stops 8 seconds after its last reader.
+A crash shows up in the `watch` output as a `{"type":"crash"}` (or `"recurred"`) line a few seconds after the process dies. `watch` stops after `--seconds` (default 300) or when interrupted, and exits with an error if the server closes the stream early. Without `watch`, call `get /logs "snapshot=1&follow=1&limit=1"` more often than every 8 seconds: the log stops 8 seconds after its last reader.
 
 Right after a session boots, the device logs heavily for a minute or two, and a crash in that window can come back without its tail (`logTailSource` of `buffer-rolled-past` or `no-app-lines`, no lines). If that happens, reproduce again once logging settles; the new occurrence gets its tail.
 
@@ -51,17 +51,17 @@ The detail returns `{record, occurrence, report, reportError}`:
   - `buffer-rolled-past`: the buffer no longer reached back that far, or nothing held the log when the crash happened.
   - `no-app-lines`: the window was there, but the app logged nothing.
   - `none`: nothing was buffered for the device, usually because nothing held the log.
-- `occurrence.appVersion`, `buildVersion`, and `faultingQueue` belong to that occurrence, not only to the newest one.
-- `report` is the full `.ips` text. It is `null` with a `reportError` when macOS deleted the file, or when the file at that path no longer holds this crash's report.
+- `occurrence.appVersion`, `buildVersion`, and `faultingQueue` are per occurrence.
+- `report` is the full `.ips` text. When it is `null`, `reportError` says why.
 
 ## Read the device log
 
 ```bash
 node <skill-dir>/scripts/preview-api.js get /logs "snapshot=1&follow=1&limit=500"  # newest 500 lines, keep the log running
-node <skill-dir>/scripts/preview-api.js get /logs "snapshot=1&since=<latestSeq>"   # only lines after a previous read
+node <skill-dir>/scripts/preview-api.js get /logs "snapshot=1&follow=1&since=<latestSeq>"   # only lines after a previous read
 ```
 
-The JSON has `lines` (`{seq, raw}`, where `raw` is one NDJSON log entry with `processImagePath`, `processID`, `eventMessage`, and `messageType`), `latestSeq`, `oldestSeq`, and `status` (`streaming`, `restarting`, or `stopped`). To keep only the user's app, match `processImagePath` ending in the app's executable name, or `processID` for one launch.
+The JSON has `lines` (`{seq, raw}`, where `raw` is one NDJSON log entry with `processImagePath`, `processID`, `eventMessage`, and `messageType`), `latestSeq`, `oldestSeq`, and `status` (`streaming`, `restarting`, or `stopped`). Without `follow=1`, `/logs` only reads what is already buffered, and `stopped` means nothing is holding the log. To keep only the user's app, match `processImagePath` ending in the app's executable name, or `processID` for one launch.
 
 A busy simulator can log hundreds of lines a second, and the buffer is capped at about 4 MB, so it may hold only seconds to minutes of history. Read right after the event you care about; if `since` is older than `oldestSeq`, those lines are gone.
 
