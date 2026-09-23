@@ -1,0 +1,83 @@
+# Device logs and crash reports (iOS)
+
+When the user's app crashes, closes on launch, or misbehaves on an iOS session, read what the device recorded instead of guessing from screenshots. The session's preview server (serve-sim) keeps a shared buffer of the simulator's device log and collects the crash reports macOS writes for simulator apps, each with the app's own log lines from just before the crash.
+
+This covers iOS sessions. If the session's preview server predates these routes, `/crashes` returns `404`: fall back to `agent-device logs` (see [controllers.md](./controllers.md)) and tell the user crash reports aren't available on that session.
+
+## Reach the preview API
+
+`simulator:get --json` returns `remoteConfig.previewApiUrl`, the preview server's API URL with the session token already in its query. Keep it in a shell variable and don't print it: the token grants control of the session.
+
+```bash
+API=$(npx --yes eas-cli@latest simulator:get --json | node -e '
+  let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
+    const url = JSON.parse(s).remoteConfig?.previewApiUrl;
+    if (!url) process.exit(1);
+    process.stdout.write(url);
+  });') || echo "this session has no preview API"
+
+API_BASE="${API%%\?*}"; API_BASE="${API_BASE%/}"
+case "$API" in *\?*) API_QUERY="${API#*\?}" ;; *) API_QUERY="" ;; esac
+
+# sim_api <path> [extra query]: call a preview route, keeping the token query.
+sim_api() { curl -fsS "$API_BASE$1?$API_QUERY${2:+&$2}"; }
+```
+
+Every route takes `?device=<udid>` and falls back to the session's simulator without it, which is what you want on an EAS session. Calls to the preview server count as browser-preview activity, which does not reset the session's idle timer.
+
+## Catch a crash with its log tail
+
+The device log only runs while something holds it, so **start holding it before you reproduce the crash.** A crash that happens while nothing holds the log still gets a report, but its tail is empty. Hold it with a `/crashes` stream opened with `?tail=1`, which also prints each crash as it lands:
+
+```bash
+curl -fsSN -H 'Accept: text/event-stream' "$API_BASE/crashes?$API_QUERY&tail=1" \
+  > crash-events.log 2>/dev/null &
+HOLD=$!
+
+# ... reproduce the crash with agent-device (open the app, press through the flow) ...
+
+sleep 8   # a report lands a few seconds after the process dies
+sim_api /crashes                        # {meta, crashes}: one record per distinct crash
+kill "$HOLD"
+```
+
+Alternatively, poll `sim_api /logs "snapshot=1&follow=1&limit=1"` at least every 8 seconds: the log stops 8 seconds after its last reader.
+
+Right after a session boots, the device logs heavily for a minute or two, and that can roll the buffer past a crash before its report lands (`logTailSource: "buffer-rolled-past"`, no lines). If that happens, reproduce again once logging settles; the new occurrence gets its tail.
+
+An empty `crashes` array right after a crash means "not yet", not "nothing happened". `meta.reportDelaySeconds` estimates the delay, and `meta.status` says whether collection is running (`watching`) at all.
+
+## Read a crash
+
+```bash
+sim_api "/crashes/<id>"                 # newest occurrence of that crash
+sim_api "/crashes/<id>" "key=<key>"     # a specific occurrence, by a key from occurrenceTimes
+```
+
+The list gives one record per crash signature, with `signal`, `exceptionType`, `culpritFrame`, `bundleId`, `pid`, `count`, and `occurrenceTimes` (each retained occurrence's `key`, oldest first). Repeats of the same crash collapse into one record with a higher `count`.
+
+The detail returns `{record, occurrence, report, reportError}`:
+
+- `occurrence.frames` is that occurrence's stack. The first frame with `appOwned: true` is usually where to look in the user's code.
+- `occurrence.logTail` holds the app's own device-log lines (NDJSON) from at or before the crash. `occurrence.logTailSource` says how it was chosen:
+  - `app-windowed`: lines found.
+  - `buffer-rolled-past`: the buffer no longer reached back that far, or nothing held the log when the crash happened.
+  - `no-app-lines`: the window was there, but the app logged nothing.
+  - `none`: nothing was buffered for the device, usually because nothing held the log.
+- `occurrence.appVersion`, `buildVersion`, and `faultingQueue` belong to that occurrence, not only to the newest one.
+- `report` is the full `.ips` text. It is `null` with a `reportError` when macOS deleted the file, or when the file at that path no longer holds this crash's report.
+
+## Read the device log
+
+```bash
+sim_api /logs "snapshot=1&follow=1&limit=500"      # newest 500 lines, and keep the log running
+sim_api /logs "snapshot=1&since=<latestSeq>"       # only lines after a cursor from a previous read
+```
+
+The JSON has `lines` (`{seq, raw}`, where `raw` is one NDJSON log entry with `processImagePath`, `processID`, `eventMessage`, and `messageType`), `latestSeq`, `oldestSeq`, and `status` (`streaming`, `restarting`, or `stopped`). To keep only the user's app, match `processImagePath` ending in the app's executable name, or `processID` for one launch.
+
+A busy simulator can log hundreds of lines a second, and the buffer is capped at about 4 MB, so it may hold only seconds to minutes of history. Read right after the event you care about; if `since` is older than `oldestSeq`, those lines are gone.
+
+## What the user sees
+
+The same data is in the browser preview the user opens from `webPreviewUrl`: the device log in the Logs drawer (toolbar icon), and crashes in the Crashes section of the Tools panel, where each crash opens its stack, log tail, and `.ips`. Point the user there when they want to look for themselves.
