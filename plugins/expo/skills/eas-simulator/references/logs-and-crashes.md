@@ -6,29 +6,47 @@ This covers iOS sessions. If the session's preview server predates these routes,
 
 ## Reach the preview API
 
-Use the skill's script instead of building URLs by hand. Run it from the Expo project directory, like `simulator:exec`; it reads the session's `previewApiUrl` from `simulator:get --json`. That URL carries the session token, so the script keeps it inside and never prints it. Don't print or share the URL yourself either: the token grants control of the session. The script only reaches `/crashes`, `/crashes/<id>`, and `/logs`.
+`simulator:get --json` returns `remoteConfig.previewApiUrl`, the preview server's API URL with the session token already in its query. Keep it in a shell variable and don't print it: the token grants control of the session. Run this from the Expo project directory, like `simulator:exec`, or add `--id <session-id>`:
 
 ```bash
-node <skill-dir>/scripts/preview-api.js get /crashes                        # the dotenv session
-node <skill-dir>/scripts/preview-api.js get /crashes --id <session-id>      # another session
+API=$(npx --yes eas-cli@latest simulator:get --json | node -e '
+  let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
+    const j = JSON.parse(s), url = j.remoteConfig?.previewApiUrl;
+    if (j.status !== "IN_PROGRESS" || j.platform !== "IOS" || !url) {
+      console.error(`no preview API (status ${j.status}, platform ${j.platform})`);
+      process.exit(1);
+    }
+    process.stdout.write(url);
+  });')
+
+API_BASE="${API%%\?*}"; API_BASE="${API_BASE%/}"
+case "$API" in *\?*) API_QUERY="${API#*\?}" ;; *) API_QUERY="" ;; esac
+
+# sim_api <path> [extra query]: call a preview route, keeping the token query.
+sim_api() { curl -fsS "$API_BASE$1?$API_QUERY${2:+&$2}"; }
 ```
 
-`<skill-dir>` is this skill's directory. Calls to the preview server do not reset the session's idle timer.
+If your shell does not keep variables between commands, repeat these lines at the start of each command. Only call `/crashes`, `/crashes/<id>`, and `/logs`. Don't call `/api`: its response includes the exec token. Calls to the preview server do not reset the session's idle timer.
 
 ## Catch a crash with its log tail
 
-The device log only runs while something holds it, so **start holding it before you reproduce the crash.** A crash that happens while nothing holds the log still gets a report, but its tail is empty. `watch` holds the log and prints each crash event as one JSON line:
+The device log only runs while something holds it, so **start holding it before you reproduce the crash.** A crash that happens while nothing holds the log still gets a report, but its tail is empty. Hold it with a `/crashes` stream opened with `?tail=1`, which also writes each crash event as it lands:
 
 ```bash
-# Run with your agent's background-command option, so you can read its output later:
-node <skill-dir>/scripts/preview-api.js watch --seconds 120
+EVENTS="${TMPDIR:-/tmp}/crash-events.log"
+curl -fsSN --max-time 300 -H 'Accept: text/event-stream' \
+  "$API_BASE/crashes?$API_QUERY&tail=1" > "$EVENTS" 2>/dev/null &
+HOLD=$!
+for i in $(seq 1 20); do grep -q '^data:' "$EVENTS" && break; sleep 0.5; done  # first frame = log held
 
-# Wait for "holding the device log" on stderr, then reproduce the crash with agent-device.
+# ... reproduce the crash with agent-device (open the app, press through the flow) ...
 
-node <skill-dir>/scripts/preview-api.js get /crashes   # {meta, crashes}: one record per distinct crash
+grep -E '"type":"(crash|recurred)"' "$EVENTS"  # a crash event lands a few seconds after the process dies
+sim_api /crashes                                  # {meta, crashes}: one record per distinct crash
+kill "$HOLD"
 ```
 
-A crash shows up in the `watch` output as a `{"type":"crash"}` (or `"recurred"`) line a few seconds after the process dies. `watch` stops after `--seconds` (default 300) or when interrupted, and exits with an error if the server closes the stream early. Without `watch`, call `get /logs "snapshot=1&follow=1&limit=1"` more often than every 8 seconds: the log stops 8 seconds after its last reader.
+If no `data:` line shows up, the stream did not open: check that `$HOLD` is still running and that the session is `IN_PROGRESS`. `--max-time 300` ends the hold after 5 minutes, even if `kill` runs in another shell; start it again for a longer run. Without the stream, call `sim_api /logs "snapshot=1&follow=1&limit=1"` more often than every 8 seconds: the log stops 8 seconds after its last reader.
 
 Right after a session boots, the device logs heavily for a minute or two, and a crash in that window can come back without its tail (`logTailSource` of `buffer-rolled-past` or `no-app-lines`, no lines). If that happens, reproduce again once logging settles; the new occurrence gets its tail.
 
@@ -37,8 +55,8 @@ An empty `crashes` array right after a crash means "not yet", not "nothing happe
 ## Read a crash
 
 ```bash
-node <skill-dir>/scripts/preview-api.js get /crashes/<id>            # newest occurrence of that crash
-node <skill-dir>/scripts/preview-api.js get /crashes/<id> key=<key>  # an occurrence, by a key from occurrenceTimes
+sim_api "/crashes/<id>"                 # newest occurrence of that crash
+sim_api "/crashes/<id>" "key=<key>"     # an occurrence, by a key from occurrenceTimes
 ```
 
 The list gives one record per crash signature, with `signal`, `exceptionType`, `culpritFrame`, `bundleId`, `pid`, `count`, and `occurrenceTimes` (each retained occurrence's `key`, oldest first). Repeats of the same crash collapse into one record with a higher `count`.
@@ -57,8 +75,8 @@ The detail returns `{record, occurrence, report, reportError}`:
 ## Read the device log
 
 ```bash
-node <skill-dir>/scripts/preview-api.js get /logs "snapshot=1&follow=1&limit=500"  # newest 500 lines, keep the log running
-node <skill-dir>/scripts/preview-api.js get /logs "snapshot=1&follow=1&since=<latestSeq>"   # only lines after a previous read
+sim_api /logs "snapshot=1&follow=1&limit=500"             # newest 500 lines, keep the log running
+sim_api /logs "snapshot=1&follow=1&since=<latestSeq>"     # only lines after a previous read
 ```
 
 The JSON has `lines` (`{seq, raw}`, where `raw` is one NDJSON log entry with `processImagePath`, `processID`, `eventMessage`, and `messageType`), `latestSeq`, `oldestSeq`, and `status` (`streaming`, `restarting`, or `stopped`). Without `follow=1`, `/logs` only reads what is already buffered, and `stopped` means nothing is holding the log. To keep only the user's app, match `processImagePath` ending in the app's executable name, or `processID` for one launch.
