@@ -62,33 +62,33 @@ import { fillMaxWidth, paddingAll } from "@expo/ui/jetpack-compose/modifiers";
 
 ## `RNHostView` sizing with `matchContents`
 
-With `matchContents`, `RNHostView` is a leaf in the Yoga tree — it measures its hosted child itself, and the width its native parent offers never reaches that child. The measure constraints come only from point-valued `minWidth` / `maxWidth` / `minHeight` / `maxHeight` on the hosted child; percentages are ignored and anything unset is unbounded.
+With `matchContents`, `RNHostView` sizes itself to its hosted child. It measures that child without the width of its native parent. The only limits the measurement uses are point values of `minWidth`, `maxWidth`, `minHeight`, and `maxHeight` on the hosted child. Percentages are ignored, and any limit you do not set is unbounded.
 
-So unbounded `<Text>` measures at its full single-line width and does **not** wrap — it runs past the screen edge. Bound the hosted child yourself:
+As a result, a `<Text>` with no width limit measures as one line. It does **not** wrap, and it runs past the screen edge. Set a limit on the hosted child:
 
 ```jsx
-// ✅ wraps at 280
+// ❌ Measures as one line and overflows
+<RNHostView matchContents>
+  <Text>A long string that has to wrap when the width is limited</Text>
+</RNHostView>
+
+// ✅ Wraps at 280 points
 <RNHostView matchContents>
   <View style={{ maxWidth: 280 }}>
     <Text>A long string that has to wrap when the width is limited</Text>
   </View>
 </RNHostView>
-
-// ❌ measures on one line and overflows
-<RNHostView matchContents>
-  <Text>A long string that has to wrap when the width is limited</Text>
-</RNHostView>
 ```
 
-- `maxWidth` is the bound the constraints read — use it when the view should still hug shorter content. A fixed `width` also works, since Yoga resolves it while measuring.
-- Add `minHeight` when the wrapped content must not collapse below a floor.
-- Without `matchContents` the host fills its native parent, so text wraps on its own and needs no bound.
+- Use `maxWidth` when the view must still shrink to fit shorter content. A fixed `width` also works.
+- Add `minHeight` to keep the wrapped content at or above a minimum height.
+- Without `matchContents`, the host fills its native parent. Text wraps normally and needs no limit.
 
 Other `RNHostView` layout rules:
 
-- Only the **first** child is measured and laid out. Wrap several views in one parent `View` and let that view arrange them.
-- With `matchContents`, `alignSelf: 'auto' | 'stretch'` is forced to `flex-start` so the node can hug its content.
-- `onLayout` on `RNHostView` reports the size it settled on — use it to see what `matchContents` actually measured.
+- `RNHostView` measures and lays out only its **first** child. To host several views, wrap them in one `View`.
+- With `matchContents`, `alignSelf: 'auto'` and `alignSelf: 'stretch'` change to `'flex-start'`, so the host can shrink to fit its content.
+- `onLayout` on `RNHostView` reports the final size. Use it to check what `matchContents` measured.
 
 ## Key Components
 
