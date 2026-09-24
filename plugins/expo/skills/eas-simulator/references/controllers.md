@@ -1,106 +1,83 @@
-# Controllers: agent-device and argent
+# Control and inspect the hosted app
 
-`eas-cli` has no device verbs — it manages the *session*. The verbs (open/tap/type/screenshot/inspect) come from a **controller** that `npx --yes eas-cli@latest simulator:exec` runs locally and that talks to the controller daemon on the remote VM. Two controllers are supported by `npx --yes eas-cli@latest simulator:start --type`:
+EAS CLI owns the hosted session; the controller provides app/device operations. Select a controller at startup. Its connection data and commands must match the session type.
 
-- `agent-device` (Callstack, MIT) — used throughout this skill; runs on demand via `npx agent-device@latest`, nothing installed globally.
-- `argent` (Software Mansion) — a capable alternative controller; check its license for your use.
-- `serve-sim` — not a controller; a streaming/preview-only type (iOS), no programmatic control.
+| Session type | Use it for | Connection data |
+|---|---|---|
+| `agent-device` | CLI/agent inspection, interaction, screenshots, recordings | `AGENT_DEVICE_DAEMON_BASE_URL`, `AGENT_DEVICE_DAEMON_AUTH_TOKEN` |
+| `argent` | Argent CLI or MCP workflows | `ARGENT_TOOLS_URL`, `ARGENT_AUTH_TOKEN` |
+| `appium` | Existing Appium tests | `APPIUM_URL`, `APPIUM_CAPS` |
+| `web-preview-only` | Human interaction in a browser | Preview URL; no automation interface |
 
-## agent-device verbs (run via `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`)
+Current EAS CLI help specifies browser previews for every type. Check returned capabilities and actual behavior on Android, whose support is still in development. Do not send agent-device commands to an Argent or preview-only session.
 
-agent-device is a thin **client** talking to a **daemon** (the daemon runs on the VM in a session). `npx --yes eas-cli@latest simulator:exec` sets `AGENT_DEVICE_DAEMON_BASE_URL` + `AGENT_DEVICE_DAEMON_AUTH_TOKEN` from `.env.eas-simulator`, which switches the client into remote mode. Selectors and `@e`-refs come from the latest `snapshot`.
+## Connection identity comes before device identity
 
-The CLI help is written for agents and is the source of truth — run these for the full verb set and agentic loop guidance:
+For one session in its own project directory, `eas sim:exec <command> ...` loads `.env.eas-simulator` and passes the remaining arguments through. It has no session `--id` selector: `sim:exec --id ...` is not a way to select another session.
 
-```bash
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest --help
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest help workflow
-```
+Without remote configuration, a controller can select an available local device. Verify the dotenv's session ID and both daemon variables as shown in [run-your-app.md](./run-your-app.md), plus a live `sim:get` result, before opening an app. Do not infer remote identity from a believable screenshot or a local diagnostics-file path.
 
-EAS-specific notes:
+For concurrent sessions, prefer separate project directories. Alternatively, start with `--out-config-type env --json`, keep each returned ID and `remoteConfig` in a private per-session file, and launch the controller directly with explicit environment values from that record. For EAS CLI 23.2.0's `AgentDeviceRunSessionRemoteConfig`:
 
-- **`press`, not `tap`.** The tap verb is `press` — `tap` is not a verb.
-- **`snapshot -i` is slow on iOS** — tens of seconds is normal; wait for it.
-- **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts — avoids a large upload).
-- **Exercised against a live session:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`, `scroll`, `gesture` (needs a preset, e.g. `gesture swipe left`), `logs`, `record` (`start`/`stop <path>`), `network`, `perf`. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
+| JSON field | Controller environment variable |
+|---|---|
+| `agentDeviceRemoteSessionUrl` | `AGENT_DEVICE_DAEMON_BASE_URL` |
+| `agentDeviceRemoteSessionToken` | `AGENT_DEVICE_DAEMON_AUTH_TOKEN` |
 
-## argent (alternative)
+Reject a missing URL/token, wrong controller type, or non-live session before dispatch. Pass the same distinct agent-device `--session <name>` on each command when multiple client sessions coexist. Do not route this explicit-env flow back through `sim:exec`, which can load a different dotenv over those values. Avoid shell tracing, printing tokens, or putting session files in source uploads. Raw EAS output is not automatically an agent-device `--remote-config` profile.
 
-`npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).
+## agent-device: inspect, act, verify
 
-**Invoking argent — run its tools directly.** Drive argent with `npx --yes eas-cli@latest simulator:exec argent run <tool> --udid <udid> …`. `simulator:exec` is `strict = false` and hands the command its args verbatim (it `spawnAsync(command, args)` with the session env loaded), so argent's `--flags` pass straight through — no `sh -c` wrapper and no `--args` JSON blob needed. (You can also drive argent via its MCP server, which passes structured params.) argent's gesture tools take **normalized 0.0–1.0** coordinates, not pixels — check its help for the exact input shape.
-
-**Installing apps in an argent session.** `--type argent` provisions only an argent daemon on the VM — there is no agent-device daemon, so agent-device install verbs don't apply. Install a local build with argent's own `reinstall-app` (tar-upload):
+Examples below use the single-session dotenv flow. Guidance matches agent-device 0.21.0; consult targeted help when a command differs or the hosted daemon is older:
 
 ```bash
-argent run reinstall-app --udid <udid> --bundleId <bundle-id> --appPath ./MyApp.app
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest help workflow
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest help react-native
 ```
 
-Whenever the tools client is routed to a remote tool-server, it tars the local bundle and streams it up automatically — no extra flag. "Remote" covers both `argent link` and the env-var MCP config (`ARGENT_TOOLS_URL`), so this works in sandboxed shells too. It's a registry tool, so the MCP server exposes it identically — same call by CLI or MCP. Works for iOS `.app` (a directory), Android `.apk`, and Vega `.vpkg`; the client prints an upload line on stderr.
-
-Needs argent ≥ 0.16.0 (the release that adds tar-upload) — verify with `argent --version`. On older versions `reinstall-app` resolves `--appPath` on the VM only, so a local path fails; drive an app already on the sim instead.
-
-**Mode C (dev client) on argent.** Easiest is the native launch (eas-cli ≥ 22.4.0): `simulator:start --type argent --build-id <id> --launch-arg … --open-url "<scheme>://expo-development-client/?url=<metro-url>"` installs, launches, and connects the dev client with the launch-args applied and the "Open in?" dialog auto-handled — same as agent-device Method 1 (see run-your-app.md). No manual `open-url` or coordinate tap. argent needs no `open --foreground` attach either; `argent run screenshot` works against the running app, but pass an explicit `--udid` from `list-devices` (the `Booted` one — there's no default), and it saves to a LOCAL temp path.
-
-To drive the connect yourself on a bare argent session (no launch flags), argent has `open-url`, which opens a scheme / deep link directly, so you can point a dev client at Metro without tapping through the launcher. Use the dev-client **custom scheme** (not `https://`, which can fall through to Safari):
+Attach to the installed app, then perform one action and verify its outcome:
 
 ```bash
-# load the dev client from Metro via its deep link
-npx --yes eas-cli@latest simulator:exec argent run open-url --udid <udid> --url "<scheme>://expo-development-client/?url=<metro-url>"
-# open-url raises the "Open in '<app>'?" system dialog — argent has NO alert-accept, so screenshot to
-# locate "Open", then coordinate-tap it (its describe may not see the dialog — see "System dialogs" below)
-npx --yes eas-cli@latest simulator:exec argent run screenshot --udid <udid>
-npx --yes eas-cli@latest simulator:exec argent run gesture-tap --udid <udid> --x <0..1> --y <0..1>
-# then attach to Metro's debugger / reload the bundle
-npx --yes eas-cli@latest simulator:exec argent run debugger-connect --udid <udid>
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest \
+  open com.example.myapp --foreground --platform ios
+# Read the initial tree and use an actual returned ref or an observed selector.
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest \
+  press 'role=button label="Search"' --settle
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest \
+  wait text 'Search results' 30000
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest \
+  screenshot ./search-results.png
 ```
 
-Where argent is weaker than agent-device Mode C — so it's **capable, not as fast**:
-- **No launch-args.** `launch-app` takes only `--bundleId`; argent can't pre-seed `-EXDevMenuIsOnboardingFinished` / `-EXDevMenuShowsAtLaunch` the way agent-device's `open --launch-args` does. If the onboarding popup or dev menu blocks the screen, tap through it by **normalized 0.0–1.0 coordinates** (`gesture-tap`, positions from `describe` / `native-describe-screen`) — there's no element/ref tap.
-- **No Metro bind on launch.** No `--metro-host` / `--bundle-url` seed; point the client at Metro with the `open-url` deep link above, then `debugger-connect` / `debugger-reload-metro`.
-- **Whole-string text entry:** use `keyboard --text "<string>"` — it types the entire string in one call. Never type character by character.
+- **Refs:** preserve `@` and any `~sN` suffix. Use the current settle diff or `snapshot -i` to refresh stale targets. Pinned stale refs are rejected rather than safely reusable.
+- **Text:** `fill <actual-input-ref> 'text' --settle` replaces a field's contents. A placeholder label may resolve to static text. `type` appends to an already-focused field and does not accept `--settle`; inspect afterward.
+- **Ambiguity:** narrow by role/id or choose a current candidate ref. Do not pick a similarly labeled control in another part of the screen.
+- **Missing UI:** scroll into view or wait for the expected transition. For sparse/unavailable accessibility trees, inspect a screenshot and use observed coordinates, then try the tree again after navigation.
+- **Dialogs:** inspect and handle the visible system alert; `help alert` gives current syntax. Do not blindly accept unrelated permission prompts as a connection fix.
+- **Device selection:** use the remote inventory (`devices --json`) when selecting a non-default device. Pass a consistent selector if more than one is booted; install the app on that selected device too. Do not hard-code a device list or infer OS versions from model names.
+- **Timeouts:** use the command's supported timeout options. `--settle` establishes local UI quiet, not a successful business outcome. A slow/failed capture requires diagnosis; inspect before replaying a mutating action.
 
-**System dialogs on argent (e.g. the first-time deep-link "Open in '<app>'?").** argent's UI queries (`describe` / `await-ui-element`) may not see system dialogs / native modals — a screenshot shows the dialog, but element lookups time out. When that happens, argent surfaces a hint with the fix (today that's a `boot-device --force` to switch its AX backend); follow the hint, then locate and tap "Open". There's no single press-with-timeout — you wait for the element, then tap it. Use argent's own command help for the exact tools and flags.
+### Launches, captures, and diagnostics
 
-**Recording video on argent (`screen-recording-start`/`stop`).** The gotcha to know: argent **trims static stretches by default**, which drops the very frames you're measuring — turn that off when you care about cadence or timing (see argent's help for the flag). Recordings also carry a burned-in "Argent" watermark that can't be disabled on a hosted session — fine for diagnosis, mind it before sharing publicly. The stop call returns a video already downloaded locally; extract frames with `ffmpeg` (may need installing) to inspect motion frame by frame. The capture samples at ~30fps, so it shows visible jank but can't prove or disprove sub-frame hitches on 60/120Hz content.
+`open --foreground` attaches; `open <app-id> --relaunch` requests a fresh app launch. Repeated foreground opens are not repeated cold launches. Track app/foreground state and logs when diagnosing termination, and capture per-launch evidence rather than inferring a crash from a blank frame.
 
-**Screenshot resolution and token cost.** Screenshots cost context tokens once the agent reads them, so resolution is a real tradeoff. **argent's `screenshot` has two independent levers.** `scale` sets the image resolution and defaults **low** (too coarse to judge layout), so pass a larger scale when you need to **read** the UI. `includeImageInContext:false` keeps an image **out of the agent's context entirely** (zero token cost) — use that for a baseline you'll only **diff** later, and keep *that* one at full resolution so the pixel diff stays accurate. So: scale down images you actually read; drop unread ones with `includeImageInContext`, don't just shrink them. Exact flags and the current default: argent's help.
+Use `record start` / `record stop ./flow.mp4` for motion; inspect the recording. For visual comparisons, keep viewport, content, theme, and screenshot scale consistent. `screenshot --scale 1` requests full resolution; older hosted daemons may differ from a newer client. Avoid claims about exact frame pacing unless the capture method supports them.
 
-**agent-device** screenshots default to full resolution — a crisp PNG you read from disk, token-heavier for its size, so match the capture to the question. From **v0.20.6** it gains the same lever argent has and drops the old one: `screenshot --scale <0.01–1>` proportionally resizes both dimensions (`1` = full resolution), with a token-conscious default via `AGENT_DEVICE_SCREENSHOT_SCALE` (or `screenshotScale` in config) that an explicit `--scale` overrides — keep it unset or `1` for pixel-diff baselines; the former `--max-size` is removed (older calls refused with migration guidance). Verify the version with `agent-device --version`. One caveat for remote sessions: the resize runs on the daemon, so a newer client against an older EAS session daemon can have `--scale` silently ignored and get full-res back.
+Load `help debugging` for app state, logs, performance, and network diagnostics; load `help react-native` for Metro and native overlays. Use the smallest diagnostic that distinguishes the failing layer.
 
-**Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
+## Argent and Appium
+
+For Argent, use the session's own connection instructions or invoke its CLI through `sim:exec`. The package is `@swmansion/argent`. Startup installation via `--build-id`, `--application-archive-url`, or `--expo-go` is the simplest shared entry point. For a local app, current Argent supports upload via `reinstall-app`; confirm its semantics before replacing an installed app.
 
 ```bash
-npm install -g @swmansion/argent
+npx --yes eas-cli@latest sim:exec argent run list-devices
+npx --yes eas-cli@latest sim:exec argent run screenshot --udid <remote-udid>
 ```
 
-Then run `argent init --yes` to register the Argent MCP server. Link the session credentials with `argent link` — the recommended path:
+Use the actual remote UDID. Argent's gesture coordinates are normalized (0–1), unlike pixel-coordinate examples from other controllers. Its UI queries may miss a system dialog that is visible in a screenshot; follow the command's corrective hints. Check recording options such as static-frame trimming before using recordings to measure timing.
 
-```bash
-argent link '<ARGENT_TOOLS_URL>' --token '<ARGENT_AUTH_TOKEN>' --yes
-```
+For an already-installed Argent MCP client, link the returned session with `argent link '<tools-url>' --token '<token>' --yes` and restart the MCP process so it loads the new connection. Keep credentials in the host's supported private configuration; consult [Argent and Expo](https://docs.expo.dev/agents/argent/) for current setup rather than assuming every agent uses the same MCP file format. Switching an existing link requires updating its token as well as its URL.
 
-Reload the agent after linking so its `argent mcp` process picks up the remote session.
+For Appium, use the returned endpoint and capabilities with the project's existing Appium client, through `sim:exec` or explicit connection configuration. Consult current controller documentation for supported platform operations. A successful client connection still needs an app-level assertion.
 
-**Sandboxed shells** (Claude Code, some CI environments) can't write to `~/.argent/` so `argent link` won't work there. Use env vars in the MCP config file instead — this is argent's highest-precedence resolution and overrides any link:
-
-```json
-{
-  "mcpServers": {
-    "argent": {
-      "command": "argent",
-      "args": ["mcp"],
-      "env": {
-        "ARGENT_TOOLS_URL": "<ARGENT_TOOLS_URL from simulator:start>",
-        "ARGENT_AUTH_TOKEN": "<ARGENT_AUTH_TOKEN from simulator:start>"
-      }
-    }
-  }
-}
-```
-
-MCP config file location: `.cursor/mcp.json` (Cursor), `.claude/mcp.json` (Claude Code), `mcp.json` in the Codex project root. It carries a session token — **add it to `.gitignore`**.
-
-**Known issues:**
-- `argent init --help` launches an interactive wizard regardless of the flag — use `--yes` to skip it, or read the package source for non-interactive flags.
-- Re-running `argent link` against an already-linked URL **without `--yes`** reports "Already linked. No changes." and keeps the old token — every call then fails with `401 Unauthorized`. Always pass `--yes` (as above) so a rotated token is actually written.
+Close the controller when finished, then **stop the EAS session by ID**. Controller cleanup and EAS resource cleanup are separate operations.

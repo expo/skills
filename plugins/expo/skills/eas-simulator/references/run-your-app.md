@@ -1,224 +1,167 @@
-# Running your app on the remote sim — tested sequences
+# Get the right app onto the remote device
 
-The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026; the commands are experimental — if one fails, re-check `<cmd> --help`.)
+These examples use the EAS CLI 23.2.0 command surface and POSIX shell syntax. Run from the intended EAS-linked project directory; use current `--help` if a flag differs. Replace example IDs, schemes, paths, ports, and URLs with values discovered from the app and CLI output. On Windows, use a compatible shell or translate shell syntax for PowerShell.
 
-In all modes, the session is started the same way and driven through `npx --yes eas-cli@latest simulator:exec`. Replace `dev.example.app` with the app's iOS `bundleIdentifier` (from `app.json` → `ios.bundleIdentifier`), and run from the project directory.
+## Expo Go or a development build: prepare Metro
 
-> These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app`, skip `pod install`, and note there's **no `webPreviewUrl`** (Android is agent-driven / screenshot-only).
+Use Expo Go when it can represent the app and the feature under test. It needs no custom app build. Use the project's development client when native dependencies, configuration, or the test require it; see the sibling `expo-dev-client` skill.
 
-## Starting a session (shared by all modes)
-
-```bash
-# Reset the dotenv first so the new session id isn't masked by an "Overwriting previous session" warning.
-printf '# managed by eas-cli\n' > .env.eas-simulator
-
-# Start (no --json, so it writes .env.eas-simulator). It boots the sim + agent-device daemon.
-# --name is required practice: it labels the session in simulator:list/get and on expo.dev.
-# Describe what the run is for, in the user's terms — see "Always name the session" in SKILL.md.
-npx --yes eas-cli@latest simulator:start --platform ios --type agent-device --non-interactive \
-  --name "Checkout flow screenshots"
-```
-
-`start`'s own poll is unreliable, so confirm liveness with a bounded loop (boot is ~90s–15min). `get`/`exec`/`stop` default to the session in `.env.eas-simulator`, so you can omit `--id`:
+Run Metro in a persistent terminal/process on a free port owned by this task:
 
 ```bash
-# Poll up to ~16 min; IN_PROGRESS + remoteConfig = live; a terminal status = failed boot (stop + restart).
-for i in $(seq 1 64); do
-  S=$(npx --yes eas-cli@latest simulator:get --json --non-interactive 2>/dev/null)
-  echo "$S" | grep -q '"status": *"IN_PROGRESS"' && echo "$S" | grep -q remoteConfig && { echo "live"; break; }
-  echo "$S" | grep -qE '"status": *"(STOPPED|ERRORED)"' && { echo "boot failed — stop + restart"; break; }
-  sleep 15
-done
+# Expo Go
+npx expo start --go --tunnel --port 8082
+# Development client (alternative)
+npx expo start --dev-client --tunnel --port 8082
 ```
 
-If you need the id explicitly, it's `EAS_SIMULATOR_SESSION_ID` in `.env.eas-simulator`. `start` also prints a `webPreviewUrl` (iOS-only browser preview — surface it per the SKILL.md "watch it live" rules) and a job-run URL. Once live, the session env is in `.env.eas-simulator`, so `simulator:exec` works.
+The remote device cannot reach your laptop's `localhost` or private LAN address. Keep Metro and its tunnel alive throughout testing; do not use `expo start --ios`, which opens a simulator on the Metro host.
 
-## Targeting a device — iPad, or several at once
-
-**Boot a specific device at session start** with `eas simulator:start --device "<name|UDID>"` (eas-cli ≥ 22.4.0) — this is how you run on an iPad instead of the default iPhone:
+For a supported Expo CLI in a headless/robot-account environment, the account-signed tunnel is another option:
 
 ```bash
-npx --yes eas-cli@latest simulator:start --platform ios --device "iPad Pro 13-inch (M5)" \
-  --non-interactive --name "iPad run"
-# then install / launch / screenshot as usual — the iPad renders larger (e.g. 1032x1376).
+EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --go --tunnel --port 8082
 ```
 
-The value must be a device the **remote runner** offers (NOT your local Xcode set), by name **or** UDID. List them from a live session:
+This experimental flag depends on the installed Expo CLI and account/project linkage. Plain ngrok tunneling rejects robot users. Follow the actual error when the signed tunnel cannot be created; setting the flag on an older CLI does not guarantee it is active. Do not set `EXPO_FORCE_WEBCONTAINER_ENV` to work around a port error: it changes tunnel behavior and can select a legacy path restricted to 8081.
+
+Use the deep link printed by Metro. On CLIs supporting the [open endpoint](https://docs.expo.dev/more/expo-cli/#open-endpoint), get it without launching anything locally:
 
 ```bash
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest devices --json
+curl --fail --silent --show-error \
+  'http://localhost:8082/_expo/open?platform=ios&runtime=expo'
+# Development client: runtime=custom. Android: platform=android.
+# Read the response's `url`; with --tunnel it should use the public tunnel host.
 ```
 
-Available iOS devices today: iPhone 17 / 17 Pro / 17 Pro Max / 17e / Air, and iPad (A16), iPad Air 11"/13" (M4), iPad mini (A17 Pro), iPad Pro 11"/13" (M5).
+If that endpoint is unavailable, use Metro's printed URL. Expo Go uses an `exp://` or `exps://` deep link; a development client uses its configured scheme with an encoded Metro URL, such as `myapp://expo-development-client/?url=<encoded-url>`. Do not guess the scheme from the project slug or replace the app deep link with a browser URL.
 
-**Switch devices mid-session:** a session exposes ~16 sims but boots only one at start. Pass the **controller's** global `--device "<name>"` on `open` (and other verbs) to boot + target another; it stays booted alongside the first, so pass `--device` on each verb to say which it hits.
+## Install and launch at session startup
+
+After the access/ownership checks in `SKILL.md`, start **one** of these sessions:
 
 ```bash
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> "<devClientURL>" \
-  --platform ios --device "iPad Pro 13-inch (M5)" --relaunch
+# Expo Go: SDK inferred from the project; --sdk-version can select it explicitly.
+npx --yes eas-cli@latest sim --platform ios --type agent-device \
+  --expo-go --open-url '<deep-link-from-Metro>' \
+  --name 'Search flow verification' --tag skill-check \
+  --max-idle-time-minutes 15 --non-interactive
 ```
-
-- ⚠️ The **controller** `--device` resolves by **NAME only** — a udid returns `DEVICE_NOT_FOUND`. (The start-time CLI `--device` above takes either.)
-- `devices` reports each device's name, kind, and booted state, but **not** its iOS version.
-
----
-
-## Mode A — Local release build (embedded JS, no Metro)
-
-A Release build bundles the JS into the binary, so it renders without Metro. Good for a quick "run my current code on a cloud device" when a Mac toolchain is available.
 
 ```bash
-# 1. Generate native project + build a Release simulator .app
-npx expo prebuild --platform ios          # set ios.bundleIdentifier in app.json first to avoid prompts
-# pod install can fail on Ruby 4 + CocoaPods with a Unicode/ASCII-8BIT error — fix with a UTF-8 locale:
-( cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install )
-LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 xcodebuild \
-  -workspace ios/<App>.xcworkspace -scheme <App> \
-  -configuration Release -sdk iphonesimulator -derivedDataPath ios/build build
-# → ios/build/Build/Products/Release-iphonesimulator/<App>.app
-
-# 2. Start a session (see "Starting a session" above), then install + open + drive
-APP=ios/build/Build/Products/Release-iphonesimulator/<App>.app
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest install dev.example.app "$APP" --platform ios
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest open dev.example.app --platform ios
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./shot.png
-
-# 3. Stop
-npx --yes eas-cli@latest simulator:stop          # omit --id → stops the dotenv session
+# Existing EAS build: must target the chosen simulator/emulator platform.
+npx --yes eas-cli@latest sim --platform ios --type agent-device \
+  --build-id <build-id> --open-url '<development-client-deep-link>' \
+  --name 'Development build search flow' --max-idle-time-minutes 15 \
+  --non-interactive
 ```
-
-The `install` here **uploads** the (~90MB) `.app` to the remote daemon over the tunnel, which installs it on the sim with `simctl`.
-
----
-
-## Mode B — EAS build (the VM downloads it; no credentials)
-
-**Explicit-only** (see the SKILL.md mode picker): a *static* EAS artifact for CI/sharing, or when the user names an existing EAS build. For no-Mac **live** iteration use Mode C with an EAS dev-client build (see Mode C below), not this. **Simulator builds are unsigned, so EAS asks for no credentials.**
-
-⚠️ **Check for an existing build first.** Before triggering a new build, check if a fingerprint-matched one already exists — it saves ~15-20 min:
 
 ```bash
-npx --yes eas-cli@latest build:list --platform ios --profile <your-sim-profile> --status finished --json | \
-  head -20   # <your-sim-profile> = the profile you find/create in step 1; look for one whose fingerprint matches current source
+# A standalone app from a workflow or other artifact source; no Metro required.
+npx --yes eas-cli@latest sim --platform ios --type agent-device \
+  --application-archive-url '<download-url>' \
+  --name 'Swift onboarding verification' --max-idle-time-minutes 15 \
+  --non-interactive
 ```
 
-If one matches, skip straight to step 3 with its artifact URL.
+`--expo-go`, `--build-id`, and `--application-archive-url` are alternative sources. Omit `--open-url` for standalone builds. Launch options require an application source. Local paths do not belong in `--application-archive-url`; install those after boot instead.
 
-⚠️ **Order matters:** build FIRST, `start` the session LAST. The build takes ~15-20 min and a session left idle that long times out (`ERR_NGROK_3200`) — don't `start` until you have the artifact URL.
+To select a device, add `--device '<remote-device-name>'`. Current start help accepts an iOS device name/UDID or an Android AVD hardware profile ID. Choose from the remote runner's available devices; local Xcode's inventory does not describe the cloud runner.
+
+Record the ID as soon as the CLI reports session creation. Startup waits for connection data. If it is slow, inspect `sim:get --id <session-id> --json` and `sim:events --id <session-id> --follow` instead of creating another session. Confirm status `IN_PROGRESS` and the expected controller's `remoteConfig`; then verify the app separately.
+
+### Connection output and controller attachment
+
+By default, the CLI writes `.env.eas-simulator`. In **23.2.0, even `--json` writes this file after readiness**; it only skips the early ID-only write. Use **`--out-config-type env --json`** when you need machine-readable connection data without that shared file. Store output privately: `remoteConfig` contains credentials. See [controllers.md](./controllers.md) for explicit connection handling.
+
+In the single-session dotenv flow, first confirm the file's ID matches the recorded session and the connection variables exist without printing their values:
 
 ```bash
-# 1. Find or create a simulator build profile in eas.json.
-#    Read eas.json if it exists and look for a build profile with ios.simulator: true.
-#    If one exists, note its name and skip to step 2.
-#    If not, add one named "sim" — use node, python3, jq, or a direct JSON edit, whichever
-#    is available. Preserve all other profiles. Minimum: { "ios": { "simulator": true } }
-
-# 2. Build (no credentials prompt for a simulator build). Prints an artifact URL when done (~15-20 min).
-npx --yes eas-cli@latest build --platform ios --profile sim --non-interactive
-# → https://expo.dev/artifacts/eas/<hash>.tar.gz
-
-# 3. Start a session, then install-from-source so the VM downloads the artifact (no local upload)
-ART="https://expo.dev/artifacts/eas/<hash>.tar.gz"
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest install-from-source "$ART" --platform ios
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest open dev.example.app --platform ios
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./shot.png
-
-# 4. Stop
-npx --yes eas-cli@latest simulator:stop          # omit --id → stops the dotenv session
+npx --yes eas-cli@latest sim:exec node -e '
+  for (const key of ["EAS_SIMULATOR_SESSION_ID", "AGENT_DEVICE_DAEMON_BASE_URL", "AGENT_DEVICE_DAEMON_AUTH_TOKEN"])
+    if (!process.env[key]) throw new Error("Missing remote session variable: " + key);
+  console.log("Session:", process.env.EAS_SIMULATOR_SESSION_ID);
+'
 ```
 
-**Build freshness:** reuse only a build whose **fingerprint matches current source** (`npx --yes eas-cli@latest build:list --platform ios --json`, or `get-build` by fingerprint per Callstack's public `eas-agent-device` workflow); otherwise **rebuild** or use Mode C. Tell the user which build you used. (Why this matters → SKILL.md "Reusing an existing build" caveat.)
-
----
-
-## Mode C — Dev build + tunnel (live edits via Fast Refresh)
-
-The agentic edit-and-see loop: a **dev (Debug) build** loads JS from your **Metro** over a tunnel, so edits appear on the remote sim via Fast Refresh. Two ways to connect the dev client to Metro:
-
-- **Method 1 (recommended, eas-cli ≥ 22.4.0):** launch at session start — `simulator:start` installs the build, applies launch-args, and opens the Metro URL in one command, and the "Open in?" dialog is auto-handled. Needs a **remote** build source (`--build-id`, `--application-archive-url`, or `--expo-go`); a local `.app` can't be passed here.
-- **Method 2 (fallback):** drive the connect with the controller — for a **local `.app`** build, or eas-cli < 22.4.0.
-
-⚠️ **Don't install a release build as a "quick interim" and screenshot it** — it shows stale, build-time code. Use a dev build + Metro; screenshot only after the dev client is connected.
-
-### Get a dev-client build (either method needs one)
-
-- **Local (Mac):** `npx expo install expo-dev-client`; `npx expo prebuild --platform ios --clean` (set `ios.bundleIdentifier` first); `( cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install )`; then `xcodebuild -workspace ios/<App>.xcworkspace -scheme <App> -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-debug build` → `ios/build-debug/Build/Products/Debug-iphonesimulator/<App>.app`. A local `.app` → **Method 2 only**.
-- **EAS (no Mac, or to use Method 1):** ensure a profile with `developmentClient: true` + `ios.simulator: true`, then `npx --yes eas-cli@latest build --platform ios --profile <dev-sim> --non-interactive`. Note the **build id** (Method 1's `--build-id`) or the artifact URL. Reuse a fingerprint-matched build to skip the ~15-20 min.
-
-### Method 1 — launch at session start (recommended)
-
-⚠️ **Metro FIRST, then `simulator:start`** — the runner opens `--open-url` during startup, with no retry.
+Then attach to the installed app. EAS's startup launch does not create the agent-device interaction session:
 
 ```bash
-# 1. Start Metro with a tunnel on your own free port (tunnel-backend details at the end of this mode).
-EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port <your-free-port>   # background it durably
-#    Capture the manifest host. Headless runs won't print it — read ngrok's API (curl -s 127.0.0.1:4040/api/tunnels)
-#    or the manifest (curl -s -H "expo-platform: ios" localhost:<port>/ → launchAsset.url).
-
-# 2. Start the session AND install+launch+open the app in one command (--launch-arg = one token per flag):
-#    Dev client: --build-id <id>, --open-url <scheme>://expo-development-client/?url=https://<manifest-host>
-#                (scheme = app.json `scheme`, NOT the slug; URL-encode the inner url if it has a path/query)
-#    Expo Go:    --expo-go instead of --build-id, and --open-url exp://<manifest-host>  (no port; https opens Safari)
-npx --yes eas-cli@latest simulator:start --platform ios --build-id <BUILD_ID> \
-  --launch-arg "-EXDevMenuIsOnboardingFinished" --launch-arg "1" \
-  --launch-arg "-EXDevMenuShowsAtLaunch" --launch-arg "0" \
-  --launch-arg "-EXDevMenuShowFloatingActionButton" --launch-arg "0" \
-  --open-url "<scheme>://expo-development-client/?url=https://<manifest-host>" \
-  --non-interactive --name "Coin flip live edits"
-#    The app installs, launches with the launch-args (onboarding/dev-menu/gear suppressed), and opens the URL.
-#    The "Open in '<app>'?" dialog is auto-bypassed (the CLI writes the scheme approval) and the approval
-#    persists session-wide — so NO `alert accept` is needed, here or for later controller opens.
-#    `start` prints NOTHING about the install/launch — confirm from Metro's `iOS Bundled …` line.
-
-# 3. To screenshot/drive, ATTACH the controller once — the CLI launch makes NO agent-device session, so a bare
-#    `screenshot` fails `SESSION_NOT_FOUND`. `open --foreground` attaches without relaunching:
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> --foreground --platform ios
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./live.png
-#    VERIFY it's the REMOTE sim, not a silent local-sim fallback (agent-device falls back to a LOCAL sim with no
-#    error when the dotenv lacks remote config → believable but WRONG screenshots). Decisive tells: `simulator:get
-#    --json` returns the id `start` printed, AND the attach's "Session state:" path is under /Users/expo/ (remote
-#    VM), not /Users/gabe/ (your Mac). The `sessions/` vs `remote-diagnostics/` directory name is NOT reliable.
-
-# 4. Fast Refresh: edit a source file → it hits the remote sim with no reload. Screenshot again to confirm.
-# 5. Stop: npx --yes eas-cli@latest simulator:stop   # then kill the Metro process
+# Use the discovered bundle/package ID; Expo Go's installed name is "Expo Go".
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest \
+  open '<app-id-or-Expo-Go>' --foreground --platform ios
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest \
+  wait text 'Expected app landmark' 30000
 ```
 
-### Method 2 — drive the connect with the controller (fallback)
+Handle any visible launcher, onboarding, or system dialog before claiming the app loaded. If `--open-url` did not connect, inspect Metro and app state, then open the known app deep link through the controller. For a development-client launcher, entering Metro's manifest URL manually is a fallback; fill the actual input node, then use its Connect action.
 
-For a **local `.app`** (can't be passed to `--build-id`) or **eas-cli < 22.4.0**. Start a plain session (see "Starting a session"), install the build, then deep-link the dev client:
+Optional iOS dev-menu settings can reduce overlays **after** identifying the app state. EAS accepts one token per `--launch-arg`; agent-device's equivalent on `open` is repeatable `--launch-args`:
 
 ```bash
-# install: a local .app uploads over the tunnel; an EAS artifact uses install-from-source (VM downloads it):
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest install <bundleId> "$DEVAPP" --platform ios
-#   (EAS artifact instead:  install-from-source "https://expo.dev/artifacts/eas/<hash>.tar.gz" --platform ios)
-
-# connect: `open <bundleId> <devClientURL>` deep-links into the bundle, skipping the launcher UI. Assemble
-# <devClientURL> from the app's SCHEME (app.json `scheme`, NOT the slug): <scheme>://expo-development-client/?url=https://<manifest-host>
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> "<devClientURL>" --platform ios --relaunch \
-  --launch-args "-EXDevMenuIsOnboardingFinished" --launch-args "1" \
-  --launch-args "-EXDevMenuShowsAtLaunch" --launch-args "0" \
-  --launch-args "-EXDevMenuShowFloatingActionButton" --launch-args "0"
-# a controller open on a BARE session (no Method-1 launch to pre-approve the scheme) can raise the
-# "Open in '<app>'?" dialog — accept it (no-op if absent; not needed after a Method-1 launch):
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert accept 2500 --platform ios
-# then screenshot; if it shows the launcher not the app, the deep link didn't take → manual fallback:
-#   press 'label="Enter URL manually"' → snapshot -i → fill @<field> "<manifest URL>" → press 'label="Connect"'
-#   → press 'label="Reload"'; press 'label="Go back"' if expo-router shows "Unmatched Route".
+--launch-arg '-EXDevMenuIsOnboardingFinished' --launch-arg '1' \
+--launch-arg '-EXDevMenuShowsAtLaunch' --launch-arg '0' \
+--launch-arg '-EXDevMenuShowFloatingActionButton' --launch-arg '0'
 ```
 
-### Dev-menu launch flags (both methods)
+These are Expo runtime settings, not universal native-app launch arguments. Do not suppress a dev-menu/onboarding surface when that is what the test needs to exercise.
 
-The launch-args are iOS UserDefaults (`-Key Value`), verified in expo/expo `packages/expo-dev-menu`. By default the onboarding popup, auto-opened dev menu, and floating gear all show and clutter screenshots; these suppress them:
-- `-EXDevMenuIsOnboardingFinished 1` — skip the first-run onboarding popup (dev client **and** Expo Go)
-- `-EXDevMenuShowsAtLaunch 0` — don't auto-open the dev menu at launch (dev client)
-- `-EXDevMenuShowFloatingActionButton 0` — hide the floating gear (defaults visible on both)
+## When a build is necessary
 
-Method 1 passes each as two flags: `--launch-arg "<key>" --launch-arg "<value>"`. Method 2 passes them as `--launch-args`.
+### Expo / React Native
 
-### Metro tunnel backends (both methods)
+Inspect existing build profiles before adding one. For EAS Build, these example profiles distinguish live development from a standalone preview; merge only the needed profile into `eas.json`:
 
-Start Metro on your OWN free port — each run gets its own tunnel URL, so never fight for or kill :8081 (#133's rule). BOTH backends accept ANY `--port`:
-- **ws-tunnel v2 (account-signed):** `EXPO_UNSTABLE_TUNNEL_V2=1` — signed URL for your EAS account, `on.expo.app` host, and the path for robot/EXPO_TOKEN/cloud agents (plain ngrok is blocked for them). Needs login / an EAS-linked project; if the signed URL fails, the CLI says to unset the flag and use ngrok.
-- **ngrok (plain `--tunnel`, no flag):** `<host>.exp.direct` host; blocked for robot/EXPO_TOKEN users.
+```json
+{
+  "build": {
+    "development-simulator": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": { "simulator": true },
+      "android": { "buildType": "apk" }
+    },
+    "preview-simulator": {
+      "distribution": "internal",
+      "ios": { "simulator": true },
+      "android": { "buildType": "apk" }
+    }
+  }
+}
+```
 
-The ONLY 8081 lock is the LEGACY ws-tunnel path — hit WITHOUT the v2 account URL (an older CLI where the flag no-ops, or `EXPO_FORCE_WEBCONTAINER_ENV=1`). Do NOT set `EXPO_FORCE_WEBCONTAINER_ENV` to "fix" a port — it forces that legacy path and locks you to 8081. On an older CLI (e.g. expo 56) the v2 flag no-ops and you get ngrok on your chosen port (verified: expo 56.0.3 → ngrok on :8083).
+```bash
+npx --yes eas-cli@latest build --platform ios \
+  --profile development-simulator --non-interactive
+```
+
+A development-client profile also needs `expo-dev-client` installed and configured. iOS simulator builds do not require Apple distribution credentials. Android needs an installable `.apk`, not a store `.aab`.
+
+For a local Mac build, use the project's existing native build procedure. If the app uses Expo's generated native projects, prebuild only when needed; do not run `prebuild --clean` over maintained native changes. A workspace-based example:
+
+```bash
+xcodebuild -workspace ios/MyApp.xcworkspace -scheme MyApp \
+  -configuration Debug -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath .sim-build build
+```
+
+Discover the actual product path and bundle ID from build settings / the built `Info.plist`. Use Release and a bundled JS build for standalone verification. Reuse development binaries only when native dependencies/configuration are compatible. A JS-only edit should not trigger a native build; a native patch must actually be compiled into the artifact being tested.
+
+### Native Swift / SwiftUI
+
+Build the app's shared Xcode scheme for `generic/platform=iOS Simulator`, locally or with the [macOS workflow](./workflows.md). Use `-project MyApp.xcodeproj` for a project or `-workspace MyApp.xcworkspace` when required. A device `.ipa` or macOS `.app` cannot run in the iOS Simulator. Confirm simulator architecture and minimum OS compatibility when moving artifacts between machines.
+
+## Install a local artifact after boot
+
+Start a session without an application source, then use the controller's upload path:
+
+```bash
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest \
+  install com.example.myapp './path/to/MyApp.app' --platform ios
+npx --yes eas-cli@latest sim:exec npx --yes agent-device@latest \
+  open com.example.myapp --foreground --platform ios
+```
+
+For Android, use the actual package ID, `.apk` path, and `--platform android`. For a remote artifact on an already-running session, `install-from-source '<download-url>' --platform ios` lets the daemon fetch it. Installation does not prove launch or app readiness; open the intended app and verify its landmark. After native edits, rebuild and reinstall; for JS edits in Expo Go/development builds, verify Fast Refresh instead.
+
+Finish with `sim:stop --id <session-id> --json` and stop the Metro process owned by this task, unless the session is explicitly being handed off for continued use.
