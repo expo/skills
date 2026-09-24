@@ -4,11 +4,14 @@ Keep the session/build ID and relevant error before changing state. Check the la
 
 | Symptom | Check and next action |
 |---|---|
+| Approval review rejects the Metro tunnel or dev-client Connect action | Follow [Tunnel scope and approvals](./run-your-app.md#tunnel-scope-and-approvals). Include the original authorization source and verified transport in the request; use reconsideration only where the host permits it. Preserve the requested live workflow while resolving approval. |
+| Controller recording download fails or times out | The transfer can fail even though EAS retains the recording. Fetch it from [EAS session artifacts](./controllers.md#recording-download-recovery) using the original session ID and recording's `downloadUrl`. |
+| Appium or browser-preview session stops despite ongoing interaction | Only activity reported through agent-device and Argent resets the idle timer. Use the maximum duration as the lifetime bound for Appium and user-driven previews; omit the idle timeout unless inactivity from a supported controller is the intended stop condition. |
 | Command or flag not recognized | Check `npx --yes eas-cli@latest <command> --help`. Current start is `eas sim` / `eas simulator`; `simulator:start` remains an alias. `serve-sim` was replaced in CLI choices by `web-preview-only`. |
 | `An Expo user account is required` | Authenticate with `eas login` or provide `EXPO_TOKEN` through the environment. Confirm with `whoami`; do not paste tokens into logs or skill files. |
 | Project not linked / no `projectId` | Check the working directory and resolved EAS project config. Link the intended project with `eas init`; a native Swift app still needs an EAS project to own its sessions/workflows. |
 | Account not enabled | Check `sim:availability --json` for the project's account. Stop retrying allocation and report the access limitation. |
-| Maximum-duration option rejected by plan | Use the service's default maximum or the account's supported limit. Do not silently change plans. An idle timeout is a separate setting. |
+| Maximum-duration option rejected by plan | Inspect the CLI error and use the service's default maximum when the requested duration is unsupported. Do not silently change plans. An idle timeout is a separate setting. |
 | Slow startup / no connection data yet | Inspect the same ID with `sim:get` and `sim:events --follow`; consult the job error if it stops or errors. Do not create another session to retry an allocation in progress. |
 | Dotenv contains only the session ID | Startup may not have finished. Wait for controller connection data and verify live status before invoking a controller. |
 | Unexpected local device / wrong app or session | Check the saved session ID, live `remoteConfig`, and actual controller URL/token. Missing remote env can allow local selection. Do not use diagnostics-path prefixes as proof of remote execution. |

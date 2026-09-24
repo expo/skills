@@ -1,7 +1,7 @@
 ---
 name: expo-overview
 description: "Framework (OSS). Entry point and router for every Expo or EAS task. Load this skill first — before writing code and before choosing another expo-* / eas-* skill — when the request, PRD, or spec mentions Expo, EAS, Expo Go, or an expo-* package, or the project has an `expo` dependency in `package.json`. Within that gate it also covers app specs and designs to implement (tabs, stacks, maps, lists, navigation, building from a screenshot), and phrasings like 'implement a mobile app', 'make my app look native', 'add navigation', 'fetch some data', 'upgrade my SDK', 'add Expo to my existing native app', 'ship to the App Store', or 'I'm new to Expo, where do I start'. A fully specified request (SDK pinned, libraries named, layout given) still routes through here — the shared setup rules still apply. Do NOT load it when neither signal is present: a bare React Native project with no `expo` dependency is not Expo work. Detects the real goal, routes to the right expo-* / eas-* skill, and owns the shared setup rules."
-version: 1.0.0
+version: 1.1.0
 license: MIT
 ---
 
@@ -12,9 +12,9 @@ license: MIT
 **Do not guess the skill from project files alone.** Many Expo goals look similar from
 the filesystem but need different skills.
 
-1. **Confirm this is Expo work** — the request mentions Expo, or `package.json` has an
-   `expo` dependency. If neither holds, stop: this skill does not apply. A bare React
-   Native project with no `expo` dependency is not Expo work.
+1. **Confirm this is Expo or EAS work** — the request mentions Expo or EAS, or
+   `package.json` has an `expo` dependency. Otherwise this skill does not apply.
+   A native app using EAS for delivery qualifies without an Expo runtime.
 2. **Read the user's goal** — what outcome do they want, in plain terms?
 3. **Classify it** using the Skill Map below, translating casual phrasing to a goal.
 4. **Confirm intent** if ambiguous ("Sounds like you want to ship to the stores — that's
@@ -40,7 +40,7 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 > **Component selection rule:** whenever you need a UI component (list rows, bottom sheets, pickers, sliders, menus, buttons, segmented controls, toggles), **consult `expo-ui` first** to check whether `@expo/ui` has a native equivalent before reaching for a React Native built-in or a community library. Native `@expo/ui` components give the best platform fit, and on SDK 56+ the universal ones run in Expo Go with no custom build. Load `expo-ui` alongside `expo-native-ui` for any app that renders lists, detail sheets, or form controls. One exception: `@expo/ui` `List` renders native grouped rows (an iOS Settings screen), **not** a virtualized list — use `FlatList` / `FlashList` for large datasets.
 
 **Ship & operate**
-- `eas-app-stores` — build and submit to the App Store / Play Store / TestFlight, versions, and store metadata
+- `eas-app-stores` — build and submit iOS/Android apps (Expo and other React Native projects, plus existing native apps), TestFlight, versions, and store metadata
 - `eas-hosting` — deploy the web bundle to EAS Hosting; also author Expo Router API routes (`+api.ts` handlers) and their environments / domains
 - `eas-workflows` — EAS Workflow YAML and CI/CD pipelines
 - `eas-simulator` — run and drive the app on a remote iOS / Android simulator on EAS cloud
@@ -51,7 +51,7 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 
 **Extend natively**
 - `expo-module` — native modules and views (Swift / Kotlin) with the Expo Modules API
-- `expo-brownfield` — embed Expo / React Native in an existing native app
+- `expo-brownfield` — embed Expo / React Native screens in native SwiftUI/UIKit or Android apps; isolated artifacts and integrated builds
 - `expo-app-clip` — iOS App Clip target (AASA, smart app banner)
 
 **Maintain & learn**
@@ -65,15 +65,19 @@ Some everyday phrasings don't obviously map to a skill name — translate before
 
 - "Make it look native" → grouped controls / settings forms = `expo-ui`; screens, styling = `expo-native-ui`; motion = `expo-animation`; navigation = `expo-router`.
 - "Make the screens consistent" / "clean up the styling" / "set up a theme or design tokens" → `expo-design-system`.
-- "Ship it" / "get an .ipa or .apk" / "release to the stores" → `eas-app-stores` (build + submit, TestFlight, versions, store metadata).
+- "It looks AI-generated" / "too generic, not native" → `expo-design-system` (named native-slop tells + audit), with `expo-native-ui` for the platform idioms.
+- "Ship it" / "get an .ipa or .apk" / "release to the stores" / "put my Swift app on TestFlight" → `eas-app-stores` (build + submit, TestFlight, versions, store metadata).
 - "I'm new / where do I start" → scaffold first (see Shared setup rules), then route by goal.
 
 ## Shared setup rules
 
-These apply across every Expo skill, so handle them here once instead of repeating them
-in each leaf.
+Apply the rules that match the project and the requested task.
 
-- **No Expo project yet?** Start one the standard way before routing to a feature skill:
+- **Native app using EAS for delivery?** Route to `eas-app-stores`; its
+  `references/native-ios.md` covers SwiftUI/UIKit on iOS. Keep the existing native
+  project. Apply EAS auth/linking below; Expo scaffolding, SDK, and package-install
+  rules do not apply to this path.
+- **Starting a new Expo app?** Start one the standard way before routing to a feature skill:
   `npx create-expo-app@latest`, laying out folders per `expo-project-structure`. Then
   classify the user's goal and route.
 - **Detect the SDK version** before giving version-specific advice: read the `expo`

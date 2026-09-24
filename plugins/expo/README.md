@@ -94,7 +94,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ### Services & paid distribution
 
-- **eas-app-stores** - Build and submit to the iOS App Store, Android Play Store, and TestFlight
+- **eas-app-stores** - Build and submit iOS/Android apps to the stores and TestFlight: Expo and other React Native projects, plus existing native apps
 - **eas-hosting** - Deploy Expo websites and API routes to EAS Hosting (secrets, custom domains, Cloudflare Workers)
 - **eas-workflows** - EAS workflow YAML files for CI/CD pipelines
 - **eas-observe** - EAS Observe setup and launch, route, event, and version metrics

@@ -129,7 +129,7 @@ Skills whose core purpose uses paid Expo Application Services (EAS).
 
 | Skill | Use it for |
 | --- | --- |
-| `eas-app-stores` | Production builds, App Store, Play Store, TestFlight, eas.json profiles, versioning, and store metadata. |
+| `eas-app-stores` | Build and submit iOS/Android apps: Expo and other React Native projects, plus existing native apps; TestFlight, profiles, versioning, and metadata. |
 | `eas-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. |
 | `eas-workflows` | EAS Workflow YAML files and CI/CD automation. |
 | `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. |

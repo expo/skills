@@ -16,17 +16,17 @@ If a single team owns both layers, is comfortable with React Native tooling and 
 | Platform | Artifact                                                                                                                                                                                                                | Default location                                              |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | Android  | `{group}:{libraryName}:{version}` AAR                                                                                                                                                                                   | Local Maven (`~/.m2`) by default; remote Maven also supported |
-| iOS      | Set of `.xcframework`s — see [the iOS section below](#ios) for how `ios.buildReactNativeFromSource` (default `false` on SDK 56+) controls whether you get 5 frameworks or 2 — or a single Swift Package via `--package` | `./artifacts`                                                 |
+| iOS      | Set of `.xcframework`s (depends on source/prebuilt settings and package version), or a Swift Package via `--package`; see [iOS](#ios) | `./artifacts`                                                 |
 
 The JavaScript bundle is **embedded inside the artifact** in release builds, so the native app does not need Metro at runtime in production.
 
 ## Prerequisites
 
-- **Expo SDK 55 or later** — brownfield support, `expo-brownfield`, and the required runtime classes are only available on SDK 55+. Earlier SDKs will not work.
+- **Expo SDK 55 or later for this Expo toolkit** — `expo-brownfield` was introduced in SDK 55. Match package versions and native requirements to the selected SDK; this is not a minimum for historical integrated setups.
 - **Node.js (LTS)** — runs JavaScript and the Expo CLI.
-- **Yarn** — manages JavaScript dependencies.
+- The existing package manager and lockfile. Yarn is not required.
 
-Node and Yarn are only needed in the environment that _builds_ the artifact. The consuming native app does not need them.
+Node and the JS package manager are only needed in the environment that _builds_ the artifact. The consuming native app does not need them.
 
 ---
 
@@ -35,10 +35,10 @@ Node and Yarn are only needed in the environment that _builds_ the artifact. The
 ### Create a new Expo project
 
 ```sh
-npx create-expo-app@latest my-project --template default@sdk-55
+npx create-expo-app@latest my-project --template blank@latest
 ```
 
-**Pin to SDK 55 or later — earlier SDKs do not support brownfield.** The project can live in a separate repo or alongside the native app in a monorepo; it does not need to be inside the native project.
+Use this current stable blank template for a small embedded feature after the [version/toolchain checks](./version-compatibility.md). If host constraints require another SDK, select its published template tag instead. Keep an existing producer and its entry point when present. The project can live in a separate repo or alongside the native app in a monorepo; it does not need to be inside the native project.
 
 ### Install expo-brownfield
 
@@ -47,7 +47,7 @@ cd my-project
 npx expo install expo-brownfield
 ```
 
-The plugin self-registers in `app.json` with defaults derived from your app config.
+Check that the plugin registered in `app.json`; add it explicitly if the install command did not update the config (for example, with dynamic app configuration). Defaults derive from your app config.
 
 ### Check what the host app already ships
 
@@ -92,7 +92,7 @@ To override the auto-generated names, expand the plugin entry in `app.json`:
 
 ### Speed up iOS builds with prebuilt Expo modules
 
-Enable `expo-build-properties`'s `ios.usePrecompiledModules` so `pod install` downloads each Expo module as a prebuilt `.xcframework` instead of compiling it from source. `build:ios` detects those xcframeworks under `ios/Pods/` and bundles them into the Swift Package output alongside the brownfield framework, React, Hermes, and `ReactNativeDependencies`.
+SDK 57 enables precompiled Expo modules by default. For a supported SDK where an explicit opt-in is needed, install `expo-build-properties` with `npx expo install expo-build-properties` and enable its `ios.usePrecompiledModules` so `pod install` downloads each Expo module as a prebuilt `.xcframework` instead of compiling it from source. `build:ios` detects those xcframeworks under `ios/Pods/` and bundles them into the Swift Package output alongside the brownfield framework, React, Hermes, and `ReactNativeDependencies`.
 
 ```json
 {
@@ -208,56 +208,52 @@ Not everything is fused: the React Native runtime, Kotlin stdlib, host-common li
 npx expo-brownfield build:ios
 ```
 
-Outputs to `./artifacts`. The set depends on the `ios.buildReactNativeFromSource` flag (set via `expo-build-properties`):
+Outputs to `./artifacts`. Set `ios.buildReactNativeFromSource` on the **`expo-brownfield` plugin**; it applies the build-properties configuration itself and can override a separate `expo-build-properties` entry. The set depends on that setting and the installed package version:
 
-- **`buildReactNativeFromSource: false`** (default on SDK 56+) — React Native is consumed as a prebuilt binary, so `build:ios` emits five xcframeworks side-by-side: `{TargetName}.xcframework`, `React.xcframework`, `ReactNativeDependencies.xcframework`, `ExpoModulesJSI.xcframework`, and `hermesvm.xcframework`.
-- **`buildReactNativeFromSource: true`** (default on SDK 55, opt-in on SDK 56+) — React Native is compiled from source and statically linked into the brownfield framework, leaving two xcframeworks: `{TargetName}.xcframework` and `hermesvm.xcframework`.
+- **`buildReactNativeFromSource: false`** (default on SDK 56+) — React Native is consumed as a prebuilt binary. A typical set includes: `{TargetName}.xcframework`, `React.xcframework`, `ReactNativeDependencies.xcframework`, `ExpoModulesJSI.xcframework`, and `hermesvm.xcframework`.
+- **`buildReactNativeFromSource: true`** (default on SDK 55, opt-in on SDK 56+) — React Native is compiled from source and statically linked into the brownfield framework, typically leaving: `{TargetName}.xcframework` and `hermesvm.xcframework`.
 
-To force source builds on SDK 56+, add `expo-build-properties` to `app.json`:
+To force source builds, configure the brownfield plugin directly in `app.json`:
 
 ```json
 {
   "expo": {
     "plugins": [
       [
-        "expo-build-properties",
+        "expo-brownfield",
         { "ios": { "buildReactNativeFromSource": true } }
-      ],
-      "expo-brownfield"
+      ]
     ]
   }
 }
 ```
 
-**Every xcframework in the produced set must be embedded in the consuming app** (Embed & Sign). The Swift Package output below (`--package`) wires this for you automatically.
+Use the actual output and generated package manifest as the dependency inventory; precompiled modules can add more binaries. Link all required frameworks and **Embed & Sign dynamic frameworks**. Static binaries are linked, not embedded. Do not mix source-linked React Native with another copy already in the host. The Swift Package output below describes the produced dependencies.
 
-> **iOS deployment target:** the brownfield artifact inherits the Expo project's iOS deployment target (16.4 on SDK 56+). The consuming app's deployment target must be set to 16.4 or higher; otherwise Xcode will refuse to link the embedded frameworks. If the host app is on an older floor (e.g. iOS 14.0), bump its `IPHONEOS_DEPLOYMENT_TARGET` before adding the artifact.
+> **iOS deployment target:** compare the host's supported OS versions with the selected Expo/RN version and every produced binary. If the artifact requires a higher floor, resolve that product constraint before integration; changing a build setting cannot make a newer binary support older iOS releases.
 
 #### Ship as a Swift Package (recommended)
 
-Pass `--package [name]` to bundle the output as a self-contained Swift Package instead of separate `.xcframework` directories. The host iOS app then consumes it via **Add Package Dependencies → Add Local** in Xcode and links every bundled framework automatically — no manual drag-and-drop, no per-framework "Embed & Sign" toggles.
+Pass `--package [name]` to generate a local Swift Package around the XCFramework output. Add it with **Add Package Dependencies → Add Local**, then inspect `Package.swift` and select the products the host requires. Packaging layout and products vary by CLI version.
 
 ```sh
 npx expo-brownfield build:ios --release --package MyAppPackage
 ```
 
-The flag accepts an optional name. If omitted, the package is named `{TargetName}Artifacts`. The resulting directory is a complete Swift Package:
+Confirm `--package` in the installed CLI's help before using it. It accepts an optional package name. Inspect the printed output directory and its `Package.swift` instead of assuming the package name also changes the framework/module name (`MyBrownfield` in this guide).
 
-```
-artifacts/MyAppPackage/
-├── Package.swift
-└── xcframeworks/
-    ├── MyAppPackage.xcframework
-    ├── hermesvm.xcframework
-    ├── React.xcframework
-    └── ReactNativeDependencies.xcframework
+Use separate output directories for Debug and Release. The CLI can clear its selected artifacts directory before writing a package, so changing only the package name is not a safe way to preserve the previous flavor:
+
+```sh
+npx expo-brownfield build:ios --debug --artifacts ./artifacts-debug --package MyAppPackage
+npx expo-brownfield build:ios --release --artifacts ./artifacts-release --package MyAppPackage
 ```
 
-When `usePrecompiledModules` is enabled, the package directory is suffixed with the build flavor (e.g. `MyAppPackage-release/`) and includes every prebuilt Expo module xcframework. Run `build:ios --debug --package …` and `build:ios --release --package …` separately, and point your host app at the matching package for each build configuration.
+Build Debug and Release artifacts separately when the producer requires a single flavor per package. A host built in Debug with a Release binary still contains Release RN code; it does not become a Metro-enabled artifact. Swift Package Manager does not select `.binaryTarget(path:)` by Xcode configuration. Select the matching package before each host build, or use explicit build-system wiring that supplies matching binaries; do not link both packages with duplicate module names into one target.
 
 ### Generate native projects for debugging
 
-To inspect or debug the generated native code, run prebuild:
+To inspect the generated native code, run prebuild **from the separate Expo producer whose native directories are CNG-owned**, never from the consuming host:
 
 ```sh
 npx expo prebuild
@@ -349,31 +345,31 @@ startActivity(Intent(this, ExpoActivity::class.java))
 If you built a **Swift Package** (`build:ios --package …`):
 
 - In Xcode, **File → Add Package Dependencies… → Add Local…**, then select the generated package directory (e.g. `artifacts/MyAppPackage/`).
-- Add the package's product to your app target. Xcode links every bundled XCFramework through the aggregate library product — no manual "Embed & Sign" step.
-- If you produced both debug and release packages (because `usePrecompiledModules` is enabled), point the host app at the matching package per build configuration.
+- In `expo-brownfield@57.0.18`, precompiled-module builds generate a configuration-suffixed package/product such as `MyAppPackage-release`; select that aggregate product, which includes the binary targets. The Swift import remains the configured framework module (`MyBrownfield`), not the package name. Without precompiled modules, the CLI generates separate library products: add all required products from `Package.swift`. SDK 55.0.28 likewise exposes separate `MyBrownfield` and `hermesvm` products.
+- If you produced Debug and Release packages, explicitly select the matching dependency before building the host; Xcode does not switch local binary packages automatically.
 
 If you built **standalone XCFrameworks** (default output):
 
 - Drag **every** `.xcframework` produced under `./artifacts` into the Xcode project navigator.
 - In the import dialog, check **Copy items if needed** and add them to your app target.
-- Under the app target's **General** tab → **Frameworks, Libraries, and Embedded Content**, set **every** framework to **Embed & Sign**. Forgetting one (commonly `hermesvm.xcframework`) is a leading cause of runtime "Library not loaded" crashes — see [./troubleshooting.md](./troubleshooting.md#ios-xcframework-signing-isolated-approach).
+- Under the app target's **General** tab → **Frameworks, Libraries, and Embedded Content**, embed and sign the dynamic frameworks; link static binaries without embedding them. For missing runtime dependencies, see [./troubleshooting.md](./troubleshooting.md#ios-xcframework-signing-isolated-approach).
 
 #### Initialize React Native at app launch
 
-Call `ReactNativeHostManager.shared.initialize()` from `AppDelegate` **before any React Native view is created**. Initialization is asynchronous-friendly but must precede the first `ReactNativeViewController`/`ReactNativeView` instantiation.
+Merge `ReactNativeHostManager.shared.initialize()` into the existing launch callback **before any React Native view is created**. Keep the native window and navigation. This delegate example uses the generated framework's `ExpoBrownfieldAppDelegate` to forward lifecycle callbacks; if a custom superclass prevents that, use the delegate-forwarding path in [feature integration](./feature-integration.md#forward-lifecycle-events).
 
 ```swift
 import UIKit
-import MyAppBrownfield // Replace with your target name
+import MyBrownfield // The configured framework target, not the Swift Package name
 
-@main
-class AppDelegate: UIResponder, UIApplicationDelegate {
-  func application(
+// Merge into the existing delegate. Keep its existing @main only for a UIKit entry point.
+class AppDelegate: ExpoBrownfieldAppDelegate {
+  override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     ReactNativeHostManager.shared.initialize()
-    return true
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
 ```
@@ -382,7 +378,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 ```swift
 import UIKit
-import MyAppBrownfield
+import MyBrownfield
 
 class ViewController: UIViewController {
   @IBAction func openReactNative(_ sender: Any) {
@@ -406,9 +402,11 @@ let rnViewController = ReactNativeViewController(
 
 #### Present a React Native view (SwiftUI)
 
+Keep the existing `@main struct HostApp: App`. Add `@UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate` there only if the host has no delegate adaptor yet. Extend an existing delegate instead of introducing a second one. This connects initialization and lifecycle forwarding without changing the `WindowGroup`.
+
 ```swift
 import SwiftUI
-import MyAppBrownfield
+import MyBrownfield
 
 struct ContentView: View {
   @State private var showReactNative = false
@@ -436,11 +434,11 @@ Start Metro in the Expo project:
 npx expo start
 ```
 
-Build and run the native app in debug. React Native screens load JS from the Metro dev server over HTTP with full hot reloading. The device or emulator must be able to reach the dev machine — see [./troubleshooting.md](./troubleshooting.md) if Metro connections fail.
+Build a Debug artifact (`npx expo-brownfield build:ios --debug` on iOS), select it in the host, then build and run the native app in Debug. React Native screens load JS from the Metro dev server over HTTP with full hot reloading. The device or emulator must be able to reach the dev machine — see [./troubleshooting.md](./troubleshooting.md) if Metro connections fail.
 
 ### Production (release builds)
 
-The JS bundle is embedded inside the AAR/XCFramework. Metro is not used. Build the native app in Release configuration and confirm the React Native screen loads.
+Build/select the Release artifact and build the host in Release. Stop Metro and verify JS and image assets load, then exercise input, result, dismissal, and reopening using the [acceptance scenario](./feature-integration.md#acceptance-scenario).
 
 ---
 

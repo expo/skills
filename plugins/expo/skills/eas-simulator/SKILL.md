@@ -8,7 +8,7 @@ allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(npx expo *
 
 # EAS Simulator
 
-> **EAS service - costs apply.** Hosted sessions consume EAS compute; availability and limits depend on the account's access and plan. EAS Build and Workflows jobs consume additional compute. See https://expo.dev/pricing.
+> **EAS service - costs apply.** EAS Simulator is a hosted EAS service. Session usage is subject to your account's pricing and limits. See https://expo.dev/pricing for current terms.
 
 Use EAS Simulator to exercise a native app from a cloud agent, inspect a device configuration unavailable locally, reproduce a UI bug, or share an interactive browser preview. The result is an app running on a **simulated device**, not a physical-device test.
 
@@ -19,7 +19,9 @@ Use EAS Simulator to exercise a native app from a cloud agent, inspect a device 
 - **The app runtime** is Expo Go, a development build, or a standalone native binary. EAS Simulator can install and launch one at startup; it does not compile your source.
 - **Metro** serves live JavaScript from your checkout over a reachable tunnel. **EAS Build or Workflows** can produce a native artifact when a build is needed.
 
-Cloud hosting is useful when local execution is unavailable or sharing/offloading is wanted. Linux and Windows cannot host Apple's iOS Simulator, but can run local Android emulators when virtualization is available. Preserve the user's choice of local or cloud execution.
+Cloud hosting is useful when local execution is unavailable or sharing/offloading is wanted. Linux and Windows cannot host Apple's iOS Simulator, but can run local Android emulators when virtualization is available. Preserve the user's choice of local or cloud execution. For a generic simulator request, use a suitable local simulator when available; otherwise use EAS Simulator after checking access.
+
+When the user requests EAS Simulator or a cloud simulator, proceed within that request and any stated budget. Explain applicable usage once and carry existing authorization through the session. Ask before exceeding a stated budget or expanding beyond the requested work.
 
 ## Choose what to run
 
@@ -38,7 +40,7 @@ Read [run-your-app.md](./references/run-your-app.md) for installation and Metro 
 
 ## Establish access and session ownership
 
-Run from the intended EAS project directory with a current EAS CLI. These commands are experimental: check command-specific `--help` when syntax differs. Examples use `npx --yes eas-cli@latest`; a current installed `eas` works too.
+Run from the intended EAS project directory with a current EAS CLI. These commands are experimental: the relevant subcommand's `--help` is authoritative. Check it before using non-default start flags, machine-readable/config output, list filters, or session events. Examples use `npx --yes eas-cli@latest`; a current installed `eas` works too.
 
 ```bash
 npx --yes eas-cli@latest whoami
@@ -47,11 +49,13 @@ npx --yes eas-cli@latest sim:availability --json
 
 Use an existing authenticated session or `EXPO_TOKEN` in headless environments. Inspect the project's EAS linkage (`extra.eas.projectId`); link with `eas init` when needed. This project determines the account used for access and billing, including when the installed app is a native Swift app. If access is unavailable, report it and use an appropriate available testing environment; another build does not grant simulator access.
 
-Before creating a session, check whether the intended session already exists. Record the **session ID**, purpose, platform/device, and app/build identity. Give new sessions a short human-readable `--name`; use `--tag` to group a task or app variant.
+Before creating a session, check whether the intended session already exists. Use `sim:list` to inspect project sessions; its help covers status/type/platform, name-prefix and tag filters, and pagination with `--limit` / `--after`. Record the **session ID**, purpose, platform/device, and app/build identity. Give new sessions a short human-readable `--name`; use `--tag` to group a task or app variant.
 
 `.env.eas-simulator` contains credentials for **one session in one project directory**. Keep it gitignored and out of source uploads. Do not clear it before identifying its owner: creating another session overwrites the file but leaves the earlier session running. Use separate project directories or explicit connection data for concurrent work; see [controllers.md](./references/controllers.md).
 
 ## Provision, connect, verify
+
+For live Expo development, read [Tunnel scope and approvals](./references/run-your-app.md#tunnel-scope-and-approvals) before starting the tunnel or connecting the app. Carry existing authorization through tunnel creation, connection, and live edits; include its source and the concrete data flow in any required approval request.
 
 1. **Prepare the runtime.** For Expo Go or an existing compatible development build, prepare a Metro tunnel. For a new native build, submit the build and track its ID. Overlap simulator boot with short preparation when it helps latency; avoid consuming a session through a long build queue. There is no universal build-first or simulator-first rule.
 2. **Start once.** Supply `--expo-go`, `--build-id`, or `--application-archive-url` to install and launch during startup, or install a local artifact through the controller afterward. If supplying `--open-url`, have Metro and its public deep link ready first.
@@ -59,7 +63,13 @@ Before creating a session, check whether the intended session already exists. Re
 4. **Prove the app is ready.** Wait for a specific app landmark, not just an installed package, an open launcher, or a green build. For live edits, change a visible piece of test content and verify that change on the device before relying on Fast Refresh.
 5. **Exercise the requested behavior** using the loop below, then stop the hosted session.
 
-Name and bound a session according to the task. `--max-idle-time-minutes` is an optional idle bound; when omitted the current CLI specifies **no idle timeout**. `--max-duration-minutes` is customizable on paid plans; otherwise the service's default maximum applies. `--non-interactive` returns when ready and leaves the session running.
+### Session lifetime
+
+Name and bound a session according to the task. `--non-interactive` returns when ready and leaves the session running.
+
+- `--max-duration-minutes N` is the hard automatic-stop deadline. Customize it when supported by the account; otherwise use the service's default session limit.
+- `--max-idle-time-minutes N` stops a session after that many inactive minutes. Omitted means **no idle timeout**: the session runs until its maximum duration or an explicit stop.
+- **Only activity reported through `agent-device` and `argent` resets the idle timer.** Appium commands and browser-preview activity do not reset it. For Appium or a user-driven browser preview, rely on the maximum duration to bound the session; customize it when supported by the account.
 
 If startup is slow, inspect that session with `sim:get` and `sim:events --id <session-id> --follow`. Do not create a second session to retry a pending start. The EAS session can be ready while the app is still loading or failing: verify both separately.
 
@@ -78,6 +88,8 @@ Keep the test faithful to the question. If a bug names a particular native contr
 
 ## Evidence and handoff
 
+If a controller fails to download a recording, retrieve it from [EAS session artifacts](./references/controllers.md#recording-download-recovery).
+
 Record enough context to reproduce the result: session/device, app runtime and build/source identity, actions, expected versus observed state, and evidence paths. Label screenshots by what they show. Use video for motion and timing, and account for the capture's frame rate and any static-frame trimming; a recording cannot establish physical-device frame pacing.
 
 For launch/crash claims, distinguish foreground attachment from a cold launch. Use explicit relaunches and retain a landmark or crash/termination evidence for each attempt. A blank screen alone does not identify a crash. Simulator success also cannot rule out a hardware-only failure or prove real-device performance.
@@ -92,7 +104,7 @@ npx --yes eas-cli@latest sim:stop --id <session-id> --json
 
 Stop on completion and failure paths, and verify the returned status. Current EAS CLI clears its dotenv only if it still belongs to the stopped session. Stop only Metro/processes created for this task. Closing agent-device alone does not stop the EAS session.
 
-If the user wants to keep driving the preview, hand off the session ID, preview URL, stop command, and known expiry/limits. Otherwise stop before finishing. Diagnose failures with [troubleshooting.md](./references/troubleshooting.md); preserve evidence before replacing a session.
+If the user wants to keep driving the preview, hand off the session ID, preview URL, stop command, and known expiry/limits from the CLI. Browser-preview activity does not reset an idle timeout; use the maximum duration for the requested handoff. Otherwise stop before finishing. Diagnose failures with [troubleshooting.md](./references/troubleshooting.md); preserve evidence before replacing a session.
 
 ## Documentation
 

@@ -1,15 +1,24 @@
 ---
 name: eas-app-stores
-description: EAS service (paid). Deploy Expo apps to the app stores with EAS - build and submit to the iOS App Store, Google Play Store, and TestFlight, configure eas.json build and submit profiles, manage app versions and build numbers, and publish App Store metadata and ASO. Use whenever the user wants to deploy, release, or ship an app to production or the app stores, is preparing a production build, running eas build or eas submit, shipping to TestFlight, bumping version or build numbers, or setting up store listing metadata. For deploying an Expo website or API routes, use the eas-hosting skill.
-version: 1.0.0
+description: EAS service (paid). Build and submit iOS and Android apps with EAS to TestFlight, the App Store, or Google Play. Supports Expo and other React Native projects, plus existing native apps. Use for eas.json setup, release pipelines, signing, app versions and build numbers, store submissions, and listing metadata. For Expo websites and API routes, use eas-hosting; for adding React Native screens to a native app, use expo-brownfield.
+version: 1.1.0
 license: MIT
 ---
 
 # App Store Deployment
 
-> **EAS service - costs apply.** This skill uses Expo Application Services (EAS), a paid product with free-tier limits. `eas build` and `eas submit` consume your plan's build minutes, and store submission requires paid Apple Developer and Google Play accounts. Review https://expo.dev/pricing before running cloud commands.
+> **EAS service - costs apply.** Cloud builds use EAS plan resources, and EAS services have free-tier and paid-plan limits. Apple Developer and Google Play memberships are separate. Check https://expo.dev/pricing for the requested service.
 
-This skill covers building and releasing Expo apps to the iOS App Store, Google Play Store, and TestFlight using EAS (Expo Application Services). For deploying an Expo website or API routes to EAS Hosting, use the `eas-hosting` skill.
+This skill covers building and releasing iOS and Android apps with EAS: Expo and other React Native projects, plus existing native apps. EAS is a delivery service; native apps can use it without adding Expo or React Native to their runtime. The native setup walkthrough currently covers SwiftUI/UIKit on iOS.
+
+## Choose the project path
+
+- **SwiftUI/UIKit app with no React Native runtime:** read [references/native-ios.md](references/native-ios.md) before changing its build configuration. Keep the Xcode project and Swift code as the app's source of truth. The Expo/React Native quick-start and development-client examples below do not apply to this path.
+- **Native Android app with no React Native runtime:** preserve its existing native build setup. See [references/play-store.md](references/play-store.md) for submission; the Swift/iOS setup instructions do not apply. A dedicated native Android setup walkthrough is not yet included.
+- **Expo/React Native app:** use the quick-start below, then the relevant store reference.
+- **Adding React Native screens to an existing native app:** use `expo-brownfield` for that integration; return here for distribution.
+
+Use the archive and icon checks in [references/native-ios.md](references/native-ios.md) during initial native iOS setup, after changing versioning, bundle IDs, or icons, or when diagnosing a rejected upload. Routine releases follow the EAS build/submit flow and the processing and availability checks in [references/testflight.md](references/testflight.md). A successful EAS build or a queued submission does not establish Apple acceptance, tester access, or an App Store release.
 
 ## References
 
@@ -20,8 +29,9 @@ Consult these resources as needed:
 - ./references/app-store-metadata.md -- Managing App Store metadata and ASO optimization
 - ./references/play-store.md -- Submitting Android builds to Google Play Store
 - ./references/ios-app-store.md -- iOS App Store submission and review process
+- ./references/native-ios.md -- Native Swift/SwiftUI/UIKit setup, versioning, and archive verification without an Expo runtime
 
-## Quick Start
+## Expo / React Native Quick Start
 
 ### Install EAS CLI
 
@@ -36,7 +46,7 @@ eas login
 npx eas-cli@latest init
 ```
 
-This creates `eas.json` with build profiles.
+`eas init` links or creates the EAS project. Run `eas build:configure` to create build profiles in `eas.json`; preserve existing project and store identifiers when a release setup already exists.
 
 ## Build Commands
 
@@ -57,12 +67,12 @@ npx eas-cli@latest build --profile production
 
 ```bash
 # iOS: Build and submit to App Store Connect
-npx eas-cli@latest build -p ios --profile production --submit
+npx eas-cli@latest build -p ios --profile production --auto-submit
 
 # Android: Build and submit to Play Store
-npx eas-cli@latest build -p android --profile production --submit
+npx eas-cli@latest build -p android --profile production --auto-submit
 
-# Shortcut for iOS TestFlight
+# Expo / React Native shortcut for iOS TestFlight
 npx testflight
 ```
 
@@ -72,7 +82,7 @@ Deploying an Expo website or Expo Router API routes to EAS Hosting (`npx expo ex
 
 ## EAS Configuration
 
-Standard `eas.json` for production deployments:
+Example for an Expo / React Native project (native Swift profiles are in `references/native-ios.md`):
 
 ```json
 {
@@ -111,7 +121,8 @@ Standard `eas.json` for production deployments:
 
 ### iOS
 
-- Use `npx testflight` for quick TestFlight submissions
+- For native Swift apps, use the explicit build/submit flow in `references/native-ios.md`
+- For Expo / React Native apps, `npx testflight` provides a quick TestFlight flow
 - Configure Apple credentials via `eas credentials`
 - See ./references/testflight.md for credential setup
 - See ./references/ios-app-store.md for App Store submission
@@ -135,8 +146,10 @@ EAS manages version numbers automatically with `appVersionSource: "remote"`:
 eas build:version:get
 
 # Manually set version
-eas build:version:set -p ios --build-number 42
+eas build:version:set -p ios
 ```
+
+The version-set command prompts for the value. When setting up or changing native iOS versioning, or diagnosing a duplicate build number, inspect the archived `CFBundleVersion`: the remote counter alone does not prove that Xcode used it.
 
 ## Monitoring
 
@@ -145,11 +158,14 @@ eas build:version:set -p ios --build-number 42
 eas build:list
 
 # Check build status
-eas build:view
+eas build:view BUILD_ID
 
-# View submission status
-eas submit:list
+# Inspect submissions (verified with EAS CLI 23.2.0)
+eas submit:list -p ios --json
+eas submit:view SUBMISSION_ID --json
 ```
+
+Check the CLI version before interpreting a missing command: these submission commands are available in 23.2.0 but not in the tested 18.6.0 installation. A pinned `npx eas-cli@23.2.0` invocation can use them without changing the global installation. See `references/testflight.md` for live Apple status and retry guidance. Follow the returned log URLs when the JSON result omits the underlying failure. Report the exact build ID/version and the furthest verified release state.
 
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
