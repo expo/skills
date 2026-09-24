@@ -356,7 +356,9 @@ def focused_summary(path: Path) -> str:
             else:
                 result = "More passes with skills" if right["outcome_passed"] > left["outcome_passed"] else "Fewer passes with skills"
             comparable.append(complete and left["outcome_passed"] == right["outcome_passed"])
-            label = cell(case_id) + (" (model-graded)" if any(row.get("grading") == "provisional-model" for row in sides.values()) else "")
+            grading = {row.get("grading") for row in sides.values()}
+            suffix = " (model-graded)" if "provisional-model" in grading else " (exploratory)" if "exploratory" in grading else ""
+            label = cell(case_id) + suffix
             lines.append(f"| {label} | {outcome(left)} | {outcome(right)} | {result} |")
         if all(comparable):
             lines += ["", "**Finding:** No observed outcome advantage from Expo skills on these tasks. This small sample does not establish equal reliability on harder work."]

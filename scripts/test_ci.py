@@ -56,7 +56,8 @@ class LabelWorkflowTests(unittest.TestCase):
             path = Path(directory) / "summary.json"
             self.assertIn("not available", ci.focused_summary(path))
             path.write_text(json.dumps([{"id": "advice", "skill_mode": "with-expo", "outcome_passed": 0,
-                "outcome_failed": 0, "outcome_pending": 3, "outcome_unavailable": 0, "attempted": 3}]))
+                "outcome_failed": 0, "outcome_pending": 3, "outcome_unavailable": 0, "attempted": 3, "grading": "exploratory"}]))
+            self.assertIn("advice (exploratory)", ci.focused_summary(path))
             self.assertIn("0/3 passed; 3 pending", ci.focused_summary(path))
             self.assertIn("0/3 outcomes graded", ci.focused_summary(path))
             self.assertNotIn("0/0", ci.focused_summary(path))
