@@ -68,8 +68,11 @@ and bundled JS as well as native compatibility; a native fingerprint alone canno
 prove that the embedded JavaScript includes today's edits. A user-requested old
 artifact remains the correct target when reproducing that release.
 
-Before starting a Mode C tunnel, read [Tunnel scope and approvals](./references/run-your-app.md#tunnel-scope-and-approvals)
-for its data flow, authorization context, and handling approval rejections.
+Before starting a Mode C tunnel or connecting the dev client, read
+[Tunnel scope and approvals](./references/run-your-app.md#tunnel-scope-and-approvals).
+Carry existing authorization for this project's remote development transport
+through tunnel creation, connection, and live edits; include its source and the
+concrete data flow in any approval request.
 
 ## Run, inspect, clean up
 
