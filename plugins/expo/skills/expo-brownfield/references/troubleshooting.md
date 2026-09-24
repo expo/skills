@@ -6,19 +6,12 @@ Cross-cutting issues that apply to both the isolated and integrated approaches. 
 
 **Symptom:** Gradle or Xcode build fails after a config change, dependency upgrade, or Expo SDK bump.
 
-- **Integrated approach** — regenerate native projects from scratch:
-  ```sh
-  npx expo prebuild --clean
-  ```
-  Then `cd ios && pod install` and re-open the `.xcworkspace`.
-- **Isolated approach** — clear the local Maven cache and rebuild the artifact:
-  ```sh
-  rm -rf ~/.m2/repository/<group>/<libraryName>
-  npx expo-brownfield build:android
-  npx expo-brownfield build:ios
-  ```
-- For stubborn iOS issues, also delete `ios/build/`, `ios/Pods/`, and `ios/Podfile.lock`, then re-run `pod install`.
-- For stubborn Android issues, `./gradlew clean` and delete the project's `.gradle/` and `build/` directories.
+First inspect the failing build step and the dependency/configuration diff.
+
+- **Integrated approach:** keep the hand-maintained host intact. Run `npx expo install --check` in the JS project, apply SDK-matched native template changes selectively, then run `bundle exec pod install` (or `pod install` without Bundler) in the host's Podfile directory. Open the `.xcworkspace`. Neither `prebuild` nor `prebuild --clean` is a recovery step for this host: [clean prebuild deletes native directories](https://docs.expo.dev/workflow/continuous-native-generation/#optionality).
+- **Isolated approach:** rebuild the affected platform in the separate Expo producer, then replace the consumer's artifact and its accompanying dependencies. CNG regeneration belongs only in that producer, after checking that its native files are generated and reproducible.
+- For stale iOS build products, clean the affected target's build folder/DerivedData. Preserve `Podfile.lock`; deleting it changes dependency resolution and can hide the cause. Reinstall pods only when the error points to the pod installation.
+- For Android, clean the affected project's build outputs with its Gradle wrapper. Inspect publication coordinates and dependency resolution before removing a specific stale local Maven artifact; do not clear unrelated caches.
 
 ## Missing autolinked Expo modules
 
@@ -42,9 +35,9 @@ Cross-cutting issues that apply to both the isolated and integrated approaches. 
 
 **Symptom:** App launches but immediately crashes with "Library not loaded" or codesign errors during archive.
 
-- **Every** xcframework produced by `build:ios` must be set to **Embed & Sign** in the app target's **Frameworks, Libraries, and Embedded Content** section. On SDK 56+ this is five frameworks: `{TargetName}.xcframework`, `React.xcframework`, `ReactNativeDependencies.xcframework`, `ExpoModulesJSI.xcframework`, and `hermesvm.xcframework`. On SDK 55 it's two: `{TargetName}.xcframework` and `hermesvm.xcframework`. Missing any of them is a common cause of runtime crashes.
+- Inspect the actual output and generated `Package.swift`; the framework set depends on package version and source/prebuilt settings, not only the SDK major. Link all required binaries and embed/sign dynamic frameworks. Do not apply **Embed & Sign** to static binaries. See the [artifact instructions](./brownfield-isolated.md#ios).
 - The frameworks must be added to the _app target_, not a framework or extension target.
-- Prefer the Swift Package output (`build:ios --package`) — it links every bundled xcframework through one aggregate product, so you cannot forget one.
+- With Swift Package output (`build:ios --package`), inspect the manifest and link all required products. Precompiled builds on SDK 57 expose an aggregate product; other configurations and older packages can expose separate products. See [version compatibility](./version-compatibility.md).
 
 ## iOS architecture / simulator mismatch
 
@@ -81,8 +74,15 @@ Cross-cutting issues that apply to both the isolated and integrated approaches. 
 
 ## After upgrading Expo SDK
 
-If the brownfield setup stops building after an SDK upgrade:
+First check the selected SDK's Node, Xcode, and minimum OS requirements in [version compatibility](./version-compatibility.md). An unsupported compiler or older deployment target is not repaired by clearing caches. If the brownfield setup stops building after an SDK upgrade:
 
 - Re-run `npx expo install --fix` in the Expo project to align native module versions.
-- Rebuild the artifact (isolated) or run `npx expo prebuild --clean` (integrated).
+- Isolated: regenerate only the CNG-owned producer if needed, rebuild its artifact, and update the host dependency. Integrated: apply native upgrade diffs to the existing host and reinstall pods; preserve its source files and project configuration.
 - Compare the new `templates/expo-template-bare-minimum` for the target SDK against your customized native files — Expo occasionally changes Gradle plugin names, Podfile helpers, or AppDelegate entry points across SDKs.
+
+## Result missing, duplicate callbacks, or a sheet that will not close
+
+- Check the module registration and per-presentation request ID. Root props need an explicit JS entry point; do not assume a Router route receives native `initialProps` directly.
+- Attach the host listener before mounting RN and supply required startup data through initial props. For live updates, verify subscription readiness and use acknowledgements where delivery matters; messages are not a durable queue.
+- Remove only this feature's listeners on completion, cancellation, and host dismissal. Dispatch UI changes to the main thread.
+- `popToNative()` depends on the native wrapper: the SDK 55 UIKit controller pops navigation, and its SwiftUI wrapper separately calls `dismiss()`. Custom integrated containers need their own handler. Check which wrapper is actually mounted, or let the host close it on a result/close message. See [feature integration](./feature-integration.md).

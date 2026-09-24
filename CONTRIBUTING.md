@@ -87,6 +87,8 @@ When a skill triggers, its whole `SKILL.md` loads into the agent's context. Shor
 - Put reusable validation or fetching logic in `scripts/` instead of long inline command blocks.
 - One skill = one job. If it grows two distinct triggers, split it (that is why `eas-hosting` and
   `eas-app-stores` are separate skills).
+- Keep skills and references focused on requirements, supported workflows, and instructions.
+  Put test results and validation history in fixture READMEs or PR descriptions.
 
 ### 7. Add the Codex agent file
 
@@ -163,3 +165,7 @@ preserves this repository's skill name, category metadata, collaboration notice,
 - MIT license for every skill; use `@expo.io` or `@expo.dev` author emails.
 - Keep `references/` next to the skill that uses them.
 - Don't broaden a skill's scope or trigger intent when editing it - keep changes focused.
+
+## Runnable brownfield fixtures
+
+Use the [iOS brownfield playgrounds](tests/fixtures/expo-brownfield/README.md) to exercise integrated and isolated SwiftUI hosts when changing `expo-brownfield`. They include SDK 55 and SDK 57 dependency snapshots, setup commands, and a Debug/Release acceptance checklist. Native validation requires the selected SDK's Xcode toolchain; these fixtures are not part of the distributed plugin.

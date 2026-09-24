@@ -1,10 +1,25 @@
-# Controllers: agent-device and argent
+# Controllers: agent-device, Appium, and argent
 
-`eas-cli` has no device verbs — it manages the *session*. The verbs (open/tap/type/screenshot/inspect) come from a **controller** that `npx --yes eas-cli@latest simulator:exec` runs locally and that talks to the controller daemon on the remote VM. Two controllers are supported by `npx --yes eas-cli@latest simulator:start --type`:
+`eas-cli` has no device verbs — it manages the *session*. Automation commands come from the interface selected by `simulator:start --type`:
 
 - `agent-device` (Callstack, MIT) — used throughout this skill; runs on demand via `npx agent-device@latest`, nothing installed globally.
+- `appium` — exposes `APPIUM_URL` and `APPIUM_CAPS` for an Appium client.
 - `argent` (Software Mansion) — a capable alternative controller; check its license for your use.
-- `serve-sim` — not a controller; a streaming/preview-only type (iOS), no programmatic control.
+- `web-preview-only` — browser preview with no programmatic control.
+
+All four types include a web preview. Before setting `--max-idle-time-minutes`, follow [Session lifetime](../SKILL.md#session-lifetime); activity does not reset the timer for every interface.
+
+## Appium
+
+Start with `--type appium`, then run the user's Appium client through `simulator:exec`; the wrapper loads `APPIUM_URL` and JSON-encoded `APPIUM_CAPS` from `.env.eas-simulator`:
+
+```bash
+npx --yes eas-cli@latest simulator:start --platform ios --type appium --non-interactive \
+  --name "Appium checkout run"
+npx --yes eas-cli@latest simulator:exec <appium-client> [args...]
+```
+
+Use the maximum duration as the lifetime bound; Appium commands do not reset the idle timer.
 
 ## agent-device verbs (run via `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`)
 
@@ -23,6 +38,20 @@ EAS-specific notes:
 - **`snapshot -i` is slow on iOS** — tens of seconds is normal; wait for it.
 - **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts — avoids a large upload).
 - **Exercised against a live session:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`, `scroll`, `gesture` (needs a preset, e.g. `gesture swipe left`), `logs`, `record` (`start`/`stop <path>`), `network`, `perf`. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
+
+## Recording download recovery
+
+If downloading a recording through agent-device or argent fails, fetch the recording from **EAS session artifacts**. A controller download failure does not mean the recording was lost. Keep the original EAS session id and query its artifacts:
+
+```bash
+npx --yes eas-cli@latest simulator:get --id <session-id> --json
+# Select the recording in artifacts[] by filename/name and metadata; use its downloadUrl:
+curl --fail --location --max-time 600 --output ./capture.mp4 '<downloadUrl>'
+```
+
+Use the URL returned by EAS, not a path on the simulator or a controller artifact id. If the recording has not appeared yet, poll the same session with a bounded wait for upload completion. Already-uploaded artifacts can be retrieved after the session stops using its explicit id. If a download URL expires, query the session again for a fresh one. Give the download command more than 10 minutes in the outer runner, increase `--max-time` for larger files, and verify the downloaded video before reporting success.
+
+Source: EAS CLI [simulator:get](https://github.com/expo/eas-cli/blob/main/packages/eas-cli/src/commands/simulator/get.ts) exposes `artifacts[].{id,name,filename,metadata,downloadUrl}`.
 
 ## argent (alternative)
 

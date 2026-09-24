@@ -1,0 +1,4 @@
+// Validation destinations are an arm64 device build and an Apple Silicon simulator.
+ARCHS = arm64
+ONLY_ACTIVE_ARCH = YES
+CODE_SIGNING_ALLOWED = NO

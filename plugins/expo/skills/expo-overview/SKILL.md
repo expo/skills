@@ -51,7 +51,7 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 
 **Extend natively**
 - `expo-module` — native modules and views (Swift / Kotlin) with the Expo Modules API
-- `expo-brownfield` — embed Expo / React Native in an existing native app
+- `expo-brownfield` — embed Expo / React Native screens in native SwiftUI/UIKit or Android apps; isolated artifacts and integrated builds
 - `expo-app-clip` — iOS App Clip target (AASA, smart app banner)
 
 **Maintain & learn**

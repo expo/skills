@@ -1,0 +1,19 @@
+{
+  "name": "producer",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@types/react": "~19.2.10",
+    "expo": "~55.0.31",
+    "expo-brownfield": "~55.0.28",
+    "expo-status-bar": "~55.0.6",
+    "react": "19.2.0",
+    "react-native": "0.83.10",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}
