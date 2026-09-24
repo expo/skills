@@ -1,6 +1,10 @@
 # Migrating from react-navigation to expo-router
 
-In SDK 56+, application code must not import from `@react-navigation/*` directly. Repoint those imports to the matching `expo-router` entry points. Runtime API is unchanged — only the module specifiers move.
+For an **Expo Router project** upgrading to SDK 56+, repoint application imports
+from `@react-navigation/*` to the matching Router entry points. This is a Router
+upgrade migration, not a requirement to replace standalone React Navigation in
+an app that does not use Expo Router. Inspect the installed APIs and deprecations
+after changing module specifiers.
 
 ## Steps
 
@@ -48,7 +52,7 @@ For each symbol rewritten in step 2:
 1. Resolve the rewritten module to its source in `node_modules` (e.g., `node_modules/expo-router/build/react-navigation.d.ts`, `js-stack`, `js-tabs`, `js-top-tabs`).
 2. Look for a `@deprecated` JSDoc tag on the named export, or a runtime deprecation warning in the implementation file.
 3. If deprecated, capture both the reason and the recommended replacement from the JSDoc/comment.
-4. Report each deprecated symbol to the user with: the import path, the symbol, the deprecation reason, and the suggested replacement. Wait for the user to confirm before mass-applying further changes.
+4. Apply required replacements within the requested migration and report the relevant deprecations. Optional modernization can remain separate; ask only when an unresolved product/API choice or expanded scope needs the user's decision.
 
 ## Done when
 

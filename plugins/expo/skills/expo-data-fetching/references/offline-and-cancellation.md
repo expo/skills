@@ -60,9 +60,18 @@ useEffect(() => {
 }, [url]);
 ```
 
-**With React Query** (automatic):
+**With React Query:** pass the query function's signal to the request. Unused
+queries are not cancelled by default if the request does not consume the signal.
 
 ```tsx
-// React Query automatically cancels requests when queries are invalidated
-// or components unmount
+const query = useQuery({
+  queryKey: ["user", userId],
+  queryFn: async ({ signal }) => {
+    const response = await fetch(`${API_URL}/users/${userId}`, { signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  },
+});
 ```
+
+See [TanStack Query cancellation](https://tanstack.com/query/latest/docs/framework/react/guides/query-cancellation).

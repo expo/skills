@@ -1,16 +1,21 @@
 ---
 name: expo-examples
-description: Framework (OSS). Expo's official example projects - the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, NativeWind, and more). Use when integrating a third-party library or service into an existing Expo app and you want the canonical, version-matched pattern to adapt, or when scaffolding a new project from one with `npx create-expo --example`.
+description: "Framework (OSS). Find and adapt an official expo/examples integration, or scaffold a new app from one. Match the example to the existing SDK and preserve project configuration."
 allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx create-expo:*),Bash(npx degit:*),Bash(bun create:*)"
-version: 1.0.0
+version: 1.0.1
 license: MIT
 ---
 
 # Expo Examples
 
-[expo/examples](https://github.com/expo/examples) is Expo's official library of ~70 **integration examples** — directories named `with-<library>` (e.g. `with-stripe`, `with-maps`), each built around **one** library or service. These are not full apps: they're **managed** projects (no `ios/`/`android/` dirs — native setup is via config plugins), and the typical one is a **single screen of ~100–200 lines**. Mine them for the canonical integration *pattern* — the dependency set, `app.json` config plugins, and minimal wiring Expo maintains against the current SDK — and adapt that into the user's app. Don't expect to lift an application architecture from them.
+[expo/examples](https://github.com/expo/examples) contains maintained integration
+examples and starters. Use their dependency/configuration wiring as a reference,
+then adapt it to the actual project and SDK. Inspect the selected example rather
+than assuming every directory has the same structure or completeness.
 
-Reach for an example before hand-rolling an integration. (Kinds — full-stack, showcases, starters — are noted in `./references/catalog.md`.)
+Use an example when it helps resolve integration details; a routine API edit does
+not require downloading one. The local catalog is a discovery aid, not a live API
+or compatibility guarantee.
 
 ## Two modes
 
@@ -43,7 +48,7 @@ gh api 'repos/expo/examples/git/trees/master?recursive=1' \
   --jq '.tree[].path | select(startswith("with-stripe/"))'
 ```
 
-**Then read the high-signal files first:** `README.md` (setup) → `package.json` (deps) → `app.json` (config plugins / permissions) → the integration code the manifest revealed → `.env` (required secrets). Per file:
+**Then read the high-signal files first:** `README.md` (setup) → `package.json` (deps) → `app.json` (config plugins / permissions) → the integration code the manifest revealed → environment templates (required variable names). Per file:
 
 ```bash
 gh api repos/expo/examples/contents/with-stripe/utils/stripe-server.ts --jq '.content' | base64 -d
@@ -73,7 +78,7 @@ bun create expo --example with-stripe    # with bun
 
 When the user already has an app, **add only what the example introduces; never overwrite their setup.**
 
-- **Version-align — don't copy pinned versions.** Examples track the **latest** SDK, so their `package.json` pins won't match an older project. Add only the *missing* deps with `npx expo install <pkg>` (it resolves SDK-correct versions) instead of copying exact versions.
+- **Version-align — don't copy pinned versions.** Examples may target a different SDK, so their `package.json` pins won't match an older project. Add only the *missing* deps with `npx expo install <pkg>` (it resolves SDK-correct versions) instead of copying exact versions.
 - **Merge config, don't replace it.** Add only the `app.json`/`app.config.*` plugins and permissions the example introduces that the user lacks — keep their existing config block intact.
 - **Port the integration code.**
 - **Recreate env vars** from the example's `.env` shape — it holds placeholders, never working secrets.
@@ -83,7 +88,7 @@ When the user already has an app, **add only what the example introduces; never 
 ## Gotchas
 
 - **Default branch is `master`,** not `main` (matters for raw URLs and sparse checkout).
-- **Single-click deploy.** Every example has a launch URL: `https://launch.expo.dev/?github=https://github.com/expo/examples/tree/master/<example>`.
+- **Single-click deploy.** For examples supported by Launch, the URL format is: `https://launch.expo.dev/?github=https://github.com/expo/examples/tree/master/<example>`.
 
 ## Related skills
 

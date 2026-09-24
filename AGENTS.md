@@ -103,6 +103,8 @@ Skill guidelines:
 - Write descriptions that match how users naturally ask for help.
 - Include keywords users are likely to mention, but do not stuff descriptions with unrelated terms.
 - Prefer concrete commands, APIs, and Expo package names over vague advice.
+- Keep workflow decisions and Expo-specific pitfalls in skills; link routine API/flag catalogs to version-matched official docs instead of mirroring them in references. See CONTRIBUTING.md for the keep/link/remove criteria.
+- Read supporting guidance when the task needs it. Preserve existing project choices and complete authorized implementation/verification without inserting review stops from a sample workflow.
 
 ## Supporting Files
 

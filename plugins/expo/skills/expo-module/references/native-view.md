@@ -1,171 +1,20 @@
-# Native View Reference
+# Native view integration
 
-Native views let you render platform UI components (UIView on iOS, Android View on Android) as React components.
+Start from the [native view tutorial](https://docs.expo.dev/modules/native-view-tutorial/)
+and the installed version's [View/Prop/event API](https://docs.expo.dev/modules/module-api/).
+Use the generator's View/ViewEvent samples for a runnable scaffold rather than
+maintaining a second Swift/Kotlin/TypeScript tutorial here.
 
-## Defining a View
+## Boundaries that need deliberate handling
 
-**Swift:**
+- Match the registered module/view names to the JavaScript native-view binding. Include React Native view props in the public wrapper while keeping native-only props typed.
+- Define layout ownership. A native child added to an ExpoView still needs layout/measurement; mounting it does not make it fill its parent automatically on every platform.
+- Apply coordinated props after they have been received when intermediate combinations would be invalid. Keep expensive work out of repeatedly called prop setters.
+- Declare view events in the view definition and match the dispatcher name/payload to the JavaScript callback, including its `nativeEvent` wrapper where required.
+- Methods exposed on a view use that view's ref/lifetime. Handle calls before mount or after disposal, and perform UI work on the correct thread.
+- Remove observers and release native resources when the view is no longer used. Module, view, activity, and React runtime lifetimes are not interchangeable.
+- Android child management and grouped props have platform-specific APIs; consult those sections only when implementing a container or grouped setters.
 
-```swift
-public class MyViewModule: Module {
-  public func definition() -> ModuleDefinition {
-    Name("MyView")
-
-    View(MyNativeView.self) {
-      Prop("title") { (view: MyNativeView, title: String) in
-        view.titleLabel.text = title
-      }
-
-      Events("onPress", "onLoad")
-
-      AsyncFunction("reset") { (view: MyNativeView) in
-        view.reset()
-      }
-    }
-  }
-}
-
-class MyNativeView: ExpoView {
-  let titleLabel = UILabel()
-
-  required init(appContext: AppContext) {
-    super.init(appContext: appContext)
-    clipsToBounds = true
-    addSubview(titleLabel)
-  }
-
-  override func layoutSubviews() {
-    super.layoutSubviews()
-    titleLabel.frame = bounds
-  }
-}
-```
-
-**Kotlin:**
-
-```kotlin
-class MyViewModule : Module() {
-  override fun definition() = ModuleDefinition {
-    Name("MyView")
-
-    View(MyNativeView::class) {
-      Prop("title") { view: MyNativeView, title: String ->
-        view.titleView.text = title
-      }
-
-      Events("onPress", "onLoad")
-
-      AsyncFunction("reset") { view: MyNativeView ->
-        view.reset()
-      }
-    }
-  }
-}
-
-class MyNativeView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
-  val titleView = TextView(context).also {
-    addView(it, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-  }
-}
-```
-
-**TypeScript:**
-
-```typescript
-import { requireNativeView } from "expo";
-
-export type MyViewProps = {
-  title?: string;
-  onPress?: (event: { nativeEvent: { x: number; y: number } }) => void;
-  onLoad?: () => void;
-} & ViewProps;
-
-const NativeView = requireNativeView<MyViewProps>("MyView");
-
-export function MyView(props: MyViewProps) {
-  return <NativeView {...props} />;
-}
-```
-
-## View Event Dispatching
-
-**Swift:**
-
-```swift
-class MyNativeView: ExpoView {
-  let onPress = EventDispatcher()
-
-  func handleTap(at point: CGPoint) {
-    onPress(["x": point.x, "y": point.y])
-  }
-}
-```
-
-**Kotlin:**
-
-```kotlin
-class MyNativeView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
-  private val onPress by EventDispatcher()
-
-  fun handleTap(x: Float, y: Float) {
-    onPress(mapOf("x" to x, "y" to y))
-  }
-}
-```
-
-## View Lifecycle
-
-```swift
-// Called after all props have been set
-OnViewDidUpdateProps { (view: MyNativeView) in
-  view.applyChanges()
-}
-```
-
-```kotlin
-// Android only - called when view is no longer used
-OnViewDestroys { view: MyNativeView ->
-  view.cleanup()
-}
-```
-
-## AsyncFunction on Views
-
-Functions defined inside `View` are accessible via React ref:
-
-```typescript
-const ref = useRef<MyView>(null);
-// Call native function
-await ref.current?.reset();
-```
-
-## PropGroup (Android)
-
-Batch-register multiple props with shared setter logic:
-
-```kotlin
-View(MyNativeView::class) {
-  PropGroup("border", "width" to Float::class, "color" to Int::class) { view, index, value ->
-    when (index) {
-      0 -> view.borderWidth = value as Float
-      1 -> view.borderColor = value as Int
-    }
-  }
-}
-```
-
-## GroupView (Android)
-
-Enable view group functionality for managing child views:
-
-```kotlin
-View(MyContainerView::class) {
-  GroupView {
-    AddChildView { parent, child, index -> parent.addView(child, index) }
-    GetChildCount { parent -> parent.childCount }
-    GetChildViewAt { parent, index -> parent.getChildAt(index) }
-    RemoveChildView { parent, child -> parent.removeView(child) }
-    RemoveChildViewAt { parent, index -> parent.removeViewAt(index) }
-  }
-}
-```
+Build on the requested platforms and exercise prop updates, resizing, real events,
+ref methods, and mount/unmount cycles. A mocked JavaScript wrapper does not validate
+the native registration or lifecycle.

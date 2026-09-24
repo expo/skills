@@ -16,9 +16,9 @@ Recurring mistakes in generated React Native apps, with names, observable tells,
 | 8 | **Shadowboxing** | Heavy drop shadows (opacity ≥ 0.15, radius ≥ 10) doing hierarchy's job on white-on-white surfaces | 2-3 tokened elevation levels; hierarchy from the type ramp and grouping. iOS is a low-shadow platform |
 | 9 | **Wireframe Borders** | A 1px gray `borderWidth` outlining every container - usually Tailwind's `#E5E7EB` from web muscle memory | Spacing and surface contrast; hairlines only as list separators (`StyleSheet.hairlineWidth`, semantic separator color) |
 | 10 | **alert() Confirmation** | Alerts interrupt routine undoable actions, report success, or replace field validation | Native confirmation alert for uncommon irreversible actions; undo for routine reversible ones. Field errors stay inline; success updates the UI |
-| 11 | **The Hand-Rolled Header** | `headerShown: false` plus a `<Text>` title and custom back button - losing large-title collapse, back-swipe, and scroll-to-top | Stack header options. The navigation bar is configured, never rebuilt |
+| 11 | **The Hand-Rolled Header** | `headerShown: false` plus a `<Text>` title and custom back button - losing large-title collapse, back-swipe, and scroll-to-top | Stack header options. Prefer configuring the navigation bar; retain intentional custom chrome with equivalent behavior |
 | 12 | **16-Everything** | The same 16px padding on every axis at every level; section gaps equal row gaps, so proximity carries no meaning | The spacing scale with distinct steps: row gap < group gap < section gap |
-| 13 | **The Squish Reflex** | `scale: 0.96` press feedback on *every* touchable - including full-width list rows - or `TouchableOpacity`'s washed-out flash | Rows highlight (background change); buttons scale slightly or dim; `Pressable` with per-role feedback. Never `TouchableOpacity` |
+| 13 | **The Squish Reflex** | `scale: 0.96` press feedback on *every* touchable - including full-width list rows - or `TouchableOpacity`'s washed-out flash | Rows highlight (background change); buttons scale slightly or dim; `Pressable` with per-role feedback. Preserve existing controls when their feedback fits the role |
 | 14 | **The Grand Entrance** | Staggered `FadeInDown.delay(i * 100)` on every list and screen, replaying on every visit | Entrance animation only for rare/first-time moments (`expo-animation`'s frequency gate); routine screens just appear |
 | 15 | **The Onboarding Carousel** | Generic promotional slides delay the first useful screen without collecting required setup or teaching necessary concepts | Start with useful content and contextual guidance; retain onboarding that serves required setup or the user's brief |
 | 16 | **Cross-Platform Costume** | One platform wearing the other's uniform: a FAB or ripple in an iOS-idiom app; iOS back-chevrons, large titles, or iOS-styled switches on Android | Each platform gets its own HIG's idiom - or a deliberate, documented platform-neutral treatment |
@@ -29,45 +29,17 @@ Recurring mistakes in generated React Native apps, with names, observable tells,
 
 For confirmation choices, follow [Apple’s alert guidance](https://developer.apple.com/design/human-interface-guidelines/alerts): uncommon irreversible actions warrant confirmation; routine undoable actions generally do not.
 
-## Grep the greppable tells
+## Find and verify candidates
 
-Same shell-variable convention as `audit.md` (set `$SRC` and `$THEME` first, run from the repo root). These searches find candidates, not verified defects. Two hit classes:
+Use the scoped search approach in [audit.md](./audit.md). Useful terms include
+`TouchableOpacity`, `fontFamily`, `<Modal`, `Alert.alert`, `LinearGradient`,
+`headerShown`, and `tabBarStyle`. None is a defect by itself: confirm the pattern
+against the existing design and rendered behavior before changing it.
 
-- **review-each** - legitimate uses exist; check each hit against the tell's description.
-- **advisory** - hits only suggest the tell; confirm on a screenshot.
-
-```bash
-# --- review-each ---
-# Touchable* anywhere → #13 The Squish Reflex (Pressable only)
-grep -rn 'TouchableOpacity\|TouchableHighlight\|TouchableWithoutFeedback' $SRC --include='*.tsx'
-
-# fontFamily outside the theme → #6 Inter Everywhere (may reference a valid brand token)
-grep -rn 'fontFamily:' $SRC --include='*.tsx' | grep -v "^$THEME/"
-
-# RN <Modal> for picking/composing → #1 The Web Modal
-grep -rn '<Modal' $SRC --include='*.tsx'
-
-# Alert.alert → #10 alert() Confirmation
-grep -rn 'Alert\.alert' $SRC --include='*.tsx'
-
-# Gradient blocks in screens → #4 The Purple-Gradient Hero
-grep -rn 'LinearGradient\|experimental_backgroundImage' $SRC --include='*.tsx'
-
-# Rebuilt navigation chrome → #11 The Hand-Rolled Header
-grep -rn 'headerShown:\s*false' $SRC --include='*.tsx'
-
-# Custom tab bar chrome → #5 The Floating Pill Tab Bar
-grep -rn 'tabBarStyle' $SRC --include='*.tsx'
-
-# --- advisory ---
-# Emoji as UI glyphs → #3 Emoji Iconography (content strings may contain emoji; glyph-as-icon is the tell)
-# \x{FE0F} catches text-default emoji rendered emoji-style (⚙️ ❤️), which Emoji_Presentation alone misses
-rg -n '[\p{Emoji_Presentation}\x{FE0F}]' $SRC -g '*.tsx'
-```
-
-`audit.md` §1 finds related token candidates for #18 Dark-Mode Amnesia, #12 16-Everything, and #8 Shadowboxing. Token compliance does not prove readable dark mode, useful spacing hierarchy, or restrained shadows; inspect the rendered screen too.
-
-Screenshot-only tells (no grep precise enough to trust): #2 X-Button Sheet, #7 Everything's a Card, #9 Wireframe Borders, #15 Onboarding Carousel, #16 Cross-Platform Costume, #17 Safe-Area Collision. Three more need a running app: #14 The Grand Entrance (re-enter a screen), #19 The Spinner Blink (watch the first load and a refetch), #20 Keyboard Blindness (keyboard open). Check them per `SKILL.md`'s Self-Critique Pass, #16 on both platforms.
+Inspect screenshot-dependent patterns in context. Re-enter a screen to assess
+repeated entrance motion, watch initial load and refresh, and open the keyboard.
+Check cross-platform conventions on each requested platform. Deliberate brand or
+product choices take precedence over these review heuristics.
 
 ## Growing the list
 

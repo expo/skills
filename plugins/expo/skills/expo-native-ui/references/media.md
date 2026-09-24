@@ -1,193 +1,34 @@
-# Media
+# Camera, audio, video, and saved media
 
-## Camera
+Read only the API needed, using the installed SDK version:
 
-- Hide navigation headers when there's a full screen camera
-- Ensure to flip the camera with `mirror` to emulate social apps
-- Use liquid glass buttons on cameras
-- Icons: `arrow.triangle.2.circlepath` (flip), `photo` (gallery), `bolt` (flash)
-- Gate the camera behind an explanation screen with a Grant button (as below) — never fire the permission prompt on mount
-- Lazily request media library permission (at first save/pick)
+- [Camera](https://docs.expo.dev/versions/latest/sdk/camera/) and [ImagePicker](https://docs.expo.dev/versions/latest/sdk/imagepicker/) for capture/selection, permission requirements, and result shapes.
+- [Audio](https://docs.expo.dev/versions/latest/sdk/audio/) and [Video](https://docs.expo.dev/versions/latest/sdk/video/) for lifecycle-aware playback/recording. For an existing expo-av migration, use `expo-upgrade` and its focused audio/video reference.
+- [MediaLibrary](https://docs.expo.dev/versions/latest/sdk/media-library/) and [FileSystem](https://docs.expo.dev/versions/latest/sdk/filesystem/) for saving and file ownership. Current and legacy APIs differ; do not mix `/next`, legacy calls, and current imports from examples for different SDKs.
 
-The example uses the `GlassButton` helper defined in `visual-effects.md` (Glass Buttons section).
+## Integration decisions
 
-```tsx
-import React, { useRef, useState } from "react";
-import { View, Pressable, Text } from "react-native";
-import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
-import * as ImagePicker from "expo-image-picker";
-import * as Haptics from "expo-haptics";
-import { colors } from "@/theme/colors";
-import { GlassView } from "expo-glass-effect";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+Request permissions in the context of a user action that needs them. Distinguish
+unresolved, granted, denied, and cannot-ask-again states; offer an appropriate
+recovery path. Check whether the selected system picker actually requires broad
+library access before requesting it. Request microphone access only for recording
+that needs audio, and configure native permission descriptions when required.
 
-function Camera({ onPicture }: { onPicture: (uri: string) => Promise<void> }) {
-  const [permission, requestPermission] = useCameraPermissions();
-  const cameraRef = useRef<CameraView>(null);
-  const [type, setType] = useState<CameraType>("back");
-  const { bottom } = useSafeAreaInsets();
+Mount only the needed camera, and release/pause resources when the owning screen
+loses focus or the app's lifecycle requires it. Wait for camera readiness, prevent
+concurrent captures/record starts, handle preparation and save errors, and preserve
+a captured result until saving/uploading succeeds. Mirroring a selfie preview and
+mirroring the saved photo are separate product decisions.
 
-  if (!permission?.granted) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.systemBackground }}>
-        <Text style={{ color: colors.label, padding: 16 }}>Camera access is required</Text>
-        <GlassView isInteractive tintColor={colors.systemBlue} style={{ borderRadius: 12 }}>
-          <Pressable onPress={requestPermission} style={{ padding: 12, borderRadius: 12 }}>
-            <Text style={{ color: "white" }}>Grant Permission</Text>
-          </Pressable>
-        </GlassView>
-      </View>
-    );
-  }
+Keep playback/recording status tied to the actual native object. Define behavior
+on navigation, backgrounding, interruption, and headphones disconnecting according
+to the feature; do not enable background audio solely because a sample does.
 
-  const takePhoto = async () => {
-    await Haptics.selectionAsync();
-    if (!cameraRef.current) return;
-    const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
-    await onPicture(photo.uri);
-  };
+Saving a base64 image may first require writing decoded bytes to a local file with
+the correct format and extension. Check the target API's accepted URI types, await
+the save, and clean up only temporary files this flow owns. Do not assume a cache
+URI is durable storage.
 
-  const selectPhoto = async () => {
-    await Haptics.selectionAsync();
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
-      allowsEditing: false,
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets?.[0]) {
-      await onPicture(result.assets[0].uri);
-    }
-  };
-
-  return (
-    <View style={{ flex: 1, backgroundColor: "black" }}>
-      <CameraView ref={cameraRef} mirror style={{ flex: 1 }} facing={type} />
-      <View style={{ position: "absolute", left: 0, right: 0, bottom: bottom, gap: 16, alignItems: "center" }}>
-        <GlassView isInteractive style={{ padding: 8, borderRadius: 99 }}>
-          <Pressable onPress={takePhoto} style={{ width: 64, height: 64, borderRadius: 99, backgroundColor: "white" }} />
-        </GlassView>
-        <View style={{ flexDirection: "row", justifyContent: "space-around", paddingHorizontal: 8 }}>
-          <GlassButton onPress={selectPhoto} icon="photo" />
-          <GlassButton onPress={() => setType(t => t === "back" ? "front" : "back")} icon="arrow.triangle.2.circlepath" />
-        </View>
-      </View>
-    </View>
-  );
-}
-```
-
-## Audio Playback
-
-Use `expo-audio` not `expo-av`:
-
-```tsx
-import { useAudioPlayer } from 'expo-audio';
-
-const player = useAudioPlayer({ uri: 'https://stream.nightride.fm/rektory.mp3' });
-
-<Button title="Play" onPress={() => player.play()} />
-```
-
-## Audio Recording (Microphone)
-
-```tsx
-import {
-  useAudioRecorder,
-  AudioModule,
-  RecordingPresets,
-  setAudioModeAsync,
-  useAudioRecorderState,
-} from 'expo-audio';
-import { Alert, Button } from 'react-native';
-
-function App() {
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const recorderState = useAudioRecorderState(audioRecorder);
-
-  // Request the microphone on first record, not on mount — no prompt before user intent
-  const record = async () => {
-    const status = await AudioModule.requestRecordingPermissionsAsync();
-    if (!status.granted) {
-      Alert.alert('Permission to access microphone was denied');
-      return;
-    }
-    await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true });
-    await audioRecorder.prepareToRecordAsync();
-    audioRecorder.record();
-  };
-
-  const stop = () => audioRecorder.stop();
-
-  return (
-    <Button
-      title={recorderState.isRecording ? 'Stop' : 'Start'}
-      onPress={recorderState.isRecording ? stop : record}
-    />
-  );
-}
-```
-
-## Video Playback
-
-Use `expo-video` not `expo-av`:
-
-```tsx
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { useEvent } from 'expo';
-
-const videoSource = 'https://example.com/video.mp4';
-
-const player = useVideoPlayer(videoSource, player => {
-  player.loop = true;
-  player.play();
-});
-
-const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
-
-<VideoView player={player} fullscreenOptions={{}} allowsPictureInPicture />
-```
-
-VideoView options:
-- `allowsPictureInPicture`: boolean
-- `contentFit`: 'contain' | 'cover' | 'fill'
-- `nativeControls`: boolean
-- `playsInline`: boolean
-- `startsPictureInPictureAutomatically`: boolean
-
-## Saving Media
-
-```tsx
-import * as MediaLibrary from "expo-media-library";
-
-const { granted } = await MediaLibrary.requestPermissionsAsync();
-if (granted) {
-  await MediaLibrary.saveToLibraryAsync(uri);
-}
-```
-
-### Saving Base64 Images
-
-`MediaLibrary.saveToLibraryAsync` only accepts local file paths. Save base64 strings to disk first:
-
-```tsx
-import { File, Paths } from "expo-file-system/next";
-
-function base64ToLocalUri(base64: string, filename?: string) {
-  if (!filename) {
-    const match = base64.match(/^data:(image\/[a-zA-Z]+);base64,/);
-    const ext = match ? match[1].split("/")[1] : "jpg";
-    filename = `generated-${Date.now()}.${ext}`;
-  }
-
-  if (base64.startsWith("data:")) base64 = base64.split(",")[1];
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(new ArrayBuffer(len));
-  for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
-
-  const f = new File(Paths.cache, filename);
-  f.create({ overwrite: true });
-  f.write(bytes);
-  return f.uri;
-}
-```
+Verify cancellation, permission denial, successful capture/playback, and failed
+save/retry on a supported device. Web or simulator success may not cover actual
+camera, microphone, library, or background behavior.

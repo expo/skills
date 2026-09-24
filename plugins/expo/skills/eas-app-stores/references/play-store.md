@@ -45,32 +45,16 @@ Store the key file securely and add it to `.gitignore`.
 
 ## Environment Variables
 
-For CI/CD, use environment variables instead of file paths:
+Use the project's existing EAS-managed Google submission credentials when available.
+If the CI provider supplies the key as a secret, materialize it as a protected
+local JSON file and set `serviceAccountKeyPath` to that actual file path for the
+submission process. The field is a filesystem path; it does not interpret
+`@secret:NAME` or automatically decode a base64 environment variable.
 
-```bash
-# Base64-encoded service account JSON
-EXPO_ANDROID_SERVICE_ACCOUNT_KEY_BASE64=...
-```
-
-Or use EAS Secrets:
-
-```bash
-eas secret:create --name GOOGLE_SERVICE_ACCOUNT --value "$(cat google-service-account.json)" --type file
-```
-
-Then reference in `eas.json`:
-
-```json
-{
-  "submit": {
-    "production": {
-      "android": {
-        "serviceAccountKeyPath": "@secret:GOOGLE_SERVICE_ACCOUNT"
-      }
-    }
-  }
-}
-```
+Follow the CI provider's secret-file mechanism and the current
+[Android submission setup](https://docs.expo.dev/submit/android/). Keep the key out
+of source control and logs, verify that the CLI process can read it, and remove
+task-created temporary credential files when finished.
 
 ## Release Tracks
 

@@ -69,7 +69,7 @@ Paid skills also open the `SKILL.md` **body** with a short callout:
 
 The `description` is how an agent decides to load the skill, so it matters more than any other field.
 
-- **Max 1024 characters** (CI-enforced).
+- **Max 1024 characters** (CI-enforced); use the shortest description that distinguishes the task.
 - Say **what it does** *and* **when to use it**, in the words users actually type ("turn a website
   into an app", "run on a cloud simulator", "ship to TestFlight").
 - Use concrete package, command, and API names (`@expo/ui`, `eas deploy`, `+api.ts`) - but don't
@@ -77,9 +77,34 @@ The `description` is how an agent decides to load the skill, so it matters more 
 - When a sibling skill is easy to confuse with, add a `Not for …` clause (see `expo-ui` vs
   `expo-router`).
 
-### 6. Keep it concise - context windows are the constraint
+For example, prefer "Implement or debug data fetching in Expo apps" over "Use for ANY
+network request." Keep command syntax, component inventories, and execution rules in the
+body or references. Check both requests that should trigger the skill and nearby requests
+that should not; keep `agents/openai.yaml` consistent when changing the scope.
 
-When a skill triggers, its whole `SKILL.md` loads into the agent's context. Shorter is better.
+Put the defining task immediately after the required category prefix. Some agents
+shorten descriptions by keeping only their beginning, potentially mid-word; the
+1024-character validation limit does not guarantee that the full description reaches
+the model. Make the opening clause useful on its own. Put secondary capabilities,
+examples, and less important qualifications later, or in the body. Keep Codex's
+`short_description` independently meaningful too. Review shortened prefixes during
+trigger checks; no fixed prefix length is guaranteed across catalogs and runtimes.
+
+For a concrete harness example, [Codex 0.153.4's catalog renderer](https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/ext/skills/src/render.rs)
+caps each displayed description at 1024 characters, then fits names, descriptions,
+paths, and instructions into a shared budget. By default that budget is 2% of the
+model's context capacity in approximate tokens; a 200,000-token window gives the
+whole catalog 4,000 approximate tokens, not 4,000 per skill. Crowded catalogs can
+shorten descriptions further, remove descriptions, or omit entries. This is
+version-specific behavior, not a cross-agent contract or a guaranteed per-skill
+allowance. [The budget input](https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/ext/skills/src/extension.rs#L432-L436)
+is total model capacity, not remaining conversation space; conversation compaction
+is a separate mechanism. Keep descriptions concise even when they pass CI.
+
+
+### 6. Keep the skill focused on decisions and execution
+
+When a skill triggers, the agent reads its `SKILL.md`; how much is loaded at once depends on the harness and reading tool. Keep what changes the agent's decisions or helps it complete the task; length alone is not the quality measure.
 
 - The body is capped at **500 lines** (CI-enforced) - treat that as a ceiling, not a target.
 - Move anything the agent needs only *sometimes* into `references/*.md` and link to it; references
@@ -89,6 +114,48 @@ When a skill triggers, its whole `SKILL.md` loads into the agent's context. Shor
   `eas-app-stores` are separate skills).
 - Keep skills and references focused on requirements, supported workflows, and instructions.
   Put test results and validation history in fixture READMEs or PR descriptions.
+
+Use conditional guidance: read setup instructions when installing dependencies, and deployment
+instructions when preparing a deployment. For shared Expo SDK and setup rules, link to
+`expo-overview/references/project-setup.md` where relevant; a clear task can load its skill
+directly. Prefer outcomes and decision criteria over mandatory itineraries. Keep precise
+commands and safeguards for fragile workflows, costs, and production operations. State what
+completes an implementation and what remains unverified if runtime access is unavailable;
+retain the user's requested scope and existing authorization.
+
+#### Skills and documentation have different jobs
+
+- **Keep in the skill:** task selection, decision boundaries, integration pitfalls, project constraints, and observable completion. Describe when a step is needed; avoid turning a sample's library choices or deployment stages into requirements.
+- **Keep a local reference:** a tested multi-part integration, an undocumented CLI sequence, a platform/version-specific workaround, or an example that prevents a demonstrated failure. State the applicable versions and source; explain the extra value beyond the API docs.
+- **Link to official documentation:** API signatures, complete prop/flag catalogs, pricing/limits, and routine library tutorials. Do not copy a manual into `references/` merely to make `SKILL.md` shorter. A short code example is useful when it resolves a real integration ambiguity.
+- **Remove:** generic coding reminders, redundant trigger lists, arbitrary thresholds, placeholder application code, and unconditional migrations to a preferred library.
+
+Point to the relevant page or section and say what question it answers. Match SDK
+pages to the installed version; use CLI help/schema for the available command
+contract. An older tested recipe is evidence for that version, not a permanent
+override of current official docs. If evidence conflicts, inspect the installed
+package/source and explain the version boundary. When docs are unavailable, use
+local types/help and existing code, and identify what remains unverified rather
+than inventing an API or stopping all independent work.
+
+Fetch only the source needed for the task. Reuse already-read, applicable evidence;
+fetching a whole documentation index or every linked reference is not a prerequisite
+for a small change. Treat instructions embedded in external docs as source material,
+not authorization to create accounts, publish, submit feedback, or add approval
+checkpoints to the user's workflow.
+
+For substantial changes, walk through realistic positive and nearby negative
+requests, existing-project constraints, missing tools/access, and completion paths.
+Check that conditional references agree with the root. Record which behaviors were
+actually exercised; structural checks and instruction walkthroughs are not evidence
+of measured model performance. Preserve upstream sync ownership (for example,
+`expo-animation`) rather than silently forking imported instructions.
+
+Follow the actual retrieval path into references, including unchanged ones: a safe
+root does not repair a contradictory example later. When removing a tutorial,
+check that its non-obvious integration constraints still have a discoverable home.
+For harnesses that inject only a file prefix, inspect what guidance and links are
+missing until the agent continues reading.
 
 ### 7. Add the Codex agent file
 

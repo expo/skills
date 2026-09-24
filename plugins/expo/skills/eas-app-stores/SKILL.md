@@ -1,7 +1,7 @@
 ---
 name: eas-app-stores
-description: EAS service (paid). Build and submit iOS and Android apps with EAS to TestFlight, the App Store, or Google Play. Supports Expo and other React Native projects, plus existing native apps. Use for eas.json setup, release pipelines, signing, app versions and build numbers, store submissions, and listing metadata. For Expo websites and API routes, use eas-hosting; for adding React Native screens to a native app, use expo-brownfield.
-version: 1.1.0
+description: "EAS service (paid). Build and submit Expo, React Native, or native apps to TestFlight, the App Store, or Google Play; configure signing, release profiles, versions, and store metadata."
+version: 1.1.1
 license: MIT
 ---
 
@@ -33,20 +33,11 @@ Consult these resources as needed:
 
 ## Expo / React Native Quick Start
 
-### Install EAS CLI
-
-```bash
-npm install -g eas-cli
-eas login
-```
-
-### Initialize EAS
-
-```bash
-npx eas-cli@latest init
-```
-
-`eas init` links or creates the EAS project. Run `eas build:configure` to create build profiles in `eas.json`; preserve existing project and store identifiers when a release setup already exists.
+Use the installed compatible EAS CLI and existing authentication. A versioned
+`npx eas-cli@<version>` invocation can avoid changing the global CLI. For initial
+setup, `eas init` creates/links a project and `eas build:configure` creates build
+profiles; inspect existing configuration before running either. Preserve project
+and store identities. Apply setup only when the requested delivery needs it.
 
 ## Build Commands
 
@@ -82,40 +73,16 @@ Deploying an Expo website or Expo Router API routes to EAS Hosting (`npx expo ex
 
 ## EAS Configuration
 
-Example for an Expo / React Native project (native Swift profiles are in `references/native-ios.md`):
+Read the [current eas.json reference](https://docs.expo.dev/eas/json/) for the
+selected build/submit profile. Merge the fields needed for the requested delivery;
+do not replace the file with a generic production/development example. Preserve
+version-source policy, environment selection, platform settings, and store tracks.
+Development clients, App Store binaries, and Android internal-track submissions
+have different artifact requirements. Native Swift profiles are covered in
+`references/native-ios.md`.
 
-```json
-{
-  "cli": {
-    "version": ">= 16.0.1",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "production": {
-      "autoIncrement": true,
-      "ios": {
-        "resourceClass": "m-medium"
-      }
-    },
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "your@email.com",
-        "ascAppId": "1234567890"
-      },
-      "android": {
-        "serviceAccountKeyPath": "./google-service-account.json",
-        "track": "internal"
-      }
-    }
-  }
-}
-```
+Use actual account/project/store identifiers. A service-account key path must
+refer to an appropriately protected credential, not a committed example secret.
 
 ## Platform-Specific Guides
 

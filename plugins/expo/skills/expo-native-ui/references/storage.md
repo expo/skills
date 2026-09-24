@@ -1,121 +1,20 @@
-# Storage
+# Persistence choices
 
-## Key-Value Storage
+Preserve the app's existing storage unless its requirements have changed. Choose
+by data sensitivity, volume, querying, and lifetime, not by a blanket library ban.
 
-Use the localStorage polyfill for key-value storage. **Never use AsyncStorage**
+- **Non-sensitive preferences or drafts:** existing key-value storage can be sufficient. [AsyncStorage](https://docs.expo.dev/versions/latest/sdk/async-storage/) is a community package, distinct from the removed React Native core export.
+- **Structured/offline records:** [expo-sqlite](https://docs.expo.dev/versions/latest/sdk/sqlite/) provides SQL and key-value/localStorage APIs. Read the installed SDK's initialization, transaction, and persistence guidance before selecting a surface.
+- **Native credentials:** [expo-secure-store](https://docs.expo.dev/versions/latest/sdk/securestore/), or the auth provider's supported secure-storage integration. It is not a general database; check backup, uninstall, biometric, and platform behavior.
 
-```tsx
-import "expo-sqlite/localStorage/install";
+Gate state-dependent redirects and first writes on hydration. Do not overwrite
+persisted data with initial defaults while an async read is pending. Define what
+survives restart, logout, and an account switch, and migrate existing records before
+changing storage formats or removing a dependency.
 
-// Simple get/set
-localStorage.setItem("key", "value");
-localStorage.getItem("key");
+For external-store subscriptions, keep snapshots stable until the underlying value
+changes; repeatedly parsing JSON inside `getSnapshot` creates new identities. Use
+the project's established state/store integration instead of adding a generic hook.
 
-// Store objects as JSON
-localStorage.setItem("user", JSON.stringify({ name: "John", id: 1 }));
-const user = JSON.parse(localStorage.getItem("user") ?? "{}");
-```
-
-## When to Use What
-
-| Use Case                                             | Solution                |
-| ---------------------------------------------------- | ----------------------- |
-| Simple key-value (settings, preferences, small data) | `localStorage` polyfill |
-| Large datasets, complex queries, relational data     | Full `expo-sqlite`      |
-| Sensitive data (tokens, passwords)                   | `expo-secure-store`     |
-
-## Storage with React State
-
-Create a storage utility with subscriptions for reactive updates:
-
-```tsx
-// utils/storage.ts
-import "expo-sqlite/localStorage/install";
-
-type Listener = () => void;
-const listeners = new Map<string, Set<Listener>>();
-
-export const storage = {
-  get<T>(key: string, defaultValue: T): T {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : defaultValue;
-  },
-
-  set<T>(key: string, value: T): void {
-    localStorage.setItem(key, JSON.stringify(value));
-    listeners.get(key)?.forEach((fn) => fn());
-  },
-
-  subscribe(key: string, listener: Listener): () => void {
-    if (!listeners.has(key)) listeners.set(key, new Set());
-    listeners.get(key)!.add(listener);
-    return () => listeners.get(key)?.delete(listener);
-  },
-};
-```
-
-## React Hook for Storage
-
-```tsx
-// hooks/use-storage.ts
-import { useSyncExternalStore } from "react";
-import { storage } from "@/utils/storage";
-
-export function useStorage<T>(
-  key: string,
-  defaultValue: T
-): [T, (value: T) => void] {
-  const value = useSyncExternalStore(
-    (cb) => storage.subscribe(key, cb),
-    () => storage.get(key, defaultValue)
-  );
-
-  return [value, (newValue: T) => storage.set(key, newValue)];
-}
-```
-
-Usage:
-
-```tsx
-function Settings() {
-  const [theme, setTheme] = useStorage("theme", "light");
-
-  return (
-    <Switch
-      value={theme === "dark"}
-      onValueChange={(dark) => setTheme(dark ? "dark" : "light")}
-    />
-  );
-}
-```
-
-## Full SQLite for Complex Data
-
-For larger datasets or complex queries, use expo-sqlite directly:
-
-```tsx
-import * as SQLite from "expo-sqlite";
-
-const db = await SQLite.openDatabaseAsync("app.db");
-
-// Create table
-await db.execAsync(`
-  CREATE TABLE IF NOT EXISTS events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    date TEXT NOT NULL,
-    location TEXT
-  )
-`);
-
-// Insert
-await db.runAsync("INSERT INTO events (title, date) VALUES (?, ?)", [
-  "Meeting",
-  "2024-01-15",
-]);
-
-// Query
-const events = await db.getAllAsync("SELECT * FROM events WHERE date > ?", [
-  "2024-01-01",
-]);
-```
+Verify persistence across restart and the relevant user/account transition. Never
+log tokens or copy production storage values into an example.

@@ -1,6 +1,6 @@
 ---
 name: expo-brownfield
-description: Framework (OSS). Integrate Expo and React Native into an existing native iOS or Android app. Use for brownfield, embedding a React Native screen in SwiftUI/UIKit or Kotlin, or AAR/XCFramework packaging. Covers isolated and integrated approaches. For building or distributing a purely native app with EAS, use eas-app-stores.
+description: "Framework (OSS). Add Expo/React Native screens to an existing iOS or Android app using integrated native builds or isolated AAR/XCFramework artifacts while preserving the host."
 ---
 
 # Expo Brownfield

@@ -1,7 +1,7 @@
 ---
 name: expo-project-structure
-description: Framework (OSS). Folder structure for a new Expo app. Use when scaffolding or laying out a new Expo project with Expo Router, or deciding where a file should live in one. For new projects only — never restructure an existing app to match.
-version: 1.0.0
+description: "Framework (OSS). Folder structure for a new Expo app. Use when scaffolding or laying out a new Expo project with Expo Router, or deciding where a file should live in one. For new projects only — never restructure an existing app to match."
+version: 1.0.1
 license: MIT
 ---
 
@@ -9,15 +9,15 @@ license: MIT
 
 A starting skeleton for a **new** Expo app — one with no committed folder structure yet.
 
-**Apply only to new projects.** If the app already has a layout, follow its existing conventions and leave files where they are — a default to start from, never a standard to enforce or migrate toward. When unsure whether a project is new, ask before moving anything.
+**Apply only to new projects.** If the app already has a layout, follow its existing conventions and leave files where they are — a default to start from, never a standard to enforce or migrate toward. If the project already contains app code, preserve its structure; use this skeleton only for new areas that need it.
 
-The whole layout, assembled from the rules below:
+The layout below is a reference, not a list of folders to create in every app. Add directories when the requested feature needs them:
 
 ```
 ├── assets/
 ├── scripts/
 ├── src/
-│   ├── app/                       # Expo Router routes ONLY — every file is a route
+│   ├── app/                       # Expo Router routes ONLY — routes and Router special files
 │   │   ├── api/                   #   server API routes, grouped here
 │   │   │   ├── user+api.ts
 │   │   │   └── settings+api.ts
@@ -55,7 +55,7 @@ The whole layout, assembled from the rules below:
 
 Keep app code under `src/` to separate it from config files. Expo Router supports both `app/` and `src/app/` out of the box — to switch, move the folder and restart the bundler. The default template aliases `@/*` to `./src/*` in `tsconfig.json`.
 
-`src/app` is **routes-only**: every file there becomes a route, so nothing else belongs in it. Everything below lives in sibling folders.
+`src/app` is **routes-only**: files there participate in routing (including special layout/config files), so nothing else belongs in it. Everything below lives in sibling folders.
 
 ## components/ — reusable UI
 
@@ -89,7 +89,7 @@ Appending `+api` to a file in `app/` makes it a server **API route**. Server cod
 Small differences: use `Platform.select` / `Platform.OS`. For larger ones, split into platform files instead of inline `if/else` — `bar-chart.tsx` + `bar-chart.web.tsx`, imported extension-free (`@/components/bar-chart`); Metro picks the right file per target.
 
 - Props must be identical across variants.
-- A default file (no platform extension) is always required — make it a no-op if the component is single-platform.
+- Route variants require a default route file. For components, cover every supported target; a fallback should preserve the intended behavior or explicitly show that it is unavailable, not silently no-op.
 - Supported extensions: `.ios`, `.android`, `.native`, `.web`.
 
 ## Colocate styles and tests
