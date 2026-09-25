@@ -60,6 +60,36 @@ import { fillMaxWidth, paddingAll } from "@expo/ui/jetpack-compose/modifiers";
 - `RNHostView` embeds React Native components inside a Jetpack Compose tree (the same concept as in `@expo/ui/swift-ui`) — wrap any RN child in `<RNHostView>`.
 - If a required composable or modifier is missing in Expo UI, it can be extended via a local Expo module. See: https://docs.expo.dev/guides/expo-ui-jetpack-compose/extending/index.md. Confirm with the user before extending.
 
+## `RNHostView` sizing with `matchContents`
+
+With `matchContents`, `RNHostView` sizes itself to its hosted child. It measures that child without the width of its native parent. The only limits the measurement uses are point values of `minWidth`, `maxWidth`, `minHeight`, and `maxHeight` on the hosted child. Percentages are ignored, and any limit you do not set is unbounded.
+
+As a result, a `<Text>` with no width limit measures as one line. It does **not** wrap, and it runs past the screen edge. Set a limit on the hosted child:
+
+```jsx
+// ❌ Measures as one line and overflows
+<RNHostView matchContents>
+  <Text>A long string that has to wrap when the width is limited</Text>
+</RNHostView>
+
+// ✅ Wraps at 280 points
+<RNHostView matchContents>
+  <View style={{ maxWidth: 280 }}>
+    <Text>A long string that has to wrap when the width is limited</Text>
+  </View>
+</RNHostView>
+```
+
+- Use `maxWidth` when the view must still shrink to fit shorter content. A fixed `width` also works.
+- Add `minHeight` to keep the wrapped content at or above a minimum height.
+- Without `matchContents`, the host fills its native parent. Text wraps normally and needs no limit.
+
+Other `RNHostView` layout rules:
+
+- `RNHostView` measures and lays out only its **first** child. To host several views, wrap them in one `View`.
+- With `matchContents`, `alignSelf: 'auto'` and `alignSelf: 'stretch'` change to `'flex-start'`, so the host can shrink to fit its content.
+- `onLayout` on `RNHostView` reports the final size. Use it to check what `matchContents` measured.
+
 ## Key Components
 
 - **LazyColumn** — Use instead of react-native `ScrollView`/`FlatList` for scrollable lists. Wrap in `<Host style={{ flex: 1 }}>`. Not suitable for large lists — each item is a JSX node processed on the JS thread, which causes noticeable slowdowns at scale.

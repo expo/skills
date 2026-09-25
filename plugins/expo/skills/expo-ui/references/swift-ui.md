@@ -65,6 +65,36 @@ import { Pressable } from "react-native";
 
 - If a required modifier or View is missing in Expo UI, it can be extended via a local Expo module. See: https://docs.expo.dev/guides/expo-ui-swift-ui/extending/index.md. Confirm with the user before extending.
 
+## `RNHostView` sizing with `matchContents`
+
+With `matchContents`, `RNHostView` sizes itself to its hosted child. It measures that child without the width of its native parent. The only limits the measurement uses are point values of `minWidth`, `maxWidth`, `minHeight`, and `maxHeight` on the hosted child. Percentages are ignored, and any limit you do not set is unbounded.
+
+As a result, a `<Text>` with no width limit measures as one line. It does **not** wrap, and it runs past the screen edge. Set a limit on the hosted child:
+
+```jsx
+// ❌ Measures as one line and overflows
+<RNHostView matchContents>
+  <Text>A long string that has to wrap when the width is limited</Text>
+</RNHostView>
+
+// ✅ Wraps at 280 points
+<RNHostView matchContents>
+  <View style={{ maxWidth: 280 }}>
+    <Text>A long string that has to wrap when the width is limited</Text>
+  </View>
+</RNHostView>
+```
+
+- Use `maxWidth` when the view must still shrink to fit shorter content. A fixed `width` also works.
+- Add `minHeight` to keep the wrapped content at or above a minimum height.
+- Without `matchContents`, the host fills its native parent. Text wraps normally and needs no limit.
+
+Other `RNHostView` layout rules:
+
+- `RNHostView` measures and lays out only its **first** child. To host several views, wrap them in one `View`.
+- With `matchContents`, `alignSelf: 'auto'` and `alignSelf: 'stretch'` change to `'flex-start'`, so the host can shrink to fit its content.
+- `onLayout` on `RNHostView` reports the final size. Use it to check what `matchContents` measured.
+
 ## useNativeState
 
 `useNativeState` creates observable state that updates synchronously on the UI thread via worklets, enabling immediate native state changes without waiting for a React render cycle. Requires `react-native-worklets` — without it updates still go through React and flickering remains. Best for real-time interactions where synchronous updates matter, e.g. a text field that masks or formats input as the user types.
