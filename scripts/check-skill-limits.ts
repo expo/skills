@@ -7,7 +7,6 @@ const MAX_DESCRIPTION = 1024;
 const MAX_BODY_LINES = 500;
 const PAID_CALLOUT = "**EAS service - costs apply.**";
 const PAID_PRICING_LINK = "expo.dev/pricing";
-const PAID_CODEX_PREFIX = "Paid EAS service.";
 const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
 const FEEDBACK_HEADING = "## Submitting Feedback";
 
@@ -112,14 +111,8 @@ for (const path of skills) {
 
   // Codex trigger metadata
   const openaiYamlPath = join(dirname(path), "agents", "openai.yaml");
-  if (!existsSync(openaiYamlPath)) {
+  if (!existsSync(openaiYamlPath))
     errors.push(`${rel}: missing agents/openai.yaml (Codex trigger metadata)`);
-  } else if (isPaid) {
-    const yaml = readFileSync(openaiYamlPath, "utf8");
-    const shortDesc = yaml.match(/^\s*short_description:\s*"?(.*?)"?\s*$/m)?.[1] ?? "";
-    if (!shortDesc.startsWith(PAID_CODEX_PREFIX))
-      errors.push(`${rel}: paid skill's openai.yaml short_description must start with "${PAID_CODEX_PREFIX}"`);
-  }
 
   // catalog sync with skills.sh.json groups; the experimental group accepts either
   // expo-* or eas-* names

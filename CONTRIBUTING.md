@@ -86,8 +86,8 @@ When a skill triggers, its whole `SKILL.md` loads into the agent's context. Shor
 
 ### 7. Add the Codex agent file
 
-Add `agents/openai.yaml` with `display_name`, `short_description` (paid skills prefix it
-`Paid EAS service.`), and a `default_prompt` that references the skill via `$<skill-name>`.
+Add `agents/openai.yaml` with `display_name`, `short_description`, and a `default_prompt`
+that references the skill via `$<skill-name>`.
 
 ### 8. Register the skill in every catalog
 
@@ -145,8 +145,8 @@ Also run `python3 -m json.tool <file>` on any JSON you edited, and if the skill 
 run that skill's own validation.
 
 `check-skill-limits.ts` enforces more than the size caps: the naming rule (step 2), the paid
-costs callout (step 4), the Codex agent file and its paid prefix (step 7), the
-`skills.sh.json` grouping (step 8), and the feedback block (step 9) all fail CI when violated.
+costs callout (step 4), the Codex agent file (step 7), the `skills.sh.json` grouping (step 8),
+and the feedback block (step 9) all fail CI when violated.
 
 ### Syncing `expo-animation`
 
