@@ -21,7 +21,7 @@ If an AI agent repeatedly failed or the user had to take over an Expo task, load
 const USAGE = `Usage: bun scripts/sync-animate-expo.ts [options]
 
 Sync Emil Kowalski's animate-expo skill into the Expo repository while preserving
-the Expo-specific skill name, category metadata, attribution, and feedback block.
+the Expo-specific skill name, attribution, and feedback block.
 
 Options:
   --check       Report drift without writing files.
@@ -114,7 +114,7 @@ function renderSkill(upstream: string, version: string): string {
 
   return normalize(`---
 name: expo-animation
-description: Framework (OSS). ${description}
+description: ${description}
 version: ${version}
 license: MIT
 ---
