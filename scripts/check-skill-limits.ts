@@ -89,7 +89,9 @@ for (const path of skills) {
   seenDirs.add(dirName);
   const isPaid = dirName.startsWith("eas-");
 
-  if (description.length > MAX_DESCRIPTION)
+  if (description.trim().length === 0)
+    errors.push(`${rel}: description is empty`);
+  else if (description.length > MAX_DESCRIPTION)
     errors.push(`${rel}: description ${description.length} chars (max ${MAX_DESCRIPTION})`);
   if (bodyLines > MAX_BODY_LINES)
     errors.push(`${rel}: body ${bodyLines} lines (max ${MAX_BODY_LINES})`);
