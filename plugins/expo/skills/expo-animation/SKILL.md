@@ -216,11 +216,11 @@ Check these first when "the animation just doesn't run":
 
 ## 120fps
 
-On ProMotion iPhones, third-party animations are capped at 60fps unless `CADisableMinimumFrameDurationOnPhone` is set. Recent Expo SDKs set it by default — confirm it's there, and add it if not:
+On ProMotion iPhones, third-party animations are capped at 60fps unless `CADisableMinimumFrameDurationOnPhone` is `true` in `Info.plist`. Since SDK 49, Expo sets it by default during prebuild ([expo/expo#22751](https://github.com/expo/expo/pull/22751)) — don't add it to `app.json`:
 
-```json
-{ "expo": { "ios": { "infoPlist": { "CADisableMinimumFrameDurationOnPhone": true } } } }
-```
+- **SDK 49+ with CNG** (no committed `ios/`): already on. If `expo.ios.infoPlist` in `app.json` sets `"CADisableMinimumFrameDurationOnPhone": true`, it's redundant — remove it. Leave an explicit `false` alone; that's a deliberate opt-out.
+- **Committed `ios/` directory**: `app.json` `infoPlist` isn't applied without prebuild, so check `ios/<AppName>/Info.plist` and add `<key>CADisableMinimumFrameDurationOnPhone</key><true/>` there if it's missing.
+- **SDK 48 or older**: add it under `expo.ios.infoPlist` in `app.json`.
 
 Then the frame budget is 8ms, not 16. This is also why a UI-thread animation matters more on mobile than it does on web.
 
