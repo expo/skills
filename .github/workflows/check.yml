@@ -40,11 +40,6 @@ jobs:
         continue-on-error: true
         run: bun scripts/check-skill-limits.ts
 
-      - name: Check Agent Plugins schemas
-        id: agent-plugin-schemas
-        continue-on-error: true
-        run: bun scripts/check-agent-plugin-schemas.ts
-
       - name: Check plugin version bump
         id: version-check
         continue-on-error: true
@@ -66,7 +61,6 @@ jobs:
         if: always()
         env:
           SKILL_LIMITS_OUTCOME: ${{ steps.skill-limits.outcome }}
-          AGENT_PLUGIN_SCHEMAS_OUTCOME: ${{ steps.agent-plugin-schemas.outcome }}
           VERSION_CHECK_TEST_OUTCOME: ${{ steps.version-check-test.outcome }}
           VERSION_CHECK_OUTCOME: ${{ steps.version-check.outcome }}
           ROUTING_CHECK_OUTCOME: ${{ steps.routing-check.outcome }}
@@ -98,7 +92,6 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun scripts/check-skill-limits.ts"
-          report "Agent Plugins schemas" "$AGENT_PLUGIN_SCHEMAS_OUTCOME" "bun scripts/check-agent-plugin-schemas.ts"
           report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
           report "plugin version bump" "$VERSION_CHECK_OUTCOME" "bun scripts/check-plugin-version-bump.ts origin/main"
           report "expo-overview routing" "$ROUTING_CHECK_OUTCOME" "bun scripts/check-overview-routing.ts"

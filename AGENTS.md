@@ -284,12 +284,6 @@ python3 -m json.tool plugins/expo/mcp.json >/dev/null
 python3 -m json.tool plugins/expo/.mcp.json >/dev/null
 ```
 
-For changes to a root `plugin.json` or `mcp.json`, also validate against the published Agent Plugins schemas. The manifest schema sets `additionalProperties: false`, so a stray field fails validation rather than being silently ignored:
-
-```bash
-bun scripts/check-agent-plugin-schemas.ts
-```
-
 For Codex marketplace changes, verify registration in an isolated Codex home before using your real config:
 
 ```bash

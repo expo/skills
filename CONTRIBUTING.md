@@ -138,7 +138,6 @@ every case (the manifests are restored afterward).
 ```bash
 claude plugin validate ./plugins/expo
 bun scripts/check-skill-limits.ts
-bun scripts/check-agent-plugin-schemas.ts
 bun scripts/check-plugin-version-bump.ts origin/main
 ```
 
@@ -148,10 +147,6 @@ run that skill's own validation.
 `check-skill-limits.ts` enforces more than the size caps: the naming rule (step 2), the paid
 costs callout (step 4), the Codex agent file (step 7), the `skills.sh.json` grouping (step 8),
 and the feedback block (step 9) all fail CI when violated.
-
-`check-agent-plugin-schemas.ts` validates each root `plugin.json` and `mcp.json` against Agent Plugins
-1.0.0. That schema is closed, so an extra top-level field is an error. Client-specific data belongs
-under a reverse-domain key in `extensions` (Codex uses `com.openai`).
 
 ### Syncing `expo-animation`
 
