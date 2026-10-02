@@ -4,7 +4,7 @@ The remote sim boots blank. You install a **simulator-targeted** build onto the 
 
 In all modes, the session is started the same way and driven through `npx --yes eas-cli@latest simulator:exec`. Replace `dev.example.app` with the app's iOS `bundleIdentifier` (from `app.json` → `ios.bundleIdentifier`), and run from the project directory.
 
-> These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app`, and skip `pod install`. Current simulator session types include a web preview, though Android support is still in development and may lack iOS parity.
+> These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app` (`.aab` fails), and skip `pod install`. Android sessions include a browser preview (`webPreviewUrl`), which the expo.dev session page opens in a new tab with **Open preview**. Android support is still in development, so some iOS features may not work.
 
 ## Starting a session (shared by all modes)
 
@@ -35,7 +35,7 @@ for i in $(seq 1 64); do
 done
 ```
 
-If you need the id explicitly, it's `EAS_SIMULATOR_SESSION_ID` in `.env.eas-simulator`. `start` also prints a `webPreviewUrl` (iOS-only browser preview — surface it per the SKILL.md "watch it live" rules) and a job-run URL. Once live, the session env is in `.env.eas-simulator`, so `simulator:exec` works.
+If you need the id explicitly, it's `EAS_SIMULATOR_SESSION_ID` in `.env.eas-simulator`. `start` also prints a `webPreviewUrl` (browser preview on iOS and Android; `remoteConfig.previewUrl` for `web-preview-only` sessions — surface it per the SKILL.md "watch it live" rules) and a job-run URL. Once live, the session env is in `.env.eas-simulator`, so `simulator:exec` works.
 
 ## Targeting a device — iPad, or several at once
 
@@ -53,16 +53,16 @@ The value must be a device the **remote runner** offers (NOT your local Xcode se
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest devices --json
 ```
 
-Available iOS devices today: iPhone 17 / 17 Pro / 17 Pro Max / 17e / Air, and iPad (A16), iPad Air 11"/13" (M4), iPad mini (A17 Pro), iPad Pro 11"/13" (M5).
+Available iOS devices today: iPhone 17 (the default) / 17 Pro / 17 Pro Max / 17e / Air; iPad (A16), iPad Air 11-inch (M4), iPad Air 13-inch (M4), iPad mini (A17 Pro), iPad Pro 11-inch (M5), iPad Pro 13-inch (M5); plus Vision Pro and Apple TV. On Android, `--device` takes an AVD hardware profile id (e.g. `pixel_7`); all profiles render at 720x1600, density 300.
 
-**Switch devices mid-session:** a session exposes ~16 sims but boots only one at start. Pass the **controller's** global `--device "<name>"` on `open` (and other verbs) to boot + target another; it stays booted alongside the first, so pass `--device` on each verb to say which it hits.
+**Add a second simulator mid-session:** a session boots only one simulator at start. Use a separate agent-device session for the second one: pass `--session <name> --device "<name>"` (boot takes about 46 seconds), and pass `--session <name>` on each later verb for that device. Passing `--device` in the default session fails with `INVALID_ARGS` "already bound".
 
 ```bash
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> "<devClientURL>" \
-  --platform ios --device "iPad Pro 13-inch (M5)" --relaunch
+  --platform ios --session ipad --device "iPad Pro 13-inch (M5)" --relaunch
 ```
 
-- ⚠️ The **controller** `--device` resolves by **NAME only** — a udid returns `DEVICE_NOT_FOUND`. (The start-time CLI `--device` above takes either.)
+- ⚠️ The **controller** `--device` takes a **name only** — a UDID returns `DEVICE_NOT_FOUND`; use `--udid` for a UDID. (The start-time CLI `--device` above takes either.)
 - `devices` reports each device's name, kind, and booted state, but **not** its iOS version.
 
 ---
@@ -139,7 +139,7 @@ npx --yes eas-cli@latest simulator:stop          # omit --id → stops the doten
 
 The agentic edit-and-see loop: a **dev (Debug) build** loads JS from your **Metro** over a tunnel, so edits appear on the remote sim via Fast Refresh. Two ways to connect the dev client to Metro:
 
-- **Method 1 (recommended, eas-cli ≥ 22.4.0):** launch at session start — `simulator:start` installs the build, applies launch-args, and opens the Metro URL in one command, and the "Open in?" dialog is auto-handled. Needs a **remote** build source (`--build-id`, `--application-archive-url`, or `--expo-go`); a local `.app` can't be passed here.
+- **Method 1 (recommended, eas-cli ≥ 22.4.0):** launch at session start — `simulator:start` installs the build, applies launch-args, and opens the Metro URL in one command, and the "Open in?" dialog is auto-handled. Needs a **remote** build source (`--build-id`, `--build-fingerprint`, `--application-archive-url`, or `--expo-go`); a local `.app` can't be passed here. `--build-fingerprint` selects the most recent finished, non-expired build with that hash (iOS: it must be a simulator build; Android: any distribution type can match, so use an APK profile). An iOS `--application-archive-url` must be a `.tar.gz` or `.tgz` that contains a `.app` (`.zip`, `.app.zip`, and `.ipa` fail); Android needs an `.apk`.
 - **Method 2 (fallback):** drive the connect with the controller — for a **local `.app`** build, or eas-cli < 22.4.0.
 
 ⚠️ **Don't install a release build as a "quick interim" and screenshot it** — it shows stale, build-time code. Use a dev build + Metro; screenshot only after the dev client is connected.
@@ -181,7 +181,7 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest screenshot ./liv
 #    VERIFY it's the REMOTE sim, not a silent local-sim fallback (agent-device falls back to a LOCAL sim with no
 #    error when the dotenv lacks remote config → believable but WRONG screenshots). Decisive tells: `simulator:get
 #    --json` returns the id `start` printed, AND the attach's "Session state:" path is under /Users/expo/ (remote
-#    VM), not /Users/gabe/ (your Mac). The `sessions/` vs `remote-diagnostics/` directory name is NOT reliable.
+#    VM), not /Users/<you>/ (your Mac). The `sessions/` vs `remote-diagnostics/` directory name is NOT reliable.
 
 # 4. Fast Refresh: edit a source file → it hits the remote sim with no reload. Screenshot again to confirm.
 # 5. Stop: npx --yes eas-cli@latest simulator:stop   # then kill the Metro process
