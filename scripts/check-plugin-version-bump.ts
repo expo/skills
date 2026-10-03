@@ -21,25 +21,15 @@ const pluginManifests: PluginManifest[] = [
     path: "plugins/expo/.claude-plugin/plugin.json",
   },
   {
-    label: "Codex",
-    path: "plugins/expo/.codex-plugin/plugin.json",
-  },
-  {
-    label: "Cursor",
-    path: "plugins/expo/.cursor-plugin/plugin.json",
-  },
-  {
-    label: "Grok",
-    path: "plugins/expo/.grok-plugin/plugin.json",
+    label: "Agent Plugins",
+    path: "plugins/expo/plugin.json",
   },
 ];
 
 const versionedPluginPaths = [
   "plugins/expo/skills/",
   "plugins/expo/.claude-plugin/plugin.json",
-  "plugins/expo/.codex-plugin/plugin.json",
-  "plugins/expo/.cursor-plugin/plugin.json",
-  "plugins/expo/.grok-plugin/plugin.json",
+  "plugins/expo/plugin.json",
   "plugins/expo/.mcp.json",
   "plugins/expo/mcp.json",
 ];
@@ -47,14 +37,14 @@ const versionedPluginPaths = [
 const USAGE = `Usage: bun scripts/check-plugin-version-bump.ts [base-ref] [options]
 
 Guards the rule that CI enforces: when any versioned Expo plugin file changes,
-the Claude, Codex, Cursor, and Grok plugin manifests must all be bumped together
+the Claude and Agent Plugins plugin manifests must all be bumped together
 to the same version, and that version must be greater than the one on the base ref.
 
 Versioned paths:
 ${versionedPluginPaths.map((path) => `  ${path}`).join("\n")}
 
 Manifests:
-${pluginManifests.map((manifest) => `  ${manifest.label.padEnd(7)}${manifest.path}`).join("\n")}
+${pluginManifests.map((manifest) => `  ${manifest.label.padEnd(14)}${manifest.path}`).join("\n")}
 
 Arguments:
   base-ref              Git ref to compare against (default: origin/main).
@@ -131,7 +121,12 @@ function readJson(path: string) {
 
 function readBaseJson(path: string) {
   try {
-    return JSON.parse(runGit(["show", `${baseRef}:${path}`]));
+    // `git show` fails when a manifest is new in this PR, and that stderr should not look like a crash.
+    const output = execFileSync("git", ["show", `${baseRef}:${path}`], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    return JSON.parse(output);
   } catch {
     return null;
   }
@@ -275,11 +270,11 @@ for (const row of rows) {
 const presentBaseVersions = [...baseVersions].filter(isSemver);
 
 if (new Set(presentBaseVersions).size > 1) {
-  errors.push("The Claude, Codex, Cursor, and Grok plugin versions on main are not in sync.");
+  errors.push("The Claude and Agent Plugins plugin versions on main are not in sync.");
 }
 
 if (currentVersions.size !== 1) {
-  errors.push("The Claude, Codex, Cursor, and Grok plugin versions in this PR must match.");
+  errors.push("The Claude and Agent Plugins plugin versions in this PR must match.");
 }
 
 if (errors.length === 0) {
@@ -298,7 +293,7 @@ const markdown = [
   "",
   errors.length === 0
     ? "Passed. Versioned Expo plugin files changed and all plugin manifests were bumped together."
-    : "Failed. Versioned Expo plugin files changed, so the Claude, Codex, Cursor, and Grok plugin manifests must all be bumped together.",
+    : "Failed. Versioned Expo plugin files changed, so the Claude and Agent Plugins plugin manifests must all be bumped together.",
   "",
   formatVersionRows(rows),
   "",

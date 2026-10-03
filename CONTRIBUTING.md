@@ -115,19 +115,17 @@ CI fails if the block is missing, has drifted, or names the wrong skill.
 
 ### 10. Bump the plugin version
 
-Bump `version` in **all four** manifests together - they must match each other and be greater
+Bump `version` in **both** manifests together. They must match each other and be greater
 than `main`. CI enforces this.
 
-- `plugins/expo/.claude-plugin/plugin.json`
-- `plugins/expo/.codex-plugin/plugin.json`
-- `plugins/expo/.cursor-plugin/plugin.json`
-- `plugins/expo/.grok-plugin/plugin.json`
+- `plugins/expo/plugin.json` - the [Agent Plugins](https://agent-plugins.org/) manifest. Codex and other compatible clients read it. Codex install metadata lives under `extensions["com.openai"]`.
+- `plugins/expo/.claude-plugin/plugin.json` - Claude Code, Grok, and Cursor.
 
-The check script writes all four for you, rejecting a version that is not valid semver or is not
+The check script writes both for you, rejecting a version that is not valid semver or is not
 greater than the base ref:
 
 ```bash
-bun scripts/check-plugin-version-bump.ts --set-version 1.10.1
+bun scripts/check-plugin-version-bump.ts --set-version 1.14.0
 ```
 
 Run it with `--help` for the full usage, or `bun test scripts/check-plugin-version-bump.test.ts` to exercise
