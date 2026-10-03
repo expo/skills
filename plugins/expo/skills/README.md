@@ -53,4 +53,4 @@ Skills whose core purpose uses paid Expo Application Services (EAS). Each `SKILL
 2. Write a frontmatter `description` that says what the skill does and when to use it.
 3. For a services skill, open the body with a costs/plan-limits callout right after the H1.
 4. Add the skill to the table above, to `skills.sh.json`, and to the root and plugin `README.md` lists.
-5. Bump the version in all three plugin manifests (see `CONTRIBUTING.md`).
+5. Bump the version in both plugin manifests (see `CONTRIBUTING.md`).

@@ -1,6 +1,6 @@
 # Expo Skills Repository
 
-This repository contains official Expo AI agent skills. Codex, Cursor, and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Claude Code and Grok Build keep their own manifests. The skills should stay useful to any agent that can consume `SKILL.md` files.
+This repository contains official Expo AI agent skills. Codex, Cursor, and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Claude Code keeps its own manifest, which Grok reads too. The skills should stay useful to any agent that can consume `SKILL.md` files.
 
 ## Repository Structure
 
@@ -17,9 +17,7 @@ plugins/
     plugin.json             # Agent Plugins manifest (Codex, Cursor, and other compatible clients)
     mcp.json                # Agent Plugins MCP configuration
     .claude-plugin/
-      plugin.json           # Claude Code plugin manifest
-    .grok-plugin/
-      plugin.json           # Grok Build plugin manifest
+      plugin.json           # Claude Code plugin manifest, also read by Grok
     .mcp.json               # Claude Code and Grok MCP configuration
     skills/
       README.md             # Grouped index of all skills
@@ -40,17 +38,14 @@ All three marketplaces expose the active `expo` and `expo-experiments` plugins. 
 
 ## Plugin Manifests
 
-The `expo` plugin carries three manifests that share one `version`. CI rejects a skill or manifest change that does not bump them together.
+The `expo` plugin carries two manifests that share one `version`. CI rejects a skill or manifest change that does not bump them together. `expo-experiments` ships the same pair.
 
 | Manifest | Who reads it |
 | --- | --- |
 | `plugins/expo/plugin.json` | Codex, Cursor, and any other [Agent Plugins](https://agent-plugins.org/) client |
-| `plugins/expo/.claude-plugin/plugin.json` | Claude Code |
-| `plugins/expo/.grok-plugin/plugin.json` | Grok Build |
+| `plugins/expo/.claude-plugin/plugin.json` | Claude Code and Grok |
 
-Grok stays on its own manifest. It reads `.grok-plugin/plugin.json` (or a `.claude-plugin/` manifest), not a root Agent Plugins manifest. Claude Code ignores the root `plugin.json`. Cursor loads the root manifest, which covers skills and `mcp.json`. `logo` and `displayName` are not portable fields, so Cursor does not get them.
-
-`expo-experiments` has no Grok manifest. It ships the root Agent Plugins manifest and a Claude Code manifest at the same version.
+Grok reads the Claude Code manifest and `.mcp.json`. It does not read the root `plugin.json`. Claude Code ignores the root `plugin.json`. Cursor loads the root manifest, which covers skills and `mcp.json`. `logo` and `displayName` are not portable fields, so Cursor does not get them.
 
 ### Agent Plugins manifest (`plugin.json`)
 
@@ -98,7 +93,7 @@ Claude Code and Grok keep using `.mcp.json`, which stays on `"type": "http"`. Cu
 
 ### Claude Code manifest (`.claude-plugin/plugin.json`)
 
-Claude Code is not an Agent Plugins client. It reads its own manifest and its own `.mcp.json`, and ignores the root `plugin.json` entirely.
+Claude Code is not an Agent Plugins client. It reads its own manifest and its own `.mcp.json`, and ignores the root `plugin.json` entirely. Grok reads this same manifest and `.mcp.json`.
 
 ```json
 {
@@ -113,8 +108,6 @@ Claude Code is not an Agent Plugins client. It reads its own manifest and its ow
 ```
 
 Only `name` is required. `version`, `description`, and `author` are optional.
-
-The Grok manifest follows the same idea: client-specific metadata, same `version` as the others. Do not add Cursor fields such as `logo` or `displayName` to the root `plugin.json`.
 
 ## Skill Files
 
@@ -253,7 +246,7 @@ Follow the full guide in `CONTRIBUTING.md`. In short:
 4. Add the canonical feedback block with `bun scripts/check-skill-limits.ts --fix-feedback`; CI verifies that its subject matches the skill name.
 5. Register the skill in every catalog: `skills.sh.json`, `plugins/expo/README.md`, `plugins/expo/skills/README.md`, and the root `README.md`.
 6. Add a one-line entry for the skill to the `expo-overview` Skill Map (`plugins/expo/skills/expo-overview/SKILL.md`) so the router can dispatch to it. This is enforced by the `check` workflow (`bun scripts/check-overview-routing.ts`).
-7. Bump the version in all three plugin manifests together with `bun scripts/check-plugin-version-bump.ts --set-version <version>` (they must match and be greater than main; CI-enforced).
+7. Bump the version in both plugin manifests together with `bun scripts/check-plugin-version-bump.ts --set-version <version>` (they must match and be greater than main; CI-enforced).
 8. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
 
 ## Testing Plugins
@@ -275,7 +268,6 @@ python3 -m json.tool .agents/plugins/marketplace.json >/dev/null
 python3 -m json.tool .cursor-plugin/marketplace.json >/dev/null
 python3 -m json.tool plugins/expo/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/.claude-plugin/plugin.json >/dev/null
-python3 -m json.tool plugins/expo/.grok-plugin/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/mcp.json >/dev/null
 python3 -m json.tool plugins/expo/.mcp.json >/dev/null
 ```
