@@ -1,24 +1,22 @@
 # Expo Skills Repository
 
-This repository contains official Expo AI agent skills. Codex, Cursor, and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Claude Code keeps its own manifest, which Grok reads too. The skills should stay useful to any agent that can consume `SKILL.md` files.
+This repository contains official Expo AI agent skills. Codex and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Claude Code, Grok, and Cursor read `.claude-plugin/plugin.json`. The skills should stay useful to any agent that can consume `SKILL.md` files.
 
 ## Repository Structure
 
 ```
 .claude-plugin/
-  marketplace.json          # Claude Code marketplace catalog
+  marketplace.json          # Claude Code and Cursor marketplace catalog
 .agents/
   plugins/
     marketplace.json        # Codex marketplace catalog
-.cursor-plugin/
-  marketplace.json          # Cursor marketplace catalog
 plugins/
   expo/
-    plugin.json             # Agent Plugins manifest (Codex, Cursor, and other compatible clients)
+    plugin.json             # Agent Plugins manifest (Codex and other compatible clients)
     mcp.json                # Agent Plugins MCP configuration
     .claude-plugin/
-      plugin.json           # Claude Code plugin manifest, also read by Grok
-    .mcp.json               # Claude Code and Grok MCP configuration
+      plugin.json           # Claude Code, Grok, and Cursor plugin manifest
+    .mcp.json               # Claude Code, Grok, and Cursor MCP configuration
     skills/
       README.md             # Grouped index of all skills
       skill-name/
@@ -34,7 +32,7 @@ skills.sh.json              # skills.sh catalog groupings
 scripts/                    # CI checks (skill limits, plugin version bump)
 ```
 
-All three marketplaces expose the active `expo` and `expo-experiments` plugins. The Claude Code marketplace additionally keeps deprecated aliases such as `expo-app-design`, `upgrading-expo`, and `expo-deployment` pointing at `./plugins/expo` for backward compatibility. Do not add those aliases to Codex or Cursor - their marketplace entries must match the plugin manifest name.
+Both marketplaces expose the active `expo` and `expo-experiments` plugins. Entry names match the plugin manifest names. Do not add compatibility aliases.
 
 ## Plugin Manifests
 
@@ -42,10 +40,10 @@ The `expo` plugin carries two manifests that share one `version`. CI rejects a s
 
 | Manifest | Who reads it |
 | --- | --- |
-| `plugins/expo/plugin.json` | Codex, Cursor, and any other [Agent Plugins](https://agent-plugins.org/) client |
-| `plugins/expo/.claude-plugin/plugin.json` | Claude Code and Grok |
+| `plugins/expo/plugin.json` | Codex and any other [Agent Plugins](https://agent-plugins.org/) client |
+| `plugins/expo/.claude-plugin/plugin.json` | Claude Code, Grok, and Cursor |
 
-Grok reads the Claude Code manifest and `.mcp.json`. It does not read the root `plugin.json`. Claude Code ignores the root `plugin.json`. Cursor loads the root manifest, which covers skills and `mcp.json`. `logo` and `displayName` are not portable fields, so Cursor does not get them.
+Claude Code, Grok, and Cursor read `.claude-plugin/plugin.json` and `.mcp.json`. They do not read the root `plugin.json`. Cursor looks for `.cursor-plugin/plugin.json` first, then the Claude manifest, then the root manifest, and stops at the first file that parses. This repo ships no Cursor manifest, so Cursor stops on the Claude one. That manifest does not list skills, so Cursor discovers `skills/`. For MCP, Cursor reads `.mcp.json` before `mcp.json` and keeps the first `expo` server.
 
 ### Agent Plugins manifest (`plugin.json`)
 
@@ -77,7 +75,7 @@ This is the manifest Codex and every other Agent Plugins client reads. Its schem
 
 The MCP configuration is a sibling `mcp.json` with its own `$schema`. Remote servers use `"type": "streamable-http"`. `"http"` is not a valid Agent Plugins transport.
 
-Claude Code and Grok keep using `.mcp.json`, which stays on `"type": "http"`. Cursor loads the root `mcp.json`.
+Claude Code, Grok, and Cursor keep using `.mcp.json`, which stays on `"type": "http"`. Codex and other Agent Plugins clients load the root `mcp.json`.
 
 ```json
 {
@@ -93,7 +91,7 @@ Claude Code and Grok keep using `.mcp.json`, which stays on `"type": "http"`. Cu
 
 ### Claude Code manifest (`.claude-plugin/plugin.json`)
 
-Claude Code is not an Agent Plugins client. It reads its own manifest and its own `.mcp.json`, and ignores the root `plugin.json` entirely. Grok reads this same manifest and `.mcp.json`.
+Claude Code is not an Agent Plugins client. It reads its own manifest and its own `.mcp.json`, and ignores the root `plugin.json` entirely. Grok and Cursor read this same manifest and `.mcp.json`.
 
 ```json
 {
@@ -174,11 +172,10 @@ Consult these resources as needed:
 
 ## Marketplace Configuration
 
-Agent Plugins standardizes the plugin package, not its distribution, so each agent ecosystem still needs its own marketplace catalog. This repo has one shared plugin implementation at `plugins/expo` and three marketplace wrappers pointing at it:
+Agent Plugins standardizes the plugin package, not its distribution. This repo has one shared plugin implementation at `plugins/expo` and two marketplace catalogs:
 
-- `.claude-plugin/marketplace.json`: Claude Code marketplace.
+- `.claude-plugin/marketplace.json`: Claude Code. Cursor uses this file too. It tries `.cursor-plugin/marketplace.json` first, and this repo does not ship that path.
 - `.agents/plugins/marketplace.json`: Codex marketplace.
-- `.cursor-plugin/marketplace.json`: Cursor marketplace.
 
 Claude Code and Cursor marketplace entries use string `source` paths:
 
@@ -234,7 +231,7 @@ Marketplace entry fields:
 - `description` fields, when present, should be concise and user-facing.
 - Codex entries must include `policy.installation`, `policy.authentication`, and `category`.
 
-When changing Claude Code marketplace aliases, preserve backward compatibility unless the task explicitly removes an old install path. Do not add deprecated alias entries to Codex or Cursor unless their plugin manifest names also match.
+Marketplace entries are `expo` and `expo-experiments` only. Do not add compatibility aliases.
 
 ## Adding a Skill
 
@@ -265,7 +262,6 @@ For JSON-only changes, also verify the edited JSON file parses:
 ```bash
 python3 -m json.tool .claude-plugin/marketplace.json >/dev/null
 python3 -m json.tool .agents/plugins/marketplace.json >/dev/null
-python3 -m json.tool .cursor-plugin/marketplace.json >/dev/null
 python3 -m json.tool plugins/expo/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/.claude-plugin/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/mcp.json >/dev/null
@@ -279,7 +275,7 @@ mkdir -p .context/codex-home .context/fake-home
 CODEX_HOME="$PWD/.context/codex-home" HOME="$PWD/.context/fake-home" codex plugin marketplace add "$PWD"
 ```
 
-For Cursor marketplace changes, validate against Cursor's plugin template validator when available. This workspace has `bun`, so the Node-based validator can be run with Bun.
+Cursor reads `.claude-plugin/marketplace.json`. Validate that file against Cursor's plugin template validator when available. This workspace has `bun`, so the Node-based validator can be run with Bun.
 
 If a skill includes scripts, run the relevant script-level validation from that skill's `scripts/` directory.
 
@@ -291,8 +287,6 @@ Users install the active plugin from this marketplace:
 /plugin marketplace add expo/skills
 /plugin install expo
 ```
-
-The deprecated marketplace entries are compatibility aliases only. New documentation should point users to `/plugin install expo`.
 
 Codex users can add this repository as a marketplace and then install `expo` from the Codex plugin directory:
 
