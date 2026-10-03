@@ -10,7 +10,7 @@
   },
   "plugins": [
     {
-      "name": "Expo",
+      "name": "expo",
       "source": "./plugins/expo",
       "description": "Official Expo plugin. Everything your agent needs to build, verify, deploy, and monitor an app on Android, iOS, and web."
     },

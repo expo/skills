@@ -115,15 +115,14 @@ CI fails if the block is missing, has drifted, or names the wrong skill.
 
 ### 10. Bump the plugin version
 
-Bump `version` in **all four** manifests together. They must match each other and be greater
+Bump `version` in **all three** manifests together. They must match each other and be greater
 than `main`. CI enforces this.
 
-- `plugins/expo/plugin.json` - the [Agent Plugins](https://agent-plugins.org/) manifest. Codex and other compatible clients read it. Codex install metadata lives under `extensions["com.openai"]`.
+- `plugins/expo/plugin.json` - the [Agent Plugins](https://agent-plugins.org/) manifest. Codex, Cursor, and other compatible clients read it. Codex install metadata lives under `extensions["com.openai"]`.
 - `plugins/expo/.claude-plugin/plugin.json` - Claude Code
-- `plugins/expo/.cursor-plugin/plugin.json` - Cursor. It keeps the logo and display name, which the Agent Plugins schema does not have.
 - `plugins/expo/.grok-plugin/plugin.json` - Grok Build. Grok does not read a root Agent Plugins manifest.
 
-The check script writes all four for you, rejecting a version that is not valid semver or is not
+The check script writes all three for you, rejecting a version that is not valid semver or is not
 greater than the base ref:
 
 ```bash

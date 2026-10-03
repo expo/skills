@@ -1,6 +1,6 @@
 # Expo Skills Repository
 
-This repository contains official Expo AI agent skills. Codex and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Claude Code, Cursor, and Grok Build keep their own manifests. The skills should stay useful to any agent that can consume `SKILL.md` files.
+This repository contains official Expo AI agent skills. Codex, Cursor, and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Claude Code and Grok Build keep their own manifests. The skills should stay useful to any agent that can consume `SKILL.md` files.
 
 ## Repository Structure
 
@@ -14,15 +14,13 @@ This repository contains official Expo AI agent skills. Codex and other Agent Pl
   marketplace.json          # Cursor marketplace catalog
 plugins/
   expo/
-    plugin.json             # Agent Plugins manifest (Codex and other compatible clients)
+    plugin.json             # Agent Plugins manifest (Codex, Cursor, and other compatible clients)
     mcp.json                # Agent Plugins MCP configuration
     .claude-plugin/
       plugin.json           # Claude Code plugin manifest
-    .cursor-plugin/
-      plugin.json           # Cursor plugin manifest
     .grok-plugin/
       plugin.json           # Grok Build plugin manifest
-    .mcp.json               # Claude Code, Cursor, and Grok MCP configuration
+    .mcp.json               # Claude Code and Grok MCP configuration
     skills/
       README.md             # Grouped index of all skills
       skill-name/
@@ -42,18 +40,17 @@ All three marketplaces expose the active `expo` and `expo-experiments` plugins. 
 
 ## Plugin Manifests
 
-The `expo` plugin carries four manifests that share one `version`. CI rejects a skill or manifest change that does not bump them together.
+The `expo` plugin carries three manifests that share one `version`. CI rejects a skill or manifest change that does not bump them together.
 
 | Manifest | Who reads it |
 | --- | --- |
-| `plugins/expo/plugin.json` | Codex and any other [Agent Plugins](https://agent-plugins.org/) client |
+| `plugins/expo/plugin.json` | Codex, Cursor, and any other [Agent Plugins](https://agent-plugins.org/) client |
 | `plugins/expo/.claude-plugin/plugin.json` | Claude Code |
-| `plugins/expo/.cursor-plugin/plugin.json` | Cursor |
 | `plugins/expo/.grok-plugin/plugin.json` | Grok Build |
 
-Cursor and Grok stay on their own manifests. Cursor's marketplace resolver looks for `.cursor-plugin/plugin.json`, and `logo` and `displayName` are not portable fields. Grok reads `.grok-plugin/plugin.json` (or a `.claude-plugin/` manifest), not a root Agent Plugins manifest. Claude Code ignores the root `plugin.json`.
+Grok stays on its own manifest. It reads `.grok-plugin/plugin.json` (or a `.claude-plugin/` manifest), not a root Agent Plugins manifest. Claude Code ignores the root `plugin.json`. Cursor loads the root manifest, which covers skills and `mcp.json`. `logo` and `displayName` are not portable fields, so Cursor does not get them.
 
-`expo-experiments` has no Grok manifest. It ships the root Agent Plugins manifest, plus Claude Code and Cursor manifests, at the same version.
+`expo-experiments` has no Grok manifest. It ships the root Agent Plugins manifest and a Claude Code manifest at the same version.
 
 ### Agent Plugins manifest (`plugin.json`)
 
@@ -85,7 +82,7 @@ This is the manifest Codex and every other Agent Plugins client reads. Its schem
 
 The MCP configuration is a sibling `mcp.json` with its own `$schema`. Remote servers use `"type": "streamable-http"`. `"http"` is not a valid Agent Plugins transport.
 
-Claude Code, Cursor, and Grok keep using `.mcp.json`, which stays on `"type": "http"`. Cursor's manifest points `mcpServers` at that file, so it does not load the root `mcp.json`.
+Claude Code and Grok keep using `.mcp.json`, which stays on `"type": "http"`. Cursor loads the root `mcp.json`.
 
 ```json
 {
@@ -117,7 +114,7 @@ Claude Code is not an Agent Plugins client. It reads its own manifest and its ow
 
 Only `name` is required. `version`, `description`, and `author` are optional.
 
-Cursor and Grok manifests follow the same idea: client-specific metadata, same `version` as the others. Cursor also carries `logo`, `displayName`, and explicit `skills` / `mcpServers` paths. Do not add those fields to the root `plugin.json`.
+The Grok manifest follows the same idea: client-specific metadata, same `version` as the others. Do not add Cursor fields such as `logo` or `displayName` to the root `plugin.json`.
 
 ## Skill Files
 
@@ -256,7 +253,7 @@ Follow the full guide in `CONTRIBUTING.md`. In short:
 4. Add the canonical feedback block with `bun scripts/check-skill-limits.ts --fix-feedback`; CI verifies that its subject matches the skill name.
 5. Register the skill in every catalog: `skills.sh.json`, `plugins/expo/README.md`, `plugins/expo/skills/README.md`, and the root `README.md`.
 6. Add a one-line entry for the skill to the `expo-overview` Skill Map (`plugins/expo/skills/expo-overview/SKILL.md`) so the router can dispatch to it. This is enforced by the `check` workflow (`bun scripts/check-overview-routing.ts`).
-7. Bump the version in all four plugin manifests together with `bun scripts/check-plugin-version-bump.ts --set-version <version>` (they must match and be greater than main; CI-enforced).
+7. Bump the version in all three plugin manifests together with `bun scripts/check-plugin-version-bump.ts --set-version <version>` (they must match and be greater than main; CI-enforced).
 8. Keep the skill under the existing `expo` plugin unless there is a clear distribution reason to create a new plugin.
 
 ## Testing Plugins
@@ -278,7 +275,6 @@ python3 -m json.tool .agents/plugins/marketplace.json >/dev/null
 python3 -m json.tool .cursor-plugin/marketplace.json >/dev/null
 python3 -m json.tool plugins/expo/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/.claude-plugin/plugin.json >/dev/null
-python3 -m json.tool plugins/expo/.cursor-plugin/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/.grok-plugin/plugin.json >/dev/null
 python3 -m json.tool plugins/expo/mcp.json >/dev/null
 python3 -m json.tool plugins/expo/.mcp.json >/dev/null

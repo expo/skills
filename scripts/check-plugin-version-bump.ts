@@ -25,10 +25,6 @@ const pluginManifests: PluginManifest[] = [
     path: "plugins/expo/plugin.json",
   },
   {
-    label: "Cursor",
-    path: "plugins/expo/.cursor-plugin/plugin.json",
-  },
-  {
     label: "Grok",
     path: "plugins/expo/.grok-plugin/plugin.json",
   },
@@ -38,7 +34,6 @@ const versionedPluginPaths = [
   "plugins/expo/skills/",
   "plugins/expo/.claude-plugin/plugin.json",
   "plugins/expo/plugin.json",
-  "plugins/expo/.cursor-plugin/plugin.json",
   "plugins/expo/.grok-plugin/plugin.json",
   "plugins/expo/.mcp.json",
   "plugins/expo/mcp.json",
@@ -47,7 +42,7 @@ const versionedPluginPaths = [
 const USAGE = `Usage: bun scripts/check-plugin-version-bump.ts [base-ref] [options]
 
 Guards the rule that CI enforces: when any versioned Expo plugin file changes,
-the Claude, Agent Plugins, Cursor, and Grok plugin manifests must all be bumped together
+the Claude, Agent Plugins, and Grok plugin manifests must all be bumped together
 to the same version, and that version must be greater than the one on the base ref.
 
 Versioned paths:
@@ -280,11 +275,11 @@ for (const row of rows) {
 const presentBaseVersions = [...baseVersions].filter(isSemver);
 
 if (new Set(presentBaseVersions).size > 1) {
-  errors.push("The Claude, Agent Plugins, Cursor, and Grok plugin versions on main are not in sync.");
+  errors.push("The Claude, Agent Plugins, and Grok plugin versions on main are not in sync.");
 }
 
 if (currentVersions.size !== 1) {
-  errors.push("The Claude, Agent Plugins, Cursor, and Grok plugin versions in this PR must match.");
+  errors.push("The Claude, Agent Plugins, and Grok plugin versions in this PR must match.");
 }
 
 if (errors.length === 0) {
@@ -303,7 +298,7 @@ const markdown = [
   "",
   errors.length === 0
     ? "Passed. Versioned Expo plugin files changed and all plugin manifests were bumped together."
-    : "Failed. Versioned Expo plugin files changed, so the Claude, Agent Plugins, Cursor, and Grok plugin manifests must all be bumped together.",
+    : "Failed. Versioned Expo plugin files changed, so the Claude, Agent Plugins, and Grok plugin manifests must all be bumped together.",
   "",
   formatVersionRows(rows),
   "",
