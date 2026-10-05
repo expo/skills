@@ -19,7 +19,7 @@ npx --yes eas-cli@latest simulator:start --platform ios --name "<description>" \
 
 Capture records every HTTP(S) request an app sends through `URLSession`, which React Native `fetch`, image loading, and most iOS SDKs use. That includes requests from libraries and SDKs inside the app (analytics, crash reporting, `expo-updates` checks), not only the app's own code.
 
-- Requests from third-party apps that start after capture starts. For agent-device and Argent sessions, capture may start after the installed app's initial launch. Startup-only requests can be missed, and relaunching does not guarantee that those requests recur. For startup-sensitive tests, start a bare session with capture and install and launch the app after the session is ready.
+- Requests from third-party apps that start after capture starts.
 - An app that was already running is not recorded until it relaunches:
 
   ```bash
@@ -31,6 +31,12 @@ Capture records every HTTP(S) request an app sends through `URLSession`, which R
 
 - Apple system apps, such as Safari, are not recorded, and neither are requests made with `URLSession.shared`.
 - Apps that pin their server certificates cannot connect while capture is on.
+
+### Known limitation: initial launch with Argent and agent-device
+
+For now, capture may become ready after an installed app's initial launch in Argent and agent-device sessions. The app can finish its startup requests while the HAR is still empty. An empty HAR does not prove the app made no requests.
+
+Relaunch after capture is ready to inspect requests that recur. This does not recover the first launch: some requests may not recur, and cached requests may return `304` without a response body. For startup-sensitive tests, start a bare session with capture and install and launch the app after the session is ready.
 
 Capture sends the app's traffic through a proxy and decrypts it, and some apps react to that: pinned connections fail, and other requests can fail or time out. If the app misbehaves while capture is on, check it in a new session without `--network-capture` before you debug the app, and leave capture off when the task does not need it.
 

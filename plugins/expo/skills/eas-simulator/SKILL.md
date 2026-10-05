@@ -195,7 +195,7 @@ When the app crashes or closes on launch, read the iOS session's crash reports a
 
 ## Inspect the app's network traffic (iOS)
 
-To see the requests the app makes, start an iOS session with `--network-capture` (add `--network-capture-field` for headers or bodies), then download the recording from the preview API as a HAR file. Relaunch any app that was already running. Startup traffic from an app installed during agent-device or Argent session creation may be missed. Commands, fields, and limits are in [references/network-capture.md](./references/network-capture.md).
+To see the requests the app makes, start an iOS session with `--network-capture` (add `--network-capture-field` for headers or bodies), then download the recording from the preview API as a HAR file. Relaunch any app that was already running. **Known limitation:** Argent and agent-device can miss initial-launch traffic; relaunching does not recover the original requests or their bodies. Commands, fields, and limits are in [references/network-capture.md](./references/network-capture.md).
 
 ## Operating principles
 
