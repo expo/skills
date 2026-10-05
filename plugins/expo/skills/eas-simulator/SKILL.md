@@ -94,6 +94,21 @@ To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in 
 
 `start` also prints a job-run URL.
 
+## One device per session
+
+An `agent-device` session is confined to the **one** simulator or emulator it booted. EAS starts the session's agent-device daemon with a **daemon policy** (`AGENT_DEVICE_DAEMON_POLICY`):
+
+- **Devices:** the daemon lists, selects, and binds only the session device. `devices` shows only that device, and a verb that names another device (`--device`, `--udid`, `--serial`) fails.
+- **Commands:** `boot` and `shutdown` are denied.
+- **Capabilities:** every device shutdown is denied, including `close --shutdown`.
+
+A denial is `UNAUTHORIZED` with `details.reason: "DAEMON_POLICY_DENIED"`, a `rule` (`command`, `device`, or `capability`), and `retriable: false`. **Do not retry it, and do not work around it.** Change the approach instead:
+
+- **Another device (iPad, another iPhone model):** start a new session with `simulator:start --device "<name>"`. See [Targeting a device](./references/run-your-app.md#targeting-a-device--ipad-or-several-at-once).
+- **Several devices at once:** start one session per device and drive each by its explicit id and config, not the shared dotenv.
+- **The device stopped or crashed:** you cannot boot it again in that session. Stop the session and start a new one.
+- **End the session:** use `simulator:stop`, not an agent-device shutdown.
+
 ## Always name the session
 
 Pass `--name "<description>"` on every `simulator:start`. The name appears in `simulator:list`, `simulator:get`, and on the **Simulator sessions** page on expo.dev, where it replaces the generic title on each row. Unnamed, every row reads "Simulator session" over a random id — a wall of identical entries nobody can navigate. Write the name for a **human scanning that list days later**, not for yourself during this run.
