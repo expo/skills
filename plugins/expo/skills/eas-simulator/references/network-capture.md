@@ -19,7 +19,7 @@ npx --yes eas-cli@latest simulator:start --platform ios --name "<description>" \
 
 Capture records every HTTP(S) request an app sends through `URLSession`, which React Native `fetch`, image loading, and most iOS SDKs use. That includes requests from libraries and SDKs inside the app (analytics, crash reporting, `expo-updates` checks), not only the app's own code.
 
-- Requests from third-party apps that start after capture starts. The app the session installs with `--build-id`, `--application-archive-url`, or `--expo-go` is recorded from its first launch.
+- Requests from third-party apps that start after capture starts. For agent-device and Argent sessions, capture may start after the installed app's initial launch. Startup-only requests can be missed, and relaunching does not guarantee that those requests recur. For startup-sensitive tests, start a bare session with capture and install and launch the app after the session is ready.
 - An app that was already running is not recorded until it relaunches:
 
   ```bash
@@ -38,19 +38,17 @@ Capture sends the app's traffic through a proxy and decrypts it, and some apps r
 
 The recording exists only while the session runs and is not saved as a session artifact, so download it before you stop the session.
 
-Set `API_BASE` and `API_QUERY` as in [Reach the preview API](./logs-and-crashes.md#reach-the-preview-api). The capture routes refuse the token in the URL, so `sim_api` does not work for them: send the token in an `Authorization` header instead. The header goes to curl on stdin, so the token stays out of `ps`. Then list the requests:
+Use the original session ID, even if another session has replaced the dotenv. Run this from the Expo project directory and replace the script path with this skill's installed path:
 
 ```bash
-HAR="${TMPDIR:-/tmp}/eas-sim-capture-${API_BASE##*//}.har"
-TOKEN="${API_QUERY#*token=}"; TOKEN="${TOKEN%%&*}"
-printf 'url = "%s"\nheader = "Authorization: Bearer %s"\n' "$API_BASE/network-capture.har" "$TOKEN" |
-  curl -sS --fail-with-body --max-time 60 -K - -o "$HAR"
-node -e '
-  const entries = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).log.entries;
-  for (const e of entries) console.log(e.request.method, e.response.status, e.request.url);
-' "$HAR"
+npx --yes eas-cli@latest simulator:get --id <session-id> --json |
+  node "/path/to/eas-simulator/scripts/download-network-capture.mjs"
 ```
 
-Each entry also holds timings and, with the matching fields, the request and response headers and bodies. A `401` means the token was not sent as a header, or the session ended. A `404` means the session's preview server predates network capture. The user can follow the same requests live in the web preview's network panel.
+The helper reads the preview URL from stdin, sends its token in an `Authorization` header, and streams the HAR into a private temporary folder (`0700`) with an owner-only file (`0600`). It prints only the local file path. Each download has a ten-minute timeout; a failed run removes its partial download.
 
-The HAR file holds decrypted traffic. Delete it when the task is done (`rm -f "$HAR"`), and don't paste credentials from it into your reply.
+Open the local HAR to inspect request methods, URLs, status codes and timings, plus the headers and bodies that you selected. The user can also inspect requests live or select **Download session as HAR** in the preview's network panel.
+
+A `401` or `403` means the download was refused: confirm the session is active and re-run `simulator:get` for its current token. A `404` can mean no active capture session or an unsupported export route; the status alone does not identify an older server. Check capture state in the preview before deciding that an upgrade is needed.
+
+The HAR holds decrypted traffic. Delete the helper's temporary folder when analysis is done, and don't paste credentials or preview URLs into your reply. Download before stopping the session; automatic HAR artifact uploads are not available in the current workflow.
