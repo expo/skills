@@ -47,23 +47,15 @@ npx --yes eas-cli@latest simulator:start --platform ios --device "iPad Pro 13-in
 # then install / launch / screenshot as usual — the iPad renders larger (e.g. 1032x1376).
 ```
 
-The value must be a device the **remote runner** offers (NOT your local Xcode set), by name **or** UDID. List them from a live session:
+The value must be a device the **remote runner** offers (NOT your local Xcode set), by name **or** UDID.
 
-```bash
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest devices --json
-```
+Available iOS devices today: iPhone 17 (the default) / 17 Pro / 17 Pro Max / 17e / Air / Duo (a session that asks for iPhone Duo runs on a separate Xcode 27.1 image); iPad (A16), iPad Air 11-inch (M4), iPad Air 13-inch (M4), iPad mini (A17 Pro), iPad Pro 11-inch (M5), iPad Pro 13-inch (M5); plus Vision Pro and Apple TV. On Android, `--device` takes an AVD hardware profile id (e.g. `pixel_7`); all profiles render at 720x1600, density 300.
 
-Available iOS devices today: iPhone 17 (the default) / 17 Pro / 17 Pro Max / 17e / Air; iPad (A16), iPad Air 11-inch (M4), iPad Air 13-inch (M4), iPad mini (A17 Pro), iPad Pro 11-inch (M5), iPad Pro 13-inch (M5); plus Vision Pro and Apple TV. On Android, `--device` takes an AVD hardware profile id (e.g. `pixel_7`); all profiles render at 720x1600, density 300.
+**Choose the device at start. You cannot switch or add devices mid-session.** The session's agent-device daemon policy allows only the device that the session booted, and denies `boot` (see [One device per session](../SKILL.md#one-device-per-session)). So:
 
-**Add a second simulator mid-session:** a session boots only one simulator at start. Use a separate agent-device session for the second one: pass `--session <name> --device "<name>"` (boot takes about 46 seconds), and pass `--session <name>` on each later verb for that device. Passing `--device` in the default session fails with `INVALID_ARGS` "already bound".
-
-```bash
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> "<devClientURL>" \
-  --platform ios --session ipad --device "iPad Pro 13-inch (M5)" --relaunch
-```
-
-- ⚠️ The **controller** `--device` takes a **name only** — a UDID returns `DEVICE_NOT_FOUND`; use `--udid` for a UDID. (The start-time CLI `--device` above takes either.)
-- `devices` reports each device's name, kind, and booted state, but **not** its iOS version.
+- `agent-device devices` in a live session lists **only** the session device. Use it to confirm which device you are driving, not to find other devices.
+- A verb with `--device` that names another device fails. Do not retry it.
+- **For another device**, start a new session with `--device`. **For several devices at once**, start one session per device and drive each by its explicit id and config (load the daemon vars from `simulator:get --id <id> --json`), because the shared `.env.eas-simulator` holds only one session.
 
 ---
 
