@@ -8,7 +8,7 @@ allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(npx expo *
 
 # EAS Simulator
 
-> **EAS service - costs apply.** EAS Simulator is a hosted EAS service. Session usage is subject to your account's pricing and limits. See https://expo.dev/pricing for current terms.
+> **EAS service - costs apply.** Sessions count toward your account's pricing and limits and stop at their maximum duration. Stop a session with `eas simulator:stop` when the task is done. See https://expo.dev/pricing for current terms.
 
 EAS Simulator runs a remote iOS simulator or Android emulator on EAS infrastructure that you drive from your machine — from the CLI, from an AI agent (via `agent-device`), and from a browser preview. It's the unlock for **environments that can't run a simulator locally** (Linux boxes, cloud/background agents like Cursor Cloud), and for letting an agent *verify* a change on a real device instead of only reasoning about code.
 
@@ -24,9 +24,9 @@ The frontmatter `description` carries the trigger phrases. In short: use this to
 - **Generic simulator request:** use a suitable local simulator when available. If the host cannot run the requested simulator (for example, iOS on Linux or a cloud sandbox), use EAS Simulator after checking access. A non-macOS host may still support a local Android emulator.
 - Honor an explicit local choice; hand off to `expo run:ios` / Xcode / Android Studio as appropriate. Clarify only when the requested environment remains ambiguous and affects the task.
 
-When the user requests EAS Simulator or a cloud simulator, proceed within that request and
-any stated budget. Explain applicable usage once and carry existing authorization through
-the session. Ask before exceeding a stated budget or expanding beyond the requested work.
+When the user asks for EAS Simulator or a cloud simulator, start the session and do the
+requested work without asking again. Stop the session when the work is done. Only check in
+if the user set a limit you would go past, or if the work grows beyond what they asked for.
 
 ## Prerequisites
 
