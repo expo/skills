@@ -7,7 +7,7 @@
 - `argent` (Software Mansion) — a capable alternative controller; check its license for your use.
 - `web-preview-only` — browser preview with no programmatic control.
 
-All four types include a web preview. Before setting `--max-idle-time-minutes`, follow [Session lifetime](../SKILL.md#session-lifetime); activity does not reset the timer for every interface.
+All four types include a web preview. Before setting `--max-idle-time-minutes`, follow [Session lifetime](../SKILL.md#session-lifetime); browser-preview activity does not reset the timer.
 
 ## Appium
 
@@ -19,7 +19,7 @@ npx --yes eas-cli@latest simulator:start --platform ios --type appium --non-inte
 npx --yes eas-cli@latest simulator:exec <appium-client> [args...]
 ```
 
-Use the maximum duration as the lifetime bound; Appium commands do not reset the idle timer.
+The start flags `--build-id`, `--build-fingerprint`, `--application-archive-url`, or `--expo-go` (with `--launch-arg` and `--open-url`) install and launch the app in an Appium session too. Appium commands are recorded as session events with producer `appium`: they appear in `simulator:events` and reset the idle timer.
 
 ## agent-device verbs (run via `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`)
 
@@ -28,16 +28,20 @@ agent-device is a thin **client** talking to a **daemon** (the daemon runs on th
 The CLI help is written for agents and is the source of truth — run these for the full verb set and agentic loop guidance:
 
 ```bash
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest --help
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest help
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest help workflow
 ```
 
+Use `help [topic]`, not `--help`: oclif catches `--help` after `simulator:exec` and prints the EAS CLI help.
+
 EAS-specific notes:
 
-- **`press`, not `tap`.** The tap verb is `press` — `tap` is not a verb.
+- **Tap with `press` or `click`.** `tap` is a hidden alias of `press` (not in `help commands`), and older agent-device versions reject it.
 - **`snapshot -i` is slow on iOS** — tens of seconds is normal; wait for it.
 - **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts — avoids a large upload).
-- **Exercised against a live session:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`, `scroll`, `gesture` (needs a preset, e.g. `gesture swipe left`), `logs`, `record` (`start`/`stop <path>`), `network`, `perf`. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
+- **Exercised against a live session:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`, `scroll`, `gesture` (needs a preset, e.g. `gesture swipe left`), `logs`, `record` (`start [path]`/`stop`), `network`, `perf`.
+- **Recording:** `record start ./clip.mp4`, then `record stop` (no path). The file goes to the `record start` path, with a `.gesture-telemetry.json` next to it, and the clip also uploads as a session artifact. If `record stop` times out while the remote device exports, run it again; add `--platform ios` if it cannot find the recording. Separately, EAS uploads a whole-session screen recording after the session stops (iOS and Android).
+- **Remote proof:** `open` prints `Session state: /Users/expo/...` (iOS) or `/home/expo/...` (Android) on the remote device. `session state-dir` prints the local path, so it does not prove remote use. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
 
 ## Recording download recovery
 
@@ -49,7 +53,7 @@ npx --yes eas-cli@latest simulator:get --id <session-id> --json
 curl --fail --location --max-time 600 --output ./capture.mp4 '<downloadUrl>'
 ```
 
-Use the URL returned by EAS, not a path on the simulator or a controller artifact id. If the recording has not appeared yet, poll the same session with a bounded wait for upload completion. Already-uploaded artifacts can be retrieved after the session stops using its explicit id. If a download URL expires, query the session again for a fresh one. Give the download command more than 10 minutes in the outer runner, increase `--max-time` for larger files, and verify the downloaded video before reporting success.
+Use the URL returned by EAS, not a path on the simulator or a controller artifact id. If the recording has not appeared yet, poll the same session with a bounded wait for upload completion. Already-uploaded artifacts can be retrieved after the session stops using its explicit id; they stay until the session is deleted. The `downloadUrl` is stable and needs no auth: each request redirects to a new signed URL that is valid for 1 hour, so if a download fails, request the same `downloadUrl` again. Give the download command more than 10 minutes in the outer runner, increase `--max-time` for larger files, and verify the downloaded video before reporting success.
 
 Source: EAS CLI [simulator:get](https://github.com/expo/eas-cli/blob/main/packages/eas-cli/src/commands/simulator/get.ts) exposes `artifacts[].{id,name,filename,metadata,downloadUrl}`.
 
@@ -95,7 +99,7 @@ Where argent is weaker than agent-device Mode C — so it's **capable, not as fa
 
 **Screenshot resolution and token cost.** Screenshots cost context tokens once the agent reads them, so resolution is a real tradeoff. **argent's `screenshot` has two independent levers.** `scale` sets the image resolution and defaults **low** (too coarse to judge layout), so pass a larger scale when you need to **read** the UI. `includeImageInContext:false` keeps an image **out of the agent's context entirely** (zero token cost) — use that for a baseline you'll only **diff** later, and keep *that* one at full resolution so the pixel diff stays accurate. So: scale down images you actually read; drop unread ones with `includeImageInContext`, don't just shrink them. Exact flags and the current default: argent's help.
 
-**agent-device** screenshots default to full resolution — a crisp PNG you read from disk, token-heavier for its size, so match the capture to the question. From **v0.20.6** it gains the same lever argent has and drops the old one: `screenshot --scale <0.01–1>` proportionally resizes both dimensions (`1` = full resolution), with a token-conscious default via `AGENT_DEVICE_SCREENSHOT_SCALE` (or `screenshotScale` in config) that an explicit `--scale` overrides — keep it unset or `1` for pixel-diff baselines; the former `--max-size` is removed (older calls refused with migration guidance). Verify the version with `agent-device --version`. One caveat for remote sessions: the resize runs on the daemon, so a newer client against an older EAS session daemon can have `--scale` silently ignored and get full-res back.
+**agent-device** screenshots on iOS simulators default to 1x logical points (402x874 on iPhone 17); pass `--pixel-density 3` for full resolution when you need fine detail or a pixel-diff baseline, so match the capture to the question. From **v0.20.6** it gains the same lever argent has and drops the old one: `screenshot --scale <0.01–1>` proportionally resizes both dimensions (`1` = full resolution), with a token-conscious default via `AGENT_DEVICE_SCREENSHOT_SCALE` (or `screenshotScale` in config) that an explicit `--scale` overrides — keep it unset or `1` for pixel-diff baselines; the former `--max-size` is removed (older calls refused with migration guidance). Verify the version with `agent-device --version`. One caveat for remote sessions: the resize runs on the daemon, so a newer client against an older EAS session daemon can have `--scale` silently ignored and get full-res back.
 
 **Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 
