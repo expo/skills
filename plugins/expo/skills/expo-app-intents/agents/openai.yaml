@@ -1,0 +1,4 @@
+interface:
+  display_name: "Expo App Intents"
+  short_description: "Add Siri and Shortcuts actions to existing Expo apps"
+  default_prompt: "Use $expo-app-intents to integrate Apple App Intents into this existing Expo app, preserving its storage, business logic, and navigation."

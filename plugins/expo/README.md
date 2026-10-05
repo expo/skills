@@ -19,6 +19,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Covers data fetching patterns with React Query, offline support, and Expo Router loaders
 - Explains DOM components for running web code in native apps
 - Covers Expo native modules, iOS App Clips, and brownfield integration into existing native apps
+- Integrates Apple App Intents, Siri, Shortcuts, and Spotlight with existing Expo apps
 - Points at the `expo/examples` repo for canonical third-party integrations
 - Walks through Expo SDK upgrades, deprecated-package migration, cache clearing, and dependency fixes
 - Wires Expo projects into the Codex app Run button and action terminal
@@ -52,6 +53,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Upgrading to a new Expo SDK version and fixing dependency conflicts after an upgrade
 - Migrating from deprecated packages (expo-av to expo-audio/expo-video)
 - Adding an iOS App Clip (needs an Apple Developer account)
+- Adding Siri, Shortcuts, or Spotlight through `expo-app-intents`
 - Adding a Codex app Run button for `expo start` and optional iOS/Android/Web/dev-client action buttons
 - Sharing what worked or fell short across Expo, its skills, docs, CLIs, or MCP
 
@@ -89,6 +91,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-dev-client** - Build and distribute Expo development clients (local builds free; EAS Build/TestFlight paid)
 - **expo-examples** - Adapt or scaffold from the `expo/examples` repo of `with-*` integrations
 - **expo-app-clip** - Add an iOS App Clip target (AASA, associated domains, Smart App Banners; needs an Apple Developer account)
+- **expo-app-intents** - Integrate Apple App Intents with an existing app: Swift declarations, JavaScript invocation handling, entity catalogs, donations, and Spotlight
 - **expo-upgrade** - Upgrade Expo SDK versions and fix dependency issues
 - **expo-skill-feedback** - Share feedback across Expo surfaces and control opt-in usage telemetry
 

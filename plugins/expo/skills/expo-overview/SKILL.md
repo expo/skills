@@ -53,6 +53,7 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 - `expo-module` — native modules and views (Swift / Kotlin) with the Expo Modules API
 - `expo-brownfield` — embed Expo / React Native screens in native SwiftUI/UIKit or Android apps; isolated artifacts and integrated builds
 - `expo-app-clip` — iOS App Clip target (AASA, smart app banner)
+- `expo-app-intents` — Siri, Shortcuts, Apple App Intents, and Spotlight in an existing app
 
 **Maintain & learn**
 - `expo-upgrade` — upgrade the Expo SDK and fix dependency conflicts

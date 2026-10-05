@@ -21,6 +21,7 @@
         "expo-dev-client",
         "expo-examples",
         "expo-app-clip",
+        "expo-app-intents",
         "expo-upgrade",
         "expo-skill-feedback"
       ]
