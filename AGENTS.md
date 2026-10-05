@@ -1,6 +1,6 @@
 # Expo Skills Repository
 
-This repository contains official Expo AI agent skills. Codex and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Claude Code, Grok, and Cursor read `.claude-plugin/plugin.json`. The skills should stay useful to any agent that can consume `SKILL.md` files.
+This repository contains official Expo AI agent skills. Codex and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Grok uses that root manifest when it is present. Claude Code and Cursor read `.claude-plugin/plugin.json`. The skills should stay useful to any agent that can consume `SKILL.md` files.
 
 ## Repository Structure
 
@@ -15,7 +15,7 @@ plugins/
     plugin.json             # Agent Plugins manifest (Codex and other compatible clients)
     mcp.json                # Agent Plugins MCP configuration
     .claude-plugin/
-      plugin.json           # Claude Code, Grok, and Cursor plugin manifest
+      plugin.json           # Claude Code and Cursor plugin manifest
     .mcp.json               # Claude Code, Grok, and Cursor MCP configuration
     skills/
       README.md             # Grouped index of all skills
@@ -40,10 +40,10 @@ The `expo` plugin carries two manifests that share one `version`. CI rejects a s
 
 | Manifest | Who reads it |
 | --- | --- |
-| `plugins/expo/plugin.json` | Codex and any other [Agent Plugins](https://agent-plugins.org/) client |
-| `plugins/expo/.claude-plugin/plugin.json` | Claude Code, Grok, and Cursor |
+| `plugins/expo/plugin.json` | Codex, other [Agent Plugins](https://agent-plugins.org/) clients, and Grok when this file exists |
+| `plugins/expo/.claude-plugin/plugin.json` | Claude Code and Cursor |
 
-Claude Code, Grok, and Cursor read `.claude-plugin/plugin.json` and `.mcp.json`. They do not read the root `plugin.json`. Cursor looks for `.cursor-plugin/plugin.json` first, then the Claude manifest, then the root manifest, and stops at the first file that parses. This repo ships no Cursor manifest, so Cursor stops on the Claude one. That manifest does not list skills, so Cursor discovers `skills/`. For MCP, Cursor reads `.mcp.json` before `mcp.json` and keeps the first `expo` server.
+Claude Code reads `.claude-plugin/plugin.json` and `.mcp.json`. It does not read the root `plugin.json`. Grok prefers the root `plugin.json` when that file exists, and still loads MCP from `.mcp.json`. If the root manifest is absent, Grok uses the Claude manifest. Cursor looks for `.cursor-plugin/plugin.json` first, then the Claude manifest, then the root manifest, and stops at the first file that parses. This repo ships no Cursor manifest, so Cursor stops on the Claude one. That manifest does not list skills, so Cursor discovers `skills/`. For MCP, Cursor reads `.mcp.json` before `mcp.json` and keeps the first `expo` server.
 
 ### Agent Plugins manifest (`plugin.json`)
 
@@ -91,7 +91,7 @@ Claude Code, Grok, and Cursor keep using `.mcp.json`, which stays on `"type": "h
 
 ### Claude Code manifest (`.claude-plugin/plugin.json`)
 
-Claude Code is not an Agent Plugins client. It reads its own manifest and its own `.mcp.json`, and ignores the root `plugin.json` entirely. Grok and Cursor read this same manifest and `.mcp.json`.
+Claude Code is not an Agent Plugins client. It reads its own manifest and its own `.mcp.json`, and ignores the root `plugin.json`. Cursor stops on the first manifest that parses, so in this repo it reads the Claude manifest and loads MCP from `.mcp.json` before `mcp.json`. Grok prefers the root `plugin.json` when that file exists and loads MCP from `.mcp.json`.
 
 ```json
 {

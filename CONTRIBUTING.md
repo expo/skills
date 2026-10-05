@@ -118,8 +118,8 @@ CI fails if the block is missing, has drifted, or names the wrong skill.
 Bump `version` in **both** manifests together. They must match each other and be greater
 than `main`. CI enforces this.
 
-- `plugins/expo/plugin.json` - the [Agent Plugins](https://agent-plugins.org/) manifest. Codex and other compatible clients read it. Codex install metadata lives under `extensions["com.openai"]`.
-- `plugins/expo/.claude-plugin/plugin.json` - Claude Code, Grok, and Cursor.
+- `plugins/expo/plugin.json` - the [Agent Plugins](https://agent-plugins.org/) manifest. Codex and other compatible clients read it. Grok reads it when the file exists. Codex install metadata lives under `extensions["com.openai"]`.
+- `plugins/expo/.claude-plugin/plugin.json` - Claude Code and Cursor.
 
 The check script writes both for you, rejecting a version that is not valid semver or is not
 greater than the base ref:
