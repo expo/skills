@@ -64,7 +64,7 @@ This is the manifest Codex and every other Agent Plugins client reads. Its schem
   "extensions": {
     "com.openai": {
       "interface": {
-        "displayName": "My Plugin"
+        "displayName": "Expo Plugin"
       }
     }
   }
