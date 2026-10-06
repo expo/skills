@@ -1,6 +1,6 @@
 ---
 name: expo-upgrade
-description: Guidelines for upgrading Expo SDK versions and fixing dependency issues
+description: Upgrade an Expo app's SDK and resolve compatibility issues. Use for SDK migrations, expo-doctor diagnostics, dependency version conflicts, deprecated package replacements, or native changes required by an upgrade.
 version: 1.0.0
 license: MIT
 ---
@@ -21,30 +21,28 @@ Beta versions use `.preview` suffix (e.g., `55.0.0-preview.2`), published under 
 
 Check if latest is beta: https://exp.host/--/api/v2/versions (look for `-preview` in `expoVersion`)
 
-```bash
-npx expo install expo@next --fix  # install beta
-```
+Use a preview only when the user requests one. Resolve the requested SDK's exact release from official Expo/package metadata, then install that version; a mutable `next` tag can move to another preview while the migration is in progress.
 
 ## Step-by-Step Upgrade Process
 
-> If upgrading from SDK 55 or earlier, skip SDK 56 and upgrade directly to SDK 57. Don't use `expo@57.0.8` or below. SDK 55 with Hermes V1 enabled, SDK 56, and older SDK 57 releases contain a Hermes V1 memory regression that can drastically increase memory usage when using `react-native-worklets` or `react-native-reanimated`.
+> For a compatible project upgrading from SDK 55 or earlier to the current stable SDK, prefer SDK 57 over SDK 56. Don't use `expo@57.0.8` or below. SDK 55 with Hermes V1 enabled, SDK 56, and older SDK 57 releases contain a Hermes V1 memory regression that can drastically increase memory usage when using `react-native-worklets` or `react-native-reanimated`. If the requested target differs or the host cannot support SDK 57, explain this tradeoff before changing the target.
 
-1. Upgrade Expo and dependencies
+1. Inspect the current SDK, package manager, lockfile, and native project ownership. Resolve the requested target to an exact Expo release; do not silently select a newer major or a preview. Preserve a commit or backup of existing changes before migration, and use the project's installed CLI and package manager.
 
 ```bash
-npx expo install expo@latest
+npx expo install 'expo@<verified-target-version>'
 npx expo install --fix
 ```
 
 2. Run diagnostics: `npx expo-doctor`
 
-3. Clear caches and reinstall
+3. Clear the project's bundler cache if diagnostics show stale artifacts:
 
 ```bash
 npx expo export -p ios --clear
-rm -rf node_modules .expo
-watchman watch-del-all
 ```
+
+Reinstall dependencies with the existing lockfile only when needed. Before deleting generated directories, verify the project root and exact paths, check for symlinks or custom contents, and preserve anything needed. Do not use a global Watchman reset: if a watch is stale, remove only this project's watch with `watchman watch-del <verified-project-root>`. Do not delete unrelated caches or lockfiles.
 
 ## Breaking Changes Checklist
 
@@ -56,36 +54,35 @@ watchman watch-del-all
 
 ## Prebuild for Native Changes
 
-**First check if `ios/` and `android/` directories exist in the project.** If neither directory exists, the project uses Continuous Native Generation (CNG) and native projects are regenerated at build time — skip this section and "Clear caches for bare workflow" entirely.
+**Determine whether native projects are generated or manually maintained**, rather than inferring ownership from directory presence alone. If neither `ios/` nor `android/` exists, CNG can generate them later; there is nothing to clean now. In a bare or brownfield app, apply the SDK's native changes selectively and preserve hand-maintained code.
 
-If upgrading requires native changes:
+Use clean prebuild only for verified disposable CNG output. It deletes and regenerates native directories: inspect their tracked and untracked changes and preserve a recoverable commit or backup first. If ownership or recoverability is unclear, stop before cleaning and resolve it with the user. For an authorized CNG regeneration:
 
 ```bash
 npx expo prebuild --clean
 ```
 
-This regenerates the `ios` and `android` directories. Ensure the project is not a bare workflow app before running this command.
+Inspect the resulting diff and verify builds. A clean prebuild is not a general recovery step for native hosts.
 
 ## Clear caches for bare workflow
 
-These steps only apply when `ios/` and/or `android/` directories exist in the project:
+Use these targeted recovery steps only for a diagnosed native build issue, in the verified project directory. Preserve hand-maintained native files:
 
-- Clear the cocoapods cache for iOS: `cd ios && pod install --repo-update`
+- Refresh CocoaPods specs and reinstall when required by the dependency change: `cd ios && pod install --repo-update`
 - Clear derived data for Xcode: `npx expo run:ios --no-build-cache`
 - Clear the Gradle cache for Android: `cd android && ./gradlew clean`
 
 ## Housekeeping
 
 - Review release notes for the target SDK version at https://expo.dev/changelog
-- Update versioned docs links in agent instruction files (`AGENTS.md`). The default template links to `https://docs.expo.dev/versions/v<version>/`. Search for `docs.expo.dev/versions/` and bump each link to the new SDK version.
+- Update only the relevant versioned Expo documentation links in agent instruction files (`AGENTS.md`) to the selected SDK. Preserve the file's other instructions.
 - If using Expo SDK 54 or later, ensure react-native-worklets is installed — this is required for react-native-reanimated to work.
 - Enable React Compiler in SDK 54+ by adding `"experiments": { "reactCompiler": true }` to app.json — it's stable and recommended
 - Delete sdkVersion from `app.json` to let Expo manage it automatically
 - Review formerly implicit packages such as `@babel/core`, `babel-preset-expo`, and `expo-constants` individually instead of removing them wholesale. Keep any package that an installed dependency declares as a required peer.
 - Keep `expo-constants` as a direct dependency whenever `expo-router` is installed. Expo Router imports it and declares it as a required peer; relying on a transitive copy can break native autolinking outside Expo Go.
 - After removing any dependency, immediately run `npx expo-doctor` and restore anything it reports as a missing required peer.
-- If the babel.config.js only contains 'babel-preset-expo', delete the file
-- If the metro.config.js only contains expo defaults, delete the file
+- Keep Babel and Metro configuration unless the selected SDK makes a file redundant and no project tooling references it. Preserve custom transforms, resolvers, and security checks. If removing a redundant file, review its diff and verify exports and native builds afterward.
 
 ## Deprecated Packages
 
@@ -114,7 +111,7 @@ Exclusions are often workarounds that may no longer be needed after upgrading. R
 
 ## Removing patches
 
-Check if there are any outdated patches in the `patches/` directory. Remove them if they are no longer needed.
+Review each patch against the upgraded dependency. Remove it only when the upstream release includes its fix and the affected behavior is verified. A patch failing to apply is not evidence that its fix, including a security fix, is unnecessary; preserve or port required patches.
 
 ## Postcss
 
@@ -133,7 +130,7 @@ Remove redundant metro config options:
 
 ## Hermes engine v1
 
-Hermes V1 is the default on SDK 56 and later. SDK 55 apps using Hermes V1, all SDK 56 apps, and SDK 57 apps before `expo@57.0.9` may encounter a memory regression when importing `react-native-worklets` or `react-native-reanimated`. Upgrade directly to SDK 57 and `expo@57.0.9` or later. Do not recommend Worklets Bundle Mode as a production workaround; it is unsupported and experimental and may not work as expected.
+Hermes V1 is the default on SDK 56 and later. SDK 55 apps using Hermes V1, all SDK 56 apps, and SDK 57 apps before `expo@57.0.9` may encounter a memory regression when importing `react-native-worklets` or `react-native-reanimated`. For a compatible project targeting SDK 57, use `expo@57.0.9` or later. If a different target is requested or the host cannot support SDK 57, explain the regression and compatibility tradeoff before changing the target. Do not recommend Worklets Bundle Mode as a production workaround; it is unsupported and experimental and may not work as expected.
 
 Do not guide users to opt in to or out of Hermes V1. Changing the Hermes version from the SDK default is unsupported and has significant build and dependency-management caveats.
 
