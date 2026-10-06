@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "expo",
   "version": "1.14.0",
-  "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo and React Native apps.",
+  "description": "Build, test, and deploy iOS and Android apps with official Expo and React Native guides and tools.",
   "author": {
     "name": "Expo Team",
     "email": "support@expo.dev",
@@ -14,43 +14,50 @@
   "keywords": [
     "expo",
     "react-native",
-    "expo-router",
-    "codex-run-actions",
     "eas",
     "mobile",
+    "mobile-development",
+    "app-development",
     "ios",
     "android",
+    "cross-platform",
     "deployment",
-    "upgrades",
-    "native-modules",
-    "app-clips",
-    "brownfield",
-    "eas-update",
-    "mcp"
+    "emulator",
+    "simulator",
+    "app-store",
+    "google-play",
+    "testflight",
+    "ci-cd",
+    "debugging"
   ],
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "Expo",
-        "shortDescription": "Build, deploy, upgrade, and debug Expo and React Native apps",
-        "longDescription": "Official Expo-authored skills for building Expo Router UI, authoring API routes, configuring data fetching and styling, writing Expo native modules, adding App Clips, integrating Expo into brownfield native apps, inspecting EAS Update health, creating dev clients, upgrading Expo SDKs, wiring Codex app Run actions, using Expo MCP, and deploying Expo apps with EAS workflows, builds, hosting, TestFlight, App Store, and Play Store guidance.",
+        "shortDescription": "Build, test, and ship apps",
+        "longDescription": "Expo helps developers build, test, and deploy iOS and Android apps. Create screens and navigation, connect APIs, add native features, and troubleshoot or upgrade Expo and React Native projects.\n\nRun and inspect your app on an iOS simulator or Android emulator, including cloud devices through Expo Application Services (EAS). Build releases, send beta builds to TestFlight, publish to the App Store and Google Play, deploy web apps, and deliver compatible over-the-air updates.\n\nIncludes official Expo guides and tools for projects available to your connected Expo account. Cloud services have plan limits and may incur usage charges. Publishing to app stores requires the relevant Apple or Google developer accounts.",
         "developerName": "Expo",
         "category": "Developer Tools",
-        "capabilities": ["Interactive", "Read", "Write", "MCP"],
+        "capabilities": [
+          "Mobile app development",
+          "Builds and deployment",
+          "Emulators and simulators"
+        ],
         "websiteURL": "https://expo.dev/",
+        "supportURL": "https://expo.dev/contact",
         "privacyPolicyURL": "https://expo.dev/privacy",
         "termsOfServiceURL": "https://expo.dev/terms",
         "defaultPrompt": [
-          "Build a mobile app with Expo and React Native",
-          "Build a tab-based app with Expo Router",
-          "Upgrade to the latest Expo SDK and fix breaking changes",
-          "Deploy this Expo app with EAS"
+          "Build an iOS and Android app with Expo and React Native",
+          "Run and test my app on an iOS simulator or Android emulator",
+          "Build and deploy my mobile app to TestFlight, the App Store, or Google Play"
         ],
         "composerIcon": "./assets/expo.png",
         "logo": "./assets/expo.png",
         "screenshots": [],
         "brandColor": "#000020"
-      }
+      },
+      "onboardingSkill": "./skills/expo-overview/SKILL.md"
     }
   }
 }
