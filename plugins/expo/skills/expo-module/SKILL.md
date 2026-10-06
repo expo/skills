@@ -56,6 +56,7 @@ See [references/create-expo-module.md](references/create-expo-module.md) before 
    - Based on the user's instructions determine which feature scaffolding will be useful.
    - Available features: `Constant`, `Function`, `AsyncFunction`, `Event`, `View`, `ViewEvent`, `SharedObject`
 3. Scaffold deliberately:
+   - select exact SDK-compatible official generator and template releases as described in the scaffolding reference
    - pass an explicit slug or path
    - choose `--platform` intentionally instead of relying on defaults
    - use `--features` to choose code samples which you will modify in the next step to match the real implementation.

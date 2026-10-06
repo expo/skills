@@ -25,27 +25,42 @@ Use a standalone module when the module should be reusable across apps, live in 
 - usually creates an `example` app unless `--no-example` is passed
 - may initialize a Git repo if not already inside one
 
-When creating a standalone module, default to keeping the example app. Only skip it when the user explicitly asks for `--no-example` or clearly does not want the example project.
+Keep a test app for standalone modules. Create it separately below so scaffolding does not invoke a second generator with a moving template version.
 
 ## Recommended Commands
+
+### Select the generator and template
+
+Use exact releases of the official `create-expo-module` and `expo-module-template` packages from `expo/expo`. Match them to the host app's SDK; do not upgrade the app to match these examples. The commands below use SDK 57 releases. For another SDK, verify compatible exact releases in official package metadata first.
+
+Pin both packages: pinning the CLI alone still lets it download a moving `sdk-*`, `next`, or `latest` template. Fetch the fixed template without lifecycle scripts and pass its directory with `--source`:
+
+```bash
+MODULE_TEMPLATE_DIR=$(mktemp -d "${TMPDIR:-/tmp}/expo-module-template.XXXXXX")
+npm pack expo-module-template@57.0.1 --ignore-scripts --pack-destination "$MODULE_TEMPLATE_DIR"
+tar -xzf "$MODULE_TEMPLATE_DIR/expo-module-template-57.0.1.tgz" -C "$MODULE_TEMPLATE_DIR"
+```
+
+Verify the registry package's repository and integrity before using it. Templates contain executable EJS, so `--source` must point to this verified official template, not an arbitrary downloaded directory. Keep the selected versions fixed for this task and stop on a failed fetch instead of falling back to `latest`. Generate into a new module path; preserve existing native work.
 
 ### Local module
 
 Use an explicit slug or path.
 
 ```bash
-npx create-expo-module@latest key-value-store --local --platform apple android --features Function AsyncFunction
+npx --yes create-expo-module@57.0.1 key-value-store --local --platform apple android --features Function AsyncFunction --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 If you need deterministic non-interactive output, pass the slug or path explicitly and then pass the rest of the options:
 
 ```bash
-EXPO_NONINTERACTIVE=1 npx create-expo-module@latest key-value-store \
+EXPO_NONINTERACTIVE=1 npx --yes create-expo-module@57.0.1 key-value-store \
   --local \
   --name KeyValueStore \
   --package expo.modules.keyvaluestore \
   --platform apple android \
-  --features Function AsyncFunction
+  --features Function AsyncFunction \
+  --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 Important quirk:
@@ -55,9 +70,21 @@ Important quirk:
 
 ### Standalone module
 
+The standalone generator installs dependencies and builds the new package. Before running it, inspect the verified template's `$package.json` and align its development dependencies to the selected SDK in the local template copy. Package version numbers alone do not guarantee this: `expo-module-template@57.0.1` includes older React Native, Babel, and Jest development versions. Use the selected SDK's official dependency metadata for compatible versions; preserve its module build scripts. Retain and review the generated lockfile. Exact scaffold versions do not freeze every transitive dependency.
+
 ```bash
-npx create-expo-module@latest expo-key-value-store --platform apple android --features Function AsyncFunction
+npx --yes create-expo-module@57.0.1 expo-key-value-store --platform apple android --features Function AsyncFunction --no-example --source "$MODULE_TEMPLATE_DIR/package"
 ```
+
+For a new SDK 57 test app, run this from the generated module root into a new `example/` directory:
+
+```bash
+npx --yes create-expo@5.0.1 example --template expo-template-blank-typescript@57.0.28 --no-install --no-agents-md
+```
+
+This uses the official generator directly and a fixed stable template, deferring installation for review. Add the module's actual package name to `example/package.json` dependencies with the value `"file:.."`, inspect the app's dependencies/scripts, then install with the selected package manager. Import the module through its package entry point and exercise the generated functions or views. Build a development client to test native code; Expo Go does not include this custom module. For another SDK, select a matching exact app template, or use an existing compatible test app.
+
+Keep the standalone example's Metro dependency isolation too: adapt the reviewed template's `example/metro.config.js`, replace its `<%- project.slug %>` placeholder with the actual package name, and use the example SDK's `expo/metro-config`. Its parent React/React Native exclusion and local module mapping prevent the linked package's development dependencies from taking over the app's runtime. Verify React and React Native resolve to the example's versions before testing on a device; a successful TypeScript package build does not establish runtime compatibility.
 
 ## Creation Options
 
@@ -160,19 +187,19 @@ Use this subcommand when an existing Expo module needs another supported platfor
 Interactive usage from the module root:
 
 ```bash
-npx create-expo-module@latest add-platform-support
+npx --yes create-expo-module@57.0.1 add-platform-support --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 Explicit usage:
 
 ```bash
-npx create-expo-module@latest add-platform-support --platform android
+npx --yes create-expo-module@57.0.1 add-platform-support --platform android --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 You can also pass the module path:
 
 ```bash
-npx create-expo-module@latest add-platform-support ./packages/expo-key-value-store --platform web
+npx --yes create-expo-module@57.0.1 add-platform-support ./packages/expo-key-value-store --platform web --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 Important behaviors:
