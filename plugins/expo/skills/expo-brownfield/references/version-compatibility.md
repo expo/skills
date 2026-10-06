@@ -10,15 +10,15 @@ Keep the workflow version-aware rather than pinning every host to one SDK. Exist
 4. Use that SDK's versioned Brownfield API docs and `sdk-<major>` native template. Install modules with `npx expo install`; run `npx expo install --check` before native builds. For an SDK upgrade, use `expo-upgrade`, preserve the host, and apply native diffs selectively.
 5. Inspect the **installed** CLI's `build:ios --help` / `build:android --help`, plugin schema, generated Swift/Kotlin wrappers, and `Package.swift`. Flags, prebuilt defaults, import names, and binary products can change within a major release.
 
-To scaffold a small new feature after those checks:
+For an SDK 57 producer, the following example uses exact published scaffolder and template versions. Verify their official Expo origins and select compatible exact versions if targeting another SDK:
 
 ```sh
-npx create-expo-app@latest my-project --template blank@latest
+npx create-expo-app@5.0.0 my-project --template expo-template-blank@57.0.28
 cd my-project
 npx expo install expo-brownfield typescript @types/react
 ```
 
-This avoids adding a Router shell just to export one component. For an existing Router app, preserve it and add the root-props adapter described in [feature integration](./feature-integration.md). If selecting an older SDK, use a verified template tag such as `blank@sdk-55`; the scaffolder's own `@latest` version does not determine the template's SDK. Commit the producer's lockfile for repeatable builds.
+This avoids adding a Router shell just to export one component. For an existing Router app, preserve it and add the root-props adapter described in [feature integration](./feature-integration.md). For another SDK, resolve its matching template to an exact published version; the scaffolder version does not determine the template SDK. Commit the producer's lockfile for repeatable builds.
 
 ## SDK requirements and build defaults
 
