@@ -22,7 +22,7 @@ Before installing, confirm all of the following:
 
 1. **An Expo account.** Sign up at [expo.dev/signup](https://expo.dev/signup) if needed.
 2. **Expo SDK 55 or later.** Run `npx expo-doctor` to check, and `npx expo install --fix` to update dependencies. SDK 56+ unlocks the newer `ObserveRoot` / `useObserve` API.
-3. **An EAS project.** The app must have `extra.eas.projectId` set in its app config. If not, run `eas init` to create one.
+3. **An EAS project.** The app must have `extra.eas.projectId` set in its app config. If not, run `npx --yes eas-cli@latest init` to create one.
 4. **A development build or a production build.** `expo-observe` is a native library, so it does **not** work in Expo Go. Testing the integration requires a [development build](https://docs.expo.dev/develop/development-builds/introduction/).
 
 ## Step 1 — Install the library
@@ -202,7 +202,7 @@ The marker fires **once**, on mount, so its `params` are read from the first ren
 Metrics are collected from real builds, not from `expo start`:
 
 ```sh
-eas build
+npx --yes eas-cli@latest build
 ```
 
 > By default, metrics collected from **debug builds** are not dispatched. A build is treated as a debug build when either the native app is a debug build or the JS bundle is a development bundle (`__DEV__` is `true`). To dispatch anyway while testing the integration, set `dispatchInDebug: true` when calling `configure()` — see [Enable metrics in development](https://docs.expo.dev/eas/observe/configuration/#enable-metrics-in-development). This has no effect on release builds.
@@ -215,7 +215,7 @@ To query metrics from the terminal with the EAS CLI, see [`./queries.md`](./quer
 
 ## Optional — per-route navigation metrics (SDK 56+)
 
-By default `expo-observe` records app-wide startup metrics only. To additionally get **per-route / per-screen** navigation metrics (`cold_ttr`, `warm_ttr`, and a per-navigation `tti`, each tagged with the route/screen), enable one of the navigation integrations. These require **SDK 56 or later**; on earlier SDKs they are silent no-ops. Query the resulting data with `eas observe:routes`, or with `observe:metrics` / `observe:metrics-summary` under the CLI aliases `nav_cold_ttr`, `nav_warm_ttr`, and `nav_tti` (see [`./queries.md`](./queries.md)).
+By default `expo-observe` records app-wide startup metrics only. To additionally get **per-route / per-screen** navigation metrics (`cold_ttr`, `warm_ttr`, and a per-navigation `tti`, each tagged with the route/screen), enable one of the navigation integrations. These require **SDK 56 or later**; on earlier SDKs they are silent no-ops. Query the resulting data with `npx --yes eas-cli@latest observe:routes`, or with `observe:metrics` / `observe:metrics-summary` under the CLI aliases `nav_cold_ttr`, `nav_warm_ttr`, and `nav_tti` (see [`./queries.md`](./queries.md)).
 
 Pick the integration that matches the app's router:
 
@@ -401,7 +401,7 @@ User-defined events are persisted on-device, batched, and dispatched on the next
 
 ### Viewing events
 
-User-defined events appear under the **Events** tab in the Observe dashboard, and are queryable from the terminal with `eas observe:events` — see [`./queries.md`](./queries.md).
+User-defined events appear under the **Events** tab in the Observe dashboard, and are queryable from the terminal with `npx --yes eas-cli@latest observe:events` — see [`./queries.md`](./queries.md).
 
 ## Optional — error reporting
 
@@ -473,4 +473,4 @@ The URL is baked into the native layer at build time, so run `npx expo prebuild`
 - [ ] (Optional, SDK 57+) Sensitive route/query params listed in `filteredParams`.
 - [ ] (Optional, SDK 56+) User-defined events emitted via `Observe.logEvent(name, { attributes })` with stable, lowercase, dot-separated names and no PII.
 - [ ] (Optional) `<ObserveErrorBoundary>` around risky subtrees and `Observe.reportError` in recovery paths.
-- [ ] New build produced with `eas build` and metrics visible in the Observe dashboard.
+- [ ] New build produced with `npx --yes eas-cli@latest build` and metrics visible in the Observe dashboard.
