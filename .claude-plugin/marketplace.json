@@ -5,7 +5,7 @@
     "email": "support@expo.dev"
   },
   "metadata": {
-    "description": "Expo's official plugins for Claude Code"
+    "description": "Expo's official plugins"
   },
   "plugins": [
     {
@@ -17,21 +17,6 @@
       "name": "expo-experiments",
       "source": "./plugins/expo-experiments",
       "description": "Experimental Expo skills for APIs that are not finalized. Skills graduate to the expo plugin when stable."
-    },
-    {
-      "name": "expo-app-design",
-      "source": "./plugins/expo",
-      "description": "[Deprecated] Use the \"expo\" plugin instead. Build robust, productivity apps with Expo."
-    },
-    {
-      "name": "upgrading-expo",
-      "source": "./plugins/expo",
-      "description": "[Deprecated] Use the \"expo\" plugin instead. Guidelines for upgrading Expo SDK versions."
-    },
-    {
-      "name": "expo-deployment",
-      "source": "./plugins/expo",
-      "description": "[Deprecated] Use the \"expo\" plugin instead. Deploying Expo apps to App Store, Play Store, and web."
     }
   ]
 }
