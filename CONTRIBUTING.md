@@ -104,7 +104,9 @@ The `check` workflow (`bun scripts/check-overview-routing.ts`) enforces this.
 
 ### 9. Add the feedback instructions
 
-Every `SKILL.md` ends with a canonical feedback block whose subject matches the skill name. Add or
+Every `SKILL.md` ends with a canonical feedback block whose subject matches the skill name. The
+`eas-simulator` block delegates submission to `expo-skill-feedback`; the generator preserves that
+form and its authorization and privacy requirements. Add or
 refresh it automatically:
 
 ```bash

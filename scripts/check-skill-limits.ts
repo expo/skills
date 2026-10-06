@@ -11,13 +11,18 @@ const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
 const FEEDBACK_HEADING = "## Submitting Feedback";
 
 function feedbackBlock(skillName: string): string {
+  if (skillName === "eas-simulator") {
+    return `${FEEDBACK_HEADING}
+When the user asks to send feedback about this skill to Expo, load expo-skill-feedback and use the subject "${skillName}". That skill handles the authorized feedback text, environment-context disclosure, and submission workflow. Keep credentials, private URLs, source code, personal data, raw logs, screenshots, and conversation contents out of feedback. Without a request to send, keep the draft local. Use the eval-candidate format only when the user requests it.`;
+  }
   return `${FEEDBACK_HEADING}
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+When the user asks to send feedback about this skill to Expo, prepare a short technical description of the issue and expected behavior:
 \`\`\`bash
 npx --yes submit-expo-feedback@latest --category skills --subject "${skillName}" "<actionable feedback>"
 \`\`\`
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an AI agent repeatedly failed or the user had to take over an Expo task, load the expo-skill-feedback skill and follow its eval-candidate flow instead of reusing the command above.`;
+Send only the text the user has authorized for Expo. Keep credentials, private URLs, source code, personal data, raw logs, screenshots, and conversation contents out of feedback. Without a request to send, keep any feedback draft local.
+Before submission, load expo-skill-feedback to disclose the CLI-attached environment context and verify authorization.
+When the user requests an eval-candidate report about a repeatedly failed task or user takeover, use the expo-skill-feedback skill's eval-candidate format and authorization flow. Otherwise preserve the requested ordinary feedback format.`;
 }
 
 function findSkillFiles(dir: string): string[] {
@@ -102,7 +107,7 @@ for (const path of skills) {
   if (name !== dirName)
     errors.push(`${rel}: frontmatter name "${name}" does not match directory "${dirName}"`);
 
-  // Every installed skill carries the same actionable feedback instructions with its own name.
+  // Every installed skill carries its generated feedback instructions with its own subject.
   if (!body.trimEnd().endsWith(feedbackBlock(name)))
     errors.push(`${rel}: missing canonical feedback block; run "bun scripts/check-skill-limits.ts --fix-feedback"`);
 

@@ -229,9 +229,4 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 Source of truth: Expo docs and the `eas` / `agent-device` CLIs (`npx --yes eas-cli@latest simulator:* --help`, `agent-device --help`). This skill teaches how to apply them; it doesn't replace them.
 
 ## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
-```bash
-npx --yes submit-expo-feedback@latest --category skills --subject "eas-simulator" "<actionable feedback>"
-```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an AI agent repeatedly failed or the user had to take over an Expo task, load the expo-skill-feedback skill and follow its eval-candidate flow instead of reusing the command above.
+When the user asks to send feedback about this skill to Expo, load expo-skill-feedback and use the subject "eas-simulator". That skill handles the authorized feedback text, environment-context disclosure, and submission workflow. Keep credentials, private URLs, source code, personal data, raw logs, screenshots, and conversation contents out of feedback. Without a request to send, keep the draft local. Use the eval-candidate format only when the user requests it.
