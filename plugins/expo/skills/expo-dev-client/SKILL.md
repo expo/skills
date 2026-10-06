@@ -57,7 +57,7 @@ Key settings:
 Build iOS dev client and submit to TestFlight in one command:
 
 ```bash
-eas build -p ios --profile development --submit
+npx --yes eas-cli@latest build -p ios --profile development --submit
 ```
 
 This will:
@@ -78,10 +78,10 @@ Build a development client on your machine:
 
 ```bash
 # iOS (requires Xcode)
-eas build -p ios --profile development --local
+npx --yes eas-cli@latest build -p ios --profile development --local
 
 # Android
-eas build -p android --profile development --local
+npx --yes eas-cli@latest build -p android --profile development --local
 ```
 
 Local builds output:
@@ -116,23 +116,23 @@ adb install build.apk
 
 ```bash
 # iOS only
-eas build -p ios --profile development
+npx --yes eas-cli@latest build -p ios --profile development
 
 # Android only
-eas build -p android --profile development
+npx --yes eas-cli@latest build -p android --profile development
 
 # Both platforms
-eas build --profile development
+npx --yes eas-cli@latest build --profile development
 ```
 
 ## Checking Build Status
 
 ```bash
 # List recent builds
-eas build:list
+npx --yes eas-cli@latest build:list
 
 # View build details
-eas build:view
+npx --yes eas-cli@latest build:view
 ```
 
 ## Using the Dev Client
@@ -157,20 +157,20 @@ npx expo start --dev-client
 **Build fails with signing errors:**
 
 ```bash
-eas credentials
+npx --yes eas-cli@latest credentials
 ```
 
 **Clear build cache:**
 
 ```bash
-eas build -p ios --profile development --clear-cache
+npx --yes eas-cli@latest build -p ios --profile development --clear-cache
 ```
 
 **Check EAS CLI version:**
 
 ```bash
-eas --version
-eas update
+npx --yes eas-cli@latest --version
+npx --yes eas-cli@latest update
 ```
 
 ## Submitting Feedback
