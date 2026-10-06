@@ -11,7 +11,7 @@
     {
       "name": "expo",
       "source": "./plugins/expo",
-      "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo apps."
+      "description": "Build, test, and deploy iOS and Android apps with official Expo and React Native guides and tools."
     },
     {
       "name": "expo-experiments",
