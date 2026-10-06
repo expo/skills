@@ -13,6 +13,10 @@ Identify the existing app entry point, navigation owner, native build system, de
 
 Preserve the host's SwiftUI `App` / UIKit window and native screens when embedding a feature. **Do not run prebuild in a manually maintained native host**, including during troubleshooting. An isolated Expo producer may use CNG; keep its generated `ios/` and `android/` separate from the consuming app.
 
+Use SDK-matched packages from the project's lockfile. Native config plugins, Podfiles, and Gradle tasks execute code during builds: review new scripts and package origins before adding them. Building a local feature does not authorize publishing an artifact to a remote registry; establish the repository, version, and release scope before any upload. Keep repository credentials in protected environment or CI storage, outside source files and command output.
+
+Metro's HTTP connection is for development only. Scope Android exceptions to the debug variant and preferably the specific dev-server host; scope iOS exceptions to the local dev host. Preserve production TLS and certificate validation. Verify that the Release host uses a bundled Release artifact with Metro stopped and contains no development networking exception.
+
 Expo supports two distinct ways to add React Native to a brownfield project:
 
 | Approach       | What ships to the native app                                        | When to choose                                                                   |
