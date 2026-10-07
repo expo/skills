@@ -11,6 +11,14 @@ const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
 const FEEDBACK_HEADING = "## Submitting Feedback";
 
 function feedbackBlock(skillName: string): string {
+  if (skillName === "expo-upgrade") return `## Submitting Feedback
+When the user asks to send feedback about this skill to Expo, prepare a short technical description of the issue and expected behavior:
+\`\`\`bash
+npx --yes submit-expo-feedback@latest --category skills --subject "expo-upgrade" "<actionable feedback>"
+\`\`\`
+Send only the text the user has authorized for Expo. Keep credentials, private URLs, source code, personal data, raw logs, screenshots, and conversation contents out of feedback. Without a request to send, keep any feedback draft local.
+Before submission, load expo-skill-feedback to disclose the CLI-attached environment context and verify authorization.
+When the user requests an eval-candidate report about a repeatedly failed task or user takeover, use the expo-skill-feedback skill's eval-candidate format and authorization flow. Otherwise preserve the requested ordinary feedback format.`;
   return `## Submitting Feedback
 When the user requests feedback submission, follow expo-skill-feedback and use:
 \`\`\`bash
