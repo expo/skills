@@ -17,6 +17,8 @@ my-module/
 
 Plugin functions follow the `with` prefix naming convention.
 
+Use native configuration for public values such as a client identifier. `Info.plist`, Android manifest metadata, and bundled JavaScript are extractable from the app; they are not secret storage. Keep service credentials on the backend and use platform-protected storage for user session credentials.
+
 ```typescript
 import {
   ConfigPlugin,
@@ -25,10 +27,10 @@ import {
   AndroidConfig,
 } from "expo/config-plugins";
 
-const withMyConfig: ConfigPlugin<{ apiKey: string }> = (config, { apiKey }) => {
+const withMyConfig: ConfigPlugin<{ publicClientId: string }> = (config, { publicClientId }) => {
   // iOS: modify Info.plist
   config = withInfoPlist(config, (config) => {
-    config.modResults["MY_API_KEY"] = apiKey;
+    config.modResults["MY_PUBLIC_CLIENT_ID"] = publicClientId;
     return config;
   });
 
@@ -38,8 +40,8 @@ const withMyConfig: ConfigPlugin<{ apiKey: string }> = (config, { apiKey }) => {
       AndroidConfig.Manifest.getMainApplicationOrThrow(config.modResults);
     AndroidConfig.Manifest.addMetaDataItemToMainApplication(
       mainApp,
-      "MY_API_KEY",
-      apiKey
+      "MY_PUBLIC_CLIENT_ID",
+      publicClientId
     );
     return config;
   });
@@ -55,7 +57,7 @@ export default withMyConfig;
 ```json
 {
   "expo": {
-    "plugins": [["my-module", { "apiKey": "secret_key" }]]
+    "plugins": [["my-module", { "publicClientId": "public-client-id" }]]
   }
 }
 ```
@@ -65,20 +67,20 @@ export default withMyConfig;
 **Swift:**
 
 ```swift
-Function("getApiKey") {
-  return Bundle.main.object(forInfoDictionaryKey: "MY_API_KEY") as? String
+Function("getPublicClientId") {
+  return Bundle.main.object(forInfoDictionaryKey: "MY_PUBLIC_CLIENT_ID") as? String
 }
 ```
 
 **Kotlin:**
 
 ```kotlin
-Function("getApiKey") {
+Function("getPublicClientId") {
   val appInfo = appContext?.reactContext?.packageManager?.getApplicationInfo(
     appContext?.reactContext?.packageName.toString(),
     PackageManager.GET_META_DATA
   )
-  return@Function appInfo?.metaData?.getString("MY_API_KEY")
+  return@Function appInfo?.metaData?.getString("MY_PUBLIC_CLIENT_ID")
 }
 ```
 
@@ -87,4 +89,4 @@ Function("getApiKey") {
 - Plugins must be synchronous; return values must be serializable (except `mods`)
 - `Mods` are async functions invoked during the prebuild "syncing" phase
 - Use `npm run build plugin` to compile TypeScript plugins
-- Test with `npx expo prebuild --clean`
+- Test in a disposable generated app and inspect the native diff. `npx expo prebuild --clean` deletes native directories; use it only for recoverable CNG output after preserving tracked and untracked changes. Apply changes selectively in a manually maintained native host instead.

@@ -29,23 +29,38 @@ When creating a standalone module, default to keeping the example app. Only skip
 
 ## Recommended Commands
 
+### Select the generator and template
+
+Use exact releases of the official `create-expo-module` and `expo-module-template` packages from `expo/expo`. Match them to the host app's SDK; do not upgrade the app to match these examples. The commands below use SDK 57 releases. For another SDK, verify compatible exact releases in official package metadata first.
+
+Pin both packages: pinning the CLI alone still lets it download a moving `sdk-*`, `next`, or `latest` template. Fetch the fixed template without lifecycle scripts and pass its directory with `--source`:
+
+```bash
+MODULE_TEMPLATE_DIR=$(mktemp -d "${TMPDIR:-/tmp}/expo-module-template.XXXXXX")
+npm pack expo-module-template@57.0.1 --ignore-scripts --pack-destination "$MODULE_TEMPLATE_DIR"
+tar -xzf "$MODULE_TEMPLATE_DIR/expo-module-template-57.0.1.tgz" -C "$MODULE_TEMPLATE_DIR"
+```
+
+Verify the registry package's repository and integrity before using it. Templates contain executable EJS, so `--source` must point to this verified official template, not an arbitrary downloaded directory. Keep the selected versions fixed for this task and stop on a failed fetch instead of falling back to `latest`. Generate into a new module path; preserve existing native work.
+
 ### Local module
 
 Use an explicit slug or path.
 
 ```bash
-npx create-expo-module@latest key-value-store --local --platform apple android --features Function AsyncFunction
+npx --yes create-expo-module@57.0.1 key-value-store --local --platform apple android --features Function AsyncFunction --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 If you need deterministic non-interactive output, pass the slug or path explicitly and then pass the rest of the options:
 
 ```bash
-EXPO_NONINTERACTIVE=1 npx create-expo-module@latest key-value-store \
+EXPO_NONINTERACTIVE=1 npx --yes create-expo-module@57.0.1 key-value-store \
   --local \
   --name KeyValueStore \
   --package expo.modules.keyvaluestore \
   --platform apple android \
-  --features Function AsyncFunction
+  --features Function AsyncFunction \
+  --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 Important quirk:
@@ -55,8 +70,10 @@ Important quirk:
 
 ### Standalone module
 
+The standalone generator installs dependencies, builds the package, and creates its example app. Review the generated dependency versions against the selected SDK before testing native code.
+
 ```bash
-npx create-expo-module@latest expo-key-value-store --platform apple android --features Function AsyncFunction
+npx --yes create-expo-module@57.0.1 expo-key-value-store --platform apple android --features Function AsyncFunction --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 ## Creation Options
@@ -160,19 +177,19 @@ Use this subcommand when an existing Expo module needs another supported platfor
 Interactive usage from the module root:
 
 ```bash
-npx create-expo-module@latest add-platform-support
+npx --yes create-expo-module@57.0.1 add-platform-support --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 Explicit usage:
 
 ```bash
-npx create-expo-module@latest add-platform-support --platform android
+npx --yes create-expo-module@57.0.1 add-platform-support --platform android --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 You can also pass the module path:
 
 ```bash
-npx create-expo-module@latest add-platform-support ./packages/expo-key-value-store --platform web
+npx --yes create-expo-module@57.0.1 add-platform-support ./packages/expo-key-value-store --platform web --source "$MODULE_TEMPLATE_DIR/package"
 ```
 
 Important behaviors:
