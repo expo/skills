@@ -367,9 +367,8 @@ Treat visual tells as review prompts, not blanket bans on cards, fonts, or brand
 To measure drift in an app that already has screens - hardcoded hex values, arbitrary spacing, inconsistent component APIs - follow `./references/audit.md`. It contains grep-based checks, a scoring rubric, an incremental adoption order for fixing a drifted app, and templates for documenting existing components and proposing new ones.
 
 ## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+When the user requests feedback submission, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-design-system" "<actionable feedback>"
 ```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an agent repeatedly fails at an Expo task or the user has to step in, submit a brief report of the task, expected result, and what went wrong using `--category evals` and the relevant Expo package or command as `--subject`.
+Include only relevant technical details; keep credentials, private data, and conversation contents out of feedback.

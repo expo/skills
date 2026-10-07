@@ -61,9 +61,8 @@ Before native setup, read [./references/version-compatibility.md](./references/v
 Open the RN screen with input, return a result to native, dismiss, and reopen with fresh input. Check listener cleanup and the host's original navigation. Then build the host in Release with a Release artifact and Metro stopped. Rendering only in Expo Go or the producer's example app does not validate the integration. See [./references/feature-integration.md](./references/feature-integration.md) for the complete acceptance scenario.
 
 ## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+When the user requests feedback submission, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-brownfield" "<actionable feedback>"
 ```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an agent repeatedly fails at an Expo task or the user has to step in, submit a brief report of the task, expected result, and what went wrong using `--category evals` and the relevant Expo package or command as `--subject`.
+Include only relevant technical details; keep credentials, private data, and conversation contents out of feedback.

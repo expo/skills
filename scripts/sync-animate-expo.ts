@@ -12,12 +12,11 @@ const HEADING = "# Building Animations in Expo";
 const ATTRIBUTION =
   "This skill was created in collaboration with [Emil Kowalski](https://github.com/emilkowalski) and can also be found in the [emilkowalski/skills](https://github.com/emilkowalski/skills) repository, along with other useful animation skills.";
 const FEEDBACK = `## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+When the user requests feedback submission, use:
 \`\`\`bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-animation" "<actionable feedback>"
 \`\`\`
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an agent repeatedly fails at an Expo task or the user has to step in, submit a brief report of the task, expected result, and what went wrong using \`--category evals\` and the relevant Expo package or command as \`--subject\`.`;
+Include only relevant technical details; keep credentials, private data, and conversation contents out of feedback.`;
 const USAGE = `Usage: bun scripts/sync-animate-expo.ts [options]
 
 Sync Emil Kowalski's animate-expo skill into the Expo repository while preserving

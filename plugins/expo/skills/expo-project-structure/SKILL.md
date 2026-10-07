@@ -105,9 +105,8 @@ Agent instructions live at the repo root — `AGENTS.md` / `CLAUDE.md`, with pro
 Based on [Expo app folder structure best practices](https://expo.dev/blog/expo-app-folder-structure-best-practices) by Kadi Kraman. For `src/` precedence and alias mechanics, see the [Expo docs](https://docs.expo.dev/router/reference/src-directory/).
 
 ## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+When the user requests feedback submission, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-project-structure" "<actionable feedback>"
 ```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an agent repeatedly fails at an Expo task or the user has to step in, submit a brief report of the task, expected result, and what went wrong using `--category evals` and the relevant Expo package or command as `--subject`.
+Include only relevant technical details; keep credentials, private data, and conversation contents out of feedback.
