@@ -36,7 +36,7 @@ If your app is already published, pull current metadata:
 npx --yes eas-cli@latest metadata:pull
 ```
 
-This creates `store.config.json` with your current App Store configuration.
+This creates `store.config.json` with your current App Store configuration. Keep the pulled file private until you have checked it for reviewer credentials and private contact details, and exclude private metadata files from build uploads and shared artifacts. Commit only the intended public listing data; configure reviewer secrets separately through App Store Connect.
 
 ### Push Metadata Updates
 
@@ -89,7 +89,7 @@ Create `store.config.json` at your project root:
       "seventeenPlus": false
     },
     "release": {
-      "automaticRelease": true,
+      "automaticRelease": false,
       "phasedRelease": true
     },
     "review": {
@@ -97,7 +97,7 @@ Create `store.config.json` at your project root:
       "lastName": "Doe",
       "email": "review@example.com",
       "phone": "+1 555-123-4567",
-      "notes": "Demo account: test@example.com / password123"
+      "notes": "Reviewer sign-in instructions for the dedicated test account; supply credentials through App Store Connect's reviewer fields."
     }
   }
 }
@@ -377,7 +377,7 @@ Control how your app rolls out to users.
 ```json
 {
   "release": {
-    "automaticRelease": true,
+    "automaticRelease": false,
     "phasedRelease": true
   }
 }
@@ -390,9 +390,11 @@ Control how your app rolls out to users.
 - `automaticRelease: "2025-02-01T10:00:00Z"` - Schedule release (RFC 3339)
 - `phasedRelease: true` - 7-day gradual rollout (1%, 2%, 5%, 10%, 20%, 50%, 100%)
 
+Preserve an existing release policy. For a new configuration, manual release keeps App Review approval separate from public availability. Enable automatic or scheduled release only when that timing is requested; metadata editing alone does not authorize changing it.
+
 ## Review Information
 
-Provide contact info and test credentials for the App Review team.
+Provide the authorized review contact and sign-in instructions. Enter a dedicated test account's credentials directly in App Store Connect's reviewer fields; keep them out of the listing configuration, repository, and tool transcripts.
 
 ```json
 {
@@ -401,9 +403,7 @@ Provide contact info and test credentials for the App Review team.
     "lastName": "Smith",
     "email": "app-review@company.com",
     "phone": "+1 (555) 123-4567",
-    "demoUsername": "demo@example.com",
-    "demoPassword": "ReviewDemo2025!",
-    "notes": "To test premium features:\n1. Log in with demo credentials\n2. Navigate to Settings > Subscription\n3. Tap 'Restore Purchase' - sandbox purchase will be restored\n\nFor location features, allow location access when prompted."
+    "notes": "Use the dedicated review account configured in App Store Connect. Navigate to Settings > Subscription to test the premium flow with the app's test environment."
   }
 }
 ```
@@ -473,7 +473,7 @@ Description maximum is 4000 characters.
 
 ## CI/CD Integration
 
-Automate metadata updates in your deployment pipeline:
+Automate metadata updates only in the requested release pipeline. Pass the verified build ID from that pipeline into `EAS_BUILD_ID`; do not select an arbitrary latest build:
 
 ```yaml
 # .eas/workflows/release.yml
@@ -481,7 +481,7 @@ jobs:
   submit-and-metadata:
     steps:
       - name: Submit to App Store
-        run: eas submit -p ios --latest
+        run: npx --yes eas-cli@latest submit -p ios --id "$EAS_BUILD_ID"
 
       - name: Push Metadata
         run: npx --yes eas-cli@latest metadata:push
