@@ -43,7 +43,7 @@ Keep a matching lockfile for the chosen package manager. Do not add `expo`, `rea
 }
 ```
 
-`eas init` links the project and writes `extra.eas.projectId`. Reuse the existing ID when one exists. The `expo` JSON key is EAS configuration here, not evidence of an Expo runtime. Xcode's bundle identifier is authoritative for a checked-in native project; keep any duplicate app-config identifier consistent, particularly for GitHub-triggered builds.
+`npx --yes eas-cli@latest init` links the project and writes `extra.eas.projectId`. Reuse the existing ID when one exists. The `expo` JSON key is EAS configuration here, not evidence of an Expo runtime. Xcode's bundle identifier is authoritative for a checked-in native project; keep any duplicate app-config identifier consistent, particularly for GitHub-triggered builds.
 
 The [default iOS worker](https://github.com/expo/eas-cli/blob/main/packages/build-tools/src/builders/ios.ts) skips prebuild for checked-in native projects but still runs `pod install`. For an app with no pods, a minimal `Podfile` can serve as an adapter:
 
@@ -128,7 +128,7 @@ When setting up or changing versioning or the bundle ID, or diagnosing a rejecte
 plutil -p "/path/to/MyApp.xcarchive/Products/Applications/MyApp.app/Info.plist"
 ```
 
-For a downloaded `.ipa`, unzip it into a temporary directory and inspect `Payload/MyApp.app/Info.plist`; for a built `.app`, inspect its `Info.plist` directly. Compare `CFBundleIdentifier`, `CFBundleShortVersionString`, and `CFBundleVersion` with the intended release. Values must be resolved strings, and `CFBundleSupportedPlatforms` must contain `iPhoneOS`, not `iPhoneSimulator`. `eas build:view BUILD_ID --json` provides build details and the artifact URL; its reported version is not a substitute for checking the archive.
+For a downloaded `.ipa`, unzip it into a temporary directory and inspect `Payload/MyApp.app/Info.plist`; for a built `.app`, inspect its `Info.plist` directly. Compare `CFBundleIdentifier`, `CFBundleShortVersionString`, and `CFBundleVersion` with the intended release. Values must be resolved strings, and `CFBundleSupportedPlatforms` must contain `iPhoneOS`, not `iPhoneSimulator`. `npx --yes eas-cli@latest build:view BUILD_ID --json` provides build details and the artifact URL; its reported version is not a substitute for checking the archive.
 
 When adding or changing a default (Any/light) 1024px AppIcon PNG, or diagnosing an icon rejection, inspect the source selected by that build profile:
 
@@ -142,18 +142,18 @@ Check privacy usage descriptions against the features used by the app. Set the e
 
 ## Ship the exact build
 
-Reuse established EAS/Apple credentials. For a new setup, configure signing with `eas credentials -p ios` and select the correct team. An App Store Connect API key supports unattended submission without changing the app's owner or bundle ID.
+Reuse established EAS/Apple credentials. For a new setup, have the account owner complete signing with `npx --yes eas-cli@latest credentials -p ios` privately for the correct team. Do not automate Apple password/MFA entry or download signing keys. An existing App Store Connect API key supports unattended submission without changing the app's owner or bundle ID.
 
 ```bash
-eas build --platform ios --profile testflight --no-wait --non-interactive
+npx --yes eas-cli@latest build --platform ios --profile testflight --no-wait --non-interactive
 # Record the returned build ID; verify its result and source revision.
-eas submit --platform ios --profile testflight --id BUILD_ID --non-interactive
+npx --yes eas-cli@latest submit --platform ios --profile testflight --id BUILD_ID --non-interactive
 ```
 
 For an IPA exported elsewhere:
 
 ```bash
-eas submit --platform ios --profile testflight --path /path/to/MyApp.ipa
+npx --yes eas-cli@latest submit --platform ios --profile testflight --path /path/to/MyApp.ipa
 ```
 
 Use the explicit ID when multiple builds exist. Keep the distribution scope the user requested. Follow the submission's worker logs through Apple processing, then check tester availability in App Store Connect. A successful upload does not create tester access or release the app publicly.
