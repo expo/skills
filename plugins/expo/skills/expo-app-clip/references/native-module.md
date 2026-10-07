@@ -1,9 +1,9 @@
 # Native App Clip detection
 
-Create a local Expo module so JS can detect when the app is running inside an App Clip and present the install prompt for the full app.
+Create a local Expo module so JS can detect when the app is running inside an App Clip and present the install prompt for the full app. Use a verified exact generator release matching the selected SDK; the example below is for SDK 57. Present the install prompt in response to the user's app interaction, rather than automatically on every launch.
 
 ```sh
-bunx create-expo-module --local
+bunx create-expo-module@57.0.1 --local
 ```
 
 ## Swift module
