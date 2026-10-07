@@ -69,11 +69,11 @@ import { Platform } from "react-native";
 const isNewArch = global._IS_FABRIC !== undefined;
 ```
 
-Verify from the command line if the currently running app uses the New Architecture: `bunx xcobra expo eval "_IS_FABRIC"` -> `true`
+Inspect `global._IS_FABRIC` in the running app using the existing React Native debugger; no additional remote evaluation CLI is needed.
 
 ## Troubleshooting
 
 1. **Clear caches** — `npx expo start --clear`
-2. **Clean prebuild** — `npx expo prebuild --clean`
+2. **Native changes** — follow the native-ownership and backup checks in the main skill. Use clean prebuild only for disposable CNG output; apply native diffs selectively in a manually maintained host.
 3. **Check native modules** — Ensure all dependencies support New Architecture
 4. **Review console warnings** — Legacy modules log compatibility warnings
