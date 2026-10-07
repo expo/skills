@@ -142,7 +142,7 @@ Check privacy usage descriptions against the features used by the app. Set the e
 
 ## Ship the exact build
 
-Reuse established EAS/Apple credentials. For a new setup, configure signing with `eas credentials -p ios` and select the correct team. An App Store Connect API key supports unattended submission without changing the app's owner or bundle ID.
+Reuse established EAS/Apple credentials. For a new setup, have the account owner complete signing with `npx --yes eas-cli@latest credentials -p ios` privately for the correct team. Do not automate Apple password/MFA entry or download signing keys. An existing App Store Connect API key supports unattended submission without changing the app's owner or bundle ID.
 
 ```bash
 npx --yes eas-cli@latest build --platform ios --profile testflight --no-wait --non-interactive
