@@ -102,6 +102,24 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **eas-update-insights** - Check EAS Update health, crash rates, adoption, and payload size
 - **eas-simulator** - Run and drive your app on a remote iOS/Android simulator on EAS cloud, from the CLI or an AI agent
 
+## ChatGPT plugin submission
+
+The public listing metadata lives in `plugin.json` under `extensions.com.openai`. Follow the [OpenAI submission guide](https://developers.openai.com/plugins/deploy/submission) for the current listing limits and review requirements.
+
+Run this from the repository root to create a ZIP with the portable manifest, MCP configuration, skills, and assets at the archive root:
+
+```bash
+bun scripts/create-chatgpt-plugin.ts --output /tmp/expo-plugin.zip
+```
+
+The script requires Git, npm, and `zip`. It packages tracked files from the working tree; stage new package files first. It resolves `eas-cli@latest` and other versioned npm helpers once per package with `npm view <package>@latest version --json` and pins them only in the ZIP. It keeps `submit-expo-feedback@latest` and removes `@latest` from `create-expo-app`, matching the command forms used in the passing submission scan. Existing exact versions and source files stay unchanged, including the plugin version.
+
+It prints the resolved versions and refuses to overwrite an existing ZIP. Without `--output`, it writes `.context/expo-plugin-<version>-chatgpt.zip`. Rebuild the upload package for each release to refresh its EAS CLI pin.
+
+The package leaves out the Claude-specific manifest, MCP configuration, telemetry hooks, and untracked submission files. Public plugin submissions currently do not support lifecycle hooks. Upload the ZIP to the Plugins dashboard, complete MCP authentication and domain verification, and inspect the metadata, skill, and tool scan results.
+
+Before submitting for review, prepare a dedicated reviewer account with sample data, five positive and three negative test cases verified against that account, a video walkthrough, and release notes. Enter reviewer credentials in the dashboard, outside the package.
+
 ## Usage telemetry & feedback
 
 **Automatic usage telemetry is off by default.** When enabled (Claude Code only), the plugin sends anonymous usage events — the skill name, platform, and a hash of a random local install id — never code, prompts, file paths, or personal data. Ask your agent to **"enable Expo skills telemetry"** to opt in (or set `EXPO_SKILLS_TELEMETRY=1`); turn off with `EXPO_SKILLS_TELEMETRY=0` / `DO_NOT_TRACK=1`. Skills delegate feedback authorization and environment disclosure to `expo-skill-feedback`. Feedback submission is independent of automatic usage telemetry.
