@@ -9,7 +9,7 @@ description: Add an iOS App Clip target to an Expo app. Use when the user mentio
 
 Adds an iOS App Clip target to an Expo project. The Clip lives in `targets/clip/`, ships alongside the parent app, and is invoked from a URL on the app's domain via an Apple App Site Association (AASA) file.
 
-The parent app's bundle ID becomes `com.<username>.<app-name>` and the Clip's is automatically derived as `<parent>.clip` (e.g. `com.bacon.may20.clip`).
+Preserve the parent's existing bundle ID; derive the Clip's as `<parent>.clip`. Replace the example team, domain, and app identifiers with the project's values.
 
 ## 1. Set `bundleIdentifier` and `appleTeamId`
 
@@ -29,7 +29,7 @@ The parent app's bundle ID becomes `com.<username>.<app-name>` and the Clip's is
 ## 2. Add the App Clip target
 
 ```sh
-bun create target clip
+bunx create-target@3.0.5 clip
 ```
 
 This installs [`@bacons/apple-targets`](https://github.com/EvanBacon/expo-apple-targets), adds it to the `plugins` array in `app.json`, and writes:
@@ -77,7 +77,7 @@ module.exports = (config) => ({
 ## 4. Register bundle IDs and create the App Store entry
 
 ```sh
-bunx setup-safari
+bunx setup-safari@0.0.2
 ```
 
 This logs in to the Apple Developer account, registers `com.bacon.may20`, creates the App Store Connect entry, and prints:
@@ -171,7 +171,7 @@ The AASA file must be live before iOS will trust the association. Use [EAS Hosti
 
 ```sh
 bunx expo export -p web
-eas deploy --prod
+npx --yes eas-cli@latest deploy --prod
 ```
 
 This publishes the site (including `/.well-known/apple-app-site-association`) at `https://<slug>.expo.app`. Verify:
@@ -188,7 +188,7 @@ Inspect the parent app's permissions after prebuild:
 npx expo config --type introspect
 ```
 
-Look at the `infoPlist` object — mirror the permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.
+Copy only the `Info.plist` permission keys needed by the Clip's features.
 
 Set `deploymentTarget: "17.6"` in the Clip's target config — App Clips have a higher minimum size limit in iOS 17.6.
 
@@ -207,7 +207,7 @@ If the app uses push notifications or location services, add to the App Clip's `
 ## 9. Build and submit to TestFlight
 
 ```sh
-bunx testflight
+bunx testflight@1.0.4
 ```
 
 This will:
@@ -222,7 +222,7 @@ This will:
 Pull existing App Store metadata to local:
 
 ```sh
-eas metadata:pull
+npx --yes eas-cli@latest metadata:pull
 ```
 
 Add `apple.appClip` to `store.config.json`. Up to 3 invocation URLs can launch the Clip from a web page:
@@ -255,7 +255,7 @@ The `headerImage` must be a 1800x1200 PNG with no opacity.
 Push back to the store:
 
 ```sh
-eas metadata:push
+npx --yes eas-cli@latest metadata:push
 ```
 
 Apple's recommended App Clip metadata guidelines: https://sosumi.ai/documentation/appclip/configuring-the-launch-experience-of-your-app-clip
