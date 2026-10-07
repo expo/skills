@@ -1,6 +1,6 @@
-# `eas update:insights` JSON schema
+# `npx --yes eas-cli@latest update:insights` JSON schema
 
-Complete JSON output shape returned by `eas update:insights <groupId> --json --non-interactive`.
+Complete JSON output shape returned by `npx --yes eas-cli@latest update:insights <groupId> --json --non-interactive`.
 
 ```json
 {
@@ -50,20 +50,20 @@ Complete JSON output shape returned by `eas update:insights <groupId> --json --n
 | `platforms[]` | One entry per platform the group was published to (`ios`, `android`). |
 | `platforms[].updateId` | Platform-specific update ID (distinct from the group ID). |
 | `platforms[].totals.uniqueUsers` | Distinct users who ran this update in the window. |
-| `platforms[].totals.installs` | Launches / successful installs in the window. |
-| `platforms[].totals.failedInstalls` | Crashes / failed installs in the window. |
-| `platforms[].totals.crashRatePercent` | `failedInstalls / (installs + failedInstalls) * 100`. Zero when no installs. |
+| `platforms[].totals.installs` | Reported install count; the CLI labels this "Launches". Apply the main skill's download and reporting-delay caveats rather than treating it as a real-time count of completed launches. |
+| `platforms[].totals.failedInstalls` | Reported install/launch failures; the CLI labels this "Crashes". Reporting can be delayed or incomplete. |
+| `platforms[].totals.crashRatePercent` | Reported failure rate, `failedInstalls / (installs + failedInstalls) * 100`. Check both sample counts; a zero or missing rate with no activity is not evidence of health. |
 | `platforms[].payload.launchAssetCount` | Number of assets the manifest references. |
 | `platforms[].payload.averageUpdatePayloadBytes` | Mean bundle size for the window. |
 | `platforms[].daily[]` | Per-day time series of installs and failed installs. |
 
-## `eas update:view <groupId> --insights --json`
+## `npx --yes eas-cli@latest update:view <groupId> --insights --json`
 
 The `update:view --insights --json` command wraps the same insights payload:
 
 ```json
 {
   "updates": [ /* standard update:view entries */ ],
-  "insights": { /* same shape as eas update:insights above */ }
+  "insights": { /* same shape as npx --yes eas-cli@latest update:insights above */ }
 }
 ```
