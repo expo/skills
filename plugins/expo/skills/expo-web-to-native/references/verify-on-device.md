@@ -2,19 +2,21 @@
 
 Disclosed reference for [`expo-web-to-native`](../SKILL.md), steps 3–4. Verification means **running both apps and comparing the same screen** - the native port beside the web original. A clean compile or a green `expo export` proves nothing - a screen can build and still render blank or mis-render. This parity check is the gate the strangle loop runs each iteration.
 
-Two agents drive it, and this skill is **opinionated**: it requires both and installs them rather than falling back to manual screenshots.
+The recipe below uses `agent-browser` and `argent`; equivalent browser/device tools can perform the same checks.
 
 - **Web side — `agent-browser`** (vercel-labs, a Rust browser CLI): `open <url>`, `snapshot --json` (accessibility tree with refs), `screenshot <path>`, `read` (rendered DOM/text).
 - **Native side — `argent`** (`@swmansion/argent`): drives the simulator — `describe` (a11y tree), `debugger-component-tree` (RN tree), `gesture-tap`/`keyboard`, `flow` to record a check and replay it each pass. Invoke as `argent run <tool> --udid <udid>` (get the udid from `argent run list-devices`).
 
-## Setup — install if missing (don't skip, don't fall back to manual)
+## Setup — check available tools
 
-Check both are on PATH; if either is absent, ask the user, then install before proceeding:
+Check whether the tools are already on PATH:
 
 ```bash
-which agent-browser || (npm i -g agent-browser && agent-browser install)   # web agent (+ its Chrome)
-which argent        || npm i -g @swmansion/argent                          # device agent
+command -v agent-browser
+command -v argent
 ```
+
+If tool setup is requested, install a verified compatible release from its official package, following any required host approval. Otherwise use available tools or a manual device check and report any verification gap.
 
 ## The workflow
 
