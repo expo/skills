@@ -8,18 +8,18 @@ In SDK 56+, application code must not import from `@react-navigation/*` directly
 2. Replace imports using the table. Use the entry point that matches the `@react-navigation/*` source.
 3. After rewriting, check whether any of the rewritten imports are deprecated in `expo-router` (see [Check for deprecated imports](#check-for-deprecated-imports)). If so, surface the deprecation reason and the suggested replacement to the user before continuing.
 4. Validate: search for remaining `@react-navigation/` references in source files, then run typecheck/build/start.
-5. Remove `@react-navigation/*` packages that are no longer imported from `package.json` and reinstall (delete `node_modules` if needed).
+5. Remove `@react-navigation/*` packages that are no longer imported from `package.json` and reinstall using the project package manager and lockfile. Use the main skill's recovery checks if an install is corrupted.
 
 ## Automated migration (preferred)
 
-Run from the project root over your application code (replace `src` with the actual directory or glob):
+Preserve a recoverable source snapshot. Verify `expo-codemod@57.0.0` against Expo's official package and inspect its help before execution. Run from the project root over the requested application source only (replace `src` with its actual directory); exclude dependencies and generated files, then review the diff:
 
 ```sh
-npx expo-codemod sdk-56-expo-router-react-navigation-replace src
+npx expo-codemod@57.0.0 sdk-56-expo-router-react-navigation-replace src
 ```
 
 ```sh
-npx expo-codemod sdk-56-expo-router-react-navigation-replace '**/*.{ts,tsx,js,jsx}'
+npx expo-codemod@57.0.0 sdk-56-expo-router-react-navigation-replace 'src/**/*.{ts,tsx,js,jsx}'
 ```
 
 ## Manual API mapping
