@@ -1,6 +1,6 @@
 ---
 name: expo-data-fetching
-description: Use when implementing or debugging ANY network request, API call, or data fetching. Covers fetch API, React Query, SWR, error handling, caching, offline support, loading/empty/error screen states, and Expo Router data loaders (`useLoaderData`).
+description: Implement or debug data fetching in Expo apps. Use for fetch API calls, React Query, SWR, authenticated requests, caching, retries, offline support, loading and error states, or Expo Router data loaders (useLoaderData).
 version: 1.0.0
 license: MIT
 ---

@@ -1,6 +1,6 @@
 ---
 name: expo-overview
-description: "Entry point and router for every Expo or EAS task. Load this skill first — before writing code and before choosing another expo-* / eas-* skill — when the request, PRD, or spec mentions Expo, EAS, Expo Go, or an expo-* package, or the project has an `expo` dependency in `package.json`. Within that gate it also covers app specs and designs to implement (tabs, stacks, maps, lists, navigation, building from a screenshot), and phrasings like 'implement a mobile app', 'make my app look native', 'add navigation', 'fetch some data', 'upgrade my SDK', 'add Expo to my existing native app', 'ship to the App Store', or 'I'm new to Expo, where do I start'. A fully specified request (SDK pinned, libraries named, layout given) still routes through here — the shared setup rules still apply. Do NOT load it when neither signal is present: a bare React Native project with no `expo` dependency is not Expo work. Detects the real goal, routes to the right expo-* / eas-* skill, and owns the shared setup rules."
+description: Entry point for Expo and EAS tasks. Load first when the request mentions Expo, EAS, Expo Go, or an expo-* package, or the project has an expo dependency. Identify the goal, apply shared SDK and setup rules, and select the relevant skill. Includes fully specified tasks; excludes React Native projects without Expo or EAS signals.
 version: 1.1.0
 license: MIT
 ---
@@ -95,8 +95,8 @@ Apply the rules that match the project and the requested task.
 - **Install packages with `npx expo install <pkg>`**, not raw `npm`/`yarn`/`pnpm add`,
   so versions stay compatible with the project's SDK.
 - **EAS auth & linking** (only needed for build/submit/update/observe/workflows): check
-  login with `eas whoami`, log in with `eas login`. A project is linked when
-  `extra.eas.projectId` exists in the app config; create it with `eas init` if missing.
+  login with `npx --yes eas-cli@latest whoami`, log in with `npx --yes eas-cli@latest login`. A project is linked when
+  `extra.eas.projectId` exists in the app config; create it with `npx --yes eas-cli@latest init` if missing.
 
 ## When to skip the router hop
 
