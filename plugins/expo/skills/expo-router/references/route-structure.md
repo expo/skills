@@ -88,7 +88,7 @@ When an app has tabs, the header and title should be set in a Stack that is nest
 
 - Set the 'headerShown' option to false on the tab layout
 - Use (group) routes to simplify the public URL structure
-- You may need to delete or refactor existing routes to fit this structure
+- Adapt this structure to the requested navigation change. Preserve existing routes, deep links, and access guards; retire a route only after verifying its references and replacement behavior.
 
 Example structure:
 
@@ -183,14 +183,14 @@ export default function RootLayout() {
 
 ```tsx
 // app/(tabs)/_layout.tsx
-import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 
 export default function TabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <Label>Home</Label>
-        <Icon sf="house.fill" />
+        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="house.fill" />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

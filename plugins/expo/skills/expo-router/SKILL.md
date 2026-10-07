@@ -26,7 +26,7 @@ references/
 ## Code Style
 
 - Always use kebab-case for file names, e.g. `comment-card.tsx`
-- Always remove old route files when moving or restructuring navigation
+- When moving routes, preserve existing URLs, deep links, and authentication guards. Remove an old route only after checking its references and confirming its behavior is covered by the replacement or a compatibility redirect.
 - Never use special characters in file names
 - Configure tsconfig.json with path aliases, and prefer aliases over relative imports for refactors.
 
@@ -66,6 +66,8 @@ import { Link } from 'expo-router';
 ```
 
 Whenever possible, include a `<Link.Preview>` to follow iOS conventions. Add context menus and previews frequently to enhance navigation.
+
+Keep previews read-only: mounting or prefetching a screen must not submit, delete, purchase, or change account state. Preserve authentication checks for previewed routes; route groups alone do not enforce access control. Keep credentials out of URL parameters and enforce authorization on the backend too.
 
 ## Stack
 
