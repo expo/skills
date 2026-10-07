@@ -1,6 +1,6 @@
 ---
 name: eas-observe
-description: Use for anything related to EAS Observe - adding `expo-observe` to an Expo project (AppMetricsRoot/ObserveRoot HOC, markInteractive and ObserveInteractiveMarker, the useObserve hook, the Expo Router / React Navigation integrations for per-route metrics, user-defined events via `Observe.logEvent`, error reporting via ObserveErrorBoundary and `Observe.reportError`, and runtime config such as sampleRate and dispatchInDebug), querying via the EAS CLI (`eas observe:metrics-summary`, `observe:metrics`, `observe:routes`, `observe:events`, `observe:session`, `observe:versions`), interpreting the resulting metrics (cold/warm launch, TTR, TTI, navigation cold/warm TTR, update download, and the TTI frameRate/device/network params for triaging slow startups), or shipping an Observe integration inside a third-party package.
+description: Set up expo-observe and query EAS Observe metrics. Use for startup, launch, and navigation performance (TTR, TTI), custom events, error reporting, sampling configuration, CLI queries, or Observe integrations in libraries. For published OTA-update health and adoption, use eas-update-insights.
 version: 1.1.0
 license: MIT
 ---
@@ -18,7 +18,7 @@ EAS Observe tracks startup, navigation, and custom-event performance from produc
 The four reference files in `./references/` cover what people typically need this skill for:
 
 - **Adding EAS Observe to a project** → [`./references/setup.md`](./references/setup.md). Install, wrap the root layout (`AppMetricsRoot` on SDK 55, `ObserveRoot` on SDK 56+), mark the app interactive (global `markInteractive()` on SDK 55, the `useObserve()` hook or `<ObserveInteractiveMarker />` on SDK 56+), optional per-route navigation metrics through the Expo Router / React Navigation integrations, user-defined events via `Observe.logEvent` (SDK 56+), error reporting, and runtime configuration (sampling, dispatch, environments, custom endpoint).
-- **Querying metrics from the terminal** → [`./references/queries.md`](./references/queries.md). The six `eas observe:*` commands — `metrics-summary`, `metrics`, `routes`, `events`, `session`, `versions` — with flags, metric aliases, table layouts, JSON shapes, and common workflows.
+- **Querying metrics from the terminal** → [`./references/queries.md`](./references/queries.md). The six `npx --yes eas-cli@latest observe:*` commands — `metrics-summary`, `metrics`, `routes`, `events`, `session`, `versions` — with flags, metric aliases, table layouts, JSON shapes, and common workflows.
 - **Reading a dashboard or CLI output** → [`./references/metrics.md`](./references/metrics.md). Target thresholds per metric, what the automatic TTI params mean (`frameRate.*`, `device.*`, `network.*`), and diagnostic patterns for telling slow-but-smooth startup apart from main-thread contention, hard blocks, or throttled devices.
 - **Shipping an Observe integration in a library** → [`./references/third-party.md`](./references/third-party.md). For package authors only (SDK 57+): optional peer dependency, config declaration merging, `Observe.registerIntegration()`, and event naming.
 
