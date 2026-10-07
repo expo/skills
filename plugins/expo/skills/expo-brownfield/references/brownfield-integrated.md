@@ -25,7 +25,8 @@ If the native team must not need Node, Yarn, or React Native tooling, use [./bro
 Create the Expo project inside or alongside the existing native project, using the SDK selected during host inspection. For a new small feature on the current stable SDK:
 
 ```sh
-npx create-expo-app@latest my-project --template blank@latest
+# SDK 57 example; select compatible exact versions using version-compatibility.md.
+npx create-expo-app@5.0.0 my-project --template expo-template-blank@57.0.28
 ```
 
 For TypeScript, install `typescript` and `@types/react` with `npx expo install`, then use the explicit entry point in [feature integration](./feature-integration.md#register-the-component-that-receives-input). The JS entry point registers a root component under the name `"main"` — this name must match the `moduleName` referenced from the native side later.
@@ -168,16 +169,26 @@ Add the `INTERNET` permission to your main manifest at `app/src/main/AndroidMani
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-In the debug-variant manifest at `app/src/debug/AndroidManifest.xml`, enable cleartext traffic so the app can talk to the local Metro bundler over HTTP:
+Allow HTTP only to the exact Metro host in a debug-only network security configuration. First inspect the active main, flavor, and debug manifests and their referenced policy. If the host already has a policy, derive a debug resource override from it, preserving its trust anchors, pins, and domain rules, and add only the Metro exception. Keep the existing manifest resource name to avoid replacing or conflicting with the host's policy.
+
+For a host without an existing policy, an Android emulator using Metro at `10.0.2.2` can use `app/src/debug/res/xml/metro_network_security_config.xml`:
 
 ```xml
-<application
-  android:usesCleartextTraffic="true"
-  tools:targetApi="28"
-  tools:ignore="GoogleAppIndexingWarning">
-  ...
-</application>
+<network-security-config>
+  <base-config cleartextTrafficPermitted="false" />
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="false">10.0.2.2</domain>
+  </domain-config>
+</network-security-config>
 ```
+
+Reference it from the existing `<application>` in `app/src/debug/AndroidManifest.xml`:
+
+```xml
+<application android:networkSecurityConfig="@xml/metro_network_security_config" />
+```
+
+For a physical device, substitute its exact Metro host address. Keep the exception out of `src/main` and `src/release`, and inspect the merged debug and Release resources/manifests to verify the host's other trust rules and production networking policy are preserved.
 
 ### `MainApplication.kt`
 

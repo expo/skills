@@ -35,7 +35,8 @@ Node and the JS package manager are only needed in the environment that _builds_
 ### Create a new Expo project
 
 ```sh
-npx create-expo-app@latest my-project --template blank@latest
+# SDK 57 example; select compatible exact versions using version-compatibility.md.
+npx create-expo-app@5.0.0 my-project --template expo-template-blank@57.0.28
 ```
 
 Use this current stable blank template for a small embedded feature after the [version/toolchain checks](./version-compatibility.md). If host constraints require another SDK, select its published template tag instead. Keep an existing producer and its entry point when present. The project can live in a separate repo or alongside the native app in a monorepo; it does not need to be inside the native project.
@@ -113,11 +114,13 @@ When precompiled modules are detected, `build:ios` is pinned to a single flavor 
 
 ### Android
 
+Inspect the configured publications first: this command runs every declared destination. With the default configuration it publishes locally; if remote destinations are configured, choose a local task for local verification. Remote publishing requires the requested repository and artifact version.
+
 ```sh
 npx expo-brownfield build:android
 ```
 
-Produces an AAR and publishes it to the local Maven repository at `~/.m2`. The Maven coordinates come from the plugin config — e.g. `com.example:mybrownfield:1.0.0`.
+With the default configuration, produces an AAR and publishes it to the local Maven repository at `~/.m2`. The Maven coordinates come from the plugin config — e.g. `com.example:mybrownfield:1.0.0`.
 
 #### Publishing the Android AAR
 
@@ -162,9 +165,9 @@ The plugin's `publishing` option controls where the AAR is published. When unset
 }
 ```
 
-Supported `type` values: `localMaven`, `localDirectory`, `remotePublic`, `remotePrivate`. For private repos, credentials and URL accept either inline strings or `{ "variable": "ENV_VAR_NAME" }` to read from the environment at publish time.
+Supported `type` values: `localMaven`, `localDirectory`, `remotePublic`, `remotePrivate`. Use `{ "variable": "ENV_VAR_NAME" }` for private-repository credentials, populated through protected local or CI secret storage. Do not put credential values in config, logs, or chat.
 
-By default, `build:android` runs every declared publication. To pick specific publications or repositories from the command line, use the CLI flags:
+By default, `build:android` runs every declared publication, including remote uploads. Inspect all declared destinations before running it. For local verification, select a local publication task; use a remote task only within the requested publishing scope and after verifying the repository and artifact version. To pick specific publications or repositories from the command line, use the CLI flags:
 
 ```sh
 npx expo-brownfield build:android --task publishReleasePublicationToCompanyRepository
