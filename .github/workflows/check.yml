@@ -43,7 +43,7 @@ jobs:
       - name: Check private release status and simulator operations
         id: status-summary-test
         continue-on-error: true
-        run: bun test scripts/status-summary.test.ts
+        run: bun test scripts/status-summary.test.ts scripts/simulator-status.test.ts scripts/simulator-transfers.test.ts scripts/simulator-controller.test.ts
 
       - name: Check plugin version bump
         id: version-check
@@ -98,7 +98,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun scripts/check-skill-limits.ts"
-          report "private release status and simulator operations" "$STATUS_SUMMARY_TEST_OUTCOME" "bun test scripts/status-summary.test.ts"
+          report "private release status and simulator operations" "$STATUS_SUMMARY_TEST_OUTCOME" "bun test scripts/status-summary.test.ts scripts/simulator-status.test.ts scripts/simulator-transfers.test.ts scripts/simulator-controller.test.ts"
           report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
           report "plugin version bump" "$VERSION_CHECK_OUTCOME" "bun scripts/check-plugin-version-bump.ts origin/main"
           report "expo-overview routing" "$ROUTING_CHECK_OUTCOME" "bun scripts/check-overview-routing.ts"
