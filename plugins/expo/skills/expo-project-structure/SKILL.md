@@ -105,7 +105,7 @@ Agent instructions live at the repo root — `AGENTS.md` / `CLAUDE.md`, with pro
 Based on [Expo app folder structure best practices](https://expo.dev/blog/expo-app-folder-structure-best-practices) by Kadi Kraman. For `src/` precedence and alias mechanics, see the [Expo docs](https://docs.expo.dev/router/reference/src-directory/).
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
+When the user requests feedback submission about this skill, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-project-structure" --message "<actionable feedback>"
 ```

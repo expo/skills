@@ -231,7 +231,7 @@ export default function Layout({ segment }) {
 `headerLargeTitleEnabled` is the SDK 56+ option name; older SDKs use `headerLargeTitle`, which is deprecated upstream.
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
+When the user requests feedback submission about this skill, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-router" --message "<actionable feedback>"
 ```

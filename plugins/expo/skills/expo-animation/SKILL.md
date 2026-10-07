@@ -265,7 +265,7 @@ The code is the deliverable. Don't pad it into a report.
 Opinionated and brief. When the honest answer is "this shouldn't animate," or "this needs a real device before I can tell you if it's right," give it.
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
+When the user requests feedback submission about this skill, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-animation" --message "<actionable feedback>"
 ```

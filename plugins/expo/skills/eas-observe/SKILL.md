@@ -41,7 +41,7 @@ The five reference files in `./references/` cover what people typically need thi
 - Troubleshooting: https://docs.expo.dev/eas/observe/reference/troubleshooting/
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
+When the user requests feedback submission about this skill, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "eas-observe" --message "<actionable feedback>"
 ```

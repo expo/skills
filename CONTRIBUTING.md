@@ -104,7 +104,7 @@ The `check` workflow (`bun scripts/check-overview-routing.ts`) enforces this.
 
 ### 9. Add the feedback instructions
 
-Every `SKILL.md` ends with a canonical feedback block whose subject matches the skill name. Add or
+Every `SKILL.md` ends with a canonical feedback block whose subject matches the skill name. Feedback blocks use `@expo/agent-cli`, require user-requested submission, and exclude private data. Add or
 refresh it automatically:
 
 ```bash

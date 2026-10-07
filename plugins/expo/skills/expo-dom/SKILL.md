@@ -416,7 +416,7 @@ On web, the `dom` prop is ignored since no webview is needed.
 - The webview has its own JavaScript context — cannot directly share state with native
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
+When the user requests feedback submission about this skill, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-dom" --message "<actionable feedback>"
 ```

@@ -282,7 +282,7 @@ See [./references/native-module.md](./references/native-module.md) for the Swift
 - ./references/native-module.md — Local Expo module to detect App Clip context and present the SKOverlay install prompt
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
+When the user requests feedback submission about this skill, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-app-clip" --message "<actionable feedback>"
 ```

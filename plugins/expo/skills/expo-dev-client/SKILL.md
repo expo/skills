@@ -175,7 +175,7 @@ eas update
 ```
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
+When the user requests feedback submission about this skill, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-dev-client" --message "<actionable feedback>"
 ```

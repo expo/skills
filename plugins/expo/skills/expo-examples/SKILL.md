@@ -97,7 +97,7 @@ When the user already has an app, **add only what the example introduces; never 
 - `./references/catalog.md` — categorized snapshot of the example library for fast triage.
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
+When the user requests feedback submission about this skill, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-examples" --message "<actionable feedback>"
 ```

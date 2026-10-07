@@ -137,7 +137,7 @@ Never bypass a compatibility or anti-bricking safeguard merely to make an update
 - Current EAS CLI reference: https://docs.expo.dev/eas/cli.md
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
+When the user requests feedback submission about this skill, use:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "eas-update" --message "<actionable feedback>"
 ```
