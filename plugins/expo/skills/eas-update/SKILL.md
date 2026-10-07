@@ -2,7 +2,6 @@
 name: eas-update
 description: "Configure and use EAS Update for over-the-air JavaScript and asset updates with expo-updates and EAS CLI. Use when setting up OTA updates, running npx --yes eas-cli@latest update:configure or npx --yes eas-cli@latest update, publishing to preview/staging/production channels, explaining branches/channels/runtime versions, testing updates, or debugging why an installed build still shows old code. Load for TestFlight, preview, or production updates that do not appear, including questions about cold launches or reopening the app. Not for update health metrics; use eas-update-insights for adoption, crashes, and rollout monitoring."
 license: MIT
-allowed-tools: "Bash(npx expo *), Bash(npx *eas-cli@*), Bash(eas *)"
 ---
 
 # EAS Update
@@ -10,6 +9,10 @@ allowed-tools: "Bash(npx expo *), Bash(npx *eas-cli@*), Bash(eas *)"
 > **EAS service - costs apply.** EAS Update is available on the Free plan; publishing and delivery use update, bandwidth, and storage allowances, with higher limits on paid plans. See https://expo.dev/pricing.
 
 Use EAS Update to deliver compatible JavaScript, styling, and asset changes to installed apps without submitting a new native binary. Native-code changes still require a new build.
+
+Use the project's locked Expo CLI and run EAS commands with `npx --yes eas-cli@latest` from Expo's official package. Check the resolved version and command help for compatibility. Keep authentication in the CLI's login or protected CI secret store, outside chat, logs, and version control.
+
+Check identity with `npx --yes eas-cli@latest whoami`. If sign-in is needed, use `npx --yes eas-cli@latest login --browser` and let the user complete it. Do not collect passwords or MFA codes, replace the account, or run unreviewed app configuration, Metro configuration, config plugins, or package scripts with account credentials available. Review those execution surfaces in the selected source revision before exporting.
 
 ## Start with the supported configuration path
 
@@ -82,13 +85,16 @@ For the common channel-based flow:
 ```bash
 npx --yes eas-cli@latest update \
   --channel <channel> \
+  --platform <platform> \
   --message "<message>" \
   --environment <environment>
 ```
 
-SDK 55 and later require an EAS environment for publishing. Choose the environment intentionally so exported code receives the intended variables.
+Set `<platform>` to `ios`, `android`, or `all` for the requested destination. SDK 55 and later require an EAS environment for publishing. Choose the environment intentionally so exported code receives the intended variables.
 
-Publishing changes remote state and can affect installed applications. Before running it, establish the exact project, channel, environment, platforms, runtime version, and message. Publish to production only when the user has explicitly requested or approved it; if the authorization or target is ambiguous, stop before the command and ask. Do not infer a production destination solely from the current Git branch.
+Review the export's public configuration and assets before publishing. `EXPO_PUBLIC_*`, app-config `extra` values, source maps, and values copied into client code can expose secrets even when the original environment variable has a private name. Keep server credentials and private keys out of every client-visible surface; do not copy `.env` files into assets or public directories. Preserve the update's code-signing configuration; do not disable signature validation to resolve a failed update.
+
+Publishing changes remote state and can affect installed applications. Before running it, establish the exact project, channel, environment, platforms, runtime version, and message. Resolve the channel's branch and check which other channels map to it: publishing through a staging channel can affect production when both point to the same branch. If the requested audience cannot be isolated with the existing mapping, resolve that destination before publishing; do not silently remap channels. Publish to production only when the user has explicitly requested or approved it; if the authorization or target is ambiguous, stop before the command and ask. Do not infer a production destination solely from the current Git branch.
 
 Prefer a preview or staging channel for validation. When promoting a tested update, use the documented deployment flow so production receives the same artifact where possible: https://docs.expo.dev/eas-update/deployment.md.
 
