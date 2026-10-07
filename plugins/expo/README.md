@@ -99,6 +99,24 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **eas-update-insights** - Check EAS Update health, crash rates, adoption, and payload size
 - **eas-simulator** - Run and drive your app on a remote iOS/Android simulator with Expo Simulators, from the CLI or an AI agent
 
+## ChatGPT plugin submission
+
+The public listing metadata lives in `plugin.json` under `extensions.com.openai`. Follow the [OpenAI submission guide](https://developers.openai.com/plugins/deploy/submission) for the current listing limits and review requirements.
+
+Run this from the repository root to create a ZIP with the portable manifest, MCP configuration, skills, and assets at the archive root:
+
+```bash
+bun scripts/create-chatgpt-plugin.ts --output /tmp/expo-plugin.zip
+```
+
+The script requires Git, npm, and `zip`. It packages tracked files from the working tree; stage new package files first. It resolves `eas-cli@latest` and other versioned npm helpers once per package with `npm view <package>@latest version --json` and pins them only in the ZIP. This includes `@expo/agent-cli@latest`, which now provides feedback submission. It removes `@latest` from `create-expo-app`; legacy `submit-expo-feedback@latest` references are preserved. Existing exact versions and source files stay unchanged, including the plugin version.
+
+It prints the resolved versions and refuses to overwrite an existing ZIP. Without `--output`, it writes `.context/expo-plugin-<version>-chatgpt.zip`. Rebuild the upload package for each release to refresh its EAS CLI pin.
+
+The package leaves out the Claude-specific manifest and `.mcp.json`, lifecycle hooks, and untracked submission files. The portable `mcp.json` is included. Public plugin submissions currently do not support lifecycle hooks. Upload the ZIP to the Plugins dashboard, complete MCP authentication and domain verification, and inspect the metadata, skill, and tool scan results.
+
+Before submitting for review, prepare a dedicated reviewer account with sample data, five positive and three negative test cases verified against that account, a video walkthrough, and release notes. Enter reviewer credentials in the dashboard, outside the package.
+
 ## Feedback
 
 Every skill includes instructions to submit user-requested, actionable feedback with `npx --yes @expo/agent-cli@latest feedback`. Include only relevant technical details and keep credentials, private data, and conversation contents out of feedback.
