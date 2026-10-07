@@ -11,13 +11,12 @@ const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
 const FEEDBACK_HEADING = "## Submitting Feedback";
 
 function feedbackBlock(skillName: string): string {
-  return `${FEEDBACK_HEADING}
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+  return `## Submitting Feedback
+When the user requests feedback submission, follow expo-skill-feedback and use:
 \`\`\`bash
 npx --yes submit-expo-feedback@latest --category skills --subject "${skillName}" "<actionable feedback>"
 \`\`\`
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an AI agent repeatedly failed or the user had to take over an Expo task, load the expo-skill-feedback skill and follow its eval-candidate flow instead of reusing the command above.`;
+Include only relevant technical details; keep credentials, private data, and conversation contents out of feedback.`;
 }
 
 function findSkillFiles(dir: string): string[] {
@@ -102,7 +101,7 @@ for (const path of skills) {
   if (name !== dirName)
     errors.push(`${rel}: frontmatter name "${name}" does not match directory "${dirName}"`);
 
-  // Every installed skill carries the same actionable feedback instructions with its own name.
+  // Every installed skill carries its generated feedback instructions with its own subject.
   if (!body.trimEnd().endsWith(feedbackBlock(name)))
     errors.push(`${rel}: missing canonical feedback block; run "bun scripts/check-skill-limits.ts --fix-feedback"`);
 

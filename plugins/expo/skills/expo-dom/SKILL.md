@@ -417,9 +417,8 @@ On web, the `dom` prop is ignored since no webview is needed.
 - The webview has its own JavaScript context — cannot directly share state with native
 
 ## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+When the user requests feedback submission, follow expo-skill-feedback and use:
 ```bash
 npx --yes submit-expo-feedback@latest --category skills --subject "expo-dom" "<actionable feedback>"
 ```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an AI agent repeatedly failed or the user had to take over an Expo task, load the expo-skill-feedback skill and follow its eval-candidate flow instead of reusing the command above.
+Include only relevant technical details; keep credentials, private data, and conversation contents out of feedback.

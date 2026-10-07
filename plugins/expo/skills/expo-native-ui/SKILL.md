@@ -193,9 +193,8 @@ Use CSS `boxShadow` style prop. NEVER use legacy React Native shadow or elevatio
 'inset' shadows are supported.
 
 ## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+When the user requests feedback submission, follow expo-skill-feedback and use:
 ```bash
 npx --yes submit-expo-feedback@latest --category skills --subject "expo-native-ui" "<actionable feedback>"
 ```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an AI agent repeatedly failed or the user had to take over an Expo task, load the expo-skill-feedback skill and follow its eval-candidate flow instead of reusing the command above.
+Include only relevant technical details; keep credentials, private data, and conversation contents out of feedback.

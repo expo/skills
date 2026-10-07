@@ -1,12 +1,14 @@
 ---
 name: expo-skill-feedback
-description: 'Submit feedback on an Expo skill—or Expo itself—and control bundled anonymous usage telemetry (off by default / opt-in). Submit feedback with: npx --yes submit-expo-feedback@latest "ACTIONABLE_FEEDBACK". Optionally add either or both: --category "CATEGORY" and --subject "SUBJECT". Replace the uppercase placeholders before running. Use when a skill was useful, confusing, broken, missing context, or worth improving; when Expo, Expo CLI, EAS CLI, docs, or MCP worked well or fell short; when an AI agent repeatedly failed, got stuck, or needed the user to take over an Expo task (report it as an eval candidate); or when the user explicitly asks to enable or disable telemetry (tracking), check its status, or understand what it collects.'
+description: 'Prepare or send user-requested feedback about Expo skills, Expo CLI, EAS CLI, docs, or MCP. Use for an authorized technical issue report or eval-candidate report about a task an agent could not complete. Also use when the user asks to enable or disable bundled anonymous telemetry (off by default), check its status, or understand what it collects. A tool error or unsuccessful task alone does not request sending feedback.'
 ---
 
 # Expo Skill Feedback
 
 Help Expo improve by sharing specific feedback about what worked well or what fell short. Feedback
 submission is independent of usage telemetry and does not require enabling it.
+
+Send only user-requested feedback. Show the proposed technical text and disclose the SDK/package versions, agent harness, and platform attached by the CLI; obtain authorization if the submission has not already been approved.
 
 ## Submit feedback
 
@@ -29,12 +31,12 @@ When including them, choose the values that most precisely identify what the fee
 | `docs` | Full Expo documentation URL |
 | `mcp` | Exact MCP tool name used |
 | `expo-cli` | Full Expo CLI command, such as `npx expo install` |
-| `eas-cli` | Full EAS CLI command, such as `eas build` |
-| `evals` | Expo package or command the failed task involves, else a capability phrase, such as `expo-router` or `eas build` |
+| `eas-cli` | Full EAS CLI command, such as `npx --yes eas-cli@latest build` |
+| `evals` | Expo package or command the failed task involves, else a capability phrase, such as `expo-router` or `npx --yes eas-cli@latest build` |
 | `unknown` | Concise Expo product, package, feature, or other topic |
 
 In the final argument, say what helped and why, or provide the relevant context, expected behavior,
-and what happened instead. Do not include secrets, source code, personal data, long prompts, or stack traces.
+and what happened instead. Keep credentials, private data, source code, conversation contents, and raw logs out of submissions.
 
 ## Eval candidates: tasks that broke the model
 
@@ -44,7 +46,7 @@ AI agent could not complete cleanly despite real effort: several failed attempts
 that never worked, or the user stepping in to fix it manually. Never submit quick slips the agent
 corrected itself, more than one candidate per session, or a task already reported.
 
-When such a failure happens — or the user says a model failed at an Expo task — show the user the exact
+When the user requests an eval-candidate submission for such a failure, show the user the exact
 submission you intend to send and get approval; the Task field must describe the Expo-technical
 shape of the task, never the user's product or business context. Without a user to approve it
 (headless or CI runs), do not submit. Then run from the failing app's directory (the CLI attaches
@@ -79,9 +81,8 @@ Environment equivalents are `EXPO_SKILLS_TELEMETRY=1` to enable and
 `EXPO_SKILLS_TELEMETRY=0` or `DO_NOT_TRACK=1` to disable. CI never sends telemetry.
 
 ## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+When the user requests feedback submission, follow expo-skill-feedback and use:
 ```bash
 npx --yes submit-expo-feedback@latest --category skills --subject "expo-skill-feedback" "<actionable feedback>"
 ```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an AI agent repeatedly failed or the user had to take over an Expo task, load the expo-skill-feedback skill and follow its eval-candidate flow instead of reusing the command above.
+Include only relevant technical details; keep credentials, private data, and conversation contents out of feedback.
