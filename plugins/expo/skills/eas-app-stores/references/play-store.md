@@ -17,12 +17,20 @@ Once these are complete, the default `eas submit` works for a first-time submiss
 3. Grant the "Service Account User" role
 4. Create and download a JSON key
 
-### 2. Link to Play Console
+### 2. Grant the service account access
 
-1. Go to Play Console → Setup → API access
-2. Click "Link" next to your Google Cloud project
-3. Under "Service accounts", click "Manage Play Console permissions"
-4. Grant "Release to production" permission (or appropriate track permissions)
+The Play Console "Setup → API access" page was removed by Google — linking a
+Google Cloud project to Play Console is no longer required. Guides referencing
+that page are outdated.
+
+1. In Google Cloud Console, enable the **Google Play Android Developer API**
+   (`androidpublisher.googleapis.com`) in the project that owns the service account.
+2. In Play Console, go to **Users and permissions** → **Invite new user**.
+3. Paste the service account's `client_email` from the JSON key.
+4. Under **App permissions**, add your app and grant **View app information**
+   plus **Release apps to testing tracks** / **Release apps to production**.
+5. Send the invitation. Service accounts don't accept invites; access applies
+   automatically but can take minutes to propagate (up to 24–48h).
 
 ### 3. Configure EAS
 
@@ -198,7 +206,10 @@ Increment `versionCode` in `app.json` or use `autoIncrement: true` in `eas.json`
 
 ### "Service account lacks permission"
 
-Ensure the service account has "Release to production" permission in Play Console → API access.
+Ensure the service account's email was invited under Play Console → Users and
+permissions with the release permissions (not "API access" — that page was
+removed), and that the Google Play Android Developer API is enabled in its
+Google Cloud project. Permission changes can take up to 24–48h to propagate.
 
 ### "APK not acceptable"
 
