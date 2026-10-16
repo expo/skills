@@ -15,17 +15,21 @@ EAS Observe collects app performance telemetry and custom events from Expo apps 
 | `eas observe:session` | Full timeline of metric and log events for one session |
 | `eas observe:versions` | App version hierarchy with build numbers, OTA update IDs, and event counts |
 | `eas observe:errors` | Error groups by fingerprint; `--fingerprint <id>` lists one group's occurrences with stack traces |
-| `eas observe:event` | One metric, log, or error event by its ID, taken from the `--json` output of `observe:session`, `observe:metrics`, or `observe:events` |
+| `eas observe:event` | One metric, log, or error event by its ID, taken from the `--json` output of `observe:session`, `observe:metrics`, or `observe:events`, or from the occurrences listed by `observe:errors --fingerprint` |
 
-Most commands share these flags:
+All commands take these flags:
 
-- `--start <ISO date>` and `--end <ISO date>` — explicit time range
-- `--days <N>` — show data from the last N days (mutually exclusive with `--start`/`--end`, minimum 1)
 - `--project-id <id>` — run against a specific project without needing a project directory. When passed, the command will not try to create a new EAS project where one is unneeded.
 - `--json` — machine-readable output (implies `--non-interactive`)
 - `--non-interactive` — fail instead of prompting
 
-`--platform ios` / `--platform android` (default: both) is on every command **except `observe:session`**, which is scoped to one session already.
+All commands **except `observe:event`** also take these flags:
+
+- `--start <ISO date>` and `--end <ISO date>` — explicit time range
+- `--days <N>` — show data from the last N days (mutually exclusive with `--start`/`--end`, minimum 1)
+- `--environment <name>` — filter by environment, for example `production` or `development`
+
+`--platform <android|ios|ipados|macos|tvos|apple>` (default: all) is on every command **except `observe:session` and `observe:event`**, which are scoped to one session or one event already. `apple` covers iOS, iPadOS, tvOS, and macOS.
 
 Default time range is the last 60 days when none of `--days`, `--start`, `--end` is given.
 
@@ -86,7 +90,7 @@ eas observe:metrics-summary --metric tti --days 14 --platform ios
 
 **Default stats:** `median` + `eventCount` in the table; all eight in JSON.
 
-This command has no `--limit`, `--after`, `--app-version`, or `--update-id`. It always aggregates every version in the time range.
+This command has no `--limit`, `--after`, `--app-version`, `--build-number`, or `--update-id`. It always aggregates every version in the time range.
 
 **Table layout:**
 - One table per metric (with merged value + event count cells, e.g. `0.45s (150)`)
@@ -141,6 +145,7 @@ eas observe:metrics tti --after <cursor>
 - `--limit <N>` — samples per page (default 10, max 100)
 - `--after <cursor>` — pagination cursor from the previous run
 - `--app-version <version>` — filter by app version string
+- `--build-number <number>` — filter by app build number
 - `--update-id <id>` — filter by EAS update ID
 
 **Table layout:**
@@ -179,7 +184,7 @@ eas observe:routes --after <cursor>
 - `--limit <N>` — routes per page (default **50**, max **200**, different from `metrics`/`events` which default to 10).
 - `--after <cursor>` — pagination cursor from the previous run.
 - `--app-version <version>` — filter by app version string.
-- `--build-number <number>` — filter by app build number (routes-only).
+- `--build-number <number>` — filter by app build number.
 - `--route-name <name>` — filter by route name. Repeatable; only the listed routes are returned across both platforms. Duplicates are de-duplicated; omitting the flag returns all routes.
 - `--update-id <id>` — filter by EAS update ID.
 
@@ -242,6 +247,7 @@ eas observe:events login_failed --after <cursor>
 - `--all-events` — when no event name argument is given, list all events instead of the name summary. Cannot be combined with an event name argument.
 - `--session-id <id>` — filter to events from a single session (events-only). With no event name argument, this lists the session's events instead of the event-name summary. For the full timeline — metrics as well as log events — use `observe:session`.
 - `--app-version <version>` — filter by app version string
+- `--build-number <number>` — filter by app build number
 - `--update-id <id>` — filter by EAS update ID
 - `--limit <N>` — events per page (default 10, max 100)
 - `--after <cursor>` — pagination cursor
@@ -307,7 +313,7 @@ eas observe:session --event-name tti --sort slowest --days 7
 
 **The picker flags and the session ID are mutually exclusive.** `--event-name`, `--sort`, `--days`, `--start`, and `--end` describe how to *find* a session, so passing any of them together with a session ID throws. Query a known session with the ID alone.
 
-This command has no `--platform`, `--limit`, or `--after` flag. It takes the shared time-range, `--project-id`, `--json`, and `--non-interactive` flags.
+This command has no `--platform`, `--limit`, or `--after` flag. It takes the shared time-range, `--environment`, `--project-id`, `--json`, and `--non-interactive` flags.
 
 **JSON output shape:**
 ```json
@@ -321,6 +327,41 @@ This command has no `--platform`, `--limit`, or `--after` flag. It takes the sha
 ```
 
 `entries` interleaves metric and log events for the session. The two `hasMore*` flags report truncation per event kind; there is no cursor to page with.
+
+## `eas observe:errors`
+
+Shows error and exception groups, grouped by fingerprint, with event, user, and session counts for each group. The fingerprint is in the first column. Pass `--fingerprint` to list the occurrences of one group, with stack traces, instead of the grouped summary. Error reporting setup is in [`./setup.md`](./setup.md).
+
+```bash
+# Error groups, last 7 days
+eas observe:errors --days 7
+
+# Only fatal errors on Android
+eas observe:errors --severity fatal --platform android
+
+# Occurrences of one group, with stack traces
+eas observe:errors --fingerprint <fingerprint>
+```
+
+**Errors-specific flags:**
+- `--fingerprint <value>` — show the occurrences of this error group instead of the grouped summary
+- `--severity <fatal|error>` — filter by severity (ignored when `--fingerprint` is set)
+- `--app-version <version>`, `--build-number <number>`, `--update-id <id>` — filter by version, build, or EAS update
+- `--limit <N>` — occurrences per page (default 10, max 100). Requires `--fingerprint`.
+- `--after <cursor>` — pagination cursor. Requires `--fingerprint`.
+
+`--limit` or `--after` without `--fingerprint` fails with an error. The grouped summary has no pagination.
+
+## `eas observe:event`
+
+Shows one metric, log, or error event by its ID. Event IDs are in the `--json` output of `observe:metrics`, `observe:events`, and `observe:session`, and in the occurrences from `observe:errors --fingerprint`.
+
+```bash
+eas observe:event <event-id>
+eas observe:event <event-id> --json
+```
+
+`ID` is a required positional argument. The command takes only `--project-id`, `--json`, and `--non-interactive`.
 
 ## `eas observe:versions`
 
