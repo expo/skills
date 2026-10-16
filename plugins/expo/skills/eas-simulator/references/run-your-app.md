@@ -219,6 +219,8 @@ The launch-args are iOS UserDefaults (`-Key Value`), verified in expo/expo `pack
 
 Method 1 passes each as two flags: `--launch-arg "<key>" --launch-arg "<value>"`. Method 2 passes them as `--launch-args`.
 
+On SDK 58+, you can put the same switches in the URL instead, which also works on **Android**, where launch-args don't apply: append `__expo_disable_onboarding=1&__expo_disable_fab=1&__expo_disable_auto_launch=1` to the `exp://` URL or to `<scheme>://?__expo_url=<encoded manifest URL>`. On SDK 57 and earlier, keep the launch-args on iOS; on Android, the legacy dev client URL takes `&disableOnboarding=1&disableFab=1&disableAutoLaunch=1` after `url=` (`disableFab` and `disableAutoLaunch` need `expo-dev-launcher` 57.0.20+). See `../../expo-overview/references/launch-without-dev-menu.md`.
+
 ### Metro tunnel backends (both methods)
 
 #### Tunnel scope and approvals

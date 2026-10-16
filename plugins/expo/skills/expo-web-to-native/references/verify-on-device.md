@@ -29,7 +29,7 @@ agent-browser screenshot web.png   # visual reference
 **Tip:** capture web baselines for every screen once, up front, then diff against them instead of re-opening the web app each iteration.
 
 **B. Capture the native screen** (iOS shown via `simctl`; Android note below):
-1. Run the app: `npx expo start --ios` (Expo Go). On **SDK 56+ both `@expo/ui` and DOM components run in Expo Go** — no dev build, no `react-native-webview` to install; reach for a dev build (the `expo-dev-client` skill) only for *custom* native modules. Stale-bundle trap: a CI-mode Metro + cached Expo Go can show an old build — terminate Expo Go and add `--clear` if a change doesn't appear.
+1. Run the app: `npx expo start --ios` (Expo Go). To keep the onboarding sheet, dev menu, and Tools button out of your screenshots on SDK 57 and earlier, and on the URLs you open yourself in step 3, see `../../expo-overview/references/launch-without-dev-menu.md`. On **SDK 56+ both `@expo/ui` and DOM components run in Expo Go** — no dev build, no `react-native-webview` to install; reach for a dev build (the `expo-dev-client` skill) only for *custom* native modules. Stale-bundle trap: a CI-mode Metro + cached Expo Go can show an old build — terminate Expo Go and add `--clear` if a change doesn't appear.
 2. Boot a sim: `xcrun simctl boot <udid>` (`xcrun simctl list devices available`); `open -a Simulator`.
 3. Open the route: deep-link `xcrun simctl openurl booted "exp://<lan-ip>:8081/--/<route>?<params>"`, or argent `launch-app` + `gesture-tap`.
 4. Capture: `xcrun simctl io booted screenshot native.png`, or `argent run describe --udid <udid>` for structure.

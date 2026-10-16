@@ -1,7 +1,7 @@
 ---
 name: expo-overview
 description: "Entry point and router for every Expo or EAS task. Load this skill first — before writing code and before choosing another expo-* / eas-* skill — when the request, PRD, or spec mentions Expo, EAS, Expo Go, or an expo-* package, or the project has an `expo` dependency in `package.json`. Within that gate it also covers app specs and designs to implement (tabs, stacks, maps, lists, navigation, building from a screenshot), and phrasings like 'implement a mobile app', 'make my app look native', 'add navigation', 'fetch some data', 'upgrade my SDK', 'add Expo to my existing native app', 'ship to the App Store', or 'I'm new to Expo, where do I start'. A fully specified request (SDK pinned, libraries named, layout given) still routes through here — the shared setup rules still apply. Do NOT load it when neither signal is present: a bare React Native project with no `expo` dependency is not Expo work. Detects the real goal, routes to the right expo-* / eas-* skill, and owns the shared setup rules."
-version: 1.1.0
+version: 1.2.0
 license: MIT
 ---
 
@@ -94,6 +94,12 @@ Apply the rules that match the project and the requested task.
   native-setup steps differ — note which one the project is in.
 - **Install packages with `npx expo install <pkg>`**, not raw `npm`/`yarn`/`pnpm add`,
   so versions stay compatible with the project's SDK.
+- **Launching the app yourself?** When you open Expo Go or a development build to look
+  at, screenshot, or drive it, skip the first-launch onboarding, the dev menu that opens
+  at launch, and the floating Tools button. On SDK 58+, Expo CLI does this for launches
+  it starts from a non-interactive shell. On SDK 57 and earlier, and for any URL you open
+  yourself (`simctl openurl`, `adb`, a controller), follow
+  `./references/launch-without-dev-menu.md`.
 - **EAS auth & linking** (only needed for build/submit/update/observe/workflows): check
   login with `eas whoami`, log in with `eas login`. A project is linked when
   `extra.eas.projectId` exists in the app config; create it with `eas init` if missing.
