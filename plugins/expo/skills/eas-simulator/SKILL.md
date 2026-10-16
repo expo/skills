@@ -94,6 +94,25 @@ To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in 
 
 `start` also prints a job-run URL.
 
+## Preview access and sharing
+
+With **eas-cli 25.0.0+**, new sessions default to an authenticated expo.dev preview
+link. The viewer must sign in and have access to the project; a private session's
+Share button is hidden. `simulator:get` follows the session's saved sharing choice,
+including for older sessions.
+
+For a requested link that people can use without signing in, add `--public-link`
+to `simulator:start`. Anyone holding that link can view and control the simulator,
+including its app and logs. Share it only with the intended recipients. Keep the
+default authenticated link for ordinary development and diagnostics.
+
+Private `start --json` and `get --json` output omit preview tokens and return
+`remoteConfig.previewApiUrl: null`. Controller credentials remain available for
+`simulator:exec`; keep the full JSON private. A missing preview API URL does not
+mean that the session failed. Use controller logs or the authenticated browser
+preview for diagnostics; do not recreate a private session with `--public-link`
+just to read its logs. See [logs and crashes](./references/logs-and-crashes.md).
+
 ## Always name the session
 
 Pass `--name "<description>"` on every `simulator:start`. The name appears in `simulator:list`, `simulator:get`, and on the **Simulator sessions** page on expo.dev, where it replaces the generic title on each row. Unnamed, every row reads "Simulator session" over a random id — a wall of identical entries nobody can navigate. Write the name for a **human scanning that list days later**, not for yourself during this run.
@@ -189,7 +208,7 @@ For the full verb set and the `argent` controller alternative, see [references/c
 
 ## When the app crashes: device logs and crash reports (iOS)
 
-When the app crashes or closes on launch, read the iOS session's crash reports and device log before guessing from screenshots. Read them from the preview API URL in `simulator:get --json`. That URL carries the session token, so never print it.
+When the app crashes or closes on launch, read the iOS session's crash reports and device log before guessing from screenshots. Use the authenticated browser preview or controller logs for a private session. When `simulator:get --json` supplies a preview API URL, it carries the session token, so never print it.
 
 **Hold the device log before you reproduce the crash.** Without the hold, the crash gets a report but an empty log tail. Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
 

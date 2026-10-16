@@ -43,6 +43,18 @@ EAS-specific notes:
 - **Recording:** `record start ./clip.mp4`, then `record stop` (no path). The file goes to the `record start` path, with a `.gesture-telemetry.json` next to it, and the clip also uploads as a session artifact. If `record stop` times out while the remote device exports, run it again; add `--platform ios` if it cannot find the recording. Separately, EAS uploads a whole-session screen recording after the session stops (iOS and Android).
 - **Remote proof:** `open` prints `Session state: /Users/expo/...` (iOS) or `/home/expo/...` (Android) on the remote device. `session state-dir` prints the local path, so it does not prove remote use. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
 
+## Clipboard in the iOS browser preview
+
+Previews running **serve-sim 0.9.0+** support text Copy and Paste from the toolbar.
+Select text in the simulator before Copy; a timeout can mean the app did not
+change its pasteboard, including when nothing was selected. Paste reads the
+browser clipboard and sends the text to the simulator. Browser clipboard access
+may need permission; use the preview's manual fallback when access is refused.
+An embedded preview can ask its parent page for clipboard-read permission.
+These are browser-preview controls, not new `eas simulator:*` verbs. Older
+session hosts may lack them; continue using the selected controller's supported
+text-entry commands rather than assuming a client upgrade changes the host.
+
 ## Recording download recovery
 
 If downloading a recording through agent-device or argent fails, fetch the recording from **EAS session artifacts**. A controller download failure does not mean the recording was lost. Keep the original EAS session id and query its artifacts:
@@ -95,7 +107,7 @@ Where argent is weaker than agent-device Mode C — so it's **capable, not as fa
 
 **System dialogs on argent (e.g. the first-time deep-link "Open in '<app>'?").** argent's UI queries (`describe` / `await-ui-element`) may not see system dialogs / native modals — a screenshot shows the dialog, but element lookups time out. When that happens, argent surfaces a hint with the fix (today that's a `boot-device --force` to switch its AX backend); follow the hint, then locate and tap "Open". There's no single press-with-timeout — you wait for the element, then tap it. Use argent's own command help for the exact tools and flags.
 
-**Recording video on argent (`screen-recording-start`/`stop`).** The gotcha to know: argent **trims static stretches by default**, which drops the very frames you're measuring — turn that off when you care about cadence or timing (see argent's help for the flag). Recordings also carry a burned-in "Argent" watermark that can't be disabled on a hosted session — fine for diagnosis, mind it before sharing publicly. The stop call returns a video already downloaded locally; extract frames with `ffmpeg` (may need installing) to inspect motion frame by frame. The capture samples at ~30fps, so it shows visible jank but can't prove or disprove sub-frame hitches on 60/120Hz content.
+**Recording video on argent (`screen-recording-start`/`stop`).** The gotcha to know: argent **trims static stretches by default**, which drops the very frames you're measuring — turn that off when you care about cadence or timing (see argent's help for the flag). Current EAS session startup attempts to disable Argent's video watermark before starting its tool server. That step is best effort: if it fails, startup continues and the recording may still contain a watermark. Check the exported video before sharing it. The stop call returns a video already downloaded locally; extract frames with `ffmpeg` (may need installing) to inspect motion frame by frame. The capture samples at ~30fps, so it shows visible jank but can't prove or disprove sub-frame hitches on 60/120Hz content.
 
 **Screenshot resolution and token cost.** Screenshots cost context tokens once the agent reads them, so resolution is a real tradeoff. **argent's `screenshot` has two independent levers.** `scale` sets the image resolution and defaults **low** (too coarse to judge layout), so pass a larger scale when you need to **read** the UI. `includeImageInContext:false` keeps an image **out of the agent's context entirely** (zero token cost) — use that for a baseline you'll only **diff** later, and keep *that* one at full resolution so the pixel diff stays accurate. So: scale down images you actually read; drop unread ones with `includeImageInContext`, don't just shrink them. Exact flags and the current default: argent's help.
 
