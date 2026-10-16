@@ -36,6 +36,7 @@ Use `help [topic]`, not `--help`: oclif catches `--help` after `simulator:exec` 
 
 EAS-specific notes:
 
+- **One device per session.** The EAS daemon runs with an agent-device daemon policy. It allows only the session device and denies `boot`, `shutdown`, and `close --shutdown`. A denial is `UNAUTHORIZED` / `DAEMON_POLICY_DENIED` and is not retriable. See [One device per session](../SKILL.md#one-device-per-session).
 - **Tap with `press` or `click`.** `tap` is a hidden alias of `press` (not in `help commands`), and older agent-device versions reject it.
 - **`snapshot -i` is slow on iOS** — tens of seconds is normal; wait for it.
 - **`install` uploads** a local binary to the daemon; **`install-from-source`** has the VM download from a URL (use for EAS artifacts — avoids a large upload).
