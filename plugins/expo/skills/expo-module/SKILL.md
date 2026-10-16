@@ -71,6 +71,18 @@ See [references/create-expo-module.md](references/create-expo-module.md) before 
 - Local modules live in `expo.autolinking.nativeModulesDir` when configured, otherwise in `modules/`.
 - Standalone modules have their own package metadata, scripts, and usually an example app. Local modules use the host app's tooling instead.
 
+## Sharing Data with Other Expo Packages
+
+A local module sometimes needs data another Expo package owns — most often a background worker (WorkManager, BGTaskScheduler) that needs the auth token JS keeps in `expo-secure-store`. Do not read or write that package's storage directly: its on-disk format is internal, unversioned, and can change between SDKs.
+
+Prefer, in order:
+
+1. **Pass the data in from JS** (`AsyncFunction`) and keep the module's own copy in its own store (own `SharedPreferences` file, own Keychain items / KeyStore alias). JS stays the single writer.
+2. **Call the other package's native classes** rather than its files, when it exposes them.
+3. Only if the module must *write* something JS later reads back through the other package (e.g. a worker refreshes tokens while the app is dead): mirror that package's format **exactly** and test the round-trip against *its* reader, not your own.
+
+Why this matters for `expo-secure-store` on Android: values live in the `SecureStore` `SharedPreferences` file as a JSON envelope `{ct, iv, tlen, scheme, usesKeystoreSuffix, keystoreAlias, requireAuthentication}`. Its reader is destructive — an entry whose `usesKeystoreSuffix` is missing resolves the *legacy* KeyStore alias, finds no key, and **deletes the entry** before returning `null`; a decrypt failure deletes it too. A Kotlin writer that omits the metadata produces a value that survives until the next JS `getItemAsync()` (typically the next cold start), then silently vanishes — the app appears logged out with no error anywhere. Pin down `readJSONEncodedItem`/`saveEncryptedItem` in `SecureStoreModule.kt` for the installed SDK and re-check them on upgrade.
+
 ## Core File Shapes
 
 The Swift and Kotlin DSL share the same structure. Swift is usually the clearest primary example; consult the references for feature-specific details.
