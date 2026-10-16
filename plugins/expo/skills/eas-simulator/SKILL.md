@@ -193,6 +193,10 @@ When the app crashes or closes on launch, read the iOS session's crash reports a
 
 **Hold the device log before you reproduce the crash.** Without the hold, the crash gets a report but an empty log tail. Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
 
+## Inspect the app's network traffic (iOS)
+
+To see the requests the app makes, start an iOS session with `--network-capture` (add `--network-capture-field` for headers or bodies), then download the recording from the preview API as a HAR file. Relaunch any app that was already running. **Known limitation:** Argent and agent-device can miss initial-launch traffic; relaunching does not recover the original requests or their bodies. Commands, fields, and limits are in [references/network-capture.md](./references/network-capture.md).
+
 ## Operating principles
 
 The non-obvious mental model worth internalizing. Specific error→fix lookups (hung verbs, `tap` rejected, `--platform`, `--json`, `pod install` locale, orphaned sessions, boot variability) live in [references/troubleshooting.md](./references/troubleshooting.md).
@@ -224,6 +228,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 - [references/run-your-app.md](./references/run-your-app.md) — full command sequences for modes A, B, and C (read before running a mode).
 - [references/controllers.md](./references/controllers.md) — agent-device verb reference and the `argent` alternative.
 - [references/logs-and-crashes.md](./references/logs-and-crashes.md) — device logs and crash reports from an iOS session (read when the app crashes or misbehaves).
+- [references/network-capture.md](./references/network-capture.md) — record and read the app's HTTP(S) traffic on an iOS session.
 - [references/troubleshooting.md](./references/troubleshooting.md) — concrete errors and fixes.
 
 Source of truth: Expo docs and the `eas` / `agent-device` CLIs (`npx --yes eas-cli@latest simulator:* --help`, `npx --yes eas-cli@latest simulator:exec npx agent-device@latest help [topic]`; `--help` after `simulator:exec` shows the EAS CLI help instead). This skill teaches how to apply them; it doesn't replace them.
