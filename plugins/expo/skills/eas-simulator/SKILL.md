@@ -40,7 +40,8 @@ if the user set a limit you would go past, or if the work grows beyond what they
 
 - `--max-duration-minutes N` is the hard automatic-stop deadline. Any plan can set it, up to the plan limit (40 minutes on Free, 115 on paid plans). The timer starts when the session is ready.
 - `--max-idle-time-minutes N` stops a session after that many inactive minutes. Omitted means **no idle timeout**: the session runs until its maximum duration or an explicit stop.
-- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands, which are recorded as session events with producer `appium`). **Browser-preview activity does not reset it.** For a user-driven browser preview, rely on the maximum duration, not idle time, to bound the session.
+- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands, recorded as session events with producer `appium`). Current iOS automation-session workers also count serve-sim preview input and host actions. Watching video does not count; Android previews and older workers do not report preview activity. `web-preview-only` sessions do not enforce an idle timeout. Use the maximum duration as the hard limit, and omit the idle timeout when a preview must remain available without input.
+- `npx --yes eas-cli@latest account:usage` shows the selected account's Simulator minutes.
 
 ## Check availability first
 
@@ -89,9 +90,30 @@ To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in 
 - **"Open it here" (Cursor/VS Code)** → print the URL on its own line and tell the user to open Simple Browser (`Cmd/Ctrl+Shift+P` → "Simple Browser: Show") and paste it. Then **stop**: do not shell out to a system browser or a Cursor/VS Code URL handler, and do not ask "did a tab appear?" — you can't confirm it, the handoff is done.
 - **Never `open` the `webPreviewUrl` on the sim.** It's a browser preview, not a deep link and not an `agent-device open` argument; routing it to the device renders a browser-in-a-browser (a real past failure).
 - **Headless agent** (no display) → just return the URL as the deliverable.
-- **Keeping it alive for the user to drive** → use `--max-duration-minutes N` (up to the plan limit). Browser-preview activity does not reset `--max-idle-time-minutes`, so idle timeout is not a reliable lifetime bound for this case. Tell the user when the session expires, using the CLI's reported duration or expiry. Keep it running for the requested preview; stop sessions created for one-shot tasks when the task finishes.
+- **Keeping it alive for the user to drive** → use `--max-duration-minutes N` (up to the plan limit). Watching video does not reset the idle timer, and input reporting varies by platform and worker. Follow [Session lifetime](#session-lifetime) when choosing an idle timeout. Tell the user when the session expires, using the CLI's reported duration or expiry. Keep it running for the requested preview; stop sessions created for one-shot tasks when the task finishes.
 
 `start` also prints a job-run URL.
+
+## Preview access and sharing
+
+With **eas-cli 25.0.0+**, new sessions default to an authenticated expo.dev preview
+link. The viewer must sign in and have access to the project; a private session's
+Share button is hidden. `simulator:get` follows the session's saved sharing choice,
+including for older sessions.
+
+For a requested link that people can use without signing in, add `--public-link`
+to `simulator:start`. Anyone holding that link can view and control the simulator,
+including its app and logs. Share it only with the intended recipients. Keep the
+default authenticated link for ordinary development and diagnostics.
+
+Private `get --json` output omits preview tokens and returns
+`remoteConfig.previewApiUrl: null`. Private `start --json` does the same unless
+the session grants embedding or cross-origin API access; those grants expose
+the direct preview URL for the receiving page. Controller credentials remain available for
+`simulator:exec`; keep the full JSON private. A missing preview API URL does not
+mean that the session failed. Use controller logs or the authenticated browser
+preview for diagnostics; do not recreate a private session with `--public-link`
+just to read its logs. See [logs and crashes](./references/logs-and-crashes.md).
 
 ## Always name the session
 
@@ -188,7 +210,7 @@ For the full verb set and the `argent` controller alternative, see [references/c
 
 ## When the app crashes: device logs and crash reports (iOS)
 
-When the app crashes or closes on launch, read the iOS session's crash reports and device log before guessing from screenshots. Read them from the preview API URL in `simulator:get --json`. That URL carries the session token, so never print it.
+When the app crashes or closes on launch, read the iOS session's crash reports and device log before guessing from screenshots. Use the authenticated browser preview or controller logs for a private session. When `simulator:get --json` supplies a preview API URL, it carries the session token, so never print it.
 
 **Hold the device log before you reproduce the crash.** Without the hold, the crash gets a report but an empty log tail. Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
 

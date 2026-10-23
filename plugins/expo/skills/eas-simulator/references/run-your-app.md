@@ -67,6 +67,22 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> 
 
 ---
 
+## Android system image
+
+With **eas-cli 25.3.0+**, `--system-image` selects the Android SDK system-image
+package. `--device` selects the AVD hardware profile. Omit the image flag for the
+runner's default; it does not select an iOS runtime. Quote the package string
+because semicolons are shell separators:
+
+```bash
+npx --yes eas-cli@latest simulator:start --platform android --device pixel_7 \
+  --system-image 'system-images;android-35-ext15;google_apis_playstore;x86_64' \
+  --non-interactive --name "Android compatibility check"
+```
+
+Use a package supported by the remote runner. Keep the existing device-selection
+workflow for other session types.
+
 ## Mode A — Local release build (embedded JS, no Metro)
 
 A Release build bundles the JS into the binary, so it renders without Metro. Good for a quick "run my current code on a cloud device" when a Mac toolchain is available.
