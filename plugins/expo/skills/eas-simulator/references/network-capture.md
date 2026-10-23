@@ -60,7 +60,7 @@ printf 'url = "https://api.expo.dev/v2/device-run-sessions/%s"\nheader = "Author
 The helper accepts the REST envelope, checks the running iOS status, and sends
 the preview token in an Authorization header to the HAR route. It saves into a
 private temporary directory (0700) with a private file (0600), prints only the
-local filename, rejects redirects and non-JSON responses, and removes a partial
+local filename, rejects redirects and invalid HAR responses, and removes a partial
 download on failure. Its download timeout
 is ten minutes; give the outer command enough time to finish.
 

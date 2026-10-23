@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { chmod, mkdtemp, rm } from "node:fs/promises";
+import { chmod, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
@@ -64,6 +64,23 @@ async function download(url, token, filePath) {
     throw new Error(
       "HAR download did not finish. Check disk space and the connection, then retry.",
     );
+  }
+  let har;
+  try {
+    har = JSON.parse(await readFile(filePath, "utf8"));
+  } catch {
+    throw new Error("HAR export returned invalid JSON. Check capture state and retry.");
+  }
+  if (
+    typeof har?.log?.version !== "string" ||
+    !Array.isArray(har.log.entries) ||
+    !har.log.entries.every((entry) =>
+      typeof entry?.request?.method === "string" &&
+      typeof entry.request.url === "string" &&
+      typeof entry?.response?.status === "number"
+    )
+  ) {
+    throw new Error("HAR export returned an invalid archive. Check capture state and retry.");
   }
 }
 
