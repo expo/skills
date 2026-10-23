@@ -61,7 +61,7 @@ If it's **not** available, don't call `simulator:start` (it will fail). Instead,
 
 ## The core loop (always the same)
 
-A session is: **start → (install your app) → drive → stop.** `eas-cli` owns the *session*; the interactive device verbs come from the controller, which `npx --yes eas-cli@latest simulator:exec` runs with the session's connection env loaded. On iOS, `simulator:control` also provides direct host actions for screenshots, clipboard, settings, and app data; see [remote controls](./references/remote-controls.md).
+A session is: **start → (install your app) → drive → stop.** `eas-cli` owns the *session*; the interactive device verbs come from the controller, which `npx --yes eas-cli@latest simulator:exec` runs with the session's connection env loaded.
 
 ```bash
 # 1. Start a session (boots the remote sim + agent-device daemon; writes .env.eas-simulator).
@@ -226,7 +226,7 @@ The non-obvious mental model worth internalizing. Specific error→fix lookups (
    - **build fits intent** — a **release build can't live-reload**; if live edits are wanted and a release build is installed, **install the dev build, don't reconnect**.
 
    If current code isn't rendering after your **first** connect, stop poking live state: **reset to baseline** (stop session → clear dotenv → kill your Metro) and redo the mode **once**; a second failure → stop and report. Never restart Metro in place, reconnect more than once, rebuild the native client to fix a JS/connection problem, or surface a preview URL while state is unknown. A tunnel error alone does not prove that the session ended. Check its original ID with `simulator:get --id <id> --json` before replacing it; stop the original session if you create a replacement.
-2. **`exec` is a wrapper, not a driver.** `simulator:exec` loads `.env.eas-simulator` and spawns the command you pass; the device verbs come from the controller (`npx agent-device@latest`). There is no `simulator:tap`; direct iOS actions use `simulator:control`.
+2. **`exec` is a wrapper, not a driver.** `simulator:exec` loads `.env.eas-simulator` and spawns the command you pass; the device verbs come from the controller (`npx agent-device@latest`). There is no `simulator:tap`.
 3. **Act immediately; don't park an idle session.** Install and drive right after `start` so setup time does not consume the session limit. An idle timeout applies only when configured; follow [Session lifetime](#session-lifetime).
 4. **Stop sessions you created on completion or failure and reset the dotenv.** `--non-interactive` does not stop a session when your task ends. For a requested live preview, follow the duration guidance above. Poll the existing session during a slow boot; starting another creates an extra session and overwrites the dotenv's session id.
 5. **Screenshot only the correct, fresh build.** Mode C only after the dev client connects to Metro; A/B only from a build matching current source — reusing a pre-existing build is the #1 "my edits don't show" cause (see the build caveat above). (`9:41` in the status bar is the sim default, not staleness.)

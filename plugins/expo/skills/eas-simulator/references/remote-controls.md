@@ -92,15 +92,3 @@ Upload-enabled actions stage an existing local file. A missing relative path
 fails; a missing absolute path is treated as a remote-host path in CLI 25.3.0.
 Check which machine owns the path. `--output` always names a local download.
 Keep transferred app data private.
-
-## Preview embedding and API origins
-
-For a requested integration, CLI 25.1.1+ accepts repeatable start flags:
-`--frame-ancestor https://app.example.com` permits that page to frame the
-preview; `--cors-origin https://app.example.com` permits its JavaScript to call
-the preview API. An iframe alone does not need the parent's CORS grant.
-Use only the origins needed for that integration. The printed direct preview
-URL carries a token and grants session control; keep it out of source control
-and public pages. Embed that direct URL rather than the expo.dev wrapper.
-Private `get --json` does not recover this URL from saved origin grants on CLI
-25.3.0; keep the start output private or query the authenticated REST session.
