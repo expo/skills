@@ -40,7 +40,7 @@ if the user set a limit you would go past, or if the work grows beyond what they
 
 - `--max-duration-minutes N` is the hard automatic-stop deadline. Any plan can set it, up to the plan limit (40 minutes on Free, 115 on paid plans). The timer starts when the session is ready.
 - `--max-idle-time-minutes N` stops a session after that many inactive minutes. Omitted means **no idle timeout**: the session runs until its maximum duration or an explicit stop.
-- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands, recorded as session events with producer `appium`). Current iOS automation-session workers also count serve-sim preview input and host actions. Watching video does not count; Android previews and older workers do not report preview activity. `web-preview-only` sessions do not enforce an idle timeout. Use the maximum duration as the hard limit, and omit the idle timeout when a preview must remain available without input.
+- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands). Current iOS automation-session workers also count preview input and host actions recorded as session events, such as app launches and screenshots. Settings, permissions, and app-file changes do not reset the timer. Watching video does not count; Android previews and older workers do not report preview activity. `web-preview-only` sessions do not enforce an idle timeout. Use the maximum duration as the hard limit, and omit the idle timeout when a preview must remain available without input.
 - `npx --yes eas-cli@latest account:usage` shows the selected account's Simulator minutes.
 
 ## Check availability first
