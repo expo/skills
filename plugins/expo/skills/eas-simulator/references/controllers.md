@@ -67,6 +67,15 @@ Use the URL returned by EAS, not a path on the simulator or a controller artifac
 
 Source: EAS CLI [simulator:get](https://github.com/expo/eas-cli/blob/main/packages/eas-cli/src/commands/simulator/get.ts) exposes `artifacts[].{id,name,filename,metadata,downloadUrl}`.
 
+## Recording device-state metadata
+
+Current iOS workers upload a serve-sim recording manifest alongside the video.
+Use artifact filenames and metadata from the same session to identify it. Its
+video-timed device states can describe rotation, Duo panels, and encoded content
+rectangles. A controller's gesture-telemetry file is separate. Keep the manifest
+with its matching video when interpreting folds or rotations; do not assume a
+controller recording has the same timeline. Older workers can lack the manifest.
+
 ## argent (alternative)
 
 `npx --yes eas-cli@latest simulator:start --type argent` provisions an argent remote session. The connection config it returns is different (`ARGENT_TOOLS_URL` / `ARGENT_AUTH_TOKEN`).
