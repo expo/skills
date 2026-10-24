@@ -35,6 +35,32 @@ Default time range is the last 60 days when none of `--days`, `--start`, `--end`
 
 **Plan gating.** Observe is a paid feature, and the server rejects queries the account's plan does not include (`EAS_OBSERVE_PLAN_UPGRADE_REQUIRED` or `EAS_OBSERVE_FEATURE_NOT_AVAILABLE_IN_FREE_TIER`). The CLI surfaces the server's upgrade message, which links to the account's billing page. Session timelines in particular are checked before the interactive picker runs. A plan-gate failure is not a bug in the command or its flags.
 
+## Expo MCP Server tools
+
+> Source: https://docs.expo.dev/eas/observe/mcp/
+
+The Expo MCP Server has read-only tools that return the same data as the CLI. When the `observe_*` tools are available, use them instead of the CLI: they use the Expo account that the MCP client signed in with, so they need no EAS CLI install and no access token. The queries, metric names, and workflows in this file apply to both.
+
+| Tool | CLI equivalent |
+|---|---|
+| `observe_versions` | `eas observe:versions` |
+| `observe_metrics_summary` | `eas observe:metrics-summary` |
+| `observe_metrics` | `eas observe:metrics` |
+| `observe_routes` | `eas observe:routes` |
+| `observe_event_names` | `eas observe:events` (name summary) |
+| `observe_events` | `eas observe:events <name>` |
+| `observe_session` | `eas observe:session` |
+
+Differences from the CLI:
+
+- **No error tools.** For errors, use `eas observe:errors` and `eas observe:event`. An empty result from the MCP tools does not mean that the app has no errors.
+- **Project:** pass `appId` or `appFullName` (such as `@owner/my-app`). In a project directory, read the project ID from the app config.
+- **Platform:** `platform` takes `ANDROID`, `IOS`, `IPADOS`, `MACOS`, or `TVOS`. There is no `apple` value. Without `platform`, `observe_versions`, `observe_metrics_summary`, and `observe_routes` return separate Android and iOS results, and the other tools return results from all platforms.
+- **Time range:** `days`, or `start` and `end`. The default is the last 60 days. `observe_session` takes only the project and a session ID.
+- **Pagination:** pass the cursor from a response back as `nextCursor`. Routes paginate per platform. Session timelines paginate metrics and logs separately.
+- **Units:** timing values are in seconds.
+- **Plan gating and usage:** plan limits are the same as for the CLI. Each tool call counts toward the account's Expo MCP Server usage.
+
 ## Supported Metrics
 
 ### App-startup metrics
