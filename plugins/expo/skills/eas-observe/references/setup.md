@@ -491,7 +491,7 @@ If the user needs ANR/OOM capture or native symbolication today, a separate cras
 
 ## Optional — runtime configuration
 
-`Observe.configure()` controls collection and dispatch. Call it at module scope, before mount. Integration flags in particular cannot be toggled at runtime.
+`Observe.configure()` controls collection and dispatch. Call it at module scope, before mount. The navigation integration flags (`expo-router`, `react-navigation`) cannot be toggled at runtime. The `react-native-reanimated` integration can be turned off by a later `configure()` call (see [`./library-integrations.md`](./library-integrations.md)).
 
 | Option | Type | Default | What it does |
 |---|---|---|---|
@@ -500,7 +500,7 @@ If the user needs ANR/OOM capture or native symbolication today, a separate cras
 | `dispatchInDebug` | boolean | `false` | Dispatch metrics collected from debug builds. No effect on release builds. |
 | `sampleRate` | number | `undefined` (all installations) | Fraction of installations that dispatch, in `[0, 1]`. |
 | `errorHandlingEnabled` | boolean | `true` | Record unhandled JS errors as `exception` events. |
-| `integrations` | object | `undefined` | Opt in to `expo-router`, `react-navigation`, or a third-party integration. |
+| `integrations` | object | `undefined` | Opt in to `expo-router`, `react-navigation`, `expo-image`, `react-native-reanimated`, or a third-party integration. For `expo-image` and `react-native-reanimated`, see [`./library-integrations.md`](./library-integrations.md). |
 
 **Network request monitoring is automatic and has no off switch.** `expo-observe` observes `URLSession` traffic on iOS and `OkHttpClient` traffic on Android from launch, and attaches a rollup of the launch window to the TTI event — including the **host** of the slowest request (see [`./metrics.md`](./metrics.md)). Observe's own uploads are excluded. No `configure()` option disables it as of `expo-observe` 57.0.9, so treat request hosts as data that leaves the device.
 
@@ -525,5 +525,6 @@ The URL is baked into the native layer at build time, so run `npx expo prebuild`
 - [ ] (Optional, SDK 56+) Per-route metrics enabled via `Observe.configure({ integrations: { ... } })`, plus `<ObserveNavigationContainer>` (dynamic) or `<ObserveNavigationProvider>` (static) for React Navigation.
 - [ ] (Optional, SDK 57+) Sensitive route/query params listed in `filteredParams`.
 - [ ] (Optional, SDK 56+) User-defined events emitted via `Observe.logEvent(name, { attributes })` with stable, lowercase, dot-separated names and no PII.
+- [ ] (Optional) Library problem reports enabled via `integrations: { 'expo-image': true }` (SDK 57+) or `integrations: { 'react-native-reanimated': true }` (SDK 58+, Reanimated 4.7.0+), with no `configureReanimatedLogger` call in the app. See [`./library-integrations.md`](./library-integrations.md).
 - [ ] (Optional, SDK 57+) `<ObserveErrorBoundary>` (or `errorBoundaryFallback` on `ObserveRoot`) around risky subtrees, `Observe.reportError` in recovery paths, `"uploadSourceMaps": true` in the `eas.json` build profile, and `eas update --upload-source-maps` when publishing updates.
 - [ ] New build produced with `eas build` and metrics visible in the Observe dashboard.

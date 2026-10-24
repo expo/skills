@@ -1,7 +1,7 @@
 ---
 name: eas-observe
-description: Use for anything related to EAS Observe - adding `expo-observe` to an Expo project (AppMetricsRoot/ObserveRoot HOC, markInteractive and ObserveInteractiveMarker, the useObserve hook, the Expo Router / React Navigation integrations for per-route metrics, user-defined events via `Observe.logEvent`, error reporting via ObserveErrorBoundary and `Observe.reportError`, native crash reporting, source map upload for symbolicated stack traces, and runtime config such as sampleRate and dispatchInDebug), querying via the EAS CLI (`eas observe:metrics-summary`, `observe:metrics`, `observe:routes`, `observe:events`, `observe:session`, `observe:versions`, `observe:errors`, `observe:event`), interpreting the resulting metrics (cold/warm launch, TTR, TTI, navigation cold/warm TTR, update download, and the TTI frameRate/device/network params for triaging slow startups), or shipping an Observe integration inside a third-party package.
-version: 1.2.1
+description: Use for anything related to EAS Observe - adding `expo-observe` to an Expo project (AppMetricsRoot/ObserveRoot HOC, markInteractive and ObserveInteractiveMarker, the useObserve hook, the Expo Router / React Navigation integrations for per-route metrics, the expo-image and Reanimated integrations, user-defined events via `Observe.logEvent`, error reporting via ObserveErrorBoundary and `Observe.reportError`, native crash reporting, source map upload for symbolicated stack traces, and runtime config such as sampleRate and dispatchInDebug), querying via the EAS CLI (`eas observe:metrics-summary`, `observe:metrics`, `observe:routes`, `observe:events`, `observe:session`, `observe:versions`, `observe:errors`, `observe:event`), interpreting the resulting metrics (cold/warm launch, TTR, TTI, navigation cold/warm TTR, update download, and the TTI frameRate/device/network params for triaging slow startups), or shipping an Observe integration inside a third-party package.
+version: 1.3.0
 license: MIT
 ---
 
@@ -15,11 +15,12 @@ EAS Observe tracks startup, navigation, and custom-event performance from produc
 
 ## Which reference to read
 
-The four reference files in `./references/` cover what people typically need this skill for:
+The five reference files in `./references/` cover what people typically need this skill for:
 
 - **Adding EAS Observe to a project** → [`./references/setup.md`](./references/setup.md). Install, wrap the root layout (`AppMetricsRoot` on SDK 55, `ObserveRoot` on SDK 56+), mark the app interactive (global `markInteractive()` on SDK 55, the `useObserve()` hook or `<ObserveInteractiveMarker />` on SDK 56+), optional per-route navigation metrics through the Expo Router / React Navigation integrations, user-defined events via `Observe.logEvent` (SDK 56+), error reporting, and runtime configuration (sampling, dispatch, environments, custom endpoint).
 - **Querying metrics from the terminal** → [`./references/queries.md`](./references/queries.md). The `eas observe:*` commands — `metrics-summary`, `metrics`, `routes`, `events`, `session`, `versions`, `errors`, `event` — with flags, metric aliases, table layouts, JSON shapes, and common workflows.
 - **Reading a dashboard or CLI output** → [`./references/metrics.md`](./references/metrics.md). Target thresholds per metric, what the automatic TTI params mean (`frameRate.*`, `device.*`, `network.*`), and diagnostic patterns for telling slow-but-smooth startup apart from main-thread contention, hard blocks, or throttled devices.
+- **Reporting problems from library integrations** → [`./references/library-integrations.md`](./references/library-integrations.md). The current and future integrations that report problems a library detects as events or errors, with their options, limits, and how to query the reports. Currently: `expo-image` (`expo-image.oversized` events for images decoded far larger than the screen) and `react-native-reanimated` (`reanimated.error` errors and optional `reanimated.warning` events).
 - **Shipping an Observe integration in a library** → [`./references/third-party.md`](./references/third-party.md). For package authors only (SDK 57+): optional peer dependency, config declaration merging, `Observe.registerIntegration()`, and event naming.
 
 ## Quick links to the docs
@@ -30,6 +31,8 @@ The four reference files in `./references/` cover what people typically need thi
 - Metrics reference: https://docs.expo.dev/eas/observe/reference/metrics/
 - Expo Router integration: https://docs.expo.dev/eas/observe/integrations/expo-router/
 - React Navigation integration: https://docs.expo.dev/eas/observe/integrations/react-navigation/
+- Expo Image integration: https://docs.expo.dev/eas/observe/integrations/expo-image/
+- Reanimated integration: https://docs.expo.dev/eas/observe/integrations/react-native-reanimated/
 - User-defined events: https://docs.expo.dev/eas/observe/events/
 - Error reporting: https://docs.expo.dev/eas/observe/errors/
 - Configuration: https://docs.expo.dev/eas/observe/configuration/
