@@ -155,6 +155,7 @@ preserves this repository's skill name, collaboration notice, and feedback block
 ### Conventions
 
 - MIT license for every skill; use `@expo.io` or `@expo.dev` author emails.
+- Do not add a `version` key to `SKILL.md` frontmatter. Official skill validators reject it. Versions live on the plugin manifests.
 - Keep `references/` next to the skill that uses them.
 - Don't broaden a skill's scope or trigger intent when editing it - keep changes focused.
 

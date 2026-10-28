@@ -90,14 +90,7 @@ async function fetchUpstream(path: string, ref: string): Promise<string> {
   return normalize(await response.text());
 }
 
-function extractVersion(path: string): string {
-  if (!existsSync(path)) return "1.0.0";
-  return (
-    readFileSync(path, "utf8").match(/^version:\s*(.+?)\s*$/m)?.[1] ?? "1.0.0"
-  );
-}
-
-function renderSkill(upstream: string, version: string): string {
+function renderSkill(upstream: string): string {
   const match = upstream.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match)
     throw new Error("Upstream SKILL.md does not have valid frontmatter.");
@@ -115,7 +108,6 @@ function renderSkill(upstream: string, version: string): string {
   return normalize(`---
 name: expo-animation
 description: ${description}
-version: ${version}
 license: MIT
 ---
 
@@ -156,7 +148,7 @@ async function main() {
   const expectedFiles = new Map([
     [
       localSkillPath,
-      renderSkill(upstreamSkill, extractVersion(localSkillPath)),
+      renderSkill(upstreamSkill),
     ],
     [resolve(localDirectory, "RECIPES.md"), upstreamRecipes],
     [resolve(localDirectory, "LICENSE"), upstreamLicense],

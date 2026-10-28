@@ -115,7 +115,6 @@ Skills teach agents how to perform specific Expo tasks. Each skill has a `SKILL.
 ---
 name: skill-name
 description: What the skill does and when to use it.
-version: 1.0.0
 license: MIT
 ---
 
@@ -131,8 +130,9 @@ Frontmatter fields:
 | `name` | Yes | Skill identifier, lowercase with hyphens, max 64 chars |
 | `description` | Yes | Natural-language trigger description, max 1024 chars |
 | `allowed-tools` | No | Tools Claude can use without permission, for example `"Read, Grep, Bash(node:*)"` |
-| `version` | No | Skill version |
 | `license` | No | License identifier |
+
+Do not add a `version` key. Anthropic and OpenAI skill validators reject it. Versioning stays on the plugin manifests.
 
 Skill guidelines:
 
