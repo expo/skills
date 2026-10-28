@@ -43,7 +43,7 @@ Or more simply, put the `Platform.OS` guard and the SwiftUI import in the same r
   ```
   (`<skill-root>` is the directory containing this `references/` folder.)
 - **The installed package's TypeScript types (`.d.ts`) are the most reliable source of truth** for prop shapes and signatures — read the relevant `{Component}/index.d.ts` from the installed `@expo/ui/swift-ui` package in `node_modules`. Use the docs below as the human-readable reference.
-- When about to use a component, fetch its docs to confirm the API — https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/{component-name}/index.md
+- When about to use a component, fetch its docs to confirm the API — https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/{component-name}/index.md (slug is the component name lowercased, no hyphens, e.g. `button`, `bottomsheet`, `navigationstack`)
 - When unsure about a modifier's API, refer to the docs — https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/modifiers/index.md
 - Every SwiftUI tree must be wrapped in `Host`.
 - `RNHostView` is specifically for embedding RN components inside a SwiftUI tree. Example:
