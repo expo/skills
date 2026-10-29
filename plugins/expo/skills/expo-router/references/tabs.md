@@ -4,6 +4,29 @@ Always prefer NativeTabs from 'expo-router/unstable-native-tabs' for the best iO
 
 **SDK 54+. SDK 55 recommended.**
 
+## Contents
+
+- [SDK Compatibility](#sdk-compatibility)
+- [Basic Usage](#basic-usage)
+- [Rules](#rules)
+- [Platform Features](#platform-features)
+- [Icon Component](#icon-component)
+- [Label & Badge](#label--badge)
+- [iOS 26 Features](#ios-26-features)
+- [Customization](#customization)
+- [Conditional Tabs](#conditional-tabs)
+- [Behavior Options](#behavior-options)
+- [Hidden Tab Bar (SDK 55+)](#hidden-tab-bar-sdk-55)
+- [Bottom Accessory (SDK 55+)](#bottom-accessory-sdk-55)
+- [Safe Area Handling (SDK 55+)](#safe-area-handling-sdk-55)
+- [Using Vector Icons](#using-vector-icons)
+- [Structure with Stacks](#structure-with-stacks)
+- [Custom Web Layout](#custom-web-layout)
+- [Migration from JS Tabs](#migration-from-js-tabs)
+- [Limitations](#limitations)
+- [Keyboard Handling (Android)](#keyboard-handling-android)
+- [Common Issues](#common-issues)
+
 ## SDK Compatibility
 
 | Aspect        | SDK 54                                                  | SDK 55+                                                     |
