@@ -42,6 +42,7 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 - `eas-app-stores` — build and submit iOS/Android apps (Expo and other React Native projects, plus existing native apps), TestFlight, versions, and store metadata
 - `eas-hosting` — deploy the web bundle to EAS Hosting; also author Expo Router API routes (`+api.ts` handlers) and their environments / domains
 - `eas-workflows` — EAS Workflow YAML and CI/CD pipelines
+- `eas-agentic-workflows`. A headless agent inside EAS Workflows drives an Expo Simulators session and posts a verdict and evidence (Agentic CI, Issue to PR, Bug triage, QA Swarm).
 - `eas-simulator` — run and drive the app on a remote iOS / Android simulator on EAS cloud
 - `expo-dev-client` — custom development builds
 - `eas-update` — configure, publish, test, and debug compatible over-the-air updates
@@ -65,6 +66,7 @@ Some everyday phrasings don't obviously map to a skill name — translate before
 - "Make the screens consistent" / "clean up the styling" / "set up a theme or design tokens" → `expo-design-system`.
 - "It looks AI-generated" / "too generic, not native" → `expo-design-system` (named native-slop tells + audit), with `expo-native-ui` for the platform idioms.
 - "Ship it" / "get an .ipa or .apk" / "release to the stores" / "put my Swift app on TestFlight" → `eas-app-stores` (build + submit, TestFlight, versions, store metadata).
+- "Have an agent test my PRs" / "turn a GitHub issue into a PR and test it" / "reproduce this bug on a cloud simulator in CI" → `eas-agentic-workflows`. A session driven from this machine stays on `eas-simulator`.
 - "I'm new / where do I start" → scaffold first (see Shared setup rules), then route by goal.
 
 ## Shared setup rules

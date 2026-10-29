@@ -17,6 +17,8 @@ The `simulator:*` commands are **experimental and hidden**, and need a recent ea
 
 The frontmatter `description` carries the trigger phrases. In short: use this to get a user's app onto a **cloud** simulator and interact with it — especially from a Mac-less or cloud/sandbox agent. **Not** for local sims (`expo run:ios`, Xcode, Android Studio), store builds/signing (that's EAS Build), or physical devices. For the macOS case, see *Cloud vs local* next.
 
+Use `eas-agentic-workflows` to install Agentic CI, Issue to PR, Bug triage, or QA Swarm. Those workflows start the simulator inside EAS and post evidence. This skill drives a session from the current machine.
+
 ## Cloud vs local: decide this first
 
 - **Explicit cloud/remote/shareable request:** use EAS Simulator after checking access, on any host.
