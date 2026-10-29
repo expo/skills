@@ -2,6 +2,17 @@
 
 Build the React Native + Expo code as a prebuilt native library, **AAR** on Android and **XCFramework** on iOS, and consume it from the existing native app like any other dependency.
 
+## Contents
+
+- [When to use](#when-to-use)
+- [What you produce](#what-you-produce)
+- [Prerequisites](#prerequisites)
+- [1) Set up the Expo project](#1-set-up-the-expo-project)
+- [2) Build the native libraries](#2-build-the-native-libraries)
+- [3) Consume from the native app](#3-consume-from-the-native-app)
+- [Development vs. production](#development-vs-production)
+- [Related references](#related-references)
+
 ## When to use
 
 - Native and React Native are owned by different teams or release on different cadences.

@@ -24,6 +24,11 @@ Observe.configure({
 
 `configure()` replaces the full configuration. Pass every integration that the app uses in each call.
 
+## Contents
+
+- [Expo Image](#expo-image)
+- [Reanimated](#reanimated)
+
 ## Expo Image
 
 Docs: https://docs.expo.dev/eas/observe/integrations/expo-image/

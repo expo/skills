@@ -2,6 +2,17 @@
 
 Add React Native and Expo directly to the existing native project's build system — Gradle on Android, CocoaPods on iOS — the same way you would add any other library. The native project gains React Native capabilities while keeping a single, unified build.
 
+## Contents
+
+- [When to use](#when-to-use)
+- [Prerequisites](#prerequisites)
+- [1) Create an Expo project](#1-create-an-expo-project)
+- [2) Establish the project layout](#2-establish-the-project-layout)
+- [3) Configure Android](#3-configure-android)
+- [4) Configure iOS](#4-configure-ios)
+- [5) Test the integration](#5-test-the-integration)
+- [Related references](#related-references)
+
 ## When to use
 
 - A single team owns both the native and React Native code.

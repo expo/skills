@@ -4,6 +4,21 @@ Ready-to-build implementations for the cases that come up most in a React Native
 
 ---
 
+## Contents
+
+- [Setup the recipes assume](#setup-the-recipes-assume)
+- [Two worklets you'll need everywhere](#two-worklets-youll-need-everywhere)
+- [Press feedback](#press-feedback)
+- [Bottom sheet you can drag to dismiss](#bottom-sheet-you-can-drag-to-dismiss)
+- [Swipe to delete a row](#swipe-to-delete-a-row)
+- [Collapsing header on scroll](#collapsing-header-on-scroll)
+- [List entrances](#list-entrances)
+- [Keyboard-synced UI](#keyboard-synced-ui)
+- [Tab / segmented indicator](#tab--segmented-indicator)
+- [Screen transitions (Expo Router)](#screen-transitions-expo-router)
+- [Toast](#toast)
+- [Firing something once at a threshold](#firing-something-once-at-a-threshold)
+
 ## Setup the recipes assume
 
 ```bash

@@ -6,6 +6,15 @@ This reference is for **package authors**, not app developers. It describes how 
 
 App-side setup lives in [`./setup.md`](./setup.md). Querying the resulting events is in [`./queries.md`](./queries.md).
 
+## Contents
+
+- [When to use this](#when-to-use-this)
+- [Requirements](#requirements)
+- [Step 1 — Depend on `expo-observe` optionally](#step-1--depend-on-expo-observe-optionally)
+- [Step 2 — Declare the integration config](#step-2--declare-the-integration-config)
+- [Step 3 — Register the integration](#step-3--register-the-integration)
+- [Step 4 — Log events](#step-4--log-events)
+
 ## When to use this
 
 Report actionable issues the developer can fix. Good candidates:

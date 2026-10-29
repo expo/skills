@@ -2,6 +2,15 @@
 
 This skill covers implementing form sheets with footers using Expo Router's Stack navigator and react-native-screens.
 
+## Contents
+
+- [Overview](#overview)
+- [Basic Usage](#basic-usage)
+- [Key Options](#key-options)
+- [Common Detent Values](#common-detent-values)
+- [Complete Example](#complete-example)
+- [Troubleshooting](#troubleshooting)
+
 ## Overview
 
 Form sheets are modal presentations that appear as a card sliding up from the bottom of the screen. They're ideal for:

@@ -1,5 +1,17 @@
 # Migrating from expo-av to expo-video
 
+## Contents
+
+- [Imports](#imports)
+- [Video Playback](#video-playback)
+- [Status Updates](#status-updates)
+- [Local Files](#local-files)
+- [Fullscreen and PiP](#fullscreen-and-pip)
+- [API Mapping](#api-mapping)
+- [Key Differences](#key-differences)
+- [Known Issues](#known-issues)
+- [API Reference](#api-reference)
+
 ## Imports
 
 ```tsx

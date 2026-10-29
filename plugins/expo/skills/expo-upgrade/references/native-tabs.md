@@ -2,6 +2,14 @@
 
 In SDK 55, `Label`, `Icon`, `Badge`, and `VectorIcon` are now accessed as static properties on `NativeTabs.Trigger` rather than separate imports.
 
+## Contents
+
+- [Import Changes](#import-changes)
+- [Component Changes](#component-changes)
+- [New in SDK 55](#new-in-sdk-55)
+- [Full Migration Example](#full-migration-example)
+- [Migration Checklist](#migration-checklist)
+
 ## Import Changes
 
 ```tsx
