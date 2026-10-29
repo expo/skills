@@ -10,7 +10,7 @@ From this skill's directory:
 node <skill-dir>/scripts/fetch-docs.js <slug>
 ```
 
-Slugs: `introduction`, `agentic-ci`, `issue-to-pr`, `bug-triage`, `qa-swarm`.
+Slugs: `introduction`, `setup`, `agentic-ci`, `issue-to-pr`, `bug-triage`, `qa-swarm`.
 
 The script prints the markdown on stdout and `source: <url>` on stderr. The page is `https://docs.expo.dev/agentic-workflows/<slug>.md`. The guides live in `docs/pages/agentic-workflows/`, and the paste prompts use this path.
 
@@ -23,12 +23,15 @@ Each page ends with a "paste this into your agent" prompt. Follow that prompt. T
 | Slug | Install it when | Depends on |
 | --- | --- | --- |
 | `introduction` | The user wants the model, not a specific workflow | None |
-| `agentic-ci` | Test each pull request and comment a verdict | Shared setup |
-| `issue-to-pr` | A GitHub `agent` label should open a PR | Agentic CI, plus `GITHUB_TOKEN` and `GITHUB_REPOSITORY` |
-| `bug-triage` | Reproduce a GitHub issue, or TestFlight feedback on iOS | Agentic CI and Issue to PR |
-| `qa-swarm` | Several agents test flows in parallel | Shared setup. Confirm first. The launch plan calls QA Swarm coming soon. |
+| `setup` | Every workflow, once | None. Steps from "Add a build profile for the remote device" through "Push the files". "Add a GitHub token to EAS" is a separate step. |
+| `agentic-ci` | Test each pull request and comment a verdict | `setup`, except the GitHub token step |
+| `issue-to-pr` | A GitHub `agent` label should open a PR | `setup`, including the GitHub token step, and Agentic CI |
+| `bug-triage` | Reproduce a GitHub issue, or TestFlight feedback on iOS | `setup`, including the GitHub token step, plus Agentic CI and Issue to PR |
+| `qa-swarm` | Several agents test flows in parallel | `setup`, except the GitHub token step. That step is required only to post the report on a PR. |
 
-Shared setup (app id, `preview` profile, robot token, agent key, `run-agent.sh`) is repeated on every guide. Do those steps once.
+Fetch `setup` once. The guides point at that page and do not repeat its files. Agentic CI and QA Swarm stop before "Add a GitHub token to EAS". Issue to PR and Bug triage include that step.
+
+`setup` owns the app id, the `preview` profile, the robot token, the agent key, `.eas/agents/run-agent.sh`, `.eas/agents/start-session.sh`, `.cursor/cli.json` for Cursor, and the `.gitignore` lines for `.env.eas-simulator` and `agent-output/`. Merge the profile keys into an existing `preview` profile. If that profile already builds for physical devices, add a separate profile, such as `agent`, and change `profile: preview` to that name in each workflow file. If `preview` has `SENTRY_AUTH_TOKEN`, remove it and add `SENTRY_DISABLE_AUTO_UPLOAD` set to `true`. On Enterprise and Production plans the page also allows a custom environment. Then change `environment: preview` in the build profile and in each workflow file.
 
 There is no Agent Sessions guide in this section. If the user asks for one, say this skill does not cover it and ask what they want instead.
 

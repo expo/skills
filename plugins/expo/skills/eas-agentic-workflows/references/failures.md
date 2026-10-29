@@ -8,7 +8,7 @@ Read this when a run finishes or a setup step fails. The workflow posts evidence
 | --- | --- | --- | --- |
 | Agentic CI | PR comment | `PASS: …` or `FAIL: …` | `FAIL: The agent did not write a verdict.` The `result` job fails the run unless the line starts with `PASS`. |
 | Issue to PR | Issue comment, then an Agentic CI comment on the new PR | PR title is line 1 of `agent-output/summary.md` | No file changes: the job comments the reason and exits 1. Edits under `.eas` or `.github`: the job fails and does not open a PR. |
-| Bug triage | Issue comment | `REPLICATED: …` or `NOT-REPLICATED: …` | `INCONCLUSIVE: The agent did not write a verdict. See the logs of this run.` |
+| Bug triage | Issue comment headed `Bug triage (Android)` or `Bug triage (iOS)` | `REPLICATED: …` or `NOT-REPLICATED: …` | `INCONCLUSIVE: The agent did not write a verdict. See the logs of this run.` |
 | QA Swarm | Workflow run report, one line per lane. Optional PR comment. | `PASS: …` or `FAIL: …` | `FAIL: The agent did not write a verdict.` The lane job exits 1 unless the line starts with `PASS`. |
 
 Agentic CI comment links:
@@ -37,16 +37,16 @@ Claude Code writes `agent-output/evidence/agent-log.jsonl`, which the artifact u
 | Committed `ios/` or `android/` | The guides require Continuous Native Generation. Stop. Do not delete native projects. |
 | Missing bundle id or package | Ask the user for the id. A fresh app often has none. Do not invent one. |
 | `require("./app.json")` fails in `start-session.sh` | The ids are in another config file. Adapt the `APP_ID` lines only. |
-| Android job cannot install the build | `preview` needs `android.buildType: apk`, and the user must create a keystore once with `eas credentials --platform android` for the `preview` profile. |
+| Android job cannot install the build | `preview` needs `android.buildType: apk`. If the project has no Android keystore yet, the user creates one with `eas credentials --platform android` for that profile. |
 | iOS job looks for a device build | `get-build` needs `simulator: true`, and the `preview` profile needs `ios.simulator: true`. Simulator builds are not signed. |
 | Every run builds instead of repacking | `fingerprint` and `build` must both use `environment: preview`. A preview variable that changes the native fingerprint (for example an app variant) has to match the build that already exists. |
 | Workflow never starts on a PR | Connect the GitHub repo to the EAS project (EAS Workflows get started). The sample triggers on `main` and skips drafts until `ready_for_review`. Change `branches` when the base branch has another name. EAS does not start `pull_request` workflows for forks. |
-| PR from a fork would need the robot token | Do not enable fork runs. The `check` job checks out the PR, so that code can read `EXPO_TOKEN_SIMULATOR`, `GITHUB_TOKEN`, and the agent key. |
+| PR from a fork would need the robot token | Do not enable fork runs. In Agentic CI the `check` job checks out the PR. In QA Swarm each lane checks out the branch of `--ref`. That code can change `.eas/agents/run-agent.sh` and read `EXPO_TOKEN_SIMULATOR` and the agent key, and `GITHUB_TOKEN` when that step was done. |
 | Agent cannot call the controller | The runner and `start-session.sh` disagree. Claude Code and Grok `device` mode must allow the controller in the file. Copy the runner from the guide again. |
 | Argent exits "did not list a device" | The script already retries. Android emulators can take a few minutes. Read the job log. Android screenshots use scale `0.9`. |
 | `GITHUB_TOKEN` or `GITHUB_REPOSITORY` errors | Both belong in the `preview` environment. The token is fine-grained, this repository only, Contents / Issues / Pull requests read and write. `GITHUB_REPOSITORY` is plain text `owner/name`. |
-| Issue to PR Action fails at `npm ci` | The workflow file assumes npm. Match the project's package manager. |
-| TestFlight feedback does nothing | iOS workflow only. Connect App Store Connect, add the API key used by `eas testflight:feedback` (the `production` submit profile), and create the `testflight` label. Screenshot links in the issue expire. The issue omits the tester's name and email. Each report opens a new issue. |
+| Issue to PR Action fails at `npm ci` | The workflow file assumes npm. Match the project's package manager. The page shows a Bun replacement: `oven-sh/setup-bun@v2`, then `bun install --frozen-lockfile`. |
+| TestFlight feedback does nothing | iOS workflow only. Connect App Store Connect before testers send feedback. Earlier feedback does not start the workflow. Add the API key used by `eas testflight:feedback` (the `production` submit profile), and create the `testflight` label. Screenshot links in the issue expire. The issue omits the tester's name and email. Each report opens a new issue. |
 | User wants the browser preview | Hand them the link from the comment. Do not open it on the simulator, and do not print session tokens from `.env.eas-simulator` or `deviceRunSessionUrl` internals beyond the link the comment already contains. |
 | First run is very long | Expected. The first run creates a build. Later runs repack while the native fingerprint stays the same. |
 

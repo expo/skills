@@ -2,7 +2,7 @@
 // Fetch one agentic-workflows guide as markdown from docs.expo.dev.
 // Prints the page on stdout and `source: <url>` on stderr.
 
-const SLUGS = ['introduction', 'agentic-ci', 'issue-to-pr', 'bug-triage', 'qa-swarm'];
+const SLUGS = ['introduction', 'setup', 'agentic-ci', 'issue-to-pr', 'bug-triage', 'qa-swarm'];
 
 // docs/pages/agentic-workflows/ and the guides' paste prompts use this path.
 const DOCS_BASE = 'https://docs.expo.dev/agentic-workflows';

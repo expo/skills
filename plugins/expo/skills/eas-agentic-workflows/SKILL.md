@@ -20,7 +20,7 @@ Use another skill when the job is different:
 
 Ask for anything the user has not already named. One message, then wait:
 
-1. **Workflow.** Agentic CI tests a pull request. Issue to PR needs Agentic CI. Bug triage needs both, and TestFlight is iOS only. QA Swarm's guide exists, and the launch plan still calls it coming soon. Install QA Swarm only after the user confirms. There is no Agent Sessions guide. Ask what they mean instead of inventing one.
+1. **Workflow.** Agentic CI tests a pull request. Issue to PR needs Agentic CI. Bug triage needs both, and TestFlight is iOS only. QA Swarm runs several flows at once, one session per lane. There is no Agent Sessions guide. Ask what they mean instead of inventing one.
 2. **Platform.** iOS, Android, or both. Android emulator support is still in development.
 3. **Agent.** Claude Code, Codex, Cursor, or Grok. Another agent is allowed only if it has a headless mode and a key that works without a browser login.
 4. **Controller.** `agent-device` or Argent.
@@ -32,10 +32,12 @@ Bug triage includes the two workflows it depends on. Say that before adding them
 Fetch the page before writing files. Copy each file body from that page.
 
 ```bash
-node <skill-dir>/scripts/fetch-docs.js <introduction|agentic-ci|issue-to-pr|bug-triage|qa-swarm>
+node <skill-dir>/scripts/fetch-docs.js <introduction|setup|agentic-ci|issue-to-pr|bug-triage|qa-swarm>
 ```
 
 The script fetches `https://docs.expo.dev/agentic-workflows/<slug>.md` and prints `source: <url>` on stderr. Read [references/docs-pages.md](./references/docs-pages.md) for the copy rules and the runner contract. Read [references/files.md](./references/files.md) for the paths to create.
+
+Fetch `setup` once, then the guide. The guides do not repeat the shared files. Agentic CI and QA Swarm need the setup steps from "Add a build profile for the remote device" through "Push the files". Issue to PR and Bug triage also need "Add a GitHub token to EAS". QA Swarm needs that token step only to post its report on a pull request.
 
 Follow the page's "paste this into your agent" steps. The rules in this skill win where they disagree. That covers secrets, the four choices above, and not pushing or starting a run unless the user asked.
 
@@ -47,7 +49,7 @@ Run these in the Expo project. Fix or stop before writing workflow files.
 2. **App id.** The platform under test needs `ios.bundleIdentifier` or `android.package`. Read `npx expo config --json`. If the id is missing, ask the user. Do not invent one.
 3. **Link.** `npx --yes eas-cli@latest whoami`. If `extra.eas.projectId` is missing, run `npx --yes eas-cli@latest init`. A headless shell uses `EXPO_TOKEN` for this CLI. That is the developer's CLI token, not the robot token below.
 4. **Access.** `npx --yes eas-cli@latest simulator:availability --json`. Continue only when `available` is `true`. Otherwise stop and send the user to the waitlist. You may still add files when they explicitly want the repo prepared, and you must say the workflow cannot run yet.
-5. **`preview` profile.** Add the profile from the fetched page for the chosen platforms. One profile holds both platform keys when they test both. Android also needs a keystore. The user runs `eas credentials --platform android`, selects `preview`, and lets EAS generate it. Leave that interactive command to the user.
+5. **`preview` profile.** Merge the page's keys into `build.preview`, or add that profile if it is missing. One profile holds both platform keys when they test both. If `preview` already builds for physical devices, `ios.simulator: true` would stop those builds. Add a separate profile instead, such as `agent`, and change `profile: preview` to that name in each workflow file. Android needs a keystore only when the project has none yet. The user runs `eas credentials --platform android`, selects the profile, and lets EAS generate it. Leave that interactive command to the user.
 6. **GitHub.** Agentic CI, Issue to PR, and Bug triage post to GitHub. The user connects the repository to the EAS project. Follow the EAS Workflows get-started link on the fetched page. A GitHub `git remote` does not mean that connection exists.
 
 ## Secrets
@@ -63,7 +65,7 @@ Put these in the EAS `preview` environment:
 | `EXPO_TOKEN_SIMULATOR` | Secret | Robot user with the Developer role, in the account that owns the project. Developer is the lowest role that can start and stop sessions. Not a personal access token. |
 | One agent key: `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY`, `CODEX_API_KEY`, `CURSOR_API_KEY`, or `XAI_API_KEY` | Secret | The user, from the agent section of the fetched page. Claude Code: `claude setup-token` (Pro, Max, Team, or Enterprise) or an Anthropic API key. Codex: an OpenAI API key. Cursor: dashboard API keys. Grok: an xAI key from console.x.ai. |
 
-The agent job can read every variable in `preview`. Keep other secrets out of `preview`. `EXPO_PUBLIC_` values can stay. If `preview` already has a secret such as `NPM_TOKEN`, warn the user that the agent can read it.
+The agent job can read every variable in `preview`. Keep other secrets out of `preview`. `EXPO_PUBLIC_` values can stay. If `preview` already has a secret such as `NPM_TOKEN`, warn the user that the agent can read it. If `preview` has `SENTRY_AUTH_TOKEN`, remove it from `preview` and add `SENTRY_DISABLE_AUTO_UPLOAD` with the value `true`.
 
 Issue to PR and Bug triage also need, in `preview`:
 
@@ -72,11 +74,13 @@ Issue to PR and Bug triage also need, in `preview`:
 | `GITHUB_TOKEN` | Secret | Fine-grained personal access token. This repository only. Contents, Issues, and Pull requests: read and write. |
 | `GITHUB_REPOSITORY` | Plain text | `owner/name`, such as `acme/app`. |
 
-The job unsets `GITHUB_TOKEN` for the agent process. Codex can still run any command on the worker. A pull request can also change `.eas/agents/run-agent.sh`. Keep the GitHub token scoped to this one repository. EAS does not start `pull_request` workflows for forks. Leave fork runs disabled.
+QA Swarm needs those two variables only to post its report on a pull request. Agentic CI does not need them.
+
+The job unsets `GITHUB_TOKEN` for the agent process. Codex can still run any command on the worker. In Agentic CI the `check` job checks out the pull request. In QA Swarm each lane checks out the branch of `--ref`. That code can change `.eas/agents/run-agent.sh` and read `EXPO_TOKEN_SIMULATOR` and the agent key. It can also read `GITHUB_TOKEN` when that step was done. Keep the GitHub token scoped to this one repository. EAS does not start `pull_request` workflows for forks. Leave fork runs disabled.
 
 The Issue to PR GitHub Action needs a second robot token, stored as the GitHub Actions secret `EXPO_TOKEN` (`gh secret set EXPO_TOKEN`). It is not `EXPO_TOKEN_SIMULATOR`, and it does not go in a file.
 
-Do not commit `.env.eas-simulator`. The session script writes it on the worker. It holds a session token.
+Do not commit `.env.eas-simulator` or `agent-output/`. Add both to `.gitignore`. The session script writes `.env.eas-simulator` on the worker. It holds a session token.
 
 ## Install
 
@@ -100,7 +104,7 @@ Read [references/failures.md](./references/failures.md) when a run finishes or a
 
 - **Agentic CI.** The pull request comment shows `PASS` or `FAIL`, the session recording, the artifact report, and a browser preview link. Each click of that link starts a new session. The `result` job fails the run when the verdict does not start with `PASS`. Push a new commit to test again. The workflow skips draft pull requests until they are ready for review.
 - **Issue to PR.** The workflow posts a comment on the issue with the pull request URL. The branch is `agent/issue-<number>`. Agentic CI then comments on that pull request. If the agent changes no file, or edits `.eas` or `.github`, the job does not open a pull request.
-- **Bug triage.** The issue comment is `REPLICATED`, `NOT-REPLICATED`, or `INCONCLUSIVE`. A person reads a `REPLICATED` report before adding the `agent` label. Leave that label to them. TestFlight intake is iOS only and opens a new issue per report.
+- **Bug triage.** The issue comment is headed `Bug triage (Android)` or `Bug triage (iOS)`. The verdict is `REPLICATED`, `NOT-REPLICATED`, or `INCONCLUSIVE`. A person reads a `REPLICATED` report before adding the `agent` label. Leave that label to them. TestFlight intake is iOS only and opens a new issue per report. Connect App Store Connect before testers send feedback. Earlier feedback does not start the workflow.
 - **QA Swarm.** The workflow run page lists each lane's `PASS` or `FAIL` and an evidence link. A lane fails the run when its verdict is not `PASS`. The evidence site is public.
 
 ## References
