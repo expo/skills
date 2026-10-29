@@ -13,7 +13,7 @@ export async function fetchCached(url) {
 
   const cacheFile = resolve(CACHE_DIRECTORY, hashUrl(url) + '.json');
   const cached = await loadCacheEntry(cacheFile);
-  if (cached && cached.expires > Math.floor(Date.now() / 1000)) {
+  if (cached && !cached.revalidate && cached.expires > Math.floor(Date.now() / 1000)) {
     return cached.data;
   }
 
@@ -28,7 +28,13 @@ export async function fetchCached(url) {
 
   if (response.status === 304 && cached) {
     // Refresh expiration and return cached data
-    const entry = { ...cached, expires: getExpires(response.headers) };
+    const entry = {
+      ...cached,
+      expires: getExpires(response.headers),
+      revalidate: response.headers.has('cache-control')
+        ? requiresRevalidation(response.headers)
+        : cached.revalidate,
+    };
     await saveCacheEntry(cacheFile, entry);
     return cached.data;
   }
@@ -41,13 +47,19 @@ export async function fetchCached(url) {
   const data = await response.text();
   const expires = getExpires(response.headers);
 
-  await saveCacheEntry(cacheFile, { url, etag, expires, data });
+  await saveCacheEntry(cacheFile, {
+    url, etag, expires, data, revalidate: requiresRevalidation(response.headers),
+  });
 
   return data;
 }
 
 function hashUrl(url) {
   return createHash('sha256').update(url).digest('hex').slice(0, 16);
+}
+
+function requiresRevalidation(headers) {
+  return /(?:^|,)\s*no-cache\s*(?:=|,|$)/i.test(headers.get('cache-control') || '');
 }
 
 async function loadCacheEntry(cacheFile) {
