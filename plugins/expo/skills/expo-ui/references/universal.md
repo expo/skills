@@ -4,6 +4,15 @@
 
 Universal components are a single-API layer over the platform-native UI toolkits: Jetpack Compose on Android, SwiftUI on iOS, and `react-native-web` / `react-dom` on web. You write one component tree that runs unmodified on all three platforms while keeping a native look and feel — no `.ios.tsx` / `.android.tsx` split.
 
+## Contents
+
+- [Usage](#usage)
+- [Components](#components)
+- [TextInput and useNativeState](#textinput-and-usenativestate)
+- [BottomSheet](#bottomsheet)
+- [Confirming the API](#confirming-the-api)
+- [When to drop down to a platform-specific layer](#when-to-drop-down-to-a-platform-specific-layer)
+
 ## Usage
 
 Import everything, including `Host`, from the package root (`@expo/ui`). Every tree must be wrapped in `Host`.

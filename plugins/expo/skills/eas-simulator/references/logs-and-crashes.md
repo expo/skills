@@ -4,6 +4,14 @@ When the user's app crashes, closes on launch, or misbehaves on an iOS session, 
 
 This covers iOS sessions. Call `sim_api /crashes` first. If it returns `404 Not found`, the session's preview server predates these routes: fall back to `agent-device logs` (see [controllers.md](./controllers.md)) and tell the user crash reports aren't available on that session. Don't call `/logs` there, because older servers stream it without end.
 
+## Contents
+
+- [Reach the preview API](#reach-the-preview-api)
+- [Catch a crash with its log tail](#catch-a-crash-with-its-log-tail)
+- [Read a crash](#read-a-crash)
+- [Read the device log](#read-the-device-log)
+- [What the user sees](#what-the-user-sees)
+
 ## Reach the preview API
 
 `simulator:get --json` returns `remoteConfig.previewApiUrl`, the preview server's API URL with the session token already in its query. Keep it in a shell variable and don't print it: the token grants control of the session. As with `simulator:exec`, run this from the Expo project directory. Pass `--id` with the session you are driving, because another agent can replace the dotenv session between your commands.

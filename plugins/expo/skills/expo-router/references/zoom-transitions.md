@@ -6,6 +6,17 @@ Fluid zoom transitions for navigating between screens. iOS 18+, Expo SDK 55+, St
 import { Link } from "expo-router";
 ```
 
+## Contents
+
+- [Basic Zoom](#basic-zoom)
+- [Targeted Zoom with `Link.AppleZoom`](#targeted-zoom-with-linkapplezoom)
+- [Destination Target](#destination-target)
+- [Custom Alignment Rectangle](#custom-alignment-rectangle)
+- [Controlling Dismissal](#controlling-dismissal)
+- [Combining with Link.Preview](#combining-with-linkpreview)
+- [Best Practices](#best-practices)
+- [References](#references)
+
 ## Basic Zoom
 
 Use `withAppleZoom` on `Link.Trigger` to zoom the entire trigger element into the destination screen:

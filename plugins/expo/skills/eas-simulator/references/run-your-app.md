@@ -6,6 +6,14 @@ In all modes, the session is started the same way and driven through `npx --yes 
 
 > These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app` (`.aab` fails), and skip `pod install`. Android sessions include a browser preview (`webPreviewUrl`), which the expo.dev session page opens in a new tab with **Open preview**. Android support is still in development, so some iOS features may not work.
 
+## Contents
+
+- [Starting a session (shared by all modes)](#starting-a-session-shared-by-all-modes)
+- [Targeting a device — iPad, or several at once](#targeting-a-device--ipad-or-several-at-once)
+- [Mode A — Local release build (embedded JS, no Metro)](#mode-a--local-release-build-embedded-js-no-metro)
+- [Mode B — EAS build (the VM downloads it; no credentials)](#mode-b--eas-build-the-vm-downloads-it-no-credentials)
+- [Mode C — Dev build + tunnel (live edits via Fast Refresh)](#mode-c--dev-build--tunnel-live-edits-via-fast-refresh)
+
 ## Starting a session (shared by all modes)
 
 ```bash

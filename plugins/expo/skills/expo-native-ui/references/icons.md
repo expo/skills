@@ -2,6 +2,19 @@
 
 Use SF Symbols on iOS for native feel. SF Symbols are an Apple asset and never render on Android - every icon needs a Material counterpart (see "Android: Material Icons" below). Never use FontAwesome or Ionicons on either platform, and never emoji as icons.
 
+## Contents
+
+- [Basic Usage](#basic-usage)
+- [Props](#props)
+- [Common Icons](#common-icons)
+- [Animated Symbols](#animated-symbols)
+- [Symbol Weights](#symbol-weights)
+- [Symbol Scales](#symbol-scales)
+- [Multicolor Symbols](#multicolor-symbols)
+- [Android: Material Icons](#android-material-icons)
+- [Finding Symbol Names](#finding-symbol-names)
+- [Best Practices](#best-practices)
+
 ## Basic Usage
 
 ```tsx

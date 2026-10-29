@@ -2,6 +2,17 @@
 
 Swift is shown as the primary language. Kotlin follows the same DSL structure (see SKILL.md for both). Kotlin-specific syntax is noted where it meaningfully differs.
 
+## Contents
+
+- [Name](#name)
+- [Constant](#constant)
+- [Function (Synchronous)](#function-synchronous)
+- [AsyncFunction](#asyncfunction)
+- [Property](#property)
+- [Events](#events)
+- [Type System](#type-system)
+- [Shared Objects](#shared-objects)
+
 ## Name
 
 Sets the module identifier used in JavaScript.

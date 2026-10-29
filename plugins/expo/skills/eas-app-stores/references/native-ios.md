@@ -2,6 +2,14 @@
 
 Use this path when the app runs SwiftUI or UIKit and the task is to build or distribute it with EAS. Adding React Native screens is a different task. [EAS Build supports native projects without Expo or React Native](https://docs.expo.dev/build/introduction/), but the main setup tutorials assume a React Native project.
 
+## Contents
+
+- [Keep the delivery wrapper small](#keep-the-delivery-wrapper-small)
+- [Build and submit profiles](#build-and-submit-profiles)
+- [Versioning and icon troubleshooting](#versioning-and-icon-troubleshooting)
+- [Ship the exact build](#ship-the-exact-build)
+- [Verification scope](#verification-scope)
+
 ## Keep the delivery wrapper small
 
 Inspect the Xcode project, shared scheme, Swift entry point, dependencies, signing settings, and current release configuration first. Keep hand-maintained native code checked in. Running `expo prebuild --clean` would regenerate native directories; it is not a setup step for this path.

@@ -4,6 +4,16 @@ Add native iOS toolbar items to Stack screens. Items can be placed in the header
 
 **Important:** iOS only. Available in Expo SDK 55+.
 
+## Contents
+
+- [Notes app example](#notes-app-example)
+- [Mail inbox example](#mail-inbox-example)
+- [Placement](#placement)
+- [Components](#components)
+- [Recommendations](#recommendations)
+- [Limitations](#limitations)
+- [Reference](#reference)
+
 ## Notes app example
 
 ```tsx

@@ -4,6 +4,14 @@
 
 Use CSS gradients with the `experimental_backgroundImage` style property.
 
+## Contents
+
+- [Linear Gradients](#linear-gradients)
+- [Radial Gradients](#radial-gradients)
+- [Multiple Gradients](#multiple-gradients)
+- [Common Patterns](#common-patterns)
+- [Important Notes](#important-notes)
+
 ## Linear Gradients
 
 ```tsx

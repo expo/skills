@@ -4,6 +4,20 @@ Measure how far an existing Expo app has drifted from a single visual source of 
 
 Run the audit **before** proposing changes. Report findings first; apply fixes only when asked.
 
+## Contents
+
+- [0. Locate the directories first](#0-locate-the-directories-first)
+- [1. Token coverage checks](#1-token-coverage-checks)
+- [2. Scoring](#2-scoring)
+- [3. Component completeness](#3-component-completeness)
+- [4. Report format](#4-report-format)
+- [Design System Audit](#design-system-audit)
+- [5. Adopting incrementally](#5-adopting-incrementally)
+- [6. Documenting an existing component](#6-documenting-an-existing-component)
+- [Component: [Name]](#component-name)
+- [7. Proposing a new component](#7-proposing-a-new-component)
+- [Proposed: [Name]](#proposed-name)
+
 ## 0. Locate the directories first
 
 Do **not** assume a `src/` folder. The default `create-expo-app` template puts `app/`, `components/`, and `constants/` at the repo root, and running the checks below against a nonexistent `src/` returns zero hits - a false clean bill.

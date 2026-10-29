@@ -1,5 +1,15 @@
 # Migrating from expo-av to expo-audio
 
+## Contents
+
+- [Imports](#imports)
+- [Audio Playback](#audio-playback)
+- [Audio Recording](#audio-recording)
+- [Audio Mode](#audio-mode)
+- [API Mapping](#api-mapping)
+- [Key Differences](#key-differences)
+- [API Reference](#api-reference)
+
 ## Imports
 
 ```tsx
