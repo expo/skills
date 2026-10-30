@@ -38,37 +38,49 @@ try {
 } catch (_) {}
 
 // ---------------------------------------------------------------------------
-// Component extraction — parse `export * from './Name'` in an index.d.ts
+// Component extraction — follow `export * from './Name'` in an index.d.ts into
+// each module and collect the names it really exports. A module file name is
+// not always a component (e.g. './Shapes' exports Rectangle, Circle, ...).
 // ---------------------------------------------------------------------------
 // TypeScript type names that are not components — skip anything matching these suffixes
 const TYPE_SUFFIX = /(?:Props|Ref|Handle|Params|Config|Options|Type|Types|Value|Values|Colors|Style|Styles|Event|Events|Alignment|Animation|Spec)$/;
 
-function extractComponents(indexFile) {
-  if (!fs.existsSync(indexFile)) return [];
-  const src = fs.readFileSync(indexFile, 'utf8');
-  const names = [];
-  for (const line of src.split('\n')) {
-    // export * from './ComponentName'  or  export * from './ComponentName/index'
-    const m = line.match(/^export \* from ['"]\.\/([^/'"]+)/);
-    if (m) {
-      const name = m[1];
-      // Skip non-component re-exports (types, utils, state internals)
-      if (/^(types|utils|index|State|hooks|colors|layout-types|MaterialSymbols)/.test(name)) continue;
-      if (TYPE_SUFFIX.test(name)) continue;
-      names.push(name);
-    }
-    // export { Name, ... } from './Something'  — pick up named re-exports too
-    const n = line.match(/^export \{([^}]+)\}/);
-    if (n) {
-      for (const part of n[1].split(',')) {
-        // Skip `type Foo` re-exports
-        if (/^\s*type\s/.test(part)) continue;
-        const id = part.trim().split(/\s+as\s+/)[0].trim();
-        if (id && /^[A-Z]/.test(id) && !TYPE_SUFFIX.test(id)) names.push(id);
-      }
+function resolveDts(fromFile, specifier) {
+  const base = path.resolve(path.dirname(fromFile), specifier);
+  for (const candidate of [`${base}.d.ts`, path.join(base, 'index.d.ts')]) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+function collectExports(file, names, seen) {
+  if (!file || seen.has(file)) return;
+  seen.add(file);
+  const src = fs.readFileSync(file, 'utf8');
+  // export * from './Module'
+  for (const m of src.matchAll(/^export \* from ['"](\.[^'"]+)['"]/gm)) {
+    collectExports(resolveDts(file, m[1]), names, seen);
+  }
+  // export declare function Name / export declare const Name
+  for (const m of src.matchAll(/^export declare (?:const|function|class) ([A-Za-z_$][\w$]*)/gm)) {
+    names.push(m[1]);
+  }
+  // export { Name, Other as Alias } [from './Something']
+  for (const m of src.matchAll(/^export \{([^}]*)\}/gm)) {
+    for (const part of m[1].split(',')) {
+      // Skip `type Foo` re-exports
+      if (/^\s*type\s/.test(part)) continue;
+      const id = part.trim().split(/\s+as\s+/).pop().trim();
+      if (id) names.push(id);
     }
   }
-  return [...new Set(names)].sort();
+}
+
+function extractComponents(indexFile) {
+  if (!fs.existsSync(indexFile)) return [];
+  const names = [];
+  collectExports(indexFile, names, new Set());
+  return [...new Set(names.filter((id) => /^[A-Z]/.test(id) && !TYPE_SUFFIX.test(id)))].sort();
 }
 
 // ---------------------------------------------------------------------------
