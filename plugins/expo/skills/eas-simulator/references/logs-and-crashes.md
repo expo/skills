@@ -2,7 +2,24 @@
 
 When the user's app crashes, closes on launch, or misbehaves on an iOS session, read what the device recorded instead of guessing from screenshots. The session's preview server (serve-sim) keeps a shared buffer of the simulator's device log and collects the crash reports macOS writes for simulator apps, each with the app's own log lines from just before the crash.
 
-This covers iOS sessions with a preview API URL. For private sessions on eas-cli 25.0.0+, `simulator:get --json` deliberately returns `remoteConfig.previewApiUrl: null`. Use `simulator:exec npx agent-device@latest logs` (check its `help logs` for options), or direct the user to Logs and Crashes in the authenticated browser preview. A null URL is not a boot failure; do not restart the session or enable public sharing to obtain it.
+## App logs with `simulator:logs` (eas-cli 27.0.0+)
+
+`simulator:logs` reads app logs from a running iOS session. It uses your EAS login, so it works on private sessions without a preview token. Pass `--id`, because `simulator:stop` clears the dotenv session id.
+
+```bash
+npx --yes eas-cli@latest simulator:logs --id <session-id>                     # latest 100 lines from installed apps
+npx --yes eas-cli@latest simulator:logs --id <session-id> --follow > app.log  # start before you reproduce; Ctrl+C to stop
+npx --yes eas-cli@latest simulator:logs --id <session-id> --json --limit 500  # {lines: [{seq, at, raw}]}
+```
+
+- `--scope all` adds system logs, but only together with `--follow`. `--json` cannot be combined with `--follow`.
+- The worker saves app logs from the first 30 minutes of the session, up to 20 MiB per device. After that, live snapshots show new lines only while a `--follow` runs, and the saved file does not get them.
+- After the session stops, download the saved logs with `--output ./app-logs.ndjson`. When the session had more than one device, add `--artifact <n>`, a 1-based index from the listed files (non-interactive runs fail and print that list).
+- Android sessions are not supported. App logs do not include crash reports; use the routes below or the browser preview for those.
+
+## Crash reports and the device log through the preview API
+
+This covers iOS sessions with a preview API URL. For private sessions on eas-cli 25.0.0+, `simulator:get --json` deliberately returns `remoteConfig.previewApiUrl: null`. Use `simulator:logs` for app logs, `simulator:exec npx agent-device@latest logs` (check its `help logs` for options), or direct the user to Logs and Crashes in the authenticated browser preview. A null URL is not a boot failure; do not restart the session or enable public sharing to obtain it.
 
 When a preview API URL is available, call `sim_api /crashes` first. If it returns `404 Not found`, the session's preview server predates these routes: fall back to `agent-device logs` (see [controllers.md](./controllers.md)) and tell the user crash reports aren't available on that session. Don't call `/logs` there, because older servers stream it without end.
 
