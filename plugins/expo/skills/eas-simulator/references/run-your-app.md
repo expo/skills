@@ -67,6 +67,34 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> 
 
 ---
 
+## Preview embedding and API origins
+
+For a requested integration, CLI 25.1.1+ accepts repeatable start flags:
+`--frame-ancestor https://app.example.com` permits that page to frame the
+preview; `--cors-origin https://app.example.com` permits its JavaScript to call
+the preview API. An iframe alone does not need the parent's CORS grant.
+Use only the origins needed for that integration. The printed direct preview
+URL carries a token and grants session control; keep it out of source control
+and public pages. Embed that direct URL rather than the expo.dev wrapper.
+Private `get --json` does not recover this URL from saved origin grants on CLI
+25.3.0; keep the start output private or query the authenticated REST session.
+
+## Android system image
+
+With **eas-cli 25.3.0+**, `--system-image` selects the Android SDK system-image
+package. `--device` selects the AVD hardware profile. Omit the image flag for the
+runner's default; it does not select an iOS runtime. Quote the package string
+because semicolons are shell separators:
+
+```bash
+npx --yes eas-cli@latest simulator:start --platform android --device pixel_7 \
+  --system-image 'system-images;android-35-ext15;google_apis_playstore;x86_64' \
+  --non-interactive --name "Android compatibility check"
+```
+
+Use a package supported by the remote runner. Keep the existing device-selection
+workflow for other session types.
+
 ## Mode A — Local release build (embedded JS, no Metro)
 
 A Release build bundles the JS into the binary, so it renders without Metro. Good for a quick "run my current code on a cloud device" when a Mac toolchain is available.
@@ -108,7 +136,7 @@ npx --yes eas-cli@latest build:list --platform ios --profile <your-sim-profile> 
 
 If one matches, skip straight to step 3 with its artifact URL.
 
-⚠️ **Order matters:** build FIRST, `start` the session LAST. The build takes ~15-20 min and a session left idle that long times out (`ERR_NGROK_3200`) — don't `start` until you have the artifact URL.
+⚠️ **Order matters:** build FIRST, `start` the session LAST. Building can consume much of the session's maximum duration. Don't `start` until you have the artifact URL.
 
 ```bash
 # 1. Find or create a simulator build profile in eas.json.

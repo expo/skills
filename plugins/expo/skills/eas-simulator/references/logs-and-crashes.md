@@ -2,11 +2,13 @@
 
 When the user's app crashes, closes on launch, or misbehaves on an iOS session, read what the device recorded instead of guessing from screenshots. The session's preview server (serve-sim) keeps a shared buffer of the simulator's device log and collects the crash reports macOS writes for simulator apps, each with the app's own log lines from just before the crash.
 
-This covers iOS sessions. Call `sim_api /crashes` first. If it returns `404 Not found`, the session's preview server predates these routes: fall back to `agent-device logs` (see [controllers.md](./controllers.md)) and tell the user crash reports aren't available on that session. Don't call `/logs` there, because older servers stream it without end.
+This covers iOS sessions with a preview API URL. For private sessions on eas-cli 25.0.0+, `simulator:get --json` deliberately returns `remoteConfig.previewApiUrl: null`. Use `simulator:exec npx agent-device@latest logs` (check its `help logs` for options), or direct the user to Logs and Crashes in the authenticated browser preview. A null URL is not a boot failure; do not restart the session or enable public sharing to obtain it.
+
+When a preview API URL is available, call `sim_api /crashes` first. If it returns `404 Not found`, the session's preview server predates these routes: fall back to `agent-device logs` (see [controllers.md](./controllers.md)) and tell the user crash reports aren't available on that session. Don't call `/logs` there, because older servers stream it without end.
 
 ## Reach the preview API
 
-`simulator:get --json` returns `remoteConfig.previewApiUrl`, the preview server's API URL with the session token already in its query. Keep it in a shell variable and don't print it: the token grants control of the session. As with `simulator:exec`, run this from the Expo project directory. Pass `--id` with the session you are driving, because another agent can replace the dotenv session between your commands.
+For a session created with `--public-link`, `simulator:get --json` includes `remoteConfig.previewApiUrl` when the worker reports it: the preview server's API URL with the session token already in its query. Older sessions can also expose this URL. Keep it in a shell variable and don't print it: the token grants control of the session. As with `simulator:exec`, run this from the Expo project directory. Pass `--id` with the session you are driving, because another agent can replace the dotenv session between your commands.
 
 ```bash
 API=$(npx --yes eas-cli@latest simulator:get --json --id <session-id> | node -e '
@@ -14,8 +16,12 @@ API=$(npx --yes eas-cli@latest simulator:get --json --id <session-id> | node -e 
     let j;
     try { j = JSON.parse(s); } catch { console.error("simulator:get did not print JSON"); process.exit(1); }
     const url = j.remoteConfig?.previewApiUrl;
-    if (j.status !== "IN_PROGRESS" || j.platform !== "IOS" || !url) {
-      console.error(`no preview API (status ${j.status}, platform ${j.platform})`);
+    if (j.status !== "IN_PROGRESS" || j.platform !== "IOS") {
+      console.error(`no iOS preview API (status ${j.status}, platform ${j.platform})`);
+      process.exit(1);
+    }
+    if (!url) {
+      console.error("No preview API URL in this output; private sessions omit it. Use controller logs or the authenticated browser preview.");
       process.exit(1);
     }
     process.stdout.write(url);
