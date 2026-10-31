@@ -10,7 +10,7 @@ Migrate the Swift side of an existing Expo module without changing its observabl
 
 ## Prerequisite
 
-Use `expo` `58.0.21` or newer. Earlier `58.0.x` releases lack tuple conversion and the `expand` command. Older ones also lack `lazy` `@JS` properties, `SharedRef<T>` subclasses in `@SharedObject`, static shared-object members, and `.withAsync`, and the oldest lack closure arguments and free-form `Any` return values. SDK 57 also lacks `.concurrent`, `@Union`, and module auto-discovery. Do not target either. Before editing, check the installed version (`npm ls expo`, or the lockfile). If it is older, stop and tell the user to upgrade first.
+Use `expo` `58.0.21` or newer. Earlier `58.0.x` releases lack tuple conversion and the `swift:check` and `swift:expand` commands of `expo-modules-cli`. Older ones also lack `lazy` `@JS` properties, `SharedRef<T>` subclasses in `@SharedObject`, static shared-object members, and `.withAsync`, and the oldest lack closure arguments and free-form `Any` return values. SDK 57 also lacks `.concurrent`, `@Union`, and module auto-discovery. Do not target either. Before editing, check the installed version (`npm ls expo`, or the lockfile). If it is older, stop and tell the user to upgrade first.
 
 Check the example app's own dependencies too, not only the module root. The example app is the integration surface you build and launch in step 4, so it needs the same floor.
 
@@ -22,7 +22,7 @@ The macros are still **experimental and undocumented**: SDK 58 has no page about
 
 - Read `references/migration-map.md` before changing source. It contains the 1.0-to-2.0 mappings, semantic traps, and mixed-mode rules.
 - Read `references/example.md` for a full before/after walkthrough of one module through mixed mode to a complete migration. Consult it when you need to see how the per-member rules compose.
-- Read `references/compatibility.md` when the checked-out `expo-modules-core` version or branch is not known to support every requested macro. It explains how to verify the actual compile-time and runtime surface instead of guessing from a version number, gives the SDK 58 status of each capability, and shows how to run the module scanners and the `expand` command.
+- Read `references/compatibility.md` when the checked-out `expo-modules-core` version or branch is not known to support every requested macro. It explains how to verify the actual compile-time and runtime surface instead of guessing from a version number, gives the SDK 58 status of each capability, and shows how to run the module scanners and the `expo-modules-cli` checks.
 
 ## Workflow
 
@@ -98,7 +98,7 @@ Keep going with the groups that do migrate cleanly; one blocked member does not 
 
 Run the narrowest available checks first, then the real integration surface:
 
-1. Run the `expand` diagnostics check in `references/compatibility.md`. It reports macro errors and warnings in seconds, without a build.
+1. Run `npx expo-modules-cli swift:check ios` from the module package root. It reports macro errors and warnings in seconds, without a build. `references/compatibility.md` describes it.
 2. Build or type-check the Apple module against the target `expo-modules-core`.
 3. Run native unit tests and JS/TS tests.
 4. Build and launch the example app when the repository provides one.
@@ -106,11 +106,11 @@ Run the narrowest available checks first, then the real integration surface:
 6. Compare the final exported surface with the inventory from step 1. The `scanExports` check in `references/compatibility.md` lists the JS names, parameters, and sync/async shape of every migrated member. Members that stay in the DSL are not in its output.
 7. Search for stale `Name`, migrated `Function`/`AsyncFunction`/`StaticFunction`/`StaticAsyncFunction`/`Property`/`Constant`/`Events` entries, old `sendEvent` calls, `@Field`, and duplicate registrations. Search the source you wrote, not macro expansion output.
 
-Expansion alone is insufficient: `expand` runs only the macros, so generated code with no diagnostics can still fail to link or run against a mismatched core. If dependencies changed or macro plugin flags are missing, reinstall JS dependencies as appropriate, run the repository's CocoaPods installation workflow, and restart Xcode before diagnosing plugin communication failures.
+Expansion alone is insufficient: `swift:check` runs only the macros, so generated code with no diagnostics can still fail to link or run against a mismatched core. If dependencies changed or macro plugin flags are missing, reinstall JS dependencies as appropriate, run the repository's CocoaPods installation workflow, and restart Xcode before diagnosing plugin communication failures.
 
 ## Handoff
 
-Never print macro-generated or core-internal symbol names to the user. `references/compatibility.md` cites them so you can grep for them, and the `expand` output is full of them, but they are implementation details that change between plugin revisions, and they are noise in a report. Name a capability by its macro (`@JS static`, `@Event(sync:)`) and by observable JS behavior. Say "the installed core does not support synchronous events yet", not the name of the missing method. The exception is a tracking issue on `expo/expo`, where the specific missing hook is the point.
+Never print macro-generated or core-internal symbol names to the user. `references/compatibility.md` cites them so you can grep for them, and the `swift:expand` output is full of them, but they are implementation details that change between plugin revisions, and they are noise in a report. Name a capability by its macro (`@JS static`, `@Event(sync:)`) and by observable JS behavior. Say "the installed core does not support synchronous events yet", not the name of the missing method. The exception is a tracking issue on `expo/expo`, where the specific missing hook is the point.
 
 Report:
 

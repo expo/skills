@@ -2,6 +2,8 @@
 
 The Expo Modules API 2.0 design and implementation evolve across three packages: the `expo-modules-macros` compiler plugin, `expo-modules-core`, and `expo-modules-jsi`. Verify the installed dependencies instead of relying on an SDK-number claim.
 
+A fourth package, `expo-modules-cli`, provides the `expo-modules` command for module authors. `expo` installs it, so every target project has it. Its `swift:check` and `swift:expand` commands run the macros of the installed `expo-modules-macros` version on Swift sources, without a build. See "Inspect the generated code".
+
 ## Find the actual declarations
 
 Locate `ExpoModulesMacros.swift` in the target repository or installed dependencies (use your search tool, or portable shell commands - do not assume `rg` is installed):
@@ -35,7 +37,7 @@ grep -rnE '_decorateModule|_decorateSharedObject|_constructSharedObject|_jsName|
 
 An absent hook is strong evidence the capability is unavailable. A present one is weaker: it proves the symbol exists, not that its signature matches what the plugin generates or that core ever calls it.
 
-**Confirm by compiling.** Write the smallest `@JS` member that uses the capability. Run the `expand` diagnostics check in "Inspect the generated code" to see the macro's own errors without a build. Then build the module target against the installed core and read the diagnostics:
+**Confirm by compiling.** Write the smallest `@JS` member that uses the capability. Run `swift:check` (see "Inspect the generated code") to see the macro's own errors without a build. Then build the module target against the installed core and read the diagnostics:
 
 - The build succeeds: the capability is supported end to end.
 - The macro reports an error or warning: the plugin itself rejects the construct. The diagnostic names the supported alternative.
@@ -170,31 +172,30 @@ node -e "const m = require(require.resolve('expo-modules-macros', { paths: [requ
 
 ## Inspect the generated code
 
-From `expo` `58.0.21`, the `expand` command of `expo-modules-macros` runs the macros on Swift files without a build. It prints the expanded source, and it reports macro errors and warnings in the compiler's `<file>:<line>:<column>: error: <message>` format. Run it where `expo-modules-core` resolves, as with the scanners:
+From `expo` `58.0.21`, `expo-modules-cli` has two commands that run the macros on Swift sources without a build. Both find the `expo-modules-macros` version through the package's `expo` and `expo-modules-core`, which is the version the iOS build compiles with. Run them from the module package root:
 
 ```bash
-EXPO_MACROS="$(node -p "require(require.resolve('expo-modules-macros', { paths: [require.resolve('expo-modules-core/package.json')] })).getScannerBinaryPath()")"
+# Only the macro errors and warnings, and a summary. The exit code is 1 when there is an error.
+npx expo-modules-cli swift:check ios
 
-# Only the diagnostics. The exit code is 1 when there is an error.
-"$EXPO_MACROS" expand --diagnostics-only ios
-
-# The code generated for one type or one member.
-"$EXPO_MACROS" expand --symbol MyModule.load ios/MyModule.swift
+# The code that the macros generate, for a file or for one type or member.
+npx expo-modules-cli swift:expand ios/MyModule.swift
+npx expo-modules-cli swift:expand --symbol MyModule.load ios/MyModule.swift
 ```
 
-A directory is walked like the scans walk it, and only the files that use a macro are expanded. `expandMacros(paths, { symbols, diagnosticsOnly })` in the same package returns the same result as JSON.
+Write the package name, `expo-modules-cli`. Its command is called `expo-modules`, but `npx expo-modules` can fetch the unrelated `expo-modules` package from npm when the command is not linked locally. A path is a `.swift` file or a directory. In a directory, only the files that use a macro are expanded, and test and example directories are skipped. The diagnostics use the compiler's `<file>:<line>:<column>: error: <message>` format. `--json` prints a report instead of text, and then the exit code is 0 even when there is an error.
 
-Use `expand` to find a macro error fast, or to see why a binding does not behave as expected. Do not copy its output into the module source, and do not quote it to the user: it consists of the internal symbols that the handoff rule in `SKILL.md` keeps out of reports. `expand` runs only the macros, so code with no diagnostics can still fail to build or link against the installed core.
+Use `swift:check` to find a macro error fast, and `swift:expand` to see why a binding does not behave as expected. Do not copy the expansion into the module source, and do not quote it to the user: it consists of the internal symbols that the handoff rule in `SKILL.md` keeps out of reports. The macros see only syntax, so code with no diagnostics can still fail to type-check, build, or link against the installed core.
 
 ## Integration verification
 
 Use the target project's own commands. A robust sequence is:
 
 1. Run macro/unit tests if working inside the macros package.
-2. Run `expand --diagnostics-only` on the module's iOS sources.
+2. Run `npx expo-modules-cli swift:check ios` on the module's iOS sources.
 3. Compile the migrated native module against the installed core.
 4. Re-run CocoaPods installation when plugin dependencies or injection changed.
 5. Restart Xcode after swapping a macro plugin binary; cleaning DerivedData alone may not reload it.
 6. Build the example app and execute existing JS/TS behavior tests.
 
-Do not report a migration complete based only on `expand` output or textual expansion tests.
+Do not report a migration complete based only on `swift:check`, `swift:expand`, or textual expansion tests.
