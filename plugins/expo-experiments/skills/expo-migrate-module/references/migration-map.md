@@ -4,7 +4,7 @@ Use this reference while editing. Preserve behavior first; macro adoption is sec
 
 ## Module and naming
 
-Convert the module class and remove `Name(...)` only when the paired core reads the macro-synthesized name:
+Convert the module class, carry the name into `@ExpoModule("...")`, and remove `Name(...)`:
 
 ```swift
 // 1.0
@@ -19,7 +19,9 @@ public final class CameraModule: Module {
 public final class CameraModule: Module {}
 ```
 
-Always carry a custom 1.0 name into `@ExpoModule("...")`. A stale `Name(...)` can override or conflict with the 2.0 name depending on the core revision. In mixed mode, remove `Name(...)` only after verifying that the module still resolves under its expected JS name.
+Always carry a custom 1.0 name into `@ExpoModule("...")`. Without an argument, the name defaults to the Swift class name. Core reads the `@ExpoModule` name only when `definition()` has no `Name(...)` entry, so a stale `Name(...)` silently wins in mixed mode. Remove it, then verify that the module still resolves under its expected JS name.
+
+Keep the `Module` superclass. `@ExpoModule` also works on a class without one, but removing it is not part of a migration: `sendEvent` and the overridable lifecycle hooks come from it.
 
 ## Functions
 
@@ -46,9 +48,29 @@ Preserve:
 - thrown errors and return type
 - whether the result is synchronous or a Promise
 
-Do not migrate functions that resolve to the same JS name unless the checked-out macro has overload grouping and collision diagnostics. Older 2.0 implementations install one property per declaration, so the last overload silently wins.
+Keep functions that resolve to the same JS name on the DSL. The plugin has no overload grouping. It reports two `@JS` members with one JS name on one object as a build error, so leave the overloads in `definition()` as they are.
 
-Reject or keep in DSL any unsupported signature such as variadics, `inout`, unresolved generics, or closure parameters without verified callback support. A `Promise` parameter is also unsupported; refactor it as described under Async functions.
+Keep in DSL any unsupported signature such as variadics or unresolved generics. `inout` and `isolated` parameters are build errors. A `Promise` parameter is also unsupported; refactor it as described under Async functions.
+
+These argument types work in a `@JS` signature on SDK 58:
+
+- **Free-form values.** `Any`, `[Any]`, and `[String: Any]`, optional or nested, are accepted as arguments, return values, and properties. A 1.0 `[String: Any]` argument keeps its Swift type.
+- **Closures.** A function-typed parameter receives the JS function. A closure that returns a value must be `throws`, and it blocks the caller until JS returns. A `@JS` function cannot return a closure. See `references/compatibility.md` for the rules.
+- **Tuples.** From `expo` `58.0.21`, an unlabeled tuple such as `(Int, String)` converts to a JS array, and a labeled tuple such as `(x: Double, y: Double)` to a JS object. Replacing a 1.0 array or dictionary type with a tuple changes the Swift API, so do it only when the user asks.
+- **`JavaScriptValue`.** Take it as `borrowing JavaScriptValue`. On SDK 58 the DSL no longer accepts `JavaScriptValue` arguments or results, so such a member must migrate.
+
+```swift
+// 1.0, no longer compiles on SDK 58
+Function("isFunction") { (value: JavaScriptValue) -> Bool in
+  return value.isFunction()
+}
+
+// 2.0
+@JS
+func isFunction(_ value: borrowing JavaScriptValue) -> Bool {
+  return value.isFunction()
+}
+```
 
 ### Async functions
 
@@ -106,7 +128,7 @@ func download(url: URL) -> Task<DownloadResult, any Error> {
 }
 ```
 
-This shape requires the `JavaScriptEncodable` conformance for `Task` in the checked-out core (encode-only; a JS promise does not decode back into a `Task`). Verify it exists before using this shape; prefer shape 1 or 2 when it is absent.
+This shape requires the `JavaScriptEncodable` conformance for `Task`, which `expo-modules-jsi` provides on SDK 58 (encode-only; a JS promise does not decode back into a `Task`).
 
 #### Threading: the architectural difference
 
@@ -128,7 +150,7 @@ Audit every `AsyncFunction` you migrate for what the body does before its first 
 - Blocking I/O, file or database access, image or crypto work, or an unbounded loop: never leave this on the JS actor.
 - `.runOnQueue(...)` in 1.0: the queue was the contract. See the continuation pattern below.
 
-To restore the 1.0 behavior, use the `@JS` macro's `.concurrent` option (macros plugin `0.10.0`):
+To restore the 1.0 behavior, use the `@JS` macro's `.concurrent` option:
 
 ```swift
 // Body runs off the JS thread, like a 1.0 AsyncFunction.
@@ -144,20 +166,60 @@ func performWork() async throws {}
 
 Only the body moves. Arguments are still decoded on the JS thread and the result is still encoded back on it, so `.concurrent` changes execution, not the JS contract. This makes it the preferred fix for a migrated function that relied on 1.0 background execution: the intent is explicit and the body stays as written.
 
-Two constraints:
+Three constraints:
 
 - `.concurrent` is valid only on an `async` function. On anything else it is diagnosed on the `@JS` attribute.
 - You must still write `async` yourself. The macro cannot add it, but the diagnostic for a synchronous function carries a fix-it that inserts it.
+- The call sends the module or shared object off the JS thread, so in Swift 6 language mode the class must be `Sendable`. Make the class `Sendable` when its state allows it. Otherwise ask the user before declaring `@unchecked Sendable`, and state in a comment what guards the mutable state.
 
-**Check availability first.** The plugin side shipped in `0.10.0`, but this also needs a `JSOptions` type and a second `@JS` overload in core, because the options-only spelling cannot reuse the unlabeled JS-name slot. Core has lagged the plugin on every 2.0 feature so far, and where it still declares `@JS(_ jsName: String? = nil)` alone, `@JS(.concurrent)` does not compile. Read the checked-out declaration:
+#### Sync and async pairs
 
-```bash
-grep -rn 'public macro JS' <expo-modules-core>
+1.0 modules often register one body twice: a `Function` for synchronous calls and an `AsyncFunction` that runs the same work off the JS thread. Merge the pair with `.withAsync`, which binds the function under its own JS name and again under the given name as a promise-returning variant that runs on the concurrent thread pool:
+
+```swift
+// 1.0
+Function("readSync") { (path: String) throws -> String in
+  return try self.readFile(path)
+}
+AsyncFunction("read") { (path: String) throws -> String in
+  return try self.readFile(path)
+}
+
+// 2.0
+@JS("readSync", .withAsync("read"))
+func readSync(path: String) throws -> String {
+  return try readFile(path)
+}
 ```
 
-If it takes only a name, use the explicit patterns below instead.
+Constraints:
 
-For a queue-pinned function, or when `.concurrent` is unavailable, prefer restructuring the work onto the Swift Concurrency model (structured concurrency, an actor, or a detached task for blocking work). When that is not feasible because the queue itself is the contract, for example a library that must be called from one serial queue, convert to an `async` method that dispatches to that queue inside a checked continuation:
+- The function must be synchronous. On an `async` function the macro rejects the option and points to `.concurrent`.
+- The name must be a string literal, and the option can appear only once.
+- The variant is not isolated to the JS thread, so the body must be safe on any thread. A function isolated to a global actor such as `@MainActor` is rejected; mark it `nonisolated` when its isolation comes from elsewhere.
+- In Swift 6 language mode the class must be `Sendable`, as with `.concurrent`.
+- `.withAsync` needs `expo` `58.0.17` or newer.
+
+#### Queue-pinned functions
+
+For `.runOnQueue(.main)`, mark the `async` function `@MainActor`. The macro then does not isolate it to the JS thread, and the body runs on the main actor. `expo-haptics` migrated this way in SDK 58:
+
+```swift
+// 1.0
+AsyncFunction("selectionAsync") {
+  UISelectionFeedbackGenerator().selectionChanged()
+}
+.runOnQueue(.main)
+
+// 2.0
+@JS
+@MainActor
+func selectionAsync() async {
+  UISelectionFeedbackGenerator().selectionChanged()
+}
+```
+
+For a function pinned to any other queue, prefer restructuring the work onto the Swift Concurrency model (structured concurrency, an actor, or a detached task for blocking work). When that is not feasible because the queue itself is the contract, for example a library that must be called from one serial queue, convert to an `async` method that dispatches to that queue inside a checked continuation:
 
 ```swift
 // 1.0
@@ -197,29 +259,25 @@ var volume: Double = 1
 
 Access control does not define JS mutability. Verify whether the declaration is syntactically settable; a stored `var` normally produces a JS setter.
 
-Map a 1.0 `Constant` to a `@JS let`; a `let` property is a natural constant and produces a read-only JS property:
+Map a 1.0 `Constant` to a `@JS lazy var`. A 1.0 `Constant` runs its closure at the first read and caches the result. A `lazy` `@JS` property does the same: it is read-only from JS, and its first read stores the value as a data property on the JS object, so later reads do not call native code.
 
 ```swift
 // 1.0
-Constant("apiVersion") { 3 }
+Constant("buildInfo") { computeBuildInfo() }
 
 // 2.0
+@JS
+lazy var buildInfo = computeBuildInfo()
+```
+
+A `@JS let` also produces a read-only JS property, but it initializes with the module instance. Use it only for a cheap value whose evaluation time does not matter, such as a literal:
+
+```swift
 @JS
 let apiVersion = 3
 ```
 
-Evaluation timing shifts: a 1.0 `Constant` closure runs lazily, while a `let` initializes with the module instance. When the value is expensive and must stay deferred, keep private lazy storage and expose a getter-only computed property (a `var` with a `{ }` getter body and no storage of its own), not a stored `lazy var`:
-
-```swift
-private lazy var cachedInfo = computeInfo()
-
-@JS
-var info: Info {  // computed: recomputes nothing, just returns the cached value
-  return cachedInfo
-}
-```
-
-Do not expose a cached value as a settable `lazy @JS var`.
+Do not map a 1.0 `Property` getter to a `lazy var`. A `Property` getter runs on every read, so a `lazy var` would freeze its first value. `lazy` `@JS` properties need `expo` `58.0.20` or newer.
 
 ## Events
 
@@ -242,9 +300,24 @@ func report(percent: Double) {
 
 The default `@Event` wire name strips a leading `on` and decapitalizes the remainder: Swift `onProgress` emits `progress`. 1.0 modules commonly expose `onProgress`. During migration, pass the original wire name explicitly unless an intentional JS breaking change was approved.
 
-Use `() -> Void` for no-payload events. For payloads, create or reuse a `JavaScriptEncodable` type instead of preserving an untyped dictionary. Migrate `OnStartObserving` and `OnStopObserving` to the `didStartListening(event:)`/`didStopListening(event:)` lifecycle hooks (see Views and lifecycle).
+For payloads, create or reuse a `JavaScriptEncodable` type instead of preserving an untyped dictionary. Migrate `OnStartObserving` and `OnStopObserving` to the `didStartListening(event:)`/`didStopListening(event:)` lifecycle hooks (see Views and lifecycle).
 
-Default `@Event` dispatch schedules onto the JS thread and is callable from other isolation contexts. Do not use `sync: true` unless core provides the matching `emitSync` overloads.
+A `() -> Void` event sends `undefined` to the listener. A 1.0 `sendEvent("name")` without a body sent `{}`, so a listener that reads a field of its argument throws after a verbatim migration. Check the JS listeners. When any of them reads the argument, keep an object payload with an empty record:
+
+```swift
+@Record
+struct ReadyEvent {}
+
+@Event("onReady")
+var onReady: (ReadyEvent) -> Void
+
+// Sends {} as before.
+onReady(ReadyEvent())
+```
+
+Use `() -> Void` only when no listener reads the argument, or when the user approves the change.
+
+Default `@Event` dispatch schedules onto the JS thread and is callable from other isolation contexts. Do not use `sync: true`: SDK 58 core has no `emitSync`, so a synchronous event does not build.
 
 ## Shared objects
 
@@ -272,7 +345,11 @@ final class DownloadModule: Module {}
 
 Drop the leading owner argument used by instance DSL closures; use `self` in the real instance method. Preserve constructor arity and JS member names.
 
-Migrate only when the checked-out core supplies the shared-object decoration and construction hooks. Never create both a 1.0 `Class(...)` entry and a 2.0 registration for the same class without confirming that core intentionally merges them.
+`@SharedObject` accepts any direct or indirect `SharedObject` subclass. That includes a `SharedRef<T>` subclass, such as `final class AudioPlayer: SharedRef<AVPlayer>`, from `expo` `58.0.20`. Keep the superclass as it is.
+
+The 1.0 DSL has no inheritance between JS classes: each `Class(...)` block exposes only its own entries. A `@SharedObject` class likewise exposes only the `@JS` members that it declares, so put the members of each JS class on that class.
+
+SDK 58 core supplies the decoration and construction hooks for instance members, static members, and the `@JS init`. Never create both a 1.0 `Class(...)` entry and a 2.0 registration for the same class without confirming that core intentionally merges them.
 
 Static members belong to shared objects, not modules: a module is exported to JS as an instance, so Swift `static` members on a `Module` class are not useful there. Keep module-level values as instance `@JS` members.
 
@@ -316,17 +393,7 @@ final class Download: SharedObject {
 
 `StaticFunction` and `StaticAsyncFunction` both collapse into a `static` (or `class`) Swift declaration, with `async` carrying the distinction, exactly as `Function`/`AsyncFunction` do for instance members. Because 1.0 had no static property component, a `StaticFunction` that only returns a stored value can become a `@JS static var` in 2.0. That changes the JS contract from a call to a property access, so do it only when the user asks; a syntax migration keeps it a function.
 
-What decides whether any of this works is the binding path: instance members bind onto the class prototype, while `static`/`class` members bind onto the constructor object through a separate, `constructor:`-labeled decoration hook. The two are independent capabilities.
-
-**Support status.** The macros plugin has emitted the `constructor:` binding since `0.7.0`, but core shipped the `prototype:` overload well ahead of it. Where only `prototype:` is declared, a `@JS static` member expands and then fails to link. Verify before migrating any static member:
-
-```bash
-grep -rn '_decorateSharedObject' <expo-modules-core>
-```
-
-If only the `prototype:` overload is declared, keep every `StaticFunction`/`StaticAsyncFunction` entry in the 1.0 `Class(...)` block. Mixed mode is the expected outcome here: migrate the constructor and instance members, leave the static entries on the DSL, and say in the handoff that static members stayed behind because the installed core does not bind them yet.
-
-Static functions and static properties travel this same path, so neither is available ahead of the other. When the hook is present, confirm it by calling the member on the JS class rather than on an instance; an instance-side test passes whether or not static binding works.
+Instance members bind onto the class prototype, while `static`/`class` members bind onto the JS class object through a separate hook. Core has the static hook from `expo` `58.0.19`. Confirm a migrated static member by calling it on the JS class, not on an instance: an instance-side test passes whether or not static binding works.
 
 ## Records
 
@@ -349,11 +416,13 @@ Rules:
 
 Preserve the 1.0 contract exactly. For example, migrate `@Field var source: URL? = nil` to `var source: URL?`, not to `var source: URL`, unless the user approved a breaking change.
 
-Every stored property is part of the 2.0 record surface. If the old type contains stored bookkeeping that was not a 1.0 field, move it out of the record or leave the type on 1.0; there is no field opt-out. Verify that each field supports the required `JavaScriptDecodable`/`JavaScriptEncodable` direction.
+Every non-`static`, non-`private`/`fileprivate`, non-`lazy` stored property is part of the 2.0 record surface. If the old type contains stored bookkeeping that was not a 1.0 field, make it `private` with a default value, move it out of the record, or leave the type on 1.0. Verify that each field supports the required `JavaScriptDecodable`/`JavaScriptEncodable` direction. Free-form fields such as `[String: Any]?` are accepted.
+
+`@Record` applies to a struct, or to a `final class` with no inheritance clause. A 1.0 record class (`class Options: Record`) must become `final` and drop `: Record`. The macro adds the conformance, and other protocol conformances go in an extension. When the class has a superclass or subclasses, convert it to a struct only if no Swift caller relies on reference semantics; otherwise keep it on 1.0.
 
 ## Unions
 
-`@Union` (macros plugin `0.10.0`) is the typed, N-case alternative to 1.0's `Either` types. It applies to a non-generic `enum` whose every case carries exactly one associated value:
+`@Union` is the typed, N-case alternative to 1.0's `Either` types. It applies to a non-generic `enum` whose every case carries exactly one associated value:
 
 ```swift
 // 1.0: JS `string | SourceOptions`, unwrapped by probing each side.
@@ -399,19 +468,13 @@ A type the union does not carry is a compile error, not a runtime `nil`. A misma
 
 Constraints, each a compile error: a generic enum, no cases, a case with no payload or more than one, a default value on the payload, and two cases with the identical payload spelling.
 
-**Check availability first.** The plugin side shipped in `0.10.0`, but this also needs the `Union` macro declaration and the `UnionCaseMismatch` exception in core:
-
-```bash
-grep -rn 'public macro Union\|UnionCaseMismatch' <expo-modules-core>
-```
-
-Keep `Either` types on the 1.0 DSL until both exist in the target. Treat adopting `@Union` as an API-shape change to raise with the user rather than a mechanical step: it renames nothing in JS, but it does restructure Swift call sites.
+Treat adopting `@Union` as an API-shape change to raise with the user rather than a mechanical step: it renames nothing in JS, but it does restructure Swift call sites.
 
 ## Views and lifecycle
 
-Views are not covered by 2.0 yet. Keep UIKit `View`, `Prop`, view `Events`, and `OnViewDidUpdateProps` DSL entries on 1.0. Macro declarations or expansion tests alone do not prove the runtime update path exists.
+Views are not covered by 2.0 yet. Keep UIKit `View`, `Prop`, view `Events`, and `OnViewDidUpdateProps` DSL entries on 1.0. Expansion tests alone do not prove the runtime update path exists.
 
-The planned shape is a class marked `@ExpoView` whose props and event callbacks are declared once in a typed `@ViewProps` struct, instead of split between the native view and a hand-written JS prop type. Until that lands complete, a module with views migrates its non-view members and keeps the view on the DSL. That is a normal mixed-mode result, not a failed migration.
+The planned shape is a class marked `@ExpoView` whose props and event callbacks are declared once in a typed `@ViewProps` struct, instead of split between the native view and a hand-written JS prop type. The plugin implements both macros, but SDK 58 core does not declare them, so module source cannot use them. A module with views migrates its non-view members and keeps the view on the DSL. That is a normal mixed-mode result, not a failed migration.
 
 Module lifecycle is core-owned rather than macro-generated. The DSL components map to hook methods with no-op defaults:
 
@@ -429,18 +492,18 @@ Rules:
 - `didCreate()` runs after the module is registered, slightly later than 1.0 `OnCreate`, which fires before registration; `willDestroy()` runs at holder teardown. Verify nothing depends on the earlier timing before migrating `OnCreate`.
 - DSL lifecycle components can remain during an incremental migration and each fires exactly once, but do not implement a DSL component and its hook for the same behavior, or the work runs twice.
 
-There is no 2.0 replacement for every lifecycle component; for example, retain app-context teardown handling when no matching hook exists.
+`OnAppContextDestroys`, `OnAppEntersForeground`, `OnAppEntersBackground`, and `OnAppBecomesActive` have no 2.0 hook. Keep them in `definition()`.
 
 ## Mixed mode
 
-`@ExpoModule` may coexist with a non-empty `definition()` when the paired core supports merging the two surfaces. Keep only unsupported entries in the DSL and avoid duplicate names across macro and DSL registrations.
+`@ExpoModule` may coexist with a non-empty `definition()`; core merges the two surfaces. Keep only unsupported entries in the DSL and avoid duplicate names across macro and DSL registrations. `expo-sqlite` in SDK 58 is a shipped example: its module functions, properties, event, and lifecycle hooks use the 2.0 forms, while its shared-object classes stay in `definition()`.
 
 Before deleting `definition()`, verify that it contains no:
 
+- `Name(...)` entry whose name differs from the `@ExpoModule` name
 - views or view events
 - lifecycle or app-context listeners
 - queue-pinned functions
-- `StaticFunction`/`StaticAsyncFunction` entries, unless core declares the `constructor:` decoration hook
 
 ## Contract checklist
 
