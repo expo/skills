@@ -215,6 +215,12 @@ When the app crashes or closes on launch, read the iOS session's crash reports a
 
 **Hold the device log before you reproduce the crash.** Without the hold, the crash gets a report but an empty log tail. Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
 
+## Inspect app network requests (iOS)
+
+When the task needs HTTP(S) evidence, read [network capture](./references/network-capture.md)
+for capture fields, request coverage, private-session access, and downloading a
+HAR before the session stops. Capture decrypts HTTPS and can change app behavior.
+
 ## Operating principles
 
 The non-obvious mental model worth internalizing. Specific error→fix lookups (hung verbs, `tap` rejected, `--platform`, `--json`, `pod install` locale, orphaned sessions, boot variability) live in [references/troubleshooting.md](./references/troubleshooting.md).
@@ -246,6 +252,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 - [references/run-your-app.md](./references/run-your-app.md) — full command sequences for modes A, B, and C (read before running a mode).
 - [references/remote-controls.md](./references/remote-controls.md) — direct iOS actions, settings, clipboard, screenshots, and app data files.
 - [references/controllers.md](./references/controllers.md) — agent-device verb reference and the `argent` alternative.
+- [references/network-capture.md](./references/network-capture.md) — iOS HTTP(S) capture and private HAR downloads.
 - [references/logs-and-crashes.md](./references/logs-and-crashes.md) — device logs and crash reports from an iOS session (read when the app crashes or misbehaves).
 - [references/troubleshooting.md](./references/troubleshooting.md) — concrete errors and fixes.
 
