@@ -40,7 +40,7 @@ if the user set a limit you would go past, or if the work grows beyond what they
 
 - `--max-duration-minutes N` is the hard automatic-stop deadline. Any plan can set it, up to the plan limit (40 minutes on Free, 115 on paid plans). The timer starts when the session is ready.
 - `--max-idle-time-minutes N` stops a session after that many inactive minutes. Omitted means **no idle timeout**: the session runs until its maximum duration or an explicit stop.
-- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands). Current iOS automation-session workers also count preview input and host actions recorded as session events, such as app launches and screenshots. Settings, permissions, and app-file changes do not reset the timer. Watching video does not count; Android previews and older workers do not report preview activity. `web-preview-only` sessions do not enforce an idle timeout. Use the maximum duration as the hard limit, and omit the idle timeout when a preview must remain available without input.
+- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands). Current iOS automation-session workers also count preview input and host actions recorded as session events, such as app launches and screenshots. Settings, permissions, and app-file changes do not reset the timer. Watching video does not count; Android previews and older workers do not report preview activity. Current iOS `web-preview-only` sessions also enforce the idle timeout; preview input and the same recorded host actions reset it. EAS rejects an idle timeout for an Android `web-preview-only` session and does not create it, so omit `--max-idle-time-minutes` there. Use the maximum duration as the hard limit, and omit the idle timeout when a preview must remain available without input.
 - `npx --yes eas-cli@latest account:usage` shows the selected account's Simulator minutes.
 
 ## Check availability first
@@ -158,9 +158,10 @@ copy of the CLI surface. Keep non-obvious behavioral guidance from this skill—
 | `npx --yes eas-cli@latest simulator:start --platform ios\|android --name "<description>" [flags]` | Create a session; boot the sim + selected interface; write `.env.eas-simulator` by default; print the preview + job-run URLs. **Always pass `--name`**. `--json` does not suppress the dotenv; use `--out-config-type env` when no file should be written (it prints only the controller `export` lines, without `EAS_SIMULATOR_SESSION_ID`, so pass `--id` to `get`/`stop`/`events`). |
 | `npx --yes eas-cli@latest simulator:control [action] [values…] --id <id>` | Discover and run actions on a live iOS host (CLI ≥ 25.2.0). `--json` lists action schemas; `--output` saves returned files locally. See [remote controls](./references/remote-controls.md). |
 | `npx --yes eas-cli@latest simulator:exec <cmd> [args…]` | Load `.env.eas-simulator`, then run `<cmd>` with that env. The bridge to the controller. |
-| `npx --yes eas-cli@latest simulator:get [--id <id>] [--json] [--non-interactive]` | Session status + connection details, including the session name. **Use this to confirm readiness** (see *Operating principles*). |
+| `npx --yes eas-cli@latest simulator:get [--id <id>] [--json] [--non-interactive]` | Session status + connection details, including the session name. **Use this to confirm readiness** (see *Operating principles*). For a failed session, it prints the reason; `--json` adds an `errors` array (CLI ≥ 26.0.0). |
 | `npx --yes eas-cli@latest simulator:list [filters] [--limit N] [--after <cursor>] [--json]` | List and paginate project sessions; filter by status, type, platform, name prefix, and tags. |
 | `npx --yes eas-cli@latest simulator:events [--id <id>] [--follow\|--json]` | Show recorded activity events; `--follow` watches until the session ends. |
+| `npx --yes eas-cli@latest simulator:logs [--id <id>] [--follow\|--json]` | iOS app logs (CLI ≥ 27.0.0). Works on private sessions. After the session stops, `--output <path>` downloads the saved logs. See [logs and crashes](./references/logs-and-crashes.md). |
 | `npx --yes eas-cli@latest simulator:stop [--id <id>] [--json] [--non-interactive]` | Stop a session (idempotent). |
 
 ## Running the user's app — pick a mode
@@ -211,7 +212,7 @@ For the full verb set and the `argent` controller alternative, see [references/c
 
 ## When the app crashes: device logs and crash reports (iOS)
 
-When the app crashes or closes on launch, read the iOS session's crash reports and device log before guessing from screenshots. Use the authenticated browser preview or controller logs for a private session. When `simulator:get --json` supplies a preview API URL, it carries the session token, so never print it.
+When the app crashes or closes on launch, read the iOS session's crash reports and device log before guessing from screenshots. For app logs on any iOS session, including a private one, use `simulator:logs` (CLI ≥ 27.0.0). When `simulator:get --json` supplies a preview API URL, it carries the session token, so never print it.
 
 **Hold the device log before you reproduce the crash.** Without the hold, the crash gets a report but an empty log tail. Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
 
