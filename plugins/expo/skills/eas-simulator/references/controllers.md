@@ -1,11 +1,11 @@
 # Controllers: agent-device, Appium, and argent
 
-`eas-cli` has no device verbs — it manages the *session*. Automation commands come from the interface selected by `simulator:start --type`:
+`eas-cli` manages the session and exposes iOS host actions through [`simulator:control`](./remote-controls.md). For snapshots and element-reference navigation, use the interface selected by `simulator:start --type`:
 
 - `agent-device` (Callstack, MIT) — used throughout this skill; runs on demand via `npx agent-device@latest`, nothing installed globally.
 - `appium` — exposes `APPIUM_URL` and `APPIUM_CAPS` for an Appium client.
 - `argent` (Software Mansion) — a capable alternative controller; check its license for your use.
-- `web-preview-only` — browser preview with no programmatic control.
+- `web-preview-only` — browser preview without a separate controller daemon; direct iOS host actions remain available when the host supports them.
 
 All four types include a web preview. Before setting `--max-idle-time-minutes`, follow [Session lifetime](../SKILL.md#session-lifetime); current iOS automation workers also count preview input, while watching video does not count; Android and older workers differ.
 
@@ -42,6 +42,16 @@ EAS-specific notes:
 - **Exercised against a live session:** `apps`, `install`, `install-from-source`, `open`, `snapshot -i`, `press`, `fill`, `screenshot`, `scroll`, `gesture` (needs a preset, e.g. `gesture swipe left`), `logs`, `record` (`start [path]`/`stop`), `network`, `perf`.
 - **Recording:** `record start ./clip.mp4`, then `record stop` (no path). The file goes to the `record start` path, with a `.gesture-telemetry.json` next to it, and the clip also uploads as a session artifact. If `record stop` times out while the remote device exports, run it again; add `--platform ios` if it cannot find the recording. Separately, EAS uploads a whole-session screen recording after the session stops (iOS and Android).
 - **Remote proof:** `open` prints `Session state: /Users/expo/...` (iOS) or `/home/expo/...` (Android) on the remote device. `session state-dir` prints the local path, so it does not prove remote use. `metro` (`prepare`/`reload`) is the Mode C dev-client bridge. Pass `--platform ios`; run `<verb>` with no args to see its required subcommand/args.
+
+## Browser clipboard
+
+On iOS previews running serve-sim 0.9.0+, the toolbar can copy selected simulator
+text into the browser clipboard and paste browser text into the focused app.
+Browser permissions can block clipboard access; use the preview's manual Copy
+or Paste fallback. Copy can time out when nothing is selected or the app does
+not write a new pasteboard value. These controls depend on the session host,
+not just the local CLI version. For programmatic text transfer, use the
+[clipboard actions](./remote-controls.md#text-and-clipboard).
 
 ## Recording download recovery
 
