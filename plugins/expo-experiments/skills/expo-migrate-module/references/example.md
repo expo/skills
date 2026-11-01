@@ -210,4 +210,4 @@ public final class DownloaderModule: Module {
 
 `definition()` is gone only because it was empty and `@ExpoModule("Downloader")` preserves the resolved name. If any member had stayed blocked or unverified, the mixed-mode form above is the correct place to stop, not a broken end state.
 
-`.concurrent` sends the module off the JS thread. In Swift 6 language mode the class must then be `Sendable`, and `volume` is mutable state. In that mode, ask the user before declaring `@unchecked Sendable`, and say in a comment what guards `volume`.
+`.concurrent` sends the module off the JS thread, so in Swift 6 language mode the class needs `@unchecked Sendable`, as the `.concurrent` constraints in `migration-map.md` describe. The off-thread body reads only `cacheDirectory`, so the conformance is safe as long as `cacheDirectory` does not change. `volume` stays on the JS thread.

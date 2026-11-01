@@ -65,7 +65,7 @@ Follow these invariants:
 - Preserve every existing JS-visible name explicitly when Swift naming rules or macro defaults differ.
 - Keep original optional/default behavior. An optional 1.0 record field must not become required merely because 2.0 can express required fields.
 - Keep same-JS-name overloads on the DSL. The plugin does not dispatch overloads, and it reports two `@JS` members with one JS name on one object as a build error.
-- Preserve async threading behavior. A 1.0 `AsyncFunction` body ran off the JS thread; a 2.0 `async` `@JS` member starts on it and leaves only at the first `await`. A body that never awaits therefore blocks the JS thread, with no change to the JS signature. Audit what runs before the first `await`, and never leave blocking I/O on the JS actor. Fix with `@JS(.concurrent)`, or restructure onto Swift Concurrency or a continuation. Queue-pinned functions get the same treatment; `.runOnQueue(.main)` becomes a `@MainActor` `async` function. Merge a sync/async pair that shares a body into one function with `.withAsync("name")`. See the threading section in `references/migration-map.md`.
+- Preserve async threading behavior. A 1.0 `AsyncFunction` body ran off the JS thread; a 2.0 `async` `@JS` member starts on it and leaves only at the first `await`. A body that never awaits therefore blocks the JS thread, with no change to the JS signature. Audit what runs before the first `await`, and never leave blocking I/O on the JS actor. Fix with `@JS(.concurrent)`, return a `Task.detached` from a synchronous function, or restructure onto Swift Concurrency or a continuation. A plain `Task { }` in a `@JS` function that is not `nonisolated` starts on the JS thread, so it does not help. Queue-pinned functions get the same treatment; `.runOnQueue(.main)` becomes a `@MainActor` `async` function. Merge a sync/async pair that shares a body into one function with `.withAsync("name")`. See the threading section in `references/migration-map.md`.
 - Do not use `@ViewProps`, `@ExpoView`, or `@Event(sync: true)`. The plugin implements them, but SDK 58 core does not declare the two view macros and has no runtime support for synchronous events, so none of them builds. Keep 1.0 views on the DSL. Check the installed core for each of these instead of trusting a plugin version. `references/compatibility.md` has the per-capability checks.
 - Keep the `OnAppContextDestroys`, `OnAppEntersForeground`, `OnAppEntersBackground`, and `OnAppBecomesActive` components in `definition()`. 2.0 has no hook for them.
 - Keep the JS payload of every event. A `() -> Void` `@Event` sends `undefined`, but a 1.0 `sendEvent("name")` without a body sent `{}`. When JS code reads that payload, give the event an empty `@Record` payload type, which encodes to `{}`, or ask the user before you change it.
@@ -98,7 +98,7 @@ Keep going with the groups that do migrate cleanly; one blocked member does not 
 
 Run the narrowest available checks first, then the real integration surface:
 
-1. Run `npx expo-modules-cli swift:check ios` from the module package root. It reports macro errors and warnings in seconds, without a build. `references/compatibility.md` describes it.
+1. Run `npx --no-install expo-modules swift:check ios` from the module package root. It reports macro errors and warnings in seconds, without a build. `references/compatibility.md` describes it.
 2. Build or type-check the Apple module against the target `expo-modules-core`.
 3. Run native unit tests and JS/TS tests.
 4. Build and launch the example app when the repository provides one.

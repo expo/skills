@@ -56,7 +56,7 @@ These argument types work in a `@JS` signature on SDK 58:
 
 - **Free-form values.** `Any`, `[Any]`, and `[String: Any]`, optional or nested, are accepted as arguments, return values, and properties. A 1.0 `[String: Any]` argument keeps its Swift type.
 - **Closures.** A function-typed parameter receives the JS function. A closure that returns a value must be `throws`, and it blocks the caller until JS returns. A `@JS` function cannot return a closure. See `references/compatibility.md` for the rules.
-- **Tuples.** From `expo` `58.0.21`, an unlabeled tuple such as `(Int, String)` converts to a JS array, and a labeled tuple such as `(x: Double, y: Double)` to a JS object. Replacing a 1.0 array or dictionary type with a tuple changes the Swift API, so do it only when the user asks.
+- **Tuples.** An unlabeled tuple such as `(Int, String)` converts to a JS array, and a labeled tuple such as `(x: Double, y: Double)` to a JS object. Replacing a 1.0 array or dictionary type with a tuple changes the Swift API, so do it only when the user asks.
 - **`JavaScriptValue`.** Take it as `borrowing JavaScriptValue`. On SDK 58 the DSL no longer accepts `JavaScriptValue` arguments or results, so such a member must migrate.
 
 ```swift
@@ -128,7 +128,7 @@ func download(url: URL) -> Task<DownloadResult, any Error> {
 }
 ```
 
-This shape requires the `JavaScriptEncodable` conformance for `Task`, which `expo-modules-jsi` provides on SDK 58 (encode-only; a JS promise does not decode back into a `Task`).
+This shape requires the `JavaScriptEncodable` conformance for `Task`, which `expo-modules-jsi` provides on SDK 58 (encode-only; a JS promise does not decode back into a `Task`). A `Task { }` created here starts on the JS thread. To run the work off it, see "Returning a `Task`" under Threading.
 
 #### Threading: the architectural difference
 
@@ -170,7 +170,27 @@ Three constraints:
 
 - `.concurrent` is valid only on an `async` function. On anything else it is diagnosed on the `@JS` attribute.
 - You must still write `async` yourself. The macro cannot add it, but the diagnostic for a synchronous function carries a fix-it that inserts it.
-- The call sends the module or shared object off the JS thread, so in Swift 6 language mode the class must be `Sendable`. Make the class `Sendable` when its state allows it. Otherwise ask the user before declaring `@unchecked Sendable`, and state in a comment what guards the mutable state.
+- The call sends the module or shared object off the JS thread, so in Swift 6 language mode the class must be `Sendable`. `Module` and `SharedObject` are not `Sendable`, so `@unchecked Sendable` is the only conformance a subclass can have. Newer `expo-modules-macros` versions add it themselves. Run `npx --no-install expo-modules swift:expand --symbol MyModule ios/MyModule.swift`: when the output has an `extension MyModule: @unchecked Sendable` block, do not declare it. Otherwise declare `@unchecked Sendable` on the class, as `expo-sqlite` does. Either way the compiler no longer checks this state, so check that the off-thread code touches only state that is safe to share, and say in a comment what guards it.
+
+#### Returning a `Task`
+
+A synchronous `@JS` function that returns a `Task` also gives JS a promise (shape 3), and the task can run the work off the JS thread. That happens only when the task does not inherit `@JavaScriptActor`:
+
+```swift
+// The detached task runs on the concurrent thread pool. The function returns right away.
+@JS
+func clearCache() -> Task<Void, any Error> {
+  return Task.detached {
+    try FileManager.default.removeItem(at: self.cacheDirectory)
+  }
+}
+```
+
+- The macro isolates a synchronous `@JS` function to `@JavaScriptActor`, and `Task { }` inherits that isolation. The executor of that actor runs each job immediately on the current thread, so the body of a `Task { }` runs on the JS thread before the function even returns. Use `Task.detached { }`, or mark the function `nonisolated` so that its `Task { }` runs on the concurrent thread pool.
+- In Swift 6 language mode the closure sends `self` off the JS thread, so the class needs the `@unchecked Sendable` conformance described under `.concurrent`.
+- Throw inside the task, not from the function. An error that the function throws before it returns the task reaches JS as a synchronous exception, where a 1.0 `AsyncFunction` rejected its promise.
+
+For a plain migration, prefer `@JS(.concurrent)`: it keeps the `async` signature and the body as written. Return a `Task` when the work already is one.
 
 #### Sync and async pairs
 
@@ -197,8 +217,7 @@ Constraints:
 - The function must be synchronous. On an `async` function the macro rejects the option and points to `.concurrent`.
 - The name must be a string literal, and the option can appear only once.
 - The variant is not isolated to the JS thread, so the body must be safe on any thread. A function isolated to a global actor such as `@MainActor` is rejected; mark it `nonisolated` when its isolation comes from elsewhere.
-- In Swift 6 language mode the class must be `Sendable`, as with `.concurrent`.
-- `.withAsync` needs `expo` `58.0.17` or newer.
+- In Swift 6 language mode the class needs the `@unchecked Sendable` conformance described under `.concurrent`.
 
 #### Queue-pinned functions
 
@@ -277,7 +296,7 @@ A `@JS let` also produces a read-only JS property, but it initializes with the m
 let apiVersion = 3
 ```
 
-Do not map a 1.0 `Property` getter to a `lazy var`. A `Property` getter runs on every read, so a `lazy var` would freeze its first value. `lazy` `@JS` properties need `expo` `58.0.20` or newer.
+Do not map a 1.0 `Property` getter to a `lazy var`. A `Property` getter runs on every read, so a `lazy var` would freeze its first value.
 
 ## Events
 
@@ -345,7 +364,7 @@ final class DownloadModule: Module {}
 
 Drop the leading owner argument used by instance DSL closures; use `self` in the real instance method. Preserve constructor arity and JS member names.
 
-`@SharedObject` accepts any direct or indirect `SharedObject` subclass. That includes a `SharedRef<T>` subclass, such as `final class AudioPlayer: SharedRef<AVPlayer>`, from `expo` `58.0.20`. Keep the superclass as it is.
+`@SharedObject` accepts any direct or indirect `SharedObject` subclass. That includes a `SharedRef<T>` subclass, such as `final class AudioPlayer: SharedRef<AVPlayer>`. Keep the superclass as it is.
 
 The 1.0 DSL has no inheritance between JS classes: each `Class(...)` block exposes only its own entries. A `@SharedObject` class likewise exposes only the `@JS` members that it declares, so put the members of each JS class on that class.
 
@@ -393,7 +412,7 @@ final class Download: SharedObject {
 
 `StaticFunction` and `StaticAsyncFunction` both collapse into a `static` (or `class`) Swift declaration, with `async` carrying the distinction, exactly as `Function`/`AsyncFunction` do for instance members. Because 1.0 had no static property component, a `StaticFunction` that only returns a stored value can become a `@JS static var` in 2.0. That changes the JS contract from a call to a property access, so do it only when the user asks; a syntax migration keeps it a function.
 
-Instance members bind onto the class prototype, while `static`/`class` members bind onto the JS class object through a separate hook. Core has the static hook from `expo` `58.0.19`. Confirm a migrated static member by calling it on the JS class, not on an instance: an instance-side test passes whether or not static binding works.
+Instance members bind onto the class prototype, while `static`/`class` members bind onto the JS class object through a separate hook. Confirm a migrated static member by calling it on the JS class, not on an instance: an instance-side test passes whether or not static binding works.
 
 ## Records
 
