@@ -97,7 +97,7 @@ export default function MapScreen() {
 `@expo/ui` is versioned with the Expo SDK (e.g. `56.0.x` for SDK 56) and its API can change between SDK versions, so the **installed package's TypeScript types (`.d.ts`) are the most reliable source of truth** — they match the version in your project, while the docs track latest. Read the relevant component's `.d.ts` from the installed `@expo/ui` package in `node_modules`. Use the docs as the human-readable reference:
 
 - Overview — https://docs.expo.dev/versions/latest/sdk/ui/universal/index.md
-- Per component — https://docs.expo.dev/versions/latest/sdk/ui/universal/{component-name}/index.md
+- Per component — https://docs.expo.dev/versions/latest/sdk/ui/universal/{component-name}/index.md (slug is the component name lowercased, no hyphens, e.g. `button`, `bottomsheet`, `textinput`)
 
 ## When to drop down to a platform-specific layer
 

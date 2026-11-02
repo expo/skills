@@ -40,7 +40,7 @@ const ComposeList = Platform.OS === 'android' ? require('../components/ProductLi
   ```
   (`<skill-root>` is the directory containing this `references/` folder.)
 - **Always read the `.d.ts` type files** to confirm prop shapes and signatures — read the relevant `{ComponentName}/index.d.ts` from the installed `@expo/ui/jetpack-compose` package in `node_modules`. This is the most reliable source of truth.
-- When about to use a component, fetch its docs to confirm the API — https://docs.expo.dev/versions/latest/sdk/ui/jetpack-compose/{component-name}/index.md
+- When about to use a component, fetch its docs to confirm the API — https://docs.expo.dev/versions/latest/sdk/ui/jetpack-compose/{component-name}/index.md (slug is the component name lowercased, no hyphens, e.g. `button`, `bottomsheet`, `datetimepicker`)
 - When unsure about a modifier's API, refer to the docs — https://docs.expo.dev/versions/latest/sdk/ui/jetpack-compose/modifiers/index.md
 - Every Jetpack Compose tree must be wrapped in `Host`. Use `<Host matchContents>` for intrinsic sizing, or `<Host style={{ flex: 1 }}>` when you need explicit size (e.g. as a parent of `LazyColumn`). Example:
 
