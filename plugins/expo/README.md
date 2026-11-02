@@ -28,6 +28,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Guides iOS App Store, TestFlight, and Android Play Store submissions
 - Covers EAS Build configuration and version management
 - Helps write and validate EAS Workflow YAML files for CI/CD
+- Sets up agentic workflows that run a headless coding agent on an Expo Simulators session and return evidence
 - Checks EAS Update health, adoption, crash rates, and payload size
 - Configures, publishes, tests, and debugs over-the-air updates with EAS Update
 - Tracks production performance with EAS Observe
@@ -59,6 +60,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Setting up TestFlight beta testing
 - Configuring EAS Build profiles
 - Writing CI/CD workflows for automated deployments
+- Adding Agentic CI, Issue to PR, Bug triage, or QA Swarm so a headless agent tests the app on Expo Simulators
 - Inspecting EAS Update rollout health and adoption
 - Configuring, publishing, testing, or debugging an EAS Update
 - Tracking startup, navigation, and event performance with EAS Observe
@@ -94,6 +96,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **eas-app-stores** - Build and submit iOS/Android apps to the stores and TestFlight: Expo and other React Native projects, plus existing native apps
 - **eas-hosting** - Deploy Expo websites and API routes to EAS Hosting (secrets, custom domains, Cloudflare Workers)
 - **eas-workflows** - EAS workflow YAML files for CI/CD pipelines
+- **eas-agentic-workflows** - Headless coding agent inside EAS Workflows on an Expo Simulators session. It posts a verdict and evidence.
 - **eas-observe** - EAS Observe setup and launch, route, event, and version metrics
 - **eas-update** - Configure, publish, test, and debug over-the-air updates
 - **eas-update-insights** - Check EAS Update health, crash rates, adoption, and payload size
