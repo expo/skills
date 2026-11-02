@@ -1,5 +1,21 @@
 # Submitting to Google Play Store
 
+## Contents
+
+- [Prerequisites](#prerequisites)
+- [Service Account Setup](#service-account-setup)
+- [Environment Variables](#environment-variables)
+- [Release Tracks](#release-tracks)
+- [Staged Rollout](#staged-rollout)
+- [Submission Commands](#submission-commands)
+- [App Signing](#app-signing)
+- [Version Codes](#version-codes)
+- [First Submission Checklist](#first-submission-checklist)
+- [Common Issues](#common-issues)
+- [Internal Testing Distribution](#internal-testing-distribution)
+- [Monitoring Submissions](#monitoring-submissions)
+- [Tips](#tips)
+
 ## Prerequisites
 
 1. **Google Play Console Account** - Register at [play.google.com/console](https://play.google.com/console)

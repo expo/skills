@@ -1,5 +1,19 @@
 # Route Structure
 
+## Contents
+
+- [File Conventions](#file-conventions)
+- [Dynamic Routes](#dynamic-routes)
+- [Query Parameters](#query-parameters)
+- [Pathname](#pathname)
+- [Group Routes](#group-routes)
+- [Stacks and Tabs Structure](#stacks-and-tabs-structure)
+- [Array Routes for Multiple Stacks](#array-routes-for-multiple-stacks)
+- [Complete App Structure Example](#complete-app-structure-example)
+- [Layout Files](#layout-files)
+- [Route Settings](#route-settings)
+- [Not Found Routes](#not-found-routes)
+
 ## File Conventions
 
 - Routes belong in the `app` directory

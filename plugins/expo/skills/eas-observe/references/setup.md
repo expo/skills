@@ -4,6 +4,21 @@ EAS Observe collects app-startup performance metrics (cold launch, warm launch, 
 
 > Source: https://docs.expo.dev/eas/observe/get-started/ — consult this page for the latest guidance.
 
+## Contents
+
+- [SDK 55 vs SDK 56+ at a glance](#sdk-55-vs-sdk-56-at-a-glance)
+- [Prerequisites](#prerequisites)
+- [Step 1 — Install the library](#step-1--install-the-library)
+- [Step 2 — Wrap the root layout](#step-2--wrap-the-root-layout)
+- [Step 3 — Mark the app as interactive](#step-3--mark-the-app-as-interactive)
+- [Step 4 — Build the app](#step-4--build-the-app)
+- [Step 5 — View the metrics](#step-5--view-the-metrics)
+- [Optional — per-route navigation metrics (SDK 56+)](#optional--per-route-navigation-metrics-sdk-56)
+- [Optional — user-defined events (SDK 56+)](#optional--user-defined-events-sdk-56)
+- [Optional — error and crash reporting](#optional--error-and-crash-reporting)
+- [Optional — runtime configuration](#optional--runtime-configuration)
+- [Quick checklist](#quick-checklist)
+
 ## SDK 55 vs SDK 56+ at a glance
 
 The library exports differ between SDK versions. Pick the right one for the project's SDK before copying any snippet below.

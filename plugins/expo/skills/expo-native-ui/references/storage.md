@@ -1,5 +1,13 @@
 # Storage
 
+## Contents
+
+- [Key-Value Storage](#key-value-storage)
+- [When to Use What](#when-to-use-what)
+- [Storage with React State](#storage-with-react-state)
+- [React Hook for Storage](#react-hook-for-storage)
+- [Full SQLite for Complex Data](#full-sqlite-for-complex-data)
+
 ## Key-Value Storage
 
 Use the localStorage polyfill for key-value storage. **Never use AsyncStorage**

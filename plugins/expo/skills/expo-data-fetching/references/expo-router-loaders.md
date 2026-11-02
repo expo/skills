@@ -9,6 +9,18 @@ Route-level data loading for web apps using Expo SDK 55+. Loaders are async func
 
 You write one function and the framework manages when and how it executes.
 
+## Contents
+
+- [Configuration](#configuration)
+- [Imports](#imports)
+- [Basic Loader](#basic-loader)
+- [Dynamic Routes](#dynamic-routes)
+- [Server-Side Secrets & Request Access](#server-side-secrets--request-access)
+- [Response Utilities](#response-utilities)
+- [Suspense & Error Boundaries](#suspense--error-boundaries)
+- [Static vs Server Rendering](#static-vs-server-rendering)
+- [Best Practices](#best-practices)
+
 ## Configuration
 
 **Requirements:** Expo SDK 55+, web output mode (`npx expo serve` or `npx expo export --platform web`) set in `app.json` or `app.config.js`.

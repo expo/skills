@@ -4,6 +4,22 @@ EAS Observe collects app performance telemetry and custom events from Expo apps 
 
 > Source: https://docs.expo.dev/eas/observe/eas-cli/ — the canonical CLI page. This reference adds table layouts, JSON output shapes, and pagination details that the docs page does not cover.
 
+## Contents
+
+- [Commands Overview](#commands-overview)
+- [Expo MCP Server tools](#expo-mcp-server-tools)
+- [Supported Metrics](#supported-metrics)
+- [`eas observe:metrics-summary`](#eas-observemetrics-summary)
+- [`eas observe:metrics`](#eas-observemetrics)
+- [`eas observe:routes`](#eas-observeroutes)
+- [`eas observe:events`](#eas-observeevents)
+- [`eas observe:session`](#eas-observesession)
+- [`eas observe:errors`](#eas-observeerrors)
+- [`eas observe:event`](#eas-observeevent)
+- [`eas observe:versions`](#eas-observeversions)
+- [Common Workflows](#common-workflows)
+- [Notes](#notes)
+
 ## Commands Overview
 
 | Command | Purpose |

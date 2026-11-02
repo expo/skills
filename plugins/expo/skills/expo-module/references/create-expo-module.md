@@ -4,6 +4,18 @@ Use `create-expo-module` to scaffold new Expo modules and `create-expo-module ad
 
 Prefer `create-expo-module` over manually creating module files and directories. In most cases, the right move is to generate the scaffold first and then build on top of it.
 
+## Contents
+
+- [Choose the Module Type First](#choose-the-module-type-first)
+- [Recommended Commands](#recommended-commands)
+- [Creation Options](#creation-options)
+- [Platforms](#platforms)
+- [Feature Examples](#feature-examples)
+- [Local Module Quirks](#local-module-quirks)
+- [Standalone Module Quirks](#standalone-module-quirks)
+- [add-platform-support](#add-platform-support)
+- [Environment Variables](#environment-variables)
+
 ## Choose the Module Type First
 
 ### Local module

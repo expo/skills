@@ -1,5 +1,13 @@
 # Lifecycle Hooks Reference
 
+## Contents
+
+- [Module Lifecycle (in module definition)](#module-lifecycle-in-module-definition)
+- [iOS App Lifecycle (in module definition)](#ios-app-lifecycle-in-module-definition)
+- [Android Activity Lifecycle (in module definition)](#android-activity-lifecycle-in-module-definition)
+- [iOS AppDelegate Subscribers](#ios-appdelegate-subscribers)
+- [Android Lifecycle Listeners](#android-lifecycle-listeners)
+
 ## Module Lifecycle (in module definition)
 
 ```swift

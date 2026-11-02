@@ -4,6 +4,19 @@ Disclosed reference for [`expo-web-to-native`](../SKILL.md). A *false friend* is
 
 This is the single source of truth for the mapping; the SKILL.md steps name a few high-traffic swaps but defer the full list here.
 
+## Contents
+
+- [Elements & text](#elements--text)
+- [Events & interaction](#events--interaction)
+- [Styling & layout](#styling--layout)
+- [Navigation & URLs](#navigation--urls)
+- [React architecture & data (Next.js / SSR apps)](#react-architecture--data-nextjs--ssr-apps)
+- [Storage, state & sessions](#storage-state--sessions)
+- [Browser & platform APIs](#browser--platform-apis)
+- [Networking](#networking)
+- [Third-party services & SDKs](#third-party-services--sdks)
+- [Scrolling, keyboard & safe area](#scrolling-keyboard--safe-area)
+
 ## Elements & text
 
 | Web | Native | Gotcha |

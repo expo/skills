@@ -9,6 +9,13 @@
 
 All four types include a web preview. Before setting `--max-idle-time-minutes`, follow [Session lifetime](../SKILL.md#session-lifetime); browser-preview activity does not reset the timer.
 
+## Contents
+
+- [Appium](#appium)
+- [agent-device verbs (run via `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`)](#agent-device-verbs-run-via-npx---yes-eas-clilatest-simulatorexec-npx-agent-devicelatest-verb)
+- [Recording download recovery](#recording-download-recovery)
+- [argent (alternative)](#argent-alternative)
+
 ## Appium
 
 Start with `--type appium`, then run the user's Appium client through `simulator:exec`; the wrapper loads `APPIUM_URL` and JSON-encoded `APPIUM_CAPS` from `.env.eas-simulator`:

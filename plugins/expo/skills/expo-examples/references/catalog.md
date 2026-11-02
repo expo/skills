@@ -10,6 +10,22 @@ Most are single-screen integrations; a few differ:
 - **Larger showcases:** `with-shadcn`, `with-router-tv`, `with-router-menus`, `with-react-navigation`, `with-webgpu`.
 - **Starters (not integrations):** `blank`, `stickersmash`.
 
+## Contents
+
+- [Auth & identity](#auth--identity)
+- [Payments](#payments)
+- [Backend, data & storage](#backend-data--storage)
+- [Local database & state](#local-database--state)
+- [Navigation & routing](#navigation--routing)
+- [Styling & UI](#styling--ui)
+- [Animation & graphics](#animation--graphics)
+- [AI & ML](#ai--ml)
+- [Media & device](#media--device)
+- [Web & rendering](#web--rendering)
+- [Platform: TV, widgets](#platform-tv-widgets)
+- [Tooling, testing & monorepo](#tooling-testing--monorepo)
+- [Starters](#starters)
+
 ## Auth & identity
 - `with-clerk` — Clerk authentication
 - `with-auth0` — Auth0 login

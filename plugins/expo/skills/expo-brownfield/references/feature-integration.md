@@ -2,6 +2,14 @@
 
 Read after choosing the build approach. Packaging a framework and displaying its first view are only part of integration: the host also owns presentation, input, results, and lifecycle events.
 
+## Contents
+
+- [Define the boundary](#define-the-boundary)
+- [Register the component that receives input](#register-the-component-that-receives-input)
+- [SwiftUI host: receive the result and dismiss](#swiftui-host-receive-the-result-and-dismiss)
+- [Forward lifecycle events](#forward-lifecycle-events)
+- [Acceptance scenario](#acceptance-scenario)
+
 ## Define the boundary
 
 - Use initial props for a presentation's input, including a fresh `requestId` to correlate replies. Use JSON-compatible values rather than Swift objects or JS callbacks.

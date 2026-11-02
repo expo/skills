@@ -2,6 +2,15 @@
 
 Native views let you render platform UI components (UIView on iOS, Android View on Android) as React components.
 
+## Contents
+
+- [Defining a View](#defining-a-view)
+- [View Event Dispatching](#view-event-dispatching)
+- [View Lifecycle](#view-lifecycle)
+- [AsyncFunction on Views](#asyncfunction-on-views)
+- [PropGroup (Android)](#propgroup-android)
+- [GroupView (Android)](#groupview-android)
+
 ## Defining a View
 
 **Swift:**

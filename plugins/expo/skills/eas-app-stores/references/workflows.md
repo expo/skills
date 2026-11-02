@@ -4,6 +4,14 @@ Automate builds, submissions, and PR-preview updates with EAS Workflows. The exa
 
 When you need to write, edit, or validate a workflow YAML file beyond these examples, use the `eas-workflows` skill. For website and API-route deploy workflows (`type: deploy`), see the `eas-hosting` skill.
 
+## Contents
+
+- [PR Previews with EAS Update](#pr-previews-with-eas-update)
+- [Production Release](#production-release)
+- [Build on Push](#build-on-push)
+- [Conditional Jobs](#conditional-jobs)
+- [Tips](#tips)
+
 ## PR Previews with EAS Update
 
 Deploy OTA updates for pull requests:

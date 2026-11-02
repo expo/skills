@@ -4,6 +4,16 @@ Native iOS controls provide built-in haptics, accessibility, and platform-approp
 
 > **Prefer `@expo/ui` for these controls.** Its `Slider`, `Switch`, `DateTimePicker`, `Menu`, and segmented pickers render as real SwiftUI / Jetpack Compose and follow platform design conventions automatically — recommended over the React Native controls below. See the **`expo-ui`** skill; use the React Native controls below as a fallback when you're not using `@expo/ui`.
 
+## Contents
+
+- [Switch](#switch)
+- [Segmented Control](#segmented-control)
+- [Slider](#slider)
+- [Date/Time Picker](#datetime-picker)
+- [TextInput](#textinput)
+- [Picker (Wheel)](#picker-wheel)
+- [Best Practices](#best-practices)
+
 ## Switch
 
 Use for binary on/off settings. Has built-in haptics.

@@ -1,5 +1,12 @@
 # Visual Effects
 
+## Contents
+
+- [Backdrop Blur](#backdrop-blur)
+- [Glass Effects (iOS 26+)](#glass-effects-ios-26)
+- [Sheet with Glass Background](#sheet-with-glass-background)
+- [Best Practices](#best-practices)
+
 ## Backdrop Blur
 
 Use `expo-blur` for blur effects. Prefer systemMaterial tints as they adapt to dark mode.
