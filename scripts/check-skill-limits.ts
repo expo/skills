@@ -42,7 +42,12 @@ function parseSkill(path: string): { name: string; description: string; body: st
   const description = descMatch ? descMatch[1].replace(/^"|"$/g, "") : "";
   const nameMatch = frontmatter.match(/^name:\s*(.+?)\s*$/m);
   const name = nameMatch ? nameMatch[1] : "";
-  return { name, description, body, bodyLines: body.split("\n").length };
+  // The body is everything after the closing frontmatter fence, so it carries
+  // the file's trailing newline; splitting it as-is counts one phantom empty
+  // line and reports every skill a line longer than it is (a 500-line body as
+  // 501, past the cap). Drop that trailing newline before counting.
+  const bodyLines = body.replace(/\n$/, "").split("\n").length;
+  return { name, description, body, bodyLines };
 }
 
 function syncFeedbackBlock(path: string, skillName: string): void {
