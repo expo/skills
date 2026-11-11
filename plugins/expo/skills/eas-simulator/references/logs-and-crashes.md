@@ -7,20 +7,20 @@ This covers iOS sessions. `simulator:logs` reads live logs on iOS sessions only;
 | You need | Use | Works on |
 |---|---|---|
 | The device log | `simulator:logs` (eas-cli) | Every iOS session |
-| Crash reports with stack and log tail | The preview API (`sim_api /crashes`) | iOS sessions started with `--public-link`, `--cors-origin`, or `--frame-ancestor` |
+| Crash reports with stack and log tail | The preview API (`sim_api /crashes`) | iOS sessions started with `--public-link` |
 | Crash reports on a private session | The browser preview (see *What the user sees*) | Every iOS session |
 
 ## Read the device log
 
-`simulator:logs` reads the session's device log buffer. Run it from the Expo project directory. Pass `--id` with the session you are driving, because another agent can replace the dotenv session between your commands.
+`simulator:logs` reads the logs of the installed apps from the session's buffer. Run it from the Expo project directory. Pass `--id` with the session you are driving, because another agent can replace the dotenv session between your commands.
 
 ```bash
 npx --yes eas-cli@latest simulator:logs --id <session-id>                     # newest 100 lines from user apps
 npx --yes eas-cli@latest simulator:logs --id <session-id> --limit 500 --json  # more lines, as JSON
-npx --yes eas-cli@latest simulator:logs --id <session-id> --scope all         # all device processes, not only user apps
+npx --yes eas-cli@latest simulator:logs --id <session-id> --follow --scope all > ./all.txt &   # system logs too; --scope all needs --follow
 ```
 
-The log only runs while something reads it, so the buffer can be empty. **Start following before you reproduce the problem**, and save the stream to a file:
+For the first 30 minutes of a session, app logs are buffered without a reader. After that, new lines appear only while you follow. Either way, **start following before you reproduce the problem**, and save the stream to a file:
 
 ```bash
 npx --yes eas-cli@latest simulator:logs --id <session-id> --follow --timestamp > ./sim-logs.txt &
@@ -29,13 +29,13 @@ LOGS_PID=$!
 kill "$LOGS_PID"
 ```
 
-After the session stops, `--follow` fails. Download the log artifact instead: `simulator:logs --id <session-id> --output ./sim.log` (add `--artifact <n>` to pick one when there are several).
+After the session stops, `--follow` fails. Download the saved logs instead: `simulator:logs --id <session-id> --output ./app-logs.ndjson`. The `app-logs.ndjson` artifact holds only the app logs from the first 30 minutes of the session, up to 20 MiB. When the session had more than one device, non-interactive mode stops with a list of files; pass `--artifact <n>` (from 1) to pick one.
 
 If `simulator:logs` fails on an older session, fall back to `agent-device logs` (see [controllers.md](./controllers.md)).
 
 ## Reach the preview API (crash reports)
 
-`simulator:get --json` returns `remoteConfig.previewApiUrl`, the preview server's API URL with the session token already in its query. **It is `null` on a private session, which is the default.** It is present only when the session started with `--public-link`, `--cors-origin`, or `--frame-ancestor`. `--public-link` also gives a preview link that anyone can use to control the simulator, so don't add it only to read crashes. Start such a session only when the user agrees; otherwise, point the user to the crash reports in the browser preview.
+`simulator:get --json` returns `remoteConfig.previewApiUrl`, the preview server's API URL with the session token already in its query. **It is `null` on a private session, which is the default.** `simulator:get` includes it only for a session started with `--public-link`, even when a private session started with `--cors-origin` or `--frame-ancestor` (those print it only in the `simulator:start` output). `--public-link` also gives a preview link that anyone can use to control the simulator, so don't add it only to read crashes. Start such a session only when the user agrees; otherwise, point the user to the crash reports in the browser preview.
 
 Keep the URL in a shell variable and don't print it: the token grants control of the session. As with `simulator:exec`, run this from the Expo project directory, and pass `--id`.
 
