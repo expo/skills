@@ -44,7 +44,7 @@ Skills whose core purpose uses paid Expo Application Services (EAS). Each `SKILL
 | `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. | EAS Observe usage |
 | `eas-update` | EAS Update setup, OTA publishing, runtime compatibility, testing, and debugging. | EAS Update usage |
 | `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. | EAS Update usage |
-| `eas-simulator` | Remote iOS/Android simulators on EAS cloud, driven from the CLI or an agent, with browser preview. | EAS Simulator usage |
+| `eas-simulator` | Remote iOS/Android simulators with Expo Simulators, driven from the CLI or an agent, with browser preview. | Expo Simulators (EAS Simulator) usage |
 
 ## Adding a skill
 

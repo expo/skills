@@ -1,15 +1,17 @@
 ---
 name: eas-simulator
-description: "Run and control a user's app on a remote iOS/Android simulator hosted on EAS cloud. Read before running any `eas simulator:*` commands - it has the current syntax and workflow. Use whenever the user needs a simulator they can't run locally - 'run my app on a cloud simulator', 'use eas simulator to run/install/screenshot my app', 'I'm on Linux/Cursor and need an iOS device', 'no sim on this box / headless CI', 'let an agent click through my app and screenshot it', 'test my dev build on a remote sim with live reload', 'stream a sim to my browser' - even when they don't say 'EAS Simulator' or 'cloud'. On a host WITHOUT a local simulator (Linux, CI, cloud sandbox) it's the default; on macOS, do NOT auto-trigger for a plain 'run on the simulator' - use it only for a cloud/remote/shareable sim, an iOS version they lack, or an agent-driven session. NOT for local sims (expo run:ios, Xcode, Android Studio), EAS Build/Update, web preview, or physical devices."
+description: "Run and control a user's app on a remote iOS/Android simulator with Expo Simulators (also called EAS Simulator). Read before running any `eas simulator:*` commands - it has the current syntax and workflow. Use whenever the user needs a simulator they can't run locally - 'run my app on a cloud simulator', 'use eas simulator to run/install/screenshot my app', 'I'm on Linux/Cursor and need an iOS device', 'no sim on this box / headless CI', 'let an agent click through my app and screenshot it', 'test my dev build on a remote sim with live reload', 'stream a sim to my browser' - even when they don't say 'Expo Simulators', 'EAS Simulator', or 'cloud'. On a host WITHOUT a local simulator (Linux, CI, cloud sandbox) it's the default; on macOS, do NOT auto-trigger for a plain 'run on the simulator' - use it only for a cloud/remote/shareable sim, an iOS version they lack, or an agent-driven session. NOT for local sims (expo run:ios, Xcode, Android Studio), EAS Build/Update, web preview, or physical devices."
 license: MIT
 allowed-tools: "Bash(npx *eas-cli@*), Bash(npx *agent-device@*), Bash(npx expo *), Bash(eas *), Bash(expo *), Bash(xcodebuild*), Bash(pod*), Bash(argent *), Bash(ffmpeg*)"
 ---
 
-# EAS Simulator
+# Expo Simulators
 
 > **EAS service - costs apply.** Sessions count toward your account's pricing and limits and stop at their maximum duration. Stop a session with `eas simulator:stop` when the task is done. See https://expo.dev/pricing for current terms.
 
-EAS Simulator runs a remote iOS simulator or Android emulator on EAS infrastructure that you drive from your machine — from the CLI, from an AI agent (via `agent-device`), and from a browser preview. It's the unlock for **environments that can't run a simulator locally** (Linux boxes, cloud/background agents like Cursor Cloud), and for letting an agent *verify* a change on a real device instead of only reasoning about code.
+Expo Simulators runs a remote iOS simulator or Android emulator on EAS infrastructure that you drive from your machine — from the CLI, from an AI agent (via `agent-device`), and from a browser preview. It's the unlock for **environments that can't run a simulator locally** (Linux boxes, cloud/background agents like Cursor Cloud), and for letting an agent *verify* a change on a real device instead of only reasoning about code.
+
+**Naming.** The service is called **Expo Simulators**. "EAS Simulator" is an internal name that is still in use, and the CLI commands are `eas simulator:*` (alias `eas sim:*`). All of these names mean the same service: treat a request that uses any of them as a request for this skill. When you talk to the user about the service, call it **Expo Simulators**. Keep the exact command names (`eas simulator:start`) in commands.
 
 The `simulator:*` commands need a recent eas-cli, and new flags arrive often — which is why this skill runs everything via `npx --yes eas-cli@latest`. **The relevant subcommand's `--help` output is authoritative.**
 
@@ -19,11 +21,11 @@ The frontmatter `description` carries the trigger phrases. In short: use this to
 
 ## Cloud vs local: decide this first
 
-- **Explicit cloud/remote/shareable request:** use EAS Simulator after checking access, on any host.
-- **Generic simulator request:** use a suitable local simulator when available. If the host cannot run the requested simulator (for example, iOS on Linux or a cloud sandbox), use EAS Simulator after checking access. A non-macOS host may still support a local Android emulator.
+- **Explicit cloud/remote/shareable request:** use Expo Simulators after checking access, on any host.
+- **Generic simulator request:** use a suitable local simulator when available. If the host cannot run the requested simulator (for example, iOS on Linux or a cloud sandbox), use Expo Simulators after checking access. A non-macOS host may still support a local Android emulator.
 - Honor an explicit local choice; hand off to `expo run:ios` / Xcode / Android Studio as appropriate. Clarify only when the requested environment remains ambiguous and affects the task.
 
-When the user asks for EAS Simulator or a cloud simulator, start the session and do the
+When the user asks for Expo Simulators, EAS Simulator, or a cloud simulator, start the session and do the
 requested work without asking again. Stop the session when the work is done. Only check in
 if the user set a limit you would go past, or if the work grows beyond what they asked for.
 
@@ -44,7 +46,7 @@ if the user set a limit you would go past, or if the work grows beyond what they
 
 ## Check availability first
 
-EAS Simulator is available on **paid EAS plans only**. The Free plan has no access. Check access **before** starting a session; this read-only command does not create a session.
+Expo Simulators is available on **paid EAS plans only**. The Free plan has no access. Check access **before** starting a session; this read-only command does not create a session.
 
 ```bash
 npx --yes eas-cli@latest simulator:availability --json
@@ -53,8 +55,8 @@ npx --yes eas-cli@latest simulator:availability --json
 ```
 
 If it's **not** available, don't call `simulator:start` (it will fail). Instead, hand off gracefully so you keep making progress without this skill:
-- Tell the user EAS Simulator needs a paid EAS plan, and point them to their account's billing page to upgrade: `https://expo.dev/accounts/<accountName>/settings/billing` (use `accountName` from the output). Plans are compared at https://expo.dev/pricing. Give only these links, even if the output has other links.
-- Fall back to their normal local path for the actual goal — `expo run:ios` / Xcode / Android Studio for a local sim/emulator, an EAS Build, or whatever else fits. Don't dead-end on the cloud sim; the request was almost never "use EAS Simulator specifically."
+- Tell the user Expo Simulators needs a paid EAS plan, and point them to their account's billing page to upgrade: `https://expo.dev/accounts/<accountName>/settings/billing` (use `accountName` from the output). Plans are compared at https://expo.dev/pricing. Give only these links, even if the output has other links.
+- Fall back to their normal local path for the actual goal — `expo run:ios` / Xcode / Android Studio for a local sim/emulator, an EAS Build, or whatever else fits. Don't dead-end on the cloud sim; the request was almost never "use Expo Simulators specifically."
 
 (If `simulator:availability` isn't recognized, the CLI is too old — upgrade, or treat a `not enabled for this account` error from `simulator:start` the same way: stop and fall back.)
 
