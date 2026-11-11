@@ -87,7 +87,11 @@ npx --yes eas-cli@latest simulator:stop
 printf '# managed by eas-cli\n' > .env.eas-simulator
 ```
 
-To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in `--json`, `remoteConfig.webPreviewUrl`; for `web-preview-only` sessions, `remoteConfig.previewUrl`). All current session types include a browser preview, on iOS and Android; `agent-device`, `appium`, and `argent` also provide automation, while `web-preview-only` provides no automation interface. On Android, the expo.dev session page does not show the preview inline yet: **Open preview** opens it in a new tab. Some features are iOS-only, such as crash reports and the device log API (see [references/logs-and-crashes.md](./references/logs-and-crashes.md)); check `--help` for platform notes. **This URL is for the *user's* browser — you cannot open it for them, and it must never touch the sim:**
+To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in `--json`, `remoteConfig.webPreviewUrl`; for `web-preview-only` sessions, `remoteConfig.previewUrl`). All current session types include a browser preview, on iOS and Android; `agent-device`, `appium`, and `argent` also provide automation, while `web-preview-only` provides no automation interface. On Android, the expo.dev session page does not show the preview inline yet: **Open preview** opens it in a new tab. Some features are iOS-only, such as crash reports and the device log API (see [references/logs-and-crashes.md](./references/logs-and-crashes.md)); check `--help` for platform notes.
+
+**Preview links require sign-in by default.** The user opens the `webPreviewUrl` and signs in to expo.dev. `simulator:start --public-link` turns on the preview's Share button and prints a link that contains an access token: **anyone with that link can view and control the simulator**, including the app and its logs. Pass `--public-link` only when the user asks for a link they can share with people who can't sign in, and tell them about that risk. `simulator:get` shows links that follow the session's saved choice.
+
+**This URL is for the *user's* browser — you cannot open it for them, and it must never touch the sim:**
 - **"Open it here" (Cursor/VS Code)** → print the URL on its own line and tell the user to open Simple Browser (`Cmd/Ctrl+Shift+P` → "Simple Browser: Show") and paste it. Then **stop**: do not shell out to a system browser or a Cursor/VS Code URL handler, and do not ask "did a tab appear?" — you can't confirm it, the handoff is done.
 - **Never `open` the `webPreviewUrl` on the sim.** It's a browser preview, not a deep link and not an `agent-device open` argument; routing it to the device renders a browser-in-a-browser (a real past failure).
 - **Headless agent** (no display) → just return the URL as the deliverable.
@@ -140,7 +144,11 @@ copy of the CLI surface. Keep non-obvious behavioral guidance from this skill—
 | `npx --yes eas-cli@latest simulator:get [--id <id>] [--json] [--non-interactive]` | Session status + connection details, including the session name. **Use this to confirm readiness** (see *Operating principles*). |
 | `npx --yes eas-cli@latest simulator:list [filters] [--limit N] [--after <cursor>] [--json]` | List and paginate project sessions; filter by status, type, platform, name prefix, and tags. |
 | `npx --yes eas-cli@latest simulator:events [--id <id>] [--follow\|--json]` | Show recorded activity events; `--follow` watches until the session ends. |
+| `npx --yes eas-cli@latest simulator:logs [--id <id>] [--follow\|--json] [--scope user-apps\|all] [--limit N]` | iOS device log. Live sessions: the newest buffered lines (100 by default, user apps only by default), or `--follow` to stream. Stopped sessions: `--output <path>` downloads the log artifact. See [references/logs-and-crashes.md](./references/logs-and-crashes.md). |
+| `npx --yes eas-cli@latest simulator:control [<action> [values…]] [--id <id>] [--output <path>] [--import <file>]` | Run simulator actions on an iOS session, such as `screenshot.capture`, `appearance.set`, `permissions.set`, `clipboard.write`, `hardwareKeyboard.set`, or `app.install`. See *Simulator actions* below. |
 | `npx --yes eas-cli@latest simulator:stop [--id <id>] [--json] [--non-interactive]` | Stop a session (idempotent). |
+
+`sim:` is a short alias for the `simulator:` topic (for example, `eas sim:start`). This skill uses the full name.
 
 ## Running the user's app — pick a mode
 
@@ -188,11 +196,32 @@ If a controller fails to download a recording, retrieve it from [EAS session art
 
 For the full verb set and the `argent` controller alternative, see [references/controllers.md](./references/controllers.md).
 
+## Simulator actions (iOS)
+
+`simulator:control` runs actions on the simulator itself, through eas-cli. Use it for simulator settings and for a screenshot without a controller. Use the controller to drive the app's UI.
+
+```bash
+npx --yes eas-cli@latest simulator:control --list                          # actions this session supports (needs a running session)
+npx --yes eas-cli@latest simulator:control screenshot.capture --help       # usage for one action
+npx --yes eas-cli@latest simulator:control appearance.set dark
+npx --yes eas-cli@latest simulator:control permissions.set grant camera dev.example.app
+npx --yes eas-cli@latest simulator:control screenshot.capture --output ./screenshot.png
+npx --yes eas-cli@latest simulator:control clipboard.write -- --text-that-starts-with-dashes
+```
+
+- The session's preview server supplies the action list, so run `--list` before you use an action that is not in the examples above.
+- `--import <file>` runs saved actions from a JSON file (`{"version": 1, "actions": [{"action": "appearance.set", "params": {"value": "dark"}}]}`). Actions run in order and stop on the first failure. `simulator:start --import <file>` reads the same file: its `start` object holds start flags by their CLI names, and its actions run after the session is ready. Android sessions accept the `start` options but not actions yet.
+- Each command opens a connection. For many actions in a row, add `--keep-alive` (macOS and Linux). The connection closes after 120 seconds idle; change that with `--idle-timeout <seconds>`.
+- Output files are overwritten.
+
 ## When the app crashes: device logs and crash reports (iOS)
 
-When the app crashes or closes on launch, read the iOS session's crash reports and device log before guessing from screenshots. Read them from the preview API URL in `simulator:get --json`. That URL carries the session token, so never print it.
+When the app crashes or closes on launch, read the iOS session's device log and crash reports before guessing from screenshots.
 
-**Hold the device log before you reproduce the crash.** Without the hold, the crash gets a report but an empty log tail. Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
+- **Device log:** `npx --yes eas-cli@latest simulator:logs`. Start `simulator:logs --follow` **before** you reproduce the problem; the buffer holds only lines collected while something reads the log.
+- **Crash reports:** read them from the preview API URL (`remoteConfig.previewApiUrl` in `simulator:get --json`). That URL carries the session token, so never print it. It is `null` on a default (private) session; it is present only when the session started with `--public-link` (or `--cors-origin` / `--frame-ancestor`). On a private session, the user sees crash reports in the browser preview.
+
+Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
 
 ## Operating principles
 
