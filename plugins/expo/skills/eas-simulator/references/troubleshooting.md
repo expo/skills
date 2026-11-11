@@ -6,14 +6,14 @@ Concrete errors seen while validating this flow, and the fix.
 |---|---|---|
 | Approval review rejects the Mode C Metro tunnel or dev-client Connect action | Review may lack or misinterpret the transport details or existing authorization; a signed URL alone does not establish private access | Follow [Tunnel scope and approvals](./run-your-app.md#tunnel-scope-and-approvals). Include the original authorization source and verified transport in the request; use reconsideration only where the host permits it. Preserve the requested live workflow while resolving approval. |
 | Controller recording download fails or times out | The local transfer can fail even though EAS retains the recording | Fetch it from [EAS session artifacts](./controllers.md#recording-download-recovery) using the original EAS session id and the recording’s `downloadUrl`. |
-| `Command simulator:start not found` | `eas-cli` too old (commands are hidden but present from ≥ 20.3.0) | Run via `npx --yes eas-cli@latest …`, or upgrade `eas-cli`. |
+| `Command simulator:start not found` | `eas-cli` too old (the commands are present from ≥ 20.3.0) | Run via `npx --yes eas-cli@latest …`, or upgrade `eas-cli`. |
 | `simulator:start` rejects `--name` (e.g. `Nonexistent flag: --name`) | `eas-cli` too old — `--name` was added after `simulator:start` itself | Run via `npx --yes eas-cli@latest …`, or upgrade `eas-cli`. If you can't upgrade, retry once **without** `--name`; the session starts unnamed. |
 | `An Expo user account is required` / `whoami` shows logged-out | No browser login on a cloud/CI/headless box, or `EXPO_TOKEN` unset/invalid | Set **`EXPO_TOKEN`** (expo.dev → Account → Access Tokens) in the env; verify `npx --yes eas-cli@latest whoami`. (Interactive machines can `eas login`.) |
 | `simulator:start`/`build`: no linked project / missing `projectId` | A fresh `create-expo-app` isn't linked to EAS | `npx --yes eas-cli@latest init` to create/link it (writes `extra.eas.projectId`). |
 | `prebuild`/`eas build` prompts for or fails on a missing **iOS bundle identifier** | A fresh app often has no `ios.bundleIdentifier` | Set it in app config (e.g. `dev.<owner>.<slug>`); confirm via `npx expo config --json` (may live in `app.config.js`). |
-| `--max-duration-minutes` rejected | The value is above the plan limit (40 minutes on Free, 115 on paid plans); inspect the CLI error | Pass a value within the plan limit, or omit the flag to use the default. |
+| `--max-duration-minutes` rejected | The value is above the plan limit (115 minutes on paid plans); inspect the CLI error | Pass a value within the plan limit, or omit the flag to use the default. |
 | Browser-preview session stops despite ongoing interaction | Browser-preview activity does not reset `--max-idle-time-minutes`; only controller activity (`agent-device`, `argent`, Appium) does | Use the maximum duration as the lifetime bound for user-driven previews. Set it with `--max-duration-minutes`, and omit `--max-idle-time-minutes` unless controller inactivity is the intended stop condition. |
-| `simulator:start` fails with `not enabled for this account` / not-allowlisted | EAS Simulator is limited-access and isn't enabled for this account | Don't retry. Confirm with `simulator:availability`, then hand off gracefully — tell the user and fall back to a local sim / EAS Build (see SKILL.md *Check availability first*). |
+| `simulator:start` fails with `not enabled for this account` | EAS Simulator needs a paid EAS plan; the account is on the Free plan | Don't retry. Confirm with `simulator:availability`, point the user to `https://expo.dev/accounts/<accountName>/settings/billing` to upgrade, and fall back to a local sim / EAS Build (see SKILL.md *Check availability first*). |
 | `start` keeps "Waiting for … session to be ready" but it never returns | `start`'s readiness poll can miss a session that's actually live | Don't rely on it — poll `npx --yes eas-cli@latest simulator:get --id <id> --json` for `status: IN_PROGRESS` + a populated `remoteConfig`. |
 | `ERR_NGROK_3200` / endpoint offline; `Remote daemon is unavailable` | The session's tunnel/daemon dropped — left idle and timed out, or the VM was torn down | A drop invalidates the **whole** session (installed app, `@e` refs, Metro). **Don't retry the failed verb** — start a fresh session, reset the dotenv, and re-run install→open→drive from the top, acting immediately. |
 | Two sessions running / orphaned session | A second `start` (e.g. to "retry" a slow boot) creates another session and overwrites the dotenv id, orphaning the first | Poll the existing session instead. Find orphans with `simulator:list --status in-progress` and stop those you created with `simulator:stop --id <id>`. |
@@ -50,7 +50,7 @@ Concrete errors seen while validating this flow, and the fix.
 
 ## Performance expectations
 
-Set the user's expectations honestly — this is experimental:
+Set the user's expectations honestly:
 - **Boot is variable**: ~90s warm to ~15 min cold. Poll patiently.
 - **`snapshot` can be slow** on iOS (tens of seconds).
 - **First bundle load** over the tunnel (Mode C) is the slow part; subsequent Fast Refreshes are fast.

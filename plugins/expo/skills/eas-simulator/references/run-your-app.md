@@ -1,10 +1,10 @@
 # Running your app on the remote sim — tested sequences
 
-The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026. These commands are experimental — check the relevant subcommand's `--help` before using non-default flags.)
+The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026. Check the relevant subcommand's `--help` before using non-default flags.)
 
 In all modes, the session is started the same way and driven through `npx --yes eas-cli@latest simulator:exec`. Replace `dev.example.app` with the app's iOS `bundleIdentifier` (from `app.json` → `ios.bundleIdentifier`), and run from the project directory.
 
-> These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app` (`.aab` fails), and skip `pod install`. Android sessions include a browser preview (`webPreviewUrl`), which the expo.dev session page opens in a new tab with **Open preview**. Android support is still in development, so some iOS features may not work.
+> These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app` (`.aab` fails), and skip `pod install`. Android sessions include a browser preview (`webPreviewUrl`), which the expo.dev session page opens in a new tab with **Open preview**. Some features are iOS-only, such as crash reports and the device log API; check `--help` for platform notes.
 
 ## Starting a session (shared by all modes)
 
