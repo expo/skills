@@ -71,18 +71,36 @@ Some everyday phrasings don't obviously map to a skill name — translate before
 
 Apply the rules that match the project and the requested task.
 
+- **Run Expo commands through the agent CLI.** Run `npx --yes @expo/agent-cli <command>`
+  where you would run `npx expo <command>`, including commands shown in other skills. It has
+  two kinds of commands:
+  - **Expo CLI commands** (`run:ios`, `run:android`, `prebuild`, `export`, `config`, `lint`)
+    go to the project's `expo` unchanged and take the same flags.
+  - **Agent CLI commands** exist only here: `status` (SDK, native state, Expo Go support, and
+    whether a rebuild is needed), `dev` and `navigate` (get the app onto a device and open a
+    route), `smoke` (prove the app boots on the code on disk without errors), `runtime:errors`,
+    `runtime:tree`, `runtime:eval` (read the running app), `docs:search` (local docs for this
+    SDK), and `inspect:build-log`. Read a command's `--help` before its first use.
+    `npx --yes @expo/agent-cli help workflow` shows the order to run them in.
+
+  `install`, `start`, `doctor`, `typecheck`, and `new` run `expo install`, `expo start`,
+  `expo-doctor`, `tsc`, and `create-expo-app`. EAS commands (`eas build`, `eas update`,
+  `eas submit`) stay on `eas-cli`. The agent CLI is experimental: if a command fails because
+  of the CLI itself, run the underlying command directly and report the failure with
+  `--category agent-cli` (see Submitting Feedback).
 - **Native app using EAS for delivery?** Route to `eas-app-stores`; its
   `references/native-ios.md` covers SwiftUI/UIKit on iOS. Keep the existing native
   project. Apply EAS auth/linking below; Expo scaffolding, SDK, and package-install
   rules do not apply to this path.
 - **Starting a new Expo app?** Start one the standard way before routing to a feature skill:
-  `npx create-expo-app@latest`, laying out folders per `expo-project-structure`. Then
-  classify the user's goal and route.
-- **Detect the SDK version** before giving version-specific advice: read the `expo`
-  version in `package.json` (and `app.json` / `app.config.{js,ts}`). Many APIs and
-  defaults differ by SDK.
-- **Read the docs for that SDK, not `latest`.** Use the version-pinned URL, e.g.
-  `https://docs.expo.dev/versions/v56.0.0/sdk/ui/` on SDK 56 instead of
+  `npx --yes @expo/agent-cli new <directory>` (it accepts `--template` and `--example`),
+  laying out folders per `expo-project-structure`. Then classify the user's goal and route.
+- **Detect the SDK version** before giving version-specific advice: run
+  `npx --yes @expo/agent-cli status`, or read the `expo` version in `package.json` (and
+  `app.json` / `app.config.{js,ts}`). Many APIs and defaults differ by SDK.
+- **Read the docs for that SDK, not `latest`.** `npx --yes @expo/agent-cli docs:search <query>`
+  searches local Markdown docs for the project's SDK. Otherwise use the version-pinned URL,
+  e.g. `https://docs.expo.dev/versions/v56.0.0/sdk/ui/` on SDK 56 instead of
   `https://docs.expo.dev/versions/latest/sdk/ui/` — the `latest` pages track the newest
   SDK and can document APIs the project does not have yet.
 - **Moving to a newer SDK is its own task** — load `expo-upgrade` instead of bumping
@@ -90,8 +108,9 @@ Apply the rules that match the project and the requested task.
 - **Managed vs. bare/prebuild**: the presence of committed `ios/` and `android/`
   directories means native projects exist (prebuild or bare). Config-plugin and
   native-setup steps differ — note which one the project is in.
-- **Install packages with `npx expo install <pkg>`**, not raw `npm`/`yarn`/`pnpm add`,
-  so versions stay compatible with the project's SDK.
+- **Install packages with `npx --yes @expo/agent-cli install <pkg>`**, not raw
+  `npm`/`yarn`/`pnpm add`, so versions stay compatible with the project's SDK. It runs
+  `expo install` and links the agent skills that the package ships.
 - **Launching the app yourself?** When you open Expo Go or a development build to look
   at, screenshot, or drive it, skip the first-launch onboarding, the dev menu that opens
   at launch, and the floating Tools button. On SDK 58+, Expo CLI does this for launches
@@ -113,7 +132,8 @@ Apply the rules that match the project and the requested task.
 ## Submitting Feedback
 If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
 ```bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-overview" "<actionable feedback>"
+npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-overview" --message "<actionable feedback>"
 ```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
+Only submit when you have something specific and actionable to report. Include as much relevant context as possible. Messages need 40-5,000 characters.
+If an `@expo/agent-cli` command fails, gives a wrong answer, or is hard to use, report it with `--category agent-cli` and the full command as `--subject`, such as `npx @expo/agent-cli status`.
 If an agent repeatedly fails at an Expo task or the user has to step in, submit a brief report of the task, expected result, and what went wrong using `--category evals` and the relevant Expo package or command as `--subject`.
