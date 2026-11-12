@@ -79,7 +79,7 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 | `window.innerWidth/Height` | `useWindowDimensions()` | Reactive hook; updates on rotation. |
 | `navigator.*`, Web APIs | Expo SDK modules | e.g. camera → `expo-camera`, geolocation → `expo-location`, clipboard → `expo-clipboard`. |
 | `alert()` / `confirm()` / `prompt()` | `alert()` works; `Alert.alert(...)` for the rest | RN provides a global `alert()`; `confirm()` / `prompt()` don't exist — use `Alert.alert` with a button array. |
-| `process.env.X` | `process.env.EXPO_PUBLIC_X` | Only `EXPO_PUBLIC_`-prefixed vars are inlined into the client bundle. |
+| Public client configuration in `process.env.X` | `process.env.EXPO_PUBLIC_X` | These values are embedded in the client bundle and readable by users. Move only public values, such as an API base URL; keep private API keys, database credentials, and signing secrets on the server. |
 | `console.log` | `console.log` | Works — shows in the dev tools/terminal. |
 | `dangerouslySetInnerHTML` | — | No DOM to inject into. Render data, or use a DOM component / WebView. |
 | inline SVG | `react-native-svg` | No native `<svg>`; the library mirrors the element API. |
@@ -89,9 +89,9 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 | Web | Native | Gotcha |
 |---|---|---|
 | `fetch('/api/x')` (relative) | absolute URL | Native has no origin — relative paths fail. Use a configured base URL (`EXPO_PUBLIC_API_URL`). |
-| CORS | n/a | No browser CORS, but you still need a reachable absolute host. |
+| CORS | native HTTP client | Native requests are not governed by browser CORS. Preserve server-side authentication and authorization, and use HTTPS for production; DOM/web clients still follow browser CORS rules. |
 | `fetch`, React Query, SWR | same | The libraries themselves work on native - see `expo-data-fetching`. |
-| Next.js API routes | Expo Router API routes | Move server endpoints to Expo API routes on EAS Hosting - see `eas-hosting`. |
+| Next.js API routes | Existing backend, or Expo Router API routes | Keep the existing server by default. If backend relocation is requested, use Expo API routes on EAS Hosting - see `eas-hosting`. Keep server credentials server-side. |
 | Streaming responses (SSE, AI SDK `useChat`) | `expo/fetch` with `textStreaming` | RN's built-in `fetch` can't read a streaming response body. Use `expo/fetch` (streams, and works with the Vercel AI SDK) or an XHR-based polyfill. |
 
 ## Third-party services & SDKs
