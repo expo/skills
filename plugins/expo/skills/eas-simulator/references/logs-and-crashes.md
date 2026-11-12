@@ -2,11 +2,44 @@
 
 When the user's app crashes, closes on launch, or misbehaves on an iOS session, read what the device recorded instead of guessing from screenshots. The session's preview server (serve-sim) keeps a shared buffer of the simulator's device log and collects the crash reports macOS writes for simulator apps, each with the app's own log lines from just before the crash.
 
-This covers iOS sessions. Call `sim_api /crashes` first. If it returns `404 Not found`, the session's preview server predates these routes: fall back to `agent-device logs` (see [controllers.md](./controllers.md)) and tell the user crash reports aren't available on that session. Don't call `/logs` there, because older servers stream it without end.
+This covers iOS sessions. `simulator:logs` reads live logs on iOS sessions only; it rejects a running Android session.
 
-## Reach the preview API
+| You need | Use | Works on |
+|---|---|---|
+| The device log | `simulator:logs` (eas-cli) | Every iOS session |
+| Crash reports with stack and log tail | The preview API (`sim_api /crashes`) | iOS sessions started with `--public-link` |
+| Crash reports on a private session | The browser preview (see *What the user sees*) | Every iOS session |
 
-`simulator:get --json` returns `remoteConfig.previewApiUrl`, the preview server's API URL with the session token already in its query. Keep it in a shell variable and don't print it: the token grants control of the session. As with `simulator:exec`, run this from the Expo project directory. Pass `--id` with the session you are driving, because another agent can replace the dotenv session between your commands.
+## Read the device log
+
+`simulator:logs` reads the logs of the installed apps from the session's buffer. Run it from the Expo project directory. Pass `--id` with the session you are driving, because another agent can replace the dotenv session between your commands.
+
+```bash
+npx --yes eas-cli@latest simulator:logs --id <session-id>                     # newest 100 lines from user apps
+npx --yes eas-cli@latest simulator:logs --id <session-id> --limit 500 --json  # more lines, as JSON
+npx --yes eas-cli@latest simulator:logs --id <session-id> --follow --scope all > ./all.txt &   # system logs too; --scope all needs --follow
+```
+
+For the first 30 minutes of a session, app logs are buffered without a reader. After that, new lines appear only while you follow. Either way, **start following before you reproduce the problem**, and save the stream to a file:
+
+```bash
+npx --yes eas-cli@latest simulator:logs --id <session-id> --follow --timestamp > ./sim-logs.txt &
+LOGS_PID=$!
+# ... reproduce the problem with the controller ...
+kill "$LOGS_PID"
+```
+
+After the session stops, `--follow` fails. Download the saved logs instead: `simulator:logs --id <session-id> --output ./app-logs.ndjson`. The `app-logs.ndjson` artifact holds only the app logs from the first 30 minutes of the session, up to 20 MiB. When the session had more than one device, non-interactive mode stops with a list of files; pass `--artifact <n>` (from 1) to pick one.
+
+If `simulator:logs` fails on an older session, fall back to `agent-device logs` (see [controllers.md](./controllers.md)).
+
+## Reach the preview API (crash reports)
+
+`simulator:get --json` returns `remoteConfig.previewApiUrl`, the preview server's API URL with the session token already in its query. **It is `null` on a private session, which is the default.** `simulator:get` includes it only for a session started with `--public-link`, even when a private session started with `--cors-origin` or `--frame-ancestor` (those print it only in the `simulator:start` output). `--public-link` also gives a preview link that anyone can use to control the simulator, so don't add it only to read crashes. Start such a session only when the user agrees; otherwise, point the user to the crash reports in the browser preview.
+
+Keep the URL in a shell variable and don't print it: the token grants control of the session. As with `simulator:exec`, run this from the Expo project directory, and pass `--id`.
+
+Call `sim_api /crashes` first. If it returns `404 Not found`, the session's preview server predates these routes: tell the user crash reports aren't available on that session. Don't call `/logs` there, because older servers stream it without end.
 
 ```bash
 API=$(npx --yes eas-cli@latest simulator:get --json --id <session-id> | node -e '
@@ -83,7 +116,9 @@ The detail returns `{record, occurrence, report, reportError}`:
 - `occurrence.appVersion`, `buildVersion`, and `faultingQueue` are per occurrence.
 - `report` is the full `.ips` text. When it is `null`, `reportError` says why. The detail can be large, so print only the fields you need.
 
-## Read the device log
+## Read the device log through the preview API
+
+Prefer `simulator:logs` (above). When you already have the preview API, you can read the same buffer directly:
 
 ```bash
 sim_api /logs "snapshot=1&follow=1&limit=500"             # newest 500 lines, keep the log running
