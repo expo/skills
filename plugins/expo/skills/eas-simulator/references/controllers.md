@@ -7,7 +7,7 @@
 - `argent` (Software Mansion) — a capable alternative controller; check its license for your use.
 - `web-preview-only` — browser preview with no programmatic control.
 
-All four types include a web preview. Before setting `--max-idle-time-minutes`, follow [Session lifetime](../SKILL.md#session-lifetime); browser-preview activity does not reset the timer.
+All four types include a web preview. Before setting `--max-idle-time-minutes`, follow [Session lifetime](../SKILL.md#session-lifetime); watching the preview, and browser input on Android, do not reset the timer.
 
 ## Appium
 
