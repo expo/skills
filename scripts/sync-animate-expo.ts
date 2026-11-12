@@ -3,6 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { feedbackBlock } from "./feedback-block";
 
 const UPSTREAM_REPOSITORY = "emilkowalski/skills";
 const UPSTREAM_SKILL_DIRECTORY = "skills/animate-expo";
@@ -11,14 +12,6 @@ const DEFAULT_REF = "main";
 const HEADING = "# Building Animations in Expo";
 const ATTRIBUTION =
   "This skill was created in collaboration with [Emil Kowalski](https://github.com/emilkowalski) and can also be found in the [emilkowalski/skills](https://github.com/emilkowalski/skills) repository, along with other useful animation skills.";
-const FEEDBACK = `## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
-\`\`\`bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-animation" --message "<actionable feedback>"
-\`\`\`
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible. Messages need 40-5,000 characters.
-If an \`@expo/agent-cli\` command fails, gives a wrong answer, or is hard to use, report it with \`--category agent-cli\` and the full command as \`--subject\`, such as \`npx @expo/agent-cli status\`.
-If an agent repeatedly fails at an Expo task or the user has to step in, submit a brief report of the task, expected result, and what went wrong using \`--category evals\` and the relevant Expo package or command as \`--subject\`.`;
 const USAGE = `Usage: bun scripts/sync-animate-expo.ts [options]
 
 Sync Emil Kowalski's animate-expo skill into the Expo repository while preserving
@@ -118,7 +111,7 @@ ${ATTRIBUTION}
 
 ${bodyAfterHeading}
 
-${FEEDBACK}`);
+${feedbackBlock("expo-animation")}`);
 }
 
 function updateFile(path: string, expected: string, check: boolean): boolean {
