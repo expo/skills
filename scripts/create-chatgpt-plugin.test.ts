@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { createChatgptPlugin } from "./create-chatgpt-plugin";
 
+const submissionProfile = JSON.parse(readFileSync(join(import.meta.dir, "chatgpt-submission.json"), "utf8"));
+
 describe("Creating ChatGPT plugin packages", () => {
   let repoRoot: string;
   let outputPath: string;
@@ -33,7 +35,13 @@ describe("Creating ChatGPT plugin packages", () => {
       mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, file.endsWith(".png") ? Buffer.from([0, 255, 128, 10]) : "unchanged\n");
     }
-    writeFileSync(join(repoRoot, "plugins/expo/plugin.json"), JSON.stringify({ name: "expo", version: "1.14.0" }));
+    mkdirSync(join(repoRoot, "scripts"));
+    writeFileSync(join(repoRoot, "scripts/chatgpt-submission.json"), JSON.stringify(submissionProfile));
+    writeFileSync(join(repoRoot, "plugins/expo/plugin.json"), JSON.stringify({ name: "expo", version: "1.14.0",
+      extensions: { "com.openai": { interface: { screenshots: [], logo: "./assets/icon.png" } } } }));
+    writeFileSync(join(repoRoot, "plugins/expo/mcp.json"), JSON.stringify({ mcpServers: {
+      expo: { type: "streamable-http", url: "https://mcp.expo.dev/mcp" },
+    } }));
     writeFileSync(join(repoRoot, "plugins/expo/skills/example/SKILL.md"), 'npx --yes eas-cli@latest build\nnpx --yes eas-cli@latest whoami\nnpx @expo/example@latest\nnpx submit-expo-feedback@latest "feedback"\nnpx create-expo-app@latest\n');
     writeFileSync(join(repoRoot, "plugins/expo/README.md"), 'latest updates; https://example.test/eas-cli@latest; eas-cli@latest-beta; eas-cli@24.11.0; npm view <package>@latest version\n');
     chmodSync(join(repoRoot, "plugins/expo/skills/example/scripts/helper.cjs"), 0o755);
@@ -41,7 +49,7 @@ describe("Creating ChatGPT plugin packages", () => {
 
   afterEach(() => rmSync(repoRoot, { recursive: true, force: true }));
 
-  it("should pin unique npm packages while preserving source files, binary assets, and plugin version", () => {
+  it("should pin unique npm packages while preserving source files and binary assets", () => {
     const before = new Map(files.map(file => [file, readFileSync(join(repoRoot, "plugins/expo", file))]));
     const result = createChatgptPlugin({ repoRoot, outputPath, runCommand: run });
     expect(queries).toEqual(["eas-cli@latest", "@expo/example@latest"]);
@@ -52,9 +60,58 @@ describe("Creating ChatGPT plugin packages", () => {
     expect(packaged("skills/example/SKILL.md")).toContain("npx create-expo-app\n");
     expect(packaged("skills/example/SKILL.md")).not.toContain("create-expo-app@latest");
     expect(packaged("README.md")).toBe(before.get("README.md")!.toString());
-    expect(JSON.parse(packaged("plugin.json")).version).toBe("1.14.0");
+    expect(JSON.parse(packaged("plugin.json")).version).toBe(submissionProfile.version);
     expect(execFileSync("unzip", ["-p", outputPath, "assets/icon.png"])).toEqual(before.get("assets/icon.png"));
     for (const file of files) expect(readFileSync(join(repoRoot, "plugins/expo", file))).toEqual(before.get(file));
+  });
+
+  it("should apply the submission identity, endpoint, listing, and eight review cases only in the ZIP", () => {
+    const profilePath = join(repoRoot, "scripts/chatgpt-submission.json");
+    const before = readFileSync(profilePath, "utf8");
+    createChatgptPlugin({ repoRoot, outputPath, runCommand: run });
+    const manifest = JSON.parse(packaged("plugin.json"));
+    const openai = manifest.extensions["com.openai"];
+    expect(manifest.name).toBe("expo2");
+    expect(manifest.version).toBe("1.14.7");
+    expect(openai.interface.displayName).toBe("Expo");
+    expect(openai.interface.shortDescription).toBe("Build, test & ship mobile apps");
+    expect(openai.interface).not.toHaveProperty("screenshots");
+    expect(openai.interface.logo).toBe("./assets/icon.png");
+    expect(openai.review.test_cases).toEqual(submissionProfile.review.test_cases);
+    expect(openai.review.test_cases.positive).toHaveLength(5);
+    expect(openai.review.test_cases.negative).toHaveLength(3);
+    expect(JSON.parse(packaged("mcp.json")).mcpServers.expo.url).toBe("https://mcp.expo.dev/mcp-openai");
+    expect(readFileSync(profilePath, "utf8")).toBe(before);
+    expect(JSON.parse(readFileSync(join(repoRoot, "plugins/expo/plugin.json"), "utf8")).name).toBe("expo");
+    expect(JSON.parse(readFileSync(join(repoRoot, "plugins/expo/mcp.json"), "utf8")).mcpServers.expo.url)
+      .toBe("https://mcp.expo.dev/mcp");
+  });
+
+  it("should allow an alternate submission profile and derive the output filename from it", () => {
+    writeFileSync(join(repoRoot, "temporary-profile.json"), JSON.stringify({ ...submissionProfile, name: "expo" }));
+    const result = createChatgptPlugin({ repoRoot, profilePath: "temporary-profile.json", runCommand: run });
+    expect(result.outputPath).toBe(join(repoRoot, ".context/expo-plugin-1.14.7-chatgpt.zip"));
+    outputPath = result.outputPath;
+    expect(JSON.parse(packaged("plugin.json")).name).toBe("expo");
+  });
+
+  it.each([
+    { name: "../outside" }, { version: "latest" }, { shortDescription: "x".repeat(31) },
+    { mcpUrl: "http://mcp.expo.dev/mcp-openai" }, { mcpUrl: "https://user:secret@mcp.expo.dev/mcp-openai" },
+    { review: { test_cases: { positive: [], negative: [] } } },
+    { review: { test_cases: { ...submissionProfile.review.test_cases, positive: [{ description: "missing prompt" }] } } },
+    { review: { ...submissionProfile.review, test_credentials: "PRIVATE_FIXTURE" } },
+  ])("should reject an invalid submission profile before querying npm or creating a ZIP (%j)", override => {
+    writeFileSync(join(repoRoot, "scripts/chatgpt-submission.json"), JSON.stringify({ ...submissionProfile, ...override }));
+    expect(() => createChatgptPlugin({ repoRoot, outputPath, runCommand: run })).toThrow();
+    expect(queries).toEqual([]);
+    expect(existsSync(outputPath)).toBe(false);
+  });
+
+  it("should reject plugin-level cases when more than one MCP server is packaged", () => {
+    writeFileSync(join(repoRoot, "plugins/expo/mcp.json"), JSON.stringify({ mcpServers: { expo: {}, another: {} } }));
+    expect(() => createChatgptPlugin({ repoRoot, outputPath, runCommand: run })).toThrow("exactly one Expo MCP server");
+    expect(existsSync(outputPath)).toBe(false);
   });
 
   it("should include only tracked portable plugin files from the working tree", () => {

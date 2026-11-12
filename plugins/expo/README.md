@@ -101,7 +101,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ## ChatGPT plugin submission
 
-The public listing metadata lives in `plugin.json` under `extensions.com.openai`. Follow the [OpenAI submission guide](https://developers.openai.com/plugins/deploy/submission) for the current listing limits and review requirements.
+The shared listing metadata lives in `plugin.json` under `extensions.com.openai`. The upload-specific identity, version, subtitle, MCP endpoint, and review cases live in [`scripts/chatgpt-submission.json`](../../scripts/chatgpt-submission.json). Follow the [OpenAI submission guide](https://developers.openai.com/plugins/deploy/submission) for the current listing limits and review requirements.
 
 Run this from the repository root to create a ZIP with the portable manifest, MCP configuration, skills, and assets at the archive root:
 
@@ -109,13 +109,15 @@ Run this from the repository root to create a ZIP with the portable manifest, MC
 bun scripts/create-chatgpt-plugin.ts --output /tmp/expo-plugin.zip
 ```
 
-The script requires Git, npm, and `zip`. It packages tracked files from the working tree; stage new package files first. It resolves `eas-cli@latest` and other versioned npm helpers once per package with `npm view <package>@latest version --json` and pins them only in the ZIP. This includes `@expo/agent-cli@latest`, which now provides feedback submission. It removes `@latest` from `create-expo-app`; legacy `submit-expo-feedback@latest` references are preserved. Existing exact versions and source files stay unchanged, including the plugin version.
+The script requires Git, npm, and `zip`. It packages tracked files from the working tree; stage new package files first. It resolves `eas-cli@latest` and other versioned npm helpers once per package with `npm view <package>@latest version --json` and pins them only in the ZIP. This includes `@expo/agent-cli@latest`, which now provides feedback submission. It removes `@latest` from `create-expo-app`; legacy `submit-expo-feedback@latest` references are preserved. Existing exact tool versions and source files stay unchanged.
 
-It prints the resolved versions and refuses to overwrite an existing ZIP. Without `--output`, it writes `.context/expo-plugin-<version>-chatgpt.zip`. Rebuild the upload package for each release to refresh its EAS CLI pin.
+The default profile produces `expo2` version `1.14.7`, displayed as **Expo** with the subtitle **Build, test & ship mobile apps**, using `https://mcp.expo.dev/mcp-openai`. It embeds five positive and three negative review cases and omits `interface.screenshots`. These overrides apply only to the archive; the marketplace plugin remains `expo`. Update the profile version for each upload release, or use `--profile <json-path>` for an alternate submission profile.
+
+It prints the resolved tool versions and refuses to overwrite an existing ZIP. Without `--output`, it writes `.context/<name>-plugin-<version>-chatgpt.zip`. Rebuild the upload package for each release to refresh its tool pins.
 
 The package leaves out the Claude-specific manifest and `.mcp.json`, lifecycle hooks, and untracked submission files. The portable `mcp.json` is included. Public plugin submissions currently do not support lifecycle hooks. Upload the ZIP to the Plugins dashboard, complete MCP authentication and domain verification, and inspect the metadata, skill, and tool scan results.
 
-Before submitting for review, prepare a dedicated reviewer account with sample data, five positive and three negative test cases verified against that account, a video walkthrough, and release notes. Enter reviewer credentials in the dashboard, outside the package.
+Before submitting for review, prepare a dedicated reviewer account with access to `@expo-mcp/sdk58` and the build referenced by the packaged review cases. Verify those cases against that account, and provide a video walkthrough and release notes. Enter reviewer credentials in the dashboard, outside the package. See [CONTRIBUTING.md](../../CONTRIBUTING.md#packaging-for-chatgpt-submission) for packaging and profile validation instructions.
 
 ## Feedback
 
