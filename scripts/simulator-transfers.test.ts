@@ -1,60 +1,19 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const skill = join(import.meta.dir, "../plugins/expo/skills/eas-simulator");
-const controllers = readFileSync(join(skill, "references/controllers.md"), "utf8");
 const logs = readFileSync(join(skill, "references/logs-and-crashes.md"), "utf8");
-const recording = controllers.match(/node -e '\n([\s\S]*?)\n' "\$ARTIFACT_OUTPUT"/)![1].replace("<artifact-id>", "chosen");
 const preview = logs.match(/API=\$\(node -e '\n([\s\S]*?)\n\s*\}\);'/)![1] + "\n});";
 const id = "03d5dfcf-736c-475a-8730-af039c3f4d06";
 const otherId = "13d5dfcf-736c-475a-8730-af039c3f4d06";
 const origin = "https://storage.example.test:8443";
 const url = `${origin}/movie.mp4?signature=PRIVATE_FIXTURE`;
-const record = { id, artifacts: [{ id: "chosen", downloadUrl: url }] };
 const session = { id, status: "IN_PROGRESS", platform: "IOS", remoteConfig: { previewApiUrl: url } };
 
-function parseRecording(payload: unknown) {
-  const directory = mkdtempSync(join(tmpdir(), "sim-record-test-"));
-  try {
-    const path = join(directory, "session.json");
-    writeFileSync(path, JSON.stringify(payload));
-    return spawnSync("node", ["-e", recording, path, origin, id], { encoding: "utf8" });
-  } finally { rmSync(directory, { recursive: true }); }
-}
-
-describe("Binding simulator transfers to the requested session", () => {
-  it("should select only the identified recording URL for the private curl pipe", () => {
-    const result = parseRecording({ ...record, otherToken: "UNRELATED_SECRET" });
-    expect(result.status).toBe(0);
-    expect(result.stdout).toBe(`url = "${url}"\n`);
-    expect(result.stdout).not.toContain("UNRELATED_SECRET");
-  });
-
-  it.each([
-    { ...record, id: otherId }, { ...record, id: [id] }, { artifacts: record.artifacts },
-    { id, artifacts: [] }, { id, artifacts: [record.artifacts[0], record.artifacts[0]] },
-    { id, artifacts: [null] },
-  ])("should reject an unrelated or ambiguous recording response (%j)", (payload) => {
-    const result = parseRecording(payload);
-    expect(result.status).toBe(1);
-    expect(result.stdout).toBe("");
-    expect(result.stderr).not.toContain("PRIVATE_FIXTURE");
-  });
-
-  it.each([
-    "http://storage.example.test:8443/movie.mp4", "https://foreign.test/movie.mp4",
-    "https://storage.example.test/movie.mp4", `${url}#fragment`,
-    "https://user:password@storage.example.test:8443/movie.mp4", `${url}\u0000`, `${url}\u00a0`,
-  ])("should reject unsafe recording destinations (%s)", (downloadUrl) => {
-    const result = parseRecording({ id, artifacts: [{ id: "chosen", downloadUrl }] });
-    expect(result.status).toBe(1);
-    expect(result.stdout).toBe("");
-    expect(result.stderr).not.toContain("PRIVATE_FIXTURE");
-  });
-
+describe("Binding simulator previews to the requested session", () => {
   it("should select a verified live preview without emitting unrelated config", () => {
     const result = spawnSync("node", ["-e", preview, origin, id], {
       input: JSON.stringify({ ...session, otherToken: "UNRELATED_SECRET" }), encoding: "utf8",
@@ -79,37 +38,125 @@ describe("Binding simulator transfers to the requested session", () => {
     expect(result.stderr).not.toContain("PRIVATE_FIXTURE");
   });
 
+});
+
+const { downloadRecording } = require("../plugins/expo/skills/eas-simulator/scripts/download-recording.cjs");
+const record = { id, artifacts: [{ id: "chosen", downloadUrl: url }] };
+const storageOrigin = "https://signed.example.test";
+const signedUrl = `${storageOrigin}/capture.mp4?signature=PRIVATE_FIXTURE`;
+const video = Buffer.from("0000ftypisomVIDEO_FIXTURE");
+
+describe("Downloading simulator recordings", () => {
+  let directory: string;
+  let outputPath: string;
+  let requested: string[];
+  let options: Record<string, string>;
+  const request = async (url: string, init: RequestInit) => {
+    requested.push(url);
+    expect(init.redirect).toBe("manual");
+    return url === signedUrl ? new Response(video) : new Response(null, {
+      status: 302, headers: { location: signedUrl },
+    });
+  };
+
+  beforeEach(() => {
+    directory = mkdtempSync(join(tmpdir(), "sim-record-test-"));
+    outputPath = join(directory, "capture.mp4");
+    requested = [];
+    options = { sessionId: id, artifactId: "chosen", artifactOrigin: origin, storageOrigin, outputPath };
+  });
+
+  afterEach(() => rmSync(directory, { recursive: true, force: true }));
+
+  it("should follow a verified storage redirect and save the recording privately", async () => {
+    await downloadRecording(record, options, request);
+    expect(requested).toEqual([url, signedUrl]);
+    expect(readFileSync(outputPath)).toEqual(video);
+    expect(statSync(outputPath).mode & 0o777).toBe(0o600);
+  });
+
+  it("should handle a file type header split across streamed chunks", async () => {
+    await downloadRecording(record, options, async () => new Response(new ReadableStream({
+      start(controller) {
+        controller.enqueue(video.subarray(0, 6));
+        controller.enqueue(video.subarray(6));
+        controller.close();
+      },
+    })));
+    expect(readFileSync(outputPath)).toEqual(video);
+  });
+
   it.each([
-    ["successful download", record, "0", "0", true],
-    ["failed transfer", record, "0", "22", false],
-    ["wrong session", { ...record, id: otherId }, "0", "0", false],
-    ["failed query", record, "1", "0", false],
-  ] as const)("should keep %s private and preserve existing output files", (_label, payload, queryCode, curlCode, succeeds) => {
-    const directory = mkdtempSync(join(tmpdir(), "sim-transfer-test-"));
-    try {
-      const script = controllers.match(/```bash\n(set \+x\numask 077[\s\S]*?)\n```/)![1]
-        .replace("https://<verified-storage-hostname>", origin).replace("<artifact-id>", "chosen");
-      writeFileSync(join(directory, "response"), JSON.stringify(payload));
-      writeFileSync(join(directory, "capture.mp4"), "EXISTING_CAPTURE");
-      writeFileSync(join(directory, "npx"), '#!/bin/bash\ncat "$FIXTURE_DIR/response"\necho PRIVATE_FIXTURE >&2\nexit "$QUERY_CODE"\n');
-      writeFileSync(join(directory, "curl"), '#!/bin/bash\nprintf "%s\\n" "$@" > "$FIXTURE_DIR/args"\ncat > "$FIXTURE_DIR/config"\nwhile [ "$#" -gt 0 ]; do\n if [ "$1" = --output ]; then shift; printf VIDEO_FIXTURE > "$1"; fi\n shift\ndone\necho PRIVATE_FIXTURE >&2\nexit "$CURL_CODE"\n');
-      for (const command of ["npx", "curl"]) chmodSync(join(directory, command), 0o700);
-      const result = spawnSync("bash", ["-e", "-x", "-c", script], {
-        cwd: directory, encoding: "utf8",
-        env: { ...process.env, PATH: `${directory}:${process.env.PATH}`, TMPDIR: directory,
-          FIXTURE_DIR: directory, QUERY_CODE: queryCode, CURL_CODE: curlCode, SESSION_ID: id },
-      });
-      expect(result.status === 0).toBe(succeeds);
-      expect(result.stdout + result.stderr).not.toContain("PRIVATE_FIXTURE");
-      expect(readFileSync(join(directory, "capture.mp4"), "utf8")).toBe("EXISTING_CAPTURE");
-      const artifacts = join(directory, readdirSync(directory).find(name => name.startsWith("eas-sim-artifact."))!);
-      expect(statSync(artifacts).mode & 0o777).toBe(0o700);
-      expect(readdirSync(artifacts).includes("capture.mp4")).toBe(succeeds);
-      if (succeeds) {
-        expect(readFileSync(join(directory, "args"), "utf8")).not.toContain("PRIVATE_FIXTURE");
-        expect(readFileSync(join(directory, "config"), "utf8")).toBe(`url = "${url}"\n`);
-        expect(statSync(join(artifacts, "capture.mp4")).mode & 0o777).toBe(0o600);
-      }
-    } finally { rmSync(directory, { recursive: true }); }
+    { ...record, id: otherId }, { ...record, id: [id] }, { artifacts: record.artifacts },
+    { id, artifacts: [] }, { id, artifacts: [record.artifacts[0], record.artifacts[0]] },
+    { id, artifacts: [null] },
+  ])("should reject an unrelated or ambiguous recording before making a request (%j)", async payload => {
+    await expect(downloadRecording(payload, options, request)).rejects.toThrow("Recording recovery failed");
+    expect(requested).toEqual([]);
+    expect(existsSync(outputPath)).toBe(false);
+  });
+
+  it.each([
+    "http://storage.example.test:8443/movie.mp4", "https://foreign.test/movie.mp4",
+    "https://storage.example.test/movie.mp4", `${url}#fragment`,
+    "https://user:password@storage.example.test:8443/movie.mp4", `${url}\u0000`, `${url}\u00a0`,
+  ])("should reject unsafe initial recording destinations (%s)", async downloadUrl => {
+    await expect(downloadRecording({ id, artifacts: [{ id: "chosen", downloadUrl }] }, options, request))
+      .rejects.toThrow("Recording recovery failed");
+    expect(requested).toEqual([]);
+  });
+
+  it.each([
+    "https://foreign.test/PRIVATE_FIXTURE", "http://signed.example.test/PRIVATE_FIXTURE",
+    `${signedUrl}#fragment`, "https://user:password@signed.example.test/PRIVATE_FIXTURE", "",
+  ])("should reject an unverified redirect before requesting its destination (%s)", async location => {
+    await expect(downloadRecording(record, options, async (url: string) => {
+      requested.push(url);
+      return new Response(null, { status: 302, headers: { location } });
+    })).rejects.toThrow("Recording recovery failed");
+    expect(requested).toEqual([url]);
+    expect(existsSync(outputPath)).toBe(false);
+  });
+
+  it("should stop a redirect loop without writing a recording", async () => {
+    await expect(downloadRecording(record, options, async (url: string) => {
+      requested.push(url);
+      return new Response(null, { status: 302, headers: { location: "/loop" } });
+    })).rejects.toThrow("Recording recovery failed");
+    expect(requested).toHaveLength(6);
+    expect(existsSync(outputPath)).toBe(false);
+  });
+
+  it.each([new Response("<html>redirect response</html>"), new Response(""),
+    new Response("missing", { status: 404 }), new Response(video, { status: 206 })])
+    ("should reject unsuccessful or non-video responses without saving a recording (%j)", async response => {
+      await expect(downloadRecording(record, options, async () => response)).rejects.toThrow("Recording recovery failed");
+      expect(existsSync(outputPath)).toBe(false);
+    });
+
+  it("should remove a partial recording and keep transfer errors private", async () => {
+    let reads = 0;
+    const body = new ReadableStream({
+      pull(controller) {
+        if (reads++ === 0) controller.enqueue(video);
+        else controller.error(new Error("PRIVATE_FIXTURE"));
+      },
+    });
+    await expect(downloadRecording(record, options, async () => new Response(body)))
+      .rejects.toThrow(/^Recording recovery failed; verify the session, storage origins, and recording before retrying\.$/);
+    expect(existsSync(outputPath)).toBe(false);
+  });
+
+  it("should preserve an existing output", async () => {
+    writeFileSync(outputPath, "EXISTING_CAPTURE");
+    await expect(downloadRecording(record, options, request)).rejects.toThrow("Recording recovery failed");
+    expect(readFileSync(outputPath, "utf8")).toBe("EXISTING_CAPTURE");
+  });
+
+  it("should keep malformed session data out of command output", () => {
+    const result = spawnSync("node", [join(skill, "scripts/download-recording.cjs"),
+      id, "chosen", origin, storageOrigin, outputPath], { input: "PRIVATE_FIXTURE", encoding: "utf8" });
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).not.toContain("PRIVATE_FIXTURE");
   });
 });
