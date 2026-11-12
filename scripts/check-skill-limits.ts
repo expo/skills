@@ -2,23 +2,13 @@
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { FEEDBACK_HEADING, feedbackBlock } from "./feedback-block";
 
 const MAX_DESCRIPTION = 1024;
 const MAX_BODY_LINES = 500;
 const PAID_CALLOUT = "**EAS service - costs apply.**";
 const PAID_PRICING_LINK = "expo.dev/pricing";
 const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
-const FEEDBACK_HEADING = "## Submitting Feedback";
-
-function feedbackBlock(skillName: string): string {
-  return `${FEEDBACK_HEADING}
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
-\`\`\`bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "${skillName}" "<actionable feedback>"
-\`\`\`
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible.
-If an agent repeatedly fails at an Expo task or the user has to step in, submit a brief report of the task, expected result, and what went wrong using \`--category evals\` and the relevant Expo package or command as \`--subject\`.`;
-}
 
 function findSkillFiles(dir: string): string[] {
   const results: string[] = [];
@@ -48,7 +38,7 @@ function parseSkill(path: string): { name: string; description: string; body: st
 function syncFeedbackBlock(path: string, skillName: string): void {
   const content = readFileSync(path, "utf8");
   const block = feedbackBlock(skillName);
-  const feedbackSection = /\n## Submitting Feedback\n[\s\S]*?(?=\n## |\s*$)/;
+  const feedbackSection = new RegExp(`\\n${FEEDBACK_HEADING}\\n[\\s\\S]*?(?=\\n## |\\s*$)`);
   const withoutOldBlock = content.replace(feedbackSection, "").trimEnd();
   const updated = `${withoutOldBlock}\n\n${block}\n`;
 
