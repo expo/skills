@@ -19,7 +19,7 @@ First inspect the failing build step and the dependency/configuration diff.
 
 - Install with `npx expo install <package>` rather than plain `yarn add` — `expo install` picks the version compatible with the current SDK.
 - After installing a new module, rebuild the native app. Autolinking runs at native build time, not at JS bundle time.
-- For the **isolated approach**, you must re-run `npx expo-brownfield build:android|ios` after adding a module, and republish/re-embed the new artifact.
+- For the **isolated approach**, rebuild after adding a module and re-embed the new artifact. On Android, select a local publication task for local verification; publish remotely only within the requested distribution scope.
 
 ## Metro connection
 
@@ -28,8 +28,8 @@ First inspect the failing build step and the dependency/configuration diff.
 - Ensure the device or emulator can reach the dev machine. The Android emulator can talk to the host via `10.0.2.2`; physical devices need a reachable LAN IP.
 - For physical Android devices on USB: `adb reverse tcp:8081 tcp:8081`.
 - Confirm Metro is actually running: `npx expo start` from the Expo project (or `yarn start` from the workspace root).
-- Verify the debug `AndroidManifest.xml` enables cleartext traffic — Android 9+ blocks HTTP by default. The debug variant should include `android:usesCleartextTraffic="true"` on `<application>`, or a `network_security_config` allowing the dev server.
-- iOS simulator: Metro should be reachable at `localhost:8081`. If it is not, check that ATS exceptions are still in place in `Info.plist` for `localhost` (the Expo template ships this by default).
+- Verify the debug network security configuration allows HTTP to the exact Metro host, as in [the integrated setup](./brownfield-integrated.md#androidmanifestxml). Preserve other trust rules and the Release policy; do not enable app-wide cleartext traffic to fix a development connection.
+- iOS simulator: Metro should be reachable at `localhost:8081`. If it is not, check the Debug configuration's ATS exception for the local dev host. Do not add an unrestricted ATS exception or carry development exceptions into the Release configuration.
 
 ## iOS XCFramework signing (isolated approach)
 
