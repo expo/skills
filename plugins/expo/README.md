@@ -101,7 +101,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ## Feedback
 
-Every skill includes instructions to submit specific, actionable feedback with `npx --yes @expo/agent-cli@latest feedback`.
+Every skill includes instructions to submit user-requested, actionable feedback with `npx --yes @expo/agent-cli@latest feedback`. Include only relevant technical details and keep credentials, private data, and conversation contents out of feedback.
 
 ## License
 
