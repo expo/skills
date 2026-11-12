@@ -146,6 +146,36 @@ run that skill's own validation.
 costs callout (step 4), the Codex agent file (step 7), the `skills.sh.json` grouping (step 8),
 and the feedback block (step 9) all fail CI when violated.
 
+### Packaging for ChatGPT submission
+
+Create the upload ZIP from the packaging layer or after this stack is merged:
+
+```bash
+bun scripts/create-chatgpt-plugin.ts
+```
+
+The builder reads `scripts/chatgpt-submission.json`. That profile supplies the submission
+name (`expo2`), upload version (`1.14.7`), display name, subtitle, `/mcp-openai` endpoint,
+and exactly five positive and three negative MCP review cases. Update the profile's version
+for each release; it is separate from the shared marketplace manifests. The builder applies
+these values in the ZIP and removes `interface.screenshots`, without editing source manifests
+or the marketplace's `expo` identity. Keep reviewer credentials and access instructions in the
+secure submission dashboard, outside the profile and ZIP.
+
+The default output is `.context/<name>-plugin-<version>-chatgpt.zip`. To use a temporary
+submission identity, copy the profile, change its `name`, and pass that file explicitly:
+
+```bash
+bun scripts/create-chatgpt-plugin.ts --profile /tmp/expo-submission.json --output /tmp/expo-plugin.zip
+```
+
+The builder includes tracked plugin files, preserves binary assets, and refuses to overwrite
+an existing ZIP. It resolves `@latest` tool versions through npm once per package and pins
+them in the archive, so subsequent runs can pick up newer releases. Run
+`bun test scripts/create-chatgpt-plugin.test.ts` before changing the profile or builder.
+The review cases require an Expo reviewer account with access to `@expo-mcp/sdk58` and
+the referenced build. Package validation does not execute those authenticated MCP cases.
+
 ### Syncing `expo-animation`
 
 `expo-animation` mirrors `skills/animate-expo` from `emilkowalski/skills`. Pull upstream changes
