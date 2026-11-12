@@ -42,7 +42,7 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 - `eas-app-stores` — build and submit iOS/Android apps (Expo and other React Native projects, plus existing native apps), TestFlight, versions, and store metadata
 - `eas-hosting` — deploy the web bundle to EAS Hosting; also author Expo Router API routes (`+api.ts` handlers) and their environments / domains
 - `eas-workflows` — EAS Workflow YAML and CI/CD pipelines
-- `eas-simulator` — run and drive the app on a remote iOS / Android simulator on EAS cloud
+- `eas-simulator` — run and drive the app on a remote iOS / Android simulator with Expo Simulators (also called EAS Simulator)
 - `expo-dev-client` — custom development builds
 - `eas-update` — configure, publish, test, and debug compatible over-the-air updates
 - `eas-update-insights` — OTA update health: crash rate, adoption, payload size

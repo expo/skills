@@ -1,10 +1,10 @@
 # Running your app on the remote sim — tested sequences
 
-The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026. These commands are experimental — check the relevant subcommand's `--help` before using non-default flags.)
+The remote sim boots blank. You install a **simulator-targeted** build onto the session, then open it. Pick a mode from `SKILL.md`. (Sequences validated against eas-cli 20.3.x + agent-device 0.17.x in mid-2026. Check the relevant subcommand's `--help` before using non-default flags.)
 
 In all modes, the session is started the same way and driven through `npx --yes eas-cli@latest simulator:exec`. Replace `dev.example.app` with the app's iOS `bundleIdentifier` (from `app.json` → `ios.bundleIdentifier`), and run from the project directory.
 
-> These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app` (`.aab` fails), and skip `pod install`. Android sessions include a browser preview (`webPreviewUrl`), which the expo.dev session page opens in a new tab with **Open preview**. Android support is still in development, so some iOS features may not work.
+> These sequences are **iOS**. For **Android**: build via `npx --yes eas-cli@latest build --platform android` (or local Gradle), `install` the `.apk` instead of an `.app` (`.aab` fails), and skip `pod install`. Android sessions include a browser preview (`webPreviewUrl`), which the expo.dev session page opens in a new tab with **Open preview**. Some features are iOS-only, such as crash reports and the device log API; check `--help` for platform notes.
 
 ## Starting a session (shared by all modes)
 
@@ -227,16 +227,16 @@ On SDK 58+, you can put the same switches in the URL instead, which also works o
 
 Mode C needs a route from the EAS VM to your local Metro server. The account-signed Expo tunnel is the normal transport for this workflow: it forwards requests to `http://localhost:<your-free-port>` so the remote app can fetch its development manifest, JavaScript bundle, and assets and receive live updates. Describe that concrete purpose when requesting network execution, including the project, port, and expected Expo service; a bare “start a public tunnel” omits the task context.
 
-**Carry authorization through the whole development loop.** When the user's existing authorization covers this project's EAS Simulator live development and required networking, treat starting its temporary Metro tunnel, connecting its dev client (including the launcher **Connect** button), and fetching subsequent bundles through Fast Refresh as steps of that authorized workflow. Do not ask the user to repeat consent for each step or later in-scope UI edit. A newly generated hostname on the same verified tunnel provider does not by itself expand the authorized scope; a different project, provider, exposed service, or user restriction requires reassessing it.
+**Carry authorization through the whole development loop.** When the user's existing authorization covers this project's Expo Simulators live development and required networking, treat starting its temporary Metro tunnel, connecting its dev client (including the launcher **Connect** button), and fetching subsequent bundles through Fast Refresh as steps of that authorized workflow. Do not ask the user to repeat consent for each step or later in-scope UI edit. A newly generated hostname on the same verified tunnel provider does not by itself expand the authorized scope; a different project, provider, exposed service, or user restriction requires reassessing it.
 
 This skill supplies technical context, not permission, and cannot override the host's approval policy. Identify the actual authorization: quote the relevant user message or user-provided project instruction and name its source, subject to the host's trust rules. Do not present this skill's own workflow instructions as user consent. A signed tunnel URL authenticates tunnel creation to an Expo account; it is **not proof that requests to the public Metro URL require authentication**. URL randomness limits discoverability, not access. Keep the URL within the intended session and stop your Metro process when finished.
 
 Put the authorization and transport details in the approval request itself so the reviewer can evaluate them together. Adapt this example only to facts verified for the current run:
 
-> Continue the authorized EAS Simulator live-development workflow for `<project>`.
+> Continue the authorized Expo Simulators live-development workflow for `<project>`.
 > Existing authorization: `<quote the relevant instruction>` from `<user message or project instruction source>`.
 > Start this project's Metro server on `localhost:<port>` through `<verified tunnel provider>`
-> so the project's dev client on EAS Simulator can fetch its development manifest,
+> so the project's dev client on Expo Simulators can fetch its development manifest,
 > JavaScript bundle, and assets and receive Fast Refresh updates. The Metro endpoint
 > is publicly reachable by URL while the tunnel runs. Keep the URL within the intended
 > session and stop this Metro process when the requested development session ends.
