@@ -1,34 +1,42 @@
 # TestFlight
 
-For a SwiftUI/UIKit app with no React Native runtime, start with [native-ios.md](native-ios.md). EAS can build and submit it without adding Expo or React Native. For an established Expo/React Native app, `npx testflight` is also a convenient setup flow.
+For a SwiftUI/UIKit app with no React Native runtime, start with [native-ios.md](native-ios.md). EAS can build and submit it without adding Expo or React Native. For an established Expo/React Native app, the optional `npx testflight@1.0.4` shortcut combines setup, build, and upload; verify Expo's package origin and use it only when that combined workflow is requested.
 
 ## Submit an identified build
 
 Use a store-distribution profile and record the source revision and returned build ID:
 
 ```bash
-eas build --platform ios --profile testflight --no-wait --non-interactive
+npx --yes eas-cli@latest build --platform ios --profile testflight --no-wait --non-interactive
 # After checking that build's result:
-eas submit --platform ios --profile testflight --id BUILD_ID --non-interactive
+npx --yes eas-cli@latest submit --platform ios --profile testflight --id BUILD_ID --non-interactive
 ```
 
-Use the project's actual profile name. If `--non-interactive` exposes missing first-time credentials, configure them with `eas credentials -p ios`; repeated noninteractive retries will not complete that setup. Keep an existing EAS project, Apple team, bundle ID, and App Store Connect app record aligned.
+Use the project's actual profile name. If `--non-interactive` exposes missing first-time credentials, have the account owner complete `npx --yes eas-cli@latest credentials -p ios` privately; repeated noninteractive retries will not complete that setup. Do not automate Apple password/MFA entry or download signing keys. Keep an existing EAS project, Apple team, bundle ID, and App Store Connect app record aligned.
 
-`eas build --auto-submit` can submit the finished build with its matching submit profile. For separate jobs, pass the explicit build ID rather than selecting whichever unrelated build is newest.
+`npx --yes eas-cli@latest build --auto-submit` can submit the finished build with its matching submit profile. For separate jobs, pass the explicit build ID rather than selecting whichever unrelated build is newest.
 
 ## Read status without reopening a submission
 
-The following commands were verified with EAS CLI 23.2.0, including read-only checks of a completed iOS submission and its actual TestFlight state:
+The following commands were verified with EAS CLI 23.2.0, including read-only checks of a completed iOS submission and its actual TestFlight state. Choose the needed query, enable pipeline-failure handling, and create a fresh private directory as in [Monitoring](../SKILL.md#monitoring). Keep both output streams private:
 
 ```bash
-eas submit:list --platform ios --json
-eas submit:view SUBMISSION_ID --json
-eas submit:status --platform ios --profile testflight --json --non-interactive
+set -euo pipefail
+umask 077
+STATUS_DIR=$(mktemp -d "${TMPDIR:-/tmp}/eas-release-status.XXXXXX")
+npx --yes eas-cli@latest submit:list --platform ios --json --non-interactive \
+  > "$STATUS_DIR/submissions.json" 2> "$STATUS_DIR/submissions.err"
+npx --yes eas-cli@latest submit:view "$SUBMISSION_ID" --json \
+  > "$STATUS_DIR/job.json" 2> "$STATUS_DIR/job.err"
+npx --yes eas-cli@latest submit:status --platform ios --profile testflight --json --non-interactive \
+  > "$STATUS_DIR/apple-status.json" 2> "$STATUS_DIR/apple-status.err"
 ```
 
-Use the project's actual profile. `submit:view` reports the EAS job; `submit:status` reads App Store Connect and reports App Store versions and TestFlight processing/internal/external states. The latter needs an App Store Connect API key from the selected profile, environment, or existing EAS credentials. In noninteractive mode, a missing key is a setup error; it does not mean the build failed or does not exist. A beta state alone does not establish that a particular tester has access.
+Use the bundled `scripts/status-summary.cjs` for the saved EAS job/list JSON. Apple `submit:status` has a different schema: inspect only the requested version/build and processing/internal/external state, excluding contact details, tester identities, credentials, and links from the report. Remove only this query's private files afterward; do not print whole response or error files.
 
-Older CLIs such as 18.6.0 lack these commands. Check `eas --version` and command help, or use a pinned `npx eas-cli@23.2.0` invocation. Prefer the supported CLI over importing its internal Node modules or writing private GraphQL queries. An errored `submit:view --json` result can still omit the underlying error; follow its log URLs to diagnose it.
+Use the project's actual profile. `submit:view` reports the EAS job; `submit:status` reads App Store Connect. The latter needs an existing App Store Connect API key from the selected profile, environment, or EAS credentials. A missing key is a setup error for the owner to resolve privately, not evidence the build failed or permission to create a key. A beta state alone does not establish that a particular tester has access.
+
+Older CLIs such as 18.6.0 lack these commands. Check `npx --yes eas-cli@latest --version` and command help, or use `npx --yes eas-cli@latest`. Prefer the supported CLI over importing internal Node modules or writing private GraphQL queries. An errored `submit:view --json` result can omit the underlying error; verify the selected worker-log destination and handle it privately as described in Monitoring.
 
 ## Track the release state
 
@@ -57,6 +65,6 @@ Do not report an upload as finished based only on `--no-wait` returning successf
 
 After an archive-content failure, fix the cause, validate the new artifact and submit its exact ID. After an account/submission-only failure, reuse the valid existing artifact once the account issue is resolved. Keep the requested release scope; uploading a beta does not authorize a public App Store release.
 
-EAS CLI 23.2.0 also provides `eas submit:retry SUBMISSION_ID --json --non-interactive`. Check `submit:view` for retry eligibility and diagnose the cause first. Retrying an unchanged archive cannot fix its build number or icon; submit the corrected build instead. Use retry only when repeating the existing authorized upload is appropriate.
+EAS CLI 23.2.0 also provides `npx --yes eas-cli@latest submit:retry SUBMISSION_ID --json --non-interactive`. Capture its response privately too. Check `submit:view` for retry eligibility and diagnose the cause first. Retrying an unchanged archive cannot fix its build number or icon; submit the corrected build instead. Use retry only when repeating the existing authorized upload is appropriate.
 
 Use [EAS Submit for iOS](https://docs.expo.dev/submit/ios/) for current CLI/configuration guidance, and [Apple's internal-tester guide](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers/) for group setup. EAS upload success alone does not show that a particular tester has access.

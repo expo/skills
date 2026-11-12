@@ -29,20 +29,13 @@ For native SwiftUI/UIKit apps without a React Native runtime, configure the Xcod
 
 ### Using EAS Credentials
 
-```bash
-eas credentials -p ios
-```
-
-This interactive flow helps you:
-- Create or select a distribution certificate
-- Create or select a provisioning profile
-- Configure App Store Connect API key (recommended)
+When working managed credentials are absent, the account owner completes `npx --yes eas-cli@latest credentials -p ios` privately for the selected team/profile. Its interactive menus can provision certificates/profiles and configure an API key; they are not read-only status queries. Do not drive those menus, collect account passwords/MFA codes, or download private credentials during a routine build or submission.
 
 ### App Store Connect API Key (Recommended)
 
-API keys avoid 2FA prompts in CI/CD:
+An authorized App Store Connect API key supports CI/CD uploads without an interactive Apple ID sign-in. This is Apple's supported authentication flow, not permission to disable account security or obtain another user's key.
 
-Use `eas credentials -p ios` to select the build profile and configure its App Store Connect API key. Reuse a working managed key when one already exists. For an existing local team API key, configure the submit profile explicitly:
+Reuse a working managed key. If initial setup is missing, have the account owner complete `npx --yes eas-cli@latest credentials -p ios` privately for the selected team/profile; do not automate Apple password/MFA entry or download private keys. For an existing protected local team API key, configure the submit profile explicitly:
 
 Configure in `eas.json`:
 
@@ -51,7 +44,7 @@ Configure in `eas.json`:
   "submit": {
     "production": {
       "ios": {
-        "ascApiKeyPath": "./AuthKey_XXXXX.p8",
+        "ascApiKeyPath": "../private-credentials/AuthKey_XXXXX.p8",
         "ascApiKeyIssuerId": "xxxxx-xxxx-xxxx-xxxx-xxxxx",
         "ascApiKeyId": "XXXXXXXXXX"
       }
@@ -60,16 +53,17 @@ Configure in `eas.json`:
 }
 ```
 
-Keep private key material outside version control. Use the installed CLI's credential flow and current documentation when setting up a different key type.
+The relative key path above denotes protected local storage outside the uploaded project; replace it with the existing protected location. Hosted workflow jobs cannot read a sibling file on your machine; use EAS-managed credentials or a protected file provisioned for that job. Do not create or copy a key into the uploaded project to satisfy the example. Keep private key material outside version control and the EAS Build upload archive. If an existing key is inside the project, check both `.gitignore` and any overriding `.easignore`. Reuse valid managed credentials. Use the installed CLI's credential flow and current documentation when setting up a different key type.
 
 ### Apple ID Authentication (Alternative)
 
 For manual submissions, you can use Apple ID:
 
 ```bash
-EXPO_APPLE_ID=your@email.com
-EXPO_APPLE_TEAM_ID=XXXXXXXXXX
-EXPO_APPLE_APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
+# Configure these names through a protected local or CI secret store:
+# EXPO_APPLE_ID
+# EXPO_APPLE_TEAM_ID
+# EXPO_APPLE_APP_SPECIFIC_PASSWORD
 ```
 
 The app-specific password is for the upload flow. Interactive Apple Developer signing setup has a separate authentication flow.
@@ -77,15 +71,17 @@ The app-specific password is for the upload flow. Interactive Apple Developer si
 ## Submission Commands
 
 ```bash
-# Build and submit to App Store Connect
-eas build -p ios --profile production --auto-submit
+# Build the store artifact; verify it before uploading
+npx --yes eas-cli@latest build -p ios --profile production
 
 # Submit the verified build
-eas submit -p ios --profile production --id BUILD_ID
+npx --yes eas-cli@latest submit -p ios --profile production --id BUILD_ID
 
 # Expo / React Native TestFlight shortcut
-npx testflight
+npx testflight@1.0.4
 ```
+
+The shortcut and `build --auto-submit` combine remote actions. Use them only for a requested combined workflow with the selected account, app, and submit profile already verified. For an existing artifact or a build-only request, use the separate steps.
 
 ## App Store Connect Configuration
 
@@ -283,9 +279,7 @@ Rollout: Day 1 (1%) → Day 2 (2%) → Day 3 (5%) → Day 4 (10%) → Day 5 (20%
 
 ### Check Current Credentials
 
-```bash
-eas credentials -p ios
-```
+Ask the account owner to inspect the selected team's credentials through the EAS dashboard or `npx --yes eas-cli@latest credentials -p ios` privately. Request only the non-secret status needed for the release. Do not treat the interactive credential manager as a read-only query or select create/download/revoke actions.
 
 ## App Store Metadata
 
@@ -293,10 +287,10 @@ Use EAS Metadata to manage App Store listing from code:
 
 ```bash
 # Pull existing metadata
-eas metadata:pull
+npx --yes eas-cli@latest metadata:pull
 
 # Push changes
-eas metadata:push
+npx --yes eas-cli@latest metadata:push
 ```
 
 See ./app-store-metadata.md for detailed configuration.
@@ -331,9 +325,7 @@ For a checked-in Swift app, the equivalent declaration belongs in its native Inf
 
 ### "Invalid provisioning profile"
 
-```bash
-eas credentials -p ios
-```
+Check the selected team, bundle ID, entitlements, and profile expiry against the build configuration. Have the account owner resolve an invalid profile through the official credential flow privately. A failed build does not authorize revoking or replacing valid signing credentials.
 
 ### Build stuck in "Processing"
 
@@ -342,6 +334,8 @@ App Store Connect processing can take 5-30 minutes. Check status in App Store Co
 ## CI/CD Integration
 
 For automated submissions in CI/CD:
+
+Approve the exact tagged source and submit profile before the build job receives signing access. Use protected release tags; enabling unattended releases requires an explicit automation request and a corresponding trusted-source policy.
 
 ```yaml
 # .eas/workflows/release.yml
@@ -352,8 +346,12 @@ on:
     tags: ['v*']
 
 jobs:
+  approve_release:
+    type: require-approval
+
   build:
     type: build
+    needs: [approve_release]
     params:
       platform: ios
       profile: production
