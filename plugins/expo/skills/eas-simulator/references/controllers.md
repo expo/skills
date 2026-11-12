@@ -1,6 +1,6 @@
 # Controllers: agent-device, Appium, and argent
 
-`eas-cli` has no device verbs — it manages the *session*. Automation commands come from the interface selected by `simulator:start --type`:
+Use `simulator:control` for the built-in [iOS simulator actions](../SKILL.md#simulator-actions-ios). For accessibility queries, Android actions, and additional automation, use the interface selected by `simulator:start --type`:
 
 - `agent-device` (Callstack, MIT) — used throughout this skill; uses the reviewed installed executable at `AGENT_DEVICE_BIN`.
 - `appium` — exposes `APPIUM_URL` and `APPIUM_CAPS` for an Appium client.
@@ -81,7 +81,7 @@ fi
 # Keep this new private directory for the requested recording; do not overwrite an existing output.
 ```
 
-Verify the selected recording belongs to the requested session and app, and its HTTPS download host is the expected EAS artifact-storage destination. Keep raw session responses and signed URLs private. The helper follows at most five redirects, verifies every destination against the two selected HTTPS origins, and rejects responses without an MP4 file type header. Use a local media tool to check the complete recording before sharing it. Use the URL returned by EAS, not a path on the simulator or a controller artifact id. If the recording has not appeared yet, poll the same session with a bounded wait for upload completion. Already-uploaded artifacts can be retrieved after the session stops using its explicit id; they stay until the session is deleted. The `downloadUrl` is stable and needs no auth: each request redirects to a new signed URL that is valid for 1 hour, so if a download fails, request the same `downloadUrl` again. Give the download command more than 10 minutes in the outer runner, increase `--max-time` for larger files, and verify the downloaded video before reporting success.
+Verify the selected recording belongs to the requested session and app, and its HTTPS download host is the expected EAS artifact-storage destination. Keep raw session responses and signed URLs private. The helper follows at most five redirects, verifies every destination against the two selected HTTPS origins, and rejects responses without an MP4 file type header. Use a local media tool to check the complete recording before sharing it. Use the URL returned by EAS, not a path on the simulator or a controller artifact id. If the recording has not appeared yet, poll the same session with a bounded wait for upload completion. Already-uploaded artifacts can be retrieved after the session stops using its explicit id; they stay until the session is deleted. The `downloadUrl` is stable and needs no auth: each request redirects to a new signed URL that is valid for 1 hour, so if a download fails, request the same `downloadUrl` again. Allow more than ten minutes in the outer runner. The helper has a ten-minute transfer deadline; review that deadline before retrying a larger recording that times out.
 
 Source: EAS CLI [simulator:get](https://github.com/expo/eas-cli/blob/main/packages/eas-cli/src/commands/simulator/get.ts) exposes `artifacts[].{id,name,filename,metadata,downloadUrl}`.
 
