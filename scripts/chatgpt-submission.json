@@ -1,0 +1,60 @@
+{
+  "name": "expo2",
+  "version": "1.14.7",
+  "displayName": "Expo",
+  "shortDescription": "Build, test & ship mobile apps",
+  "mcpUrl": "https://mcp.expo.dev/mcp-openai",
+  "review": {
+    "test_cases": {
+      "positive": [
+        {
+          "description": "Find official Expo guidance for expo-sqlite.",
+          "prompt": "Search the Expo documentation for guidance on how to use expo-sqlite.",
+          "expected_behavior": "Returns relevant official Expo documentation pages ranked by relevance.",
+          "tools_triggered": "search_documentation"
+        },
+        {
+          "description": "List build job statuses for an Expo project.",
+          "prompt": "List the recent builds for `@expo-mcp/sdk58`, including their build IDs and statuses.",
+          "expected_behavior": "Returns the latest builds with their IDs, statuses, and relevant metadata.",
+          "tools_triggered": "build_list"
+        },
+        {
+          "description": "Inspect build logs for a specific EAS build.",
+          "prompt": "Show me the logs for EAS build `f8634c28-9d79-45b9-8ef5-b09419be9efd`. Summarize the outcome and any warnings or errors in the logs.",
+          "expected_behavior": "Retrieves logs for build f8634c28-9d79-45b9-8ef5-b09419be9efd and summarizes the outcome and any reported warnings or errors.",
+          "tools_triggered": "build_logs"
+        },
+        {
+          "description": "List workflow job statuses for an Expo project.",
+          "prompt": "Get my Expo workflow jobs for the project `@expo-mcp/sdk58`.",
+          "expected_behavior": "Returns recent workflow jobs with their statuses and relevant metadata.",
+          "tools_triggered": "workflow_list"
+        },
+        {
+          "description": "Explain async transaction behavior using the Expo SQLite documentation.",
+          "prompt": "Read https://docs.expo.dev/versions/latest/sdk/sqlite/ and explain the difference between withTransactionAsync and withExclusiveTransactionAsync. Can a query outside the transaction callback be included in the transaction?",
+          "expected_behavior": "Retrieves the SQLite documentation and explains that withTransactionAsync can include queries outside its callback while the transaction is active, whereas withExclusiveTransactionAsync limits the transaction to queries executed through its transaction object.",
+          "tools_triggered": "read_documentation"
+        }
+      ],
+      "negative": [
+        {
+          "description": "Do not trigger for unrelated calendar requests.",
+          "prompt": "What meetings do I have tomorrow?",
+          "expected_behavior": "The app should not be invoked because it does not manage calendars."
+        },
+        {
+          "description": "Do not trigger for general programming questions unrelated to Expo.",
+          "prompt": "Explain how Python generators work.",
+          "expected_behavior": "The app should not be invoked because the request does not involve Expo or EAS workflows."
+        },
+        {
+          "description": "Do not trigger for local prose editing.",
+          "prompt": "Rewrite this paragraph to sound more concise.",
+          "expected_behavior": "The app should not be invoked because the request is unrelated to its developer tools and hosted services."
+        }
+      ]
+    }
+  }
+}

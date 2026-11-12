@@ -6,7 +6,12 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
 
 type RunCommand = (command: string, args: string[], options: { cwd: string }) => string;
-type Options = { repoRoot?: string; outputPath?: string; runCommand?: RunCommand };
+type Options = { repoRoot?: string; outputPath?: string; profilePath?: string; runCommand?: RunCommand };
+type ReviewCase = { description: string; prompt: string; tools_triggered?: string; expected_behavior?: string };
+type SubmissionProfile = {
+  name: string; version: string; displayName: string; shortDescription: string; mcpUrl: string;
+  review: { test_cases: { positive: ReviewCase[]; negative: ReviewCase[] } };
+};
 
 const packagePaths = ["plugin.json", "mcp.json", "README.md", "assets", "skills"];
 const textExtensions = /\.(md|json|ya?ml|[cm]?[jt]s|tsx|jsx|sh)$/;
@@ -16,6 +21,34 @@ const runCommand: RunCommand = (command, args, options) => execFileSync(command,
   ...options, stdio: "pipe", encoding: "utf8", timeout: 60_000, maxBuffer: 16 * 1024 * 1024,
 });
 
+function readProfile(path: string): SubmissionProfile {
+  const profile = JSON.parse(readFileSync(path, "utf8"));
+  const nonempty = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0;
+  const cases = profile?.review?.test_cases;
+  if (typeof profile?.name !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(profile.name) ||
+      typeof profile.version !== "string" || !versionPattern.test(profile.version) ||
+      !nonempty(profile.displayName) || !nonempty(profile.shortDescription) ||
+      [...profile.shortDescription].length > 30 || typeof profile.mcpUrl !== "string") {
+    throw new Error("Invalid ChatGPT submission profile: check the name, version, listing text, and MCP URL.");
+  }
+  const endpoint = new URL(profile.mcpUrl);
+  if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.hash) {
+    throw new Error("The submission MCP URL must use HTTPS without credentials or a fragment.");
+  }
+  for (const [group, count] of [["positive", 5], ["negative", 3]] as const) {
+    const entries = cases?.[group];
+    if (!Array.isArray(entries) || entries.length !== count || entries.some(entry =>
+      !nonempty(entry?.description) || !nonempty(entry?.prompt) ||
+      (group === "positive" && (!nonempty(entry.tools_triggered) || !nonempty(entry.expected_behavior))))) {
+      throw new Error(`The submission profile requires exactly ${count} complete ${group} review cases.`);
+    }
+  }
+  if ("test_credentials" in profile.review || "reviewer_instructions" in profile.review) {
+    throw new Error("Keep reviewer credentials and instructions in the secure dashboard, outside the submission profile.");
+  }
+  return profile;
+}
+
 export function createChatgptPlugin(options: Options = {}) {
   const repoRoot = resolve(options.repoRoot ?? join(import.meta.dir, ".."));
   const run = options.runCommand ?? runCommand;
@@ -23,7 +56,8 @@ export function createChatgptPlugin(options: Options = {}) {
   if (manifest.name !== "expo" || typeof manifest.version !== "string" || !versionPattern.test(manifest.version)) {
     throw new Error("Expected an Expo manifest with a valid plugin version.");
   }
-  const outputPath = resolve(repoRoot, options.outputPath ?? `.context/expo-plugin-${manifest.version}-chatgpt.zip`);
+  const profile = readProfile(resolve(repoRoot, options.profilePath ?? "scripts/chatgpt-submission.json"));
+  const outputPath = resolve(repoRoot, options.outputPath ?? `.context/${profile.name}-plugin-${profile.version}-chatgpt.zip`);
   if (existsSync(outputPath)) throw new Error(`Output already exists: ${outputPath}`);
   const tracked = run("git", ["ls-files", "-z", "--", ...packagePaths.map(path => `plugins/expo/${path}`)], { cwd: repoRoot });
   const files = tracked.split("\0").filter(Boolean).map(path => {
@@ -32,9 +66,21 @@ export function createChatgptPlugin(options: Options = {}) {
     }
     return path.slice("plugins/expo/".length);
   });
-  if (!files.includes("plugin.json") || !files.some(path => /^skills\/[^/]+\/SKILL\.md$/.test(path))) {
-    throw new Error("The tracked package must include its manifest and skills.");
+  if (!files.includes("plugin.json") || !files.includes("mcp.json") || !files.some(path => /^skills\/[^/]+\/SKILL\.md$/.test(path))) {
+    throw new Error("The tracked package must include its manifest, MCP configuration, and skills.");
   }
+
+  manifest.name = profile.name;
+  manifest.version = profile.version;
+  const openai = (manifest.extensions ??= {})["com.openai"] ??= {};
+  openai.interface = { ...openai.interface, displayName: profile.displayName, shortDescription: profile.shortDescription };
+  delete openai.interface.screenshots;
+  openai.review = profile.review;
+  const mcp = JSON.parse(readFileSync(join(repoRoot, "plugins/expo/mcp.json"), "utf8"));
+  if (!mcp.mcpServers?.expo || Object.keys(mcp.mcpServers).length !== 1) {
+    throw new Error("Plugin-level review cases require exactly one Expo MCP server.");
+  }
+  mcp.mcpServers.expo = { ...mcp.mcpServers.expo, type: "streamable-http", url: profile.mcpUrl };
 
   const packageRoot = realpathSync(join(repoRoot, "plugins/expo"));
   const stage = mkdtempSync(join(tmpdir(), "expo-chatgpt-plugin-"));
@@ -48,6 +94,8 @@ export function createChatgptPlugin(options: Options = {}) {
         throw new Error(`Package entry resolves outside the plugin: ${file}`);
       }
       let contents = readFileSync(sourcePath);
+      if (file === "plugin.json") contents = Buffer.from(JSON.stringify(manifest, null, 2) + "\n");
+      if (file === "mcp.json") contents = Buffer.from(JSON.stringify(mcp, null, 2) + "\n");
       if (textExtensions.test(file)) {
         const text = contents.toString("utf8").replace(latestPackage, (specifier, name: string) => {
           // Preserve the command forms verified in the submission scan.
@@ -86,16 +134,19 @@ export function createChatgptPlugin(options: Options = {}) {
 if (import.meta.main) {
   const args = process.argv.slice(2);
   let outputPath: string | undefined;
+  let profilePath: string | undefined;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--output" && outputPath === undefined && args[i + 1] && !args[i + 1].startsWith("--")) {
       outputPath = args[++i];
+    } else if (args[i] === "--profile" && profilePath === undefined && args[i + 1] && !args[i + 1].startsWith("--")) {
+      profilePath = args[++i];
     } else {
-      console.error("Usage: bun scripts/create-chatgpt-plugin.ts [--output <zip-path>]");
+      console.error("Usage: bun scripts/create-chatgpt-plugin.ts [--profile <json-path>] [--output <zip-path>]");
       process.exit(1);
     }
   }
   try {
-    const result = createChatgptPlugin({ outputPath });
+    const result = createChatgptPlugin({ outputPath, profilePath });
     for (const [name, version] of Object.entries(result.versions)) console.log(`${name}@latest -> ${name}@${version}`);
     console.log(`Created ${result.outputPath} (${result.fileCount} files).`);
   } catch (error) {
