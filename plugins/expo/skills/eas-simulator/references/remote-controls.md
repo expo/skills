@@ -44,6 +44,23 @@ npx --yes eas-cli@latest simulator:control reduceMotion.set on --id <session-id>
 in the current directory. Choose a new filename if an existing file must be
 preserved. Base64 file actions such as `app.file.read` require `--output`.
 
+`simulator:control screenshot.capture` always saves a full-resolution PNG
+(1206x2622 on iPhone 17), which costs many tokens when you read it. If you pass
+`maxWidth`, `format`, or `quality`, the host rejects them with "Screenshot image
+options require binary output." For a smaller image, use
+agent-device `screenshot --scale` (see
+[controllers](./controllers.md)) or, with serve-sim 0.14.0+, the preview host
+API. Get the preview host URL and token as for
+[HAR downloads](./network-capture.md#authenticated-private-session):
+
+```bash
+curl -fsS -X POST -H "Authorization: Bearer <token>" -o shot.jpg \
+  "https://<preview-host>/api/screenshot?maxWidth=402&format=jpeg&quality=80"
+```
+
+Check the response `Content-Type`: an older host ignores the options and
+returns a full PNG. Keep the token out of logs and reports.
+
 On serve-sim 0.10.4+, a screenshot follows the active display, including after a
 Duo fold. To select a panel explicitly, use `display=<simctl-display-id>` only
 with an actual screen ID from that device. The ID is positive; hinge angle or
