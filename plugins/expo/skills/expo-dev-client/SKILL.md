@@ -146,7 +146,7 @@ Connect to local development:
 
 ```bash
 # Start Metro bundler
-npx expo start --dev-client
+npx --yes @expo/agent-cli@latest start --dev-client
 
 # Scan QR code with dev client or enter URL manually
 ```

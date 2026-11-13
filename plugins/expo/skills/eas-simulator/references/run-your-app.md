@@ -73,7 +73,7 @@ A Release build bundles the JS into the binary, so it renders without Metro. Goo
 
 ```bash
 # 1. Generate native project + build a Release simulator .app
-npx expo prebuild --platform ios          # set ios.bundleIdentifier in app.json first to avoid prompts
+npx --yes @expo/agent-cli@latest prebuild --platform ios          # set ios.bundleIdentifier in app.json first to avoid prompts
 # pod install can fail on Ruby 4 + CocoaPods with a Unicode/ASCII-8BIT error — fix with a UTF-8 locale:
 ( cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install )
 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 xcodebuild \
@@ -146,7 +146,7 @@ The agentic edit-and-see loop: a **dev (Debug) build** loads JS from your **Metr
 
 ### Get a dev-client build (either method needs one)
 
-- **Local (Mac):** `npx expo install expo-dev-client`; `npx expo prebuild --platform ios --clean` (set `ios.bundleIdentifier` first); `( cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install )`; then `xcodebuild -workspace ios/<App>.xcworkspace -scheme <App> -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-debug build` → `ios/build-debug/Build/Products/Debug-iphonesimulator/<App>.app`. A local `.app` → **Method 2 only**.
+- **Local (Mac):** `npx --yes @expo/agent-cli@latest install expo-dev-client`; `npx --yes @expo/agent-cli@latest prebuild --platform ios --clean` (set `ios.bundleIdentifier` first); `( cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install )`; then `xcodebuild -workspace ios/<App>.xcworkspace -scheme <App> -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build-debug build` → `ios/build-debug/Build/Products/Debug-iphonesimulator/<App>.app`. A local `.app` → **Method 2 only**.
 - **EAS (no Mac, or to use Method 1):** ensure a profile with `developmentClient: true` + `ios.simulator: true`, then `npx --yes eas-cli@latest build --platform ios --profile <dev-sim> --non-interactive`. Note the **build id** (Method 1's `--build-id`) or the artifact URL. Reuse a fingerprint-matched build to skip the ~15-20 min.
 
 ### Method 1 — launch at session start (recommended)
@@ -155,7 +155,7 @@ The agentic edit-and-see loop: a **dev (Debug) build** loads JS from your **Metr
 
 ```bash
 # 1. Start Metro with a tunnel on your own free port (tunnel-backend details at the end of this mode).
-EXPO_UNSTABLE_TUNNEL_V2=1 npx expo start --tunnel --port <your-free-port>   # background it durably
+EXPO_UNSTABLE_TUNNEL_V2=1 npx --yes @expo/agent-cli@latest start --tunnel --port <your-free-port>   # background it durably
 #    Capture the manifest host. Headless runs won't print it — read ngrok's API (curl -s 127.0.0.1:4040/api/tunnels)
 #    or the manifest (curl -s -H "expo-platform: ios" localhost:<port>/ → launchAsset.url).
 

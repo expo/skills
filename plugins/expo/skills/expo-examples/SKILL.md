@@ -1,7 +1,7 @@
 ---
 name: expo-examples
 description: Expo's official example projects - the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, NativeWind, and more). Use when integrating a third-party library or service into an existing Expo app and you want the canonical, version-matched pattern to adapt, or when scaffolding a new project from one with `npx create-expo --example`.
-allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx create-expo:*),Bash(npx degit:*),Bash(bun create:*)"
+allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx create-expo:*),Bash(npx degit:*),Bash(bun create:*),Bash(npx --yes @expo/agent-cli@latest *)"
 license: MIT
 ---
 
@@ -72,7 +72,7 @@ bun create expo --example with-stripe    # with bun
 
 When the user already has an app, **add only what the example introduces; never overwrite their setup.**
 
-- **Version-align — don't copy pinned versions.** Examples track the **latest** SDK, so their `package.json` pins won't match an older project. Add only the *missing* deps with `npx expo install <pkg>` (it resolves SDK-correct versions) instead of copying exact versions.
+- **Version-align — don't copy pinned versions.** Examples track the **latest** SDK, so their `package.json` pins won't match an older project. Add only the *missing* deps with `npx --yes @expo/agent-cli@latest install <pkg>` (it resolves SDK-correct versions) instead of copying exact versions.
 - **Merge config, don't replace it.** Add only the `app.json`/`app.config.*` plugins and permissions the example introduces that the user lacks — keep their existing config block intact.
 - **Port the integration code.**
 - **Recreate env vars** from the example's `.env` shape — it holds placeholders, never working secrets.

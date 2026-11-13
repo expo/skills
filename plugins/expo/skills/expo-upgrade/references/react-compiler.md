@@ -53,7 +53,7 @@ React Compiler runs at build time. Check the Metro bundler output for compilatio
 If you encounter issues:
 
 1. Ensure New Architecture is enabled
-2. Clear Metro cache: `npx expo start --clear`
+2. Clear Metro cache: `npx --yes @expo/agent-cli@latest start --clear`
 3. Check for incompatible patterns in your code (rare)
 
 React Compiler is designed to work with idiomatic React code. If it can't safely optimize a component, it skips that component without breaking your app.
