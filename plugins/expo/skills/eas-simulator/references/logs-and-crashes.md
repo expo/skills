@@ -47,8 +47,12 @@ API=$(npx --yes eas-cli@latest simulator:get --json --id <session-id> | node -e 
     let j;
     try { j = JSON.parse(s); } catch { console.error("simulator:get did not print JSON"); process.exit(1); }
     const url = j.remoteConfig?.previewApiUrl;
-    if (j.status !== "IN_PROGRESS" || j.platform !== "IOS" || !url) {
-      console.error(`no preview API (status ${j.status}, platform ${j.platform})`);
+    if (j.status !== "IN_PROGRESS" || j.platform !== "IOS") {
+      console.error(`no iOS preview API (status ${j.status}, platform ${j.platform})`);
+      process.exit(1);
+    }
+    if (!url) {
+      console.error("No preview API URL in this output; private sessions omit it. Use controller logs or the authenticated browser preview.");
       process.exit(1);
     }
     process.stdout.write(url);
