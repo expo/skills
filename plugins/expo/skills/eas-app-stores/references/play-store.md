@@ -174,6 +174,36 @@ Android requires incrementing `versionCode` for each upload:
 
 With `appVersionSource: "remote"`, EAS tracks version codes automatically.
 
+### `appVersionSource: "remote"` makes `app.json`'s `versionCode` a no-op
+
+With `cli.appVersionSource: "remote"`, the remote record on EAS servers is the
+**single source of truth** for the build's `versionCode`. The
+`expo.android.versionCode` field in `app.json` is **ignored** — EAS CLI says so
+on every invocation:
+
+```
+android.versionCode field in app config is ignored when version source is set to
+remote, but this value will still be in the manifest available via
+expo-constants. It's recommended to remove this value from app config.
+```
+
+So editing `app.json` to bump the version code does nothing to the uploaded
+artifact. Two consequences worth internalising:
+
+- **To change the baseline**, write the remote record:
+  `eas build:version:set --platform android` (prompts for the new value; it
+  accepts any integer in `0 < v <= 2100000000`, not only `current + 1`). The
+  command touches only the EAS server — it does not modify `eas.json`.
+  Read it back with `eas build:version:get --platform android --json`.
+- **Remove `expo.android.versionCode` from `app.json`** rather than leaving a
+  stale value there. It does not participate in the build, but `expo-constants`
+  still surfaces it in the manifest, so a stale number in app config reads as
+  "this is the version code" when it is not.
+
+To confirm what a build actually got, read the build log phase
+`CONFIGURE_ANDROID_VERSION` — it prints `Version code: N`. Do not infer the
+version code from `app.json`.
+
 ## First Submission Checklist
 
 Before your first Play Store submission:
@@ -194,7 +224,20 @@ The app must exist in Play Console before EAS can submit. Create it manually fir
 
 ### "Version code already used"
 
-Increment `versionCode` in `app.json` or use `autoIncrement: true` in `eas.json`.
+Play permanently retires every `versionCode` you have uploaded, so a repeat
+upload of the same code is rejected.
+
+- With `appVersionSource: "remote"`: the fix is to advance the **remote
+  record**, not `app.json` — `eas build:version:set --platform android`, or let
+  `autoIncrement: true` do it on the next build. Editing `app.json` changes
+  nothing (see "Version Codes" above).
+- With a local version source: increment `expo.android.versionCode` in
+  `app.json`.
+
+If the code was already used on the Play side, you cannot reuse it — jump
+**forward** to a higher code. Play requires the version code to increase
+monotonically and never to repeat, but it does **not** require consecutive
+values, so skipping ahead is valid.
 
 ### "Service account lacks permission"
 
