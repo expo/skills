@@ -140,7 +140,7 @@ copy of the CLI surface. Keep non-obvious behavioral guidance from this skill—
 | Command | Purpose |
 |---|---|
 | `npx --yes eas-cli@latest simulator:availability [--json] [--non-interactive]` | Check access without creating a session. |
-| `npx --yes eas-cli@latest simulator:start --platform ios\|android --name "<description>" [flags]` | Create a session; boot the sim + selected interface; write `.env.eas-simulator` by default; print the preview + job-run URLs. **Always pass `--name`**. `--json` does not suppress the dotenv; use `--out-config-type env` when no file should be written (it prints only the controller `export` lines, without `EAS_SIMULATOR_SESSION_ID`, so pass `--id` to `get`/`stop`/`events`). |
+| `npx --yes eas-cli@latest simulator:start --platform ios\|android --name "<description>" [flags]` | Create a session; boot the sim + selected interface; write `.env.eas-simulator` by default; print the preview + job-run URLs. **Always pass `--name`**. `--json` does not suppress the dotenv; use `--out-config-type env` when no file should be written (it prints only the controller `export` lines, without `EAS_SIMULATOR_SESSION_ID`, so pass `--id` to `get`/`stop`/`events`). On CLI ≥ 27.5.0, `--import <file>` reads start flags and iOS setup actions from a JSON file; see [remote controls](./references/remote-controls.md#run-saved-actions-from-a-file). |
 | `npx --yes eas-cli@latest simulator:exec <cmd> [args…]` | Load `.env.eas-simulator`, then run `<cmd>` with that env. The bridge to the controller. |
 | `npx --yes eas-cli@latest simulator:get [--id <id>] [--json] [--non-interactive]` | Session status + connection details, including the session name. **Use this to confirm readiness** (see *Operating principles*). For a failed session, it prints the reason; `--json` adds an `errors` array (CLI ≥ 26.0.0). |
 | `npx --yes eas-cli@latest simulator:list [filters] [--limit N] [--after <cursor>] [--json]` | List and paginate project sessions; filter by status, type, platform, name prefix, and tags. |
@@ -213,7 +213,7 @@ npx --yes eas-cli@latest simulator:control location.set 37.3349 -122.0090 --id <
 
 - **Read the catalog first.** The session's serve-sim version supplies the actions, so an older session can have a different catalog; updating eas-cli does not change a running session. Run `simulator:control --id <id> --json` before you use an action that is not in the examples above.
 - Other actions in the docs: `tap x y` and `gesture '<json>'` (coordinates from 0 to 1), `type` (ASCII only; for other text, `clipboard.write` then `clipboard.paste`), `rotate`, `button`, `media.add`, `app.stop`, `app.file.upload` / `app.file.list` / `app.file.read`, and `app.approveUrlScheme <bundleId> <scheme>` (approves a custom scheme so a `simctl openurl` link skips the "Open in" dialog).
-- `app.install` uploads an **`.ipa`** with a simulator build. For a `.app` folder, put it in a `Payload` folder and zip that folder as `<App>.ipa`, or install it with the controller.
+- `app.install` uploads one local file. Since serve-sim 0.13.3, the host refuses every `.ipa` and `.zip`, so pass a `.tar.gz` of the Simulator `.app` (`tar -czf MyApp.app.tar.gz -C <build-dir> MyApp.app`). See [remote controls](./references/remote-controls.md#apps-and-data-files).
 - Pass values that start with `--` after `--` (for example, `clipboard.write -- --text`). Quote URLs and JSON for the shell. Keep passwords and tokens out of command arguments.
 - Run actions that change the device one at a time. If one times out, inspect the device before you retry: the action may already have run.
 - `--import <file>` runs saved actions from a JSON file (`{"version": 1, "actions": [{"action": "appearance.set", "params": {"value": "dark"}}]}`). Actions run in order and stop on the first failure. `simulator:start --import <file>` reads the same file: its `start` object holds start flags by their CLI names, and its actions run after the session is ready. Android sessions accept the `start` options but not actions yet.
@@ -264,7 +264,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 ## References
 
 - [references/run-your-app.md](./references/run-your-app.md) — full command sequences for modes A, B, and C (read before running a mode).
-- [references/remote-controls.md](./references/remote-controls.md) — direct iOS actions, settings, clipboard, screenshots, and app data files.
+- [references/remote-controls.md](./references/remote-controls.md) — direct iOS actions, settings, clipboard, screenshots, app data files, saved action files, and kept-alive connections.
 - [references/controllers.md](./references/controllers.md) — agent-device verb reference and the `argent` alternative.
 - [references/network-capture.md](./references/network-capture.md) — iOS HTTP(S) capture and private HAR downloads.
 - [references/logs-and-crashes.md](./references/logs-and-crashes.md) — device logs and crash reports from an iOS session (read when the app crashes or misbehaves).
