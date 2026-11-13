@@ -76,8 +76,8 @@ the preview API. An iframe alone does not need the parent's CORS grant.
 Use only the origins needed for that integration. The printed direct preview
 URL carries a token and grants session control; keep it out of source control
 and public pages. Embed that direct URL rather than the expo.dev wrapper.
-Private `get --json` does not recover this URL from saved origin grants on CLI
-25.3.0; keep the start output private or query the authenticated REST session.
+Private `get --json` does not recover this URL from saved origin grants (through CLI
+27.9.0); keep the start output private or query the authenticated REST session.
 
 ## Android system image
 

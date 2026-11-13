@@ -213,7 +213,7 @@ npx --yes eas-cli@latest simulator:control location.set 37.3349 -122.0090 --id <
 
 - **Read the catalog first.** The session's serve-sim version supplies the actions, so an older session can have a different catalog; updating eas-cli does not change a running session. Run `simulator:control --id <id> --json` before you use an action that is not in the examples above.
 - Other actions in the docs: `tap x y` and `gesture '<json>'` (coordinates from 0 to 1), `type` (ASCII only; for other text, `clipboard.write` then `clipboard.paste`), `rotate`, `button`, `media.add`, `app.stop`, `app.file.upload` / `app.file.list` / `app.file.read`, and `app.approveUrlScheme <bundleId> <scheme>` (approves a custom scheme so a `simctl openurl` link skips the "Open in" dialog).
-- `app.install` uploads one local file. Since serve-sim 0.13.3, the host refuses every `.ipa` and `.zip`, so pass a `.tar.gz` of the Simulator `.app` (`tar -czf MyApp.app.tar.gz -C <build-dir> MyApp.app`). See [remote controls](./references/remote-controls.md#apps-and-data-files).
+- `app.install` installs a Simulator `.app`: on CLI 27.8.0+, pass the `.app` folder; on older CLIs, pass a `.tar.gz` of it (`tar -czf MyApp.app.tar.gz -C <build-dir> MyApp.app`). Since serve-sim 0.13.3, the host refuses every `.ipa` and `.zip`. See [remote controls](./references/remote-controls.md#apps-and-data-files).
 - Pass values that start with `--` after `--` (for example, `clipboard.write -- --text`). Quote URLs and JSON for the shell. Keep passwords and tokens out of command arguments.
 - Run actions that change the device one at a time. If one times out, inspect the device before you retry: the action may already have run.
 - `--import <file>` runs saved actions from a JSON file (`{"version": 1, "actions": [{"action": "appearance.set", "params": {"value": "dark"}}]}`). Actions run in order and stop on the first failure. `simulator:start --import <file>` reads the same file: its `start` object holds start flags by their CLI names, and its actions run after the session is ready. Android sessions accept the `start` options but not actions yet.
@@ -225,6 +225,7 @@ npx --yes eas-cli@latest simulator:control location.set 37.3349 -122.0090 --id <
 When the app crashes or closes on launch, read the iOS session's device log and crash reports before guessing from screenshots.
 
 - **App logs:** `npx --yes eas-cli@latest simulator:logs`. Start `simulator:logs --follow` **before** you reproduce the problem. After the first 30 minutes of a session, new lines appear only while you follow.
+- **Android:** `simulator:logs` does not read Android sessions. Choose `--log-source emulator-output --log-source device-logcat` when you start the session; the logs become artifacts after it stops. See [references/logs-and-crashes.md](./references/logs-and-crashes.md).
 - **Crash reports:** read them from the preview API URL (`remoteConfig.previewApiUrl` in `simulator:get --json`). That URL carries the session token, so never print it. `simulator:get` includes it only for a session started with `--public-link`; on a default (private) session it is `null`, even with `--cors-origin` or `--frame-ancestor`. On a private session, the user sees crash reports in the browser preview.
 
 Commands, fields, and fallbacks are in [references/logs-and-crashes.md](./references/logs-and-crashes.md).
