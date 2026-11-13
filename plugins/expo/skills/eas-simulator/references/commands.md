@@ -23,5 +23,6 @@ copy of the CLI surface. Keep non-obvious behavioral guidance from this skill—
 | `npx --yes eas-cli@latest simulator:logs [--id <id>] [--follow\|--json] [--scope user-apps\|all] [--limit N]` | iOS app logs. Live sessions: the newest buffered lines (100 by default, installed apps only by default), or `--follow` to stream; `--scope all` (system logs too) needs `--follow`. Stopped sessions: `--output <path>` downloads the saved `app-logs.ndjson` (first 30 minutes only). See [logs-and-crashes.md](./logs-and-crashes.md). |
 | `npx --yes eas-cli@latest simulator:control [<action> [values…]] [--id <id>] [--output <path>] [--import <file>]` | Run direct actions on an iOS session (any session type, private links are fine), such as `screenshot.capture`, `app.launch`, `app.openUrl`, `app.install`, `appearance.set`, `location.set`, or `tap`. See [simulator-actions.md](./simulator-actions.md). |
 | `npx --yes eas-cli@latest simulator:stop [--id <id>] [--json] [--non-interactive]` | Stop a session (idempotent). |
+| `npx --yes eas-cli@latest account:usage` | Show the selected account's Simulator minutes. |
 
 `sim:` is a short alias for the `simulator:` topic (for example, `eas sim:start`). This skill uses the full name.
