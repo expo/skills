@@ -1,12 +1,5 @@
-# Skill eval for PRs labeled "eval". Advisory, never blocks merge.
-# Authors+evaluates 3 PRDs vs main and this PR. "_main" jobs cache via
-# fingerprint+restore_cache; only skill-eval-main-baseline.yml writes that
-# cache. Logic in scripts/*: EAS caps workflow files at 16 KiB.
-# Authoring model: AGENT_MODEL in scripts/ci.sh, shared by both workflows.
 name: skill-eval-ci
 
-# Must match eval-harness's own .eas/workflows/*.yml. The default worker image
-# ships Bun 1.0.14 / Node 18, too old for the analyzer to write metrics.json.
 defaults:
   image: sdk-57
   tools:
@@ -89,6 +82,7 @@ jobs:
       SCENARIO: skills_available_unmentioned
     outputs:
       report: ${{ steps.run.outputs.report }}
+      focused: ${{ steps.run.outputs.focused }}
       expected: ${{ steps.run.outputs.expected }}
       detected: ${{ steps.run.outputs.detected }}
       recall: ${{ steps.run.outputs.recall }}
@@ -107,6 +101,7 @@ jobs:
           bash scripts/ci.sh author_and_evaluate false - "$(pwd)/plugins/expo" skill-eval-report-notes-pr "${SCENARIO}" skill-eval-report-notes-pr.tar.gz
           eval "$(python3 scripts/ci.py print-outputs skill-eval-report-notes-pr/metrics.json)"
           set-output report "$report"
+          set-output focused "$focused"
           set-output expected "$expected"
           set-output detected "$detected"
           set-output recall "$recall"
@@ -335,7 +330,6 @@ jobs:
           name: skill-eval-report-wiki_reader-pr
           path: skill-eval-report-wiki_reader-pr.tar.gz
 
-  # after: (not needs:) posts even if some jobs failed.
   comment:
     name: comment
     after:
@@ -373,5 +367,13 @@ jobs:
         | hot_chocolate | PR | ${{ after.se_hot_chocolate_pr.outputs.lexical }} | ${{ after.se_hot_chocolate_pr.outputs.structural }} | ${{ after.se_hot_chocolate_pr.outputs.syntax_ok }} | ${{ after.se_hot_chocolate_pr.outputs.bundle_ok }} | ${{ after.se_hot_chocolate_pr.outputs.failing }} |
         | wiki_reader | main | ${{ after.se_wiki_reader_main.outputs.lexical }} | ${{ after.se_wiki_reader_main.outputs.structural }} | ${{ after.se_wiki_reader_main.outputs.syntax_ok }} | ${{ after.se_wiki_reader_main.outputs.bundle_ok }} | — |
         | wiki_reader | PR | ${{ after.se_wiki_reader_pr.outputs.lexical }} | ${{ after.se_wiki_reader_pr.outputs.structural }} | ${{ after.se_wiki_reader_pr.outputs.syntax_ok }} | ${{ after.se_wiki_reader_pr.outputs.bundle_ok }} | ${{ after.se_wiki_reader_pr.outputs.failing }} |
+
+        ### Focused catalog-value pilot
+
+        Four cases × three trials, with and without Expo skills. Pending reviews are not passes; source checks do not establish native-runtime correctness.
+
+        ${{ after.se_notes_pr.outputs.focused }}
+
+        Open `focused/report.html` inside the Notes PR artifact for outcomes, routing, costs and traces.
 
         📎 [Reports](${{ workflow.url }})
