@@ -4,7 +4,7 @@ Concrete errors seen while validating this flow, and the fix.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Approval review rejects the Mode C Metro tunnel or dev-client Connect action | Review may lack or misinterpret the transport details or existing authorization; a signed URL alone does not establish private access | Follow [Tunnel scope and approvals](./run-your-app.md#tunnel-scope-and-approvals). Include the original authorization source and verified transport in the request; use reconsideration only where the host permits it. Preserve the requested live workflow while resolving approval. |
+| The Mode C Metro tunnel command is not approved | The tunnel makes local Metro reachable at a public URL, so the host or the user can decline it | Do not retry it or switch tunnel providers. Tell the user that live edits need the tunnel and ask how to continue; see [Tunnel data flow and exposure](./run-your-app.md#tunnel-data-flow-and-exposure). A static build (Mode A or B) avoids the tunnel but loses Fast Refresh. |
 | Controller recording download fails or times out | The local transfer can fail even though EAS retains the recording | Fetch it from [EAS session artifacts](./controllers.md#recording-download-recovery) using the original EAS session id and the recording’s `downloadUrl`. |
 | `Command simulator:start not found` | `eas-cli` too old (the commands are present from ≥ 20.3.0) | Run via `npx --yes eas-cli@latest …`, or upgrade `eas-cli`. |
 | `simulator:start` rejects `--name` (e.g. `Nonexistent flag: --name`) | `eas-cli` too old — `--name` was added after `simulator:start` itself | Run via `npx --yes eas-cli@latest …`, or upgrade `eas-cli`. If you can't upgrade, retry once **without** `--name`; the session starts unnamed. |
