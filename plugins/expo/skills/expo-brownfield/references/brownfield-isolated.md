@@ -35,7 +35,7 @@ Node and the JS package manager are only needed in the environment that _builds_
 ### Create a new Expo project
 
 ```sh
-npx create-expo-app@latest my-project --template blank@latest
+npx --yes @expo/agent-cli@latest new my-project --template blank@latest
 ```
 
 Use this current stable blank template for a small embedded feature after the [version/toolchain checks](./version-compatibility.md). If host constraints require another SDK, select its published template tag instead. Keep an existing producer and its entry point when present. The project can live in a separate repo or alongside the native app in a monorepo; it does not need to be inside the native project.
@@ -44,7 +44,7 @@ Use this current stable blank template for a small embedded feature after the [v
 
 ```sh
 cd my-project
-npx expo install expo-brownfield
+npx --yes @expo/agent-cli@latest install expo-brownfield
 ```
 
 Check that the plugin registered in `app.json`; add it explicitly if the install command did not update the config (for example, with dynamic app configuration). Defaults derive from your app config.
@@ -92,7 +92,7 @@ To override the auto-generated names, expand the plugin entry in `app.json`:
 
 ### Speed up iOS builds with prebuilt Expo modules
 
-SDK 57 enables precompiled Expo modules by default. For a supported SDK where an explicit opt-in is needed, install `expo-build-properties` with `npx expo install expo-build-properties` and enable its `ios.usePrecompiledModules` so `pod install` downloads each Expo module as a prebuilt `.xcframework` instead of compiling it from source. `build:ios` detects those xcframeworks under `ios/Pods/` and bundles them into the Swift Package output alongside the brownfield framework, React, Hermes, and `ReactNativeDependencies`.
+SDK 57 enables precompiled Expo modules by default. For a supported SDK where an explicit opt-in is needed, install `expo-build-properties` with `npx --yes @expo/agent-cli@latest install expo-build-properties` and enable its `ios.usePrecompiledModules` so `pod install` downloads each Expo module as a prebuilt `.xcframework` instead of compiling it from source. `build:ios` detects those xcframeworks under `ios/Pods/` and bundles them into the Swift Package output alongside the brownfield framework, React, Hermes, and `ReactNativeDependencies`.
 
 ```json
 {
@@ -256,7 +256,7 @@ Build Debug and Release artifacts separately when the producer requires a single
 To inspect the generated native code, run prebuild **from the separate Expo producer whose native directories are CNG-owned**, never from the consuming host:
 
 ```sh
-npx expo prebuild
+npx --yes @expo/agent-cli@latest prebuild
 ```
 
 This creates `android/` and `ios/` directories containing the brownfield wrappers:
@@ -431,7 +431,7 @@ struct ContentView: View {
 Start Metro in the Expo project:
 
 ```sh
-npx expo start
+npx --yes @expo/agent-cli@latest start
 ```
 
 Build a Debug artifact (`npx expo-brownfield build:ios --debug` on iOS), select it in the host, then build and run the native app in Debug. React Native screens load JS from the Metro dev server over HTTP with full hot reloading. The device or emulator must be able to reach the dev machine — see [./troubleshooting.md](./troubleshooting.md) if Metro connections fail.

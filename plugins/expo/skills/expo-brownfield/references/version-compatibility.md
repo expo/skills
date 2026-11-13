@@ -7,15 +7,15 @@ Keep the workflow version-aware rather than pinning every host to one SDK. Exist
 1. Read the producer's `package.json` and lockfile; record resolved `expo`, `react-native`, and `expo-brownfield` versions. Check the host's deployment targets, Xcode/Node versions, and native dependency graph, including any existing RN runtime.
 2. For new work, check the [Expo releases](https://expo.dev/changelog/) and [SDK compatibility table](https://docs.expo.dev/versions/latest/#each-expo-sdk-version-depends-on-a-react-native-version). `npm view expo dist-tags --json` can confirm the current stable `latest` version. Do not infer stability from the highest SDK number or select `canary`/`next` by default.
 3. Select an SDK compatible with the host's supported OS versions, modules, and build tools. Do not silently raise the host's minimum OS or swap its toolchain to satisfy a tutorial. If a constraint conflicts, explain the concrete choices before changing that product requirement.
-4. Use that SDK's versioned Brownfield API docs and `sdk-<major>` native template. Install modules with `npx expo install`; run `npx expo install --check` before native builds. For an SDK upgrade, use `expo-upgrade`, preserve the host, and apply native diffs selectively.
+4. Use that SDK's versioned Brownfield API docs and `sdk-<major>` native template. Install modules with `npx --yes @expo/agent-cli@latest install`; run `npx --yes @expo/agent-cli@latest install --check` before native builds. For an SDK upgrade, use `expo-upgrade`, preserve the host, and apply native diffs selectively.
 5. Inspect the **installed** CLI's `build:ios --help` / `build:android --help`, plugin schema, generated Swift/Kotlin wrappers, and `Package.swift`. Flags, prebuilt defaults, import names, and binary products can change within a major release.
 
 To scaffold a small new feature after those checks:
 
 ```sh
-npx create-expo-app@latest my-project --template blank@latest
+npx --yes @expo/agent-cli@latest new my-project --template blank@latest
 cd my-project
-npx expo install expo-brownfield typescript @types/react
+npx --yes @expo/agent-cli@latest install expo-brownfield typescript @types/react
 ```
 
 This avoids adding a Router shell just to export one component. For an existing Router app, preserve it and add the root-props adapter described in [feature integration](./feature-integration.md). If selecting an older SDK, use a verified template tag such as `blank@sdk-55`; the scaffolder's own `@latest` version does not determine the template's SDK. Commit the producer's lockfile for repeatable builds.

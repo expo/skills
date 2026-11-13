@@ -25,10 +25,10 @@ If the native team must not need Node, Yarn, or React Native tooling, use [./bro
 Create the Expo project inside or alongside the existing native project, using the SDK selected during host inspection. For a new small feature on the current stable SDK:
 
 ```sh
-npx create-expo-app@latest my-project --template blank@latest
+npx --yes @expo/agent-cli@latest new my-project --template blank@latest
 ```
 
-For TypeScript, install `typescript` and `@types/react` with `npx expo install`, then use the explicit entry point in [feature integration](./feature-integration.md#register-the-component-that-receives-input). The JS entry point registers a root component under the name `"main"` — this name must match the `moduleName` referenced from the native side later.
+For TypeScript, install `typescript` and `@types/react` with `npx --yes @expo/agent-cli@latest install`, then use the explicit entry point in [feature integration](./feature-integration.md#register-the-component-that-receives-input). The JS entry point registers a root component under the name `"main"` — this name must match the `moduleName` referenced from the native side later.
 
 ## 2) Establish the project layout
 

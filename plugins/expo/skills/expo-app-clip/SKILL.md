@@ -38,7 +38,7 @@ This installs [`@bacons/apple-targets`](https://github.com/EvanBacon/expo-apple-
 - `targets/clip/Info.plist` — Clip Info.plist
 - `targets/clip/AppDelegate.swift`, `Assets.xcassets`, etc.
 
-Pick a good icon or reuse the existing one defined in the app — check it with `bunx expo config` under the `icon` or `ios.icon` key.
+Pick a good icon or reuse the existing one defined in the app — check it with `npx --yes @expo/agent-cli@latest config` under the `icon` or `ios.icon` key.
 
 ## 3. Wire up associated domains
 
@@ -132,7 +132,7 @@ Notes:
 Create `src/app/+html.tsx` (Expo Router's HTML shell) and add the tag from `setup-safari`. Create the versioned template if it doesn't exist:
 
 ```sh
-bunx expo customize src/app/+html.tsx
+npx --yes @expo/agent-cli@latest customize src/app/+html.tsx
 ```
 
 Add the meta tag to the `<head>`:
@@ -170,7 +170,7 @@ To make the website show the App Clip card instead of the install card, use:
 The AASA file must be live before iOS will trust the association. Use [EAS Hosting](https://docs.expo.dev/eas/hosting/):
 
 ```sh
-bunx expo export -p web
+npx --yes @expo/agent-cli@latest export -p web
 eas deploy --prod
 ```
 
@@ -185,7 +185,7 @@ curl https://may20.expo.app/.well-known/apple-app-site-association
 Inspect the parent app's permissions after prebuild:
 
 ```sh
-npx expo config --type introspect
+npx --yes @expo/agent-cli@latest config --type introspect
 ```
 
 Look at the `infoPlist` object — mirror the permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.

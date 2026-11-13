@@ -21,7 +21,7 @@ Everything else — package name, build process, dashboard, debug-mode behavior 
 Before installing, confirm all of the following:
 
 1. **An Expo account.** Sign up at [expo.dev/signup](https://expo.dev/signup) if needed.
-2. **Expo SDK 55 or later.** Run `npx expo-doctor` to check, and `npx expo install --fix` to update dependencies. SDK 56+ unlocks the newer `ObserveRoot` / `useObserve` API.
+2. **Expo SDK 55 or later.** Run `npx --yes @expo/agent-cli@latest doctor` to check, and `npx --yes @expo/agent-cli@latest install --fix` to update dependencies. SDK 56+ unlocks the newer `ObserveRoot` / `useObserve` API.
 3. **An EAS project.** The app must have `extra.eas.projectId` set in its app config. If not, run `eas init` to create one.
 4. **A development build or a production build.** `expo-observe` is a native library, so it does **not** work in Expo Go. Testing the integration requires a [development build](https://docs.expo.dev/develop/development-builds/introduction/).
 
@@ -30,8 +30,8 @@ Before installing, confirm all of the following:
 From the project root:
 
 ```sh
-npx expo install --fix
-npx expo install expo-observe
+npx --yes @expo/agent-cli@latest install --fix
+npx --yes @expo/agent-cli@latest install expo-observe
 ```
 
 ## Step 2 — Wrap the root layout
@@ -514,12 +514,12 @@ If the user needs ANR/OOM capture or native symbolication today, a separate cras
 { "expo": { "extra": { "eas": { "observe": { "endpointUrl": "https://your-endpoint.com" } } } } }
 ```
 
-The URL is baked into the native layer at build time, so run `npx expo prebuild` and rebuild after changing it. If the backend expects standard OTLP paths without the project-ID prefix, route through a collector.
+The URL is baked into the native layer at build time, so run `npx --yes @expo/agent-cli@latest prebuild` and rebuild after changing it. If the backend expects standard OTLP paths without the project-ID prefix, route through a collector.
 
 ## Quick checklist
 
 - [ ] SDK ≥ 55, EAS project linked, development or production build (not Expo Go).
-- [ ] `expo-observe` installed via `npx expo install`.
+- [ ] `expo-observe` installed via `npx --yes @expo/agent-cli@latest install`.
 - [ ] Root component exported through `AppMetricsRoot.wrap(...)` (SDK 55) or `ObserveRoot.wrap(...)` (SDK 56+).
 - [ ] `markInteractive()` called from every entry screen once it is genuinely interactive — global `AppMetrics.markInteractive()` on SDK 55, or `useObserve()` hook on SDK 56+.
 - [ ] (Optional, SDK 56+) Per-route metrics enabled via `Observe.configure({ integrations: { ... } })`, plus `<ObserveNavigationContainer>` (dynamic) or `<ObserveNavigationProvider>` (static) for React Navigation.

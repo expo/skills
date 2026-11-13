@@ -8,7 +8,7 @@ license: MIT
 
 > **EAS service - costs apply.** EAS Hosting is a paid Expo Application Services product with free-tier limits; production deploys use your plan's request and bandwidth allowance. See https://expo.dev/pricing. Authoring API routes and exporting the web bundle are free and open source, and you can self-host the exported server output instead of EAS Hosting.
 
-EAS Hosting deploys your Expo **web app and API routes** to Expo's managed edge (Cloudflare Workers). Export the web bundle with `npx expo export -p web` and ship it with `eas deploy` - the same command deploys any Expo Router API routes bundled alongside it. This skill covers deploying a website, authoring API routes, and the hosting runtime; see the Deployment section below for the deploy workflow.
+EAS Hosting deploys your Expo **web app and API routes** to Expo's managed edge (Cloudflare Workers). Export the web bundle with `npx --yes @expo/agent-cli@latest export -p web` and ship it with `eas deploy` - the same command deploys any Expo Router API routes bundled alongside it. This skill covers deploying a website, authoring API routes, and the hosting runtime; see the Deployment section below for the deploy workflow.
 
 ## When to Use API Routes
 
@@ -203,7 +203,7 @@ export async function POST(request: Request) {
 Start the development server with API routes:
 
 ```bash
-npx expo serve
+npx --yes @expo/agent-cli@latest serve
 ```
 
 This starts a local server at `http://localhost:8081` with full API route support.
@@ -230,7 +230,7 @@ Deploying ships your web bundle and any Expo Router API routes together - `eas d
 
 ```bash
 # Export the web bundle (includes any API routes)
-npx expo export -p web
+npx --yes @expo/agent-cli@latest export -p web
 
 # Deploy a preview (PR-style URL)
 npx eas-cli@latest deploy

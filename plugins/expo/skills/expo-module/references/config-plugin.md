@@ -1,6 +1,6 @@
 # Config Plugins Reference
 
-Config plugins customize native Android and iOS projects generated with `npx expo prebuild`. They are synchronous functions that accept an `ExpoConfig` and return a modified version.
+Config plugins customize native Android and iOS projects generated with `npx --yes @expo/agent-cli@latest prebuild`. They are synchronous functions that accept an `ExpoConfig` and return a modified version.
 
 ## Plugin Structure
 
@@ -87,4 +87,4 @@ Function("getApiKey") {
 - Plugins must be synchronous; return values must be serializable (except `mods`)
 - `Mods` are async functions invoked during the prebuild "syncing" phase
 - Use `npm run build plugin` to compile TypeScript plugins
-- Test with `npx expo prebuild --clean`
+- Test with `npx --yes @expo/agent-cli@latest prebuild --clean`
