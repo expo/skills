@@ -26,10 +26,10 @@ Simulator UDID. These are named actions, not an arbitrary remote shell or
 `simctl` interface. Keep using agent-device or another selected controller for
 UI-tree snapshots and element references.
 
-In released CLIs (through 27.5.0), quoting or `--` does not make a recognized
+In released CLIs (through 27.9.0), quoting or `--` does not make a recognized
 `name=value` token literal text. To send exact text, put it in `params` in a
 saved action file (see below), or avoid that parser shape. Do not use unreleased
-interactive or local `.app` folder upload syntax.
+interactive syntax.
 
 ## Screenshots and settings
 
@@ -51,7 +51,7 @@ options require binary output." For a smaller image, use
 agent-device `screenshot --scale` (see
 [controllers](./controllers.md)) or, with serve-sim 0.14.0+, the preview host
 API. Get the preview host URL and token as for
-[HAR downloads](./network-capture.md#authenticated-private-session):
+[HAR downloads](./network-capture.md#authenticated-private-session). Send the token in the `Authorization` header, not in the URL query:
 
 ```bash
 curl -fsS -X POST -H "Authorization: Bearer <token>" -o shot.jpg \
@@ -60,6 +60,13 @@ curl -fsS -X POST -H "Authorization: Bearer <token>" -o shot.jpg \
 
 Check the response `Content-Type`: an older host ignores the options and
 returns a full PNG. Keep the token out of logs and reports.
+
+With serve-sim 0.14.2+, the `X-Expo-Screenshot-Metadata` response header holds
+the returned image's `width`, `height`, and `displayRotation` as JSON. For
+periodic captures that must not keep the session alive, add
+`-H "Content-Type: application/json" -d '{"automation":true}'` (serve-sim
+0.14.0+): the capture does not reset the idle timer and is not saved as a
+session artifact.
 
 On serve-sim 0.10.4+, a screenshot follows the active display, including after a
 Duo fold. To select a panel explicitly, use `display=<simctl-display-id>` only
@@ -83,13 +90,14 @@ keyboard's ASCII keys, plus newline and tab.
 ## Apps and data files
 
 Prefer the session-start flags `--build-id`, `--application-archive-url`, or
-`--expo-go` for installation. `app.install` uploads one local file and
-installs it. Pass a `.tar.gz` or `.tgz` that contains a Simulator `.app`. The
-CLI rejects a `.app` folder, so package it first:
+`--expo-go` for installation. `app.install` uploads one local Simulator app and
+installs it. On CLI 27.8.0+, pass the `.app` folder; the CLI packages it as a
+`.tar.gz` before the upload. Older CLIs reject a folder, so package it first:
 
 ```bash
+npx --yes eas-cli@latest simulator:control app.install ./build/Debug-iphonesimulator/MyApp.app --id <session-id>
+# With a pinned CLI older than 27.8.0, package the folder and pass the archive:
 tar -czf MyApp.app.tar.gz -C ./build/Debug-iphonesimulator MyApp.app
-npx --yes eas-cli@latest simulator:control app.install ./MyApp.app.tar.gz --id <session-id>
 ```
 
 Since serve-sim 0.13.3, the host refuses every `.ipa` and `.zip`, even a

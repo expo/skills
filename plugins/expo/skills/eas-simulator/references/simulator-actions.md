@@ -14,7 +14,7 @@ npx --yes eas-cli@latest simulator:control location.set 37.3349 -122.0090 --id <
 
 - **Read the catalog first.** The session's serve-sim version supplies the actions, so an older session can have a different catalog; updating eas-cli does not change a running session. Run `simulator:control --id <id> --json` before you use an action that is not in the examples above.
 - Other actions in the docs: `tap x y` and `gesture '<json>'` (coordinates from 0 to 1), `type` (ASCII only; for other text, `clipboard.write` then `clipboard.paste`), `rotate`, `button`, `media.add`, `app.stop`, `app.file.upload` / `app.file.list` / `app.file.read`, and `app.approveUrlScheme <bundleId> <scheme>` (approves a custom scheme so a `simctl openurl` link skips the "Open in" dialog).
-- `app.install` uploads one local file. Since serve-sim 0.13.3, the host refuses every `.ipa` and `.zip`, so pass a `.tar.gz` of the Simulator `.app` (`tar -czf MyApp.app.tar.gz -C <build-dir> MyApp.app`). See [remote controls](./remote-controls.md#apps-and-data-files).
+- `app.install` installs a Simulator `.app`: on CLI 27.8.0+, pass the `.app` folder; on older CLIs, pass a `.tar.gz` of it (`tar -czf MyApp.app.tar.gz -C <build-dir> MyApp.app`). Since serve-sim 0.13.3, the host refuses every `.ipa` and `.zip`. See [remote controls](./remote-controls.md#apps-and-data-files).
 - Pass values that start with `--` after `--` (for example, `clipboard.write -- --text`). Quote URLs and JSON for the shell. Keep passwords and tokens out of command arguments.
 - Settings, permission, and app-file actions do not reset the idle timer.
 - Run actions that change the device one at a time. If one times out, inspect the device before you retry: the action may already have run.
