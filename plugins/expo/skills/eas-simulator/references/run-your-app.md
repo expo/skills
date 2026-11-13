@@ -171,7 +171,7 @@ npx --yes eas-cli@latest simulator:start --platform ios --build-id <BUILD_ID> \
   --non-interactive --name "Coin flip live edits"
 #    The app installs, launches with the launch-args (onboarding/dev-menu/gear suppressed), and opens the URL.
 #    After this launch, iOS does not show the "Open in '<app>'?" dialog for this link or for later
-#    controller opens in this session. You do not need `alert` here.
+#    controller opens of this app in this session. You do not need `alert` here.
 #    `start` prints NOTHING about the install/launch — confirm from Metro's `iOS Bundled …` line.
 
 # 3. To screenshot/drive, ATTACH the controller once — the CLI launch makes NO agent-device session, so a bare
@@ -207,7 +207,7 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> 
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert get --platform ios
 ```
 
-Run the next command only if `alert get` shows the "Open in '<app>'?" dialog. If it shows no alert or a different alert, do not accept it:
+Run the next command only if `alert get` shows the `Open in '<app>'?` dialog. If it shows no alert or a different alert, do not accept it:
 
 ```bash
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert accept --platform ios
