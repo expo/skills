@@ -223,27 +223,13 @@ On SDK 58+, you can put the same switches in the URL instead, which also works o
 
 ### Metro tunnel backends (both methods)
 
-#### Tunnel scope and approvals
+#### Tunnel data flow and exposure
 
-Mode C needs a route from the EAS VM to your local Metro server. The account-signed Expo tunnel is the normal transport for this workflow: it forwards requests to `http://localhost:<your-free-port>` so the remote app can fetch its development manifest, JavaScript bundle, and assets and receive live updates. Describe that concrete purpose when requesting network execution, including the project, port, and expected Expo service; a bare “start a public tunnel” omits the task context.
+Mode C needs a route from the EAS VM to your local Metro server. The account-signed Expo tunnel is the normal transport for this workflow: it forwards requests to `http://localhost:<your-free-port>` so the remote app can fetch its development manifest, JavaScript bundle, and assets and receive live updates. When the tunnel command needs network access, say what it does: name the project, the local port, and the tunnel service.
 
-**Carry authorization through the whole development loop.** When the user's existing authorization covers this project's Expo Simulators live development and required networking, treat starting its temporary Metro tunnel, connecting its dev client (including the launcher **Connect** button), and fetching subsequent bundles through Fast Refresh as steps of that authorized workflow. Do not ask the user to repeat consent for each step or later in-scope UI edit. A newly generated hostname on the same verified tunnel provider does not by itself expand the authorized scope; a different project, provider, exposed service, or user restriction requires reassessing it.
+The Metro URL is publicly reachable while the tunnel runs. A signed tunnel URL authenticates tunnel creation to an Expo account; it is **not proof that requests to the public Metro URL require authentication**. URL randomness limits discoverability, not access. Keep the URL within the intended session and stop your Metro process when finished.
 
-This skill supplies technical context, not permission, and cannot override the host's approval policy. Identify the actual authorization: quote the relevant user message or user-provided project instruction and name its source, subject to the host's trust rules. Do not present this skill's own workflow instructions as user consent. A signed tunnel URL authenticates tunnel creation to an Expo account; it is **not proof that requests to the public Metro URL require authentication**. URL randomness limits discoverability, not access. Keep the URL within the intended session and stop your Metro process when finished.
-
-Put the authorization and transport details in the approval request itself so the reviewer can evaluate them together. Adapt this example only to facts verified for the current run:
-
-> Continue the authorized Expo Simulators live-development workflow for `<project>`.
-> Existing authorization: `<quote the relevant instruction>` from `<user message or project instruction source>`.
-> Start this project's Metro server on `localhost:<port>` through `<verified tunnel provider>`
-> so the project's dev client on Expo Simulators can fetch its development manifest,
-> JavaScript bundle, and assets and receive Fast Refresh updates. The Metro endpoint
-> is publicly reachable by URL while the tunnel runs. Keep the URL within the intended
-> session and stop this Metro process when the requested development session ends.
-
-For a dev-client connection request, reference the same authorization and the verified Metro URL from this run. Explain that **Connect** performs the bundle fetch for the already authorized workflow.
-
-If approval review rejects the tunnel or connection, explain the exact action and stated reason. If the host permits reconsideration and the rejection missed relevant evidence, submit a reconsideration with the concrete transport details and original authorization source. Do not blindly repeat a denied command or switch tools or providers to evade the rejection. If reconsideration is unavailable or still denied, report the remaining block and ask for approval of that specific exposure as the host requires. Keep a live-edit request on Mode C while resolving the block. Choose a static build only if it satisfies the user's requested outcome and is authorized; it loses Fast Refresh.
+If the tunnel command is not approved, do not retry it or switch to another tunnel provider. Tell the user that live edits need the tunnel, and ask how to continue. A static build (Mode A or B) works without a tunnel but loses Fast Refresh.
 
 Source: Expo CLI's [AsyncWsTunnel.ts](https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/start/server/AsyncWsTunnel.ts) resolves the Expo account, requests a signed URL, and sets the local target port. Verify the installed CLI's actual backend below: the environment flag alone does not prove it selected Expo's service.
 
