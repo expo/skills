@@ -4,6 +4,15 @@ When the user's app crashes, closes on launch, or misbehaves on an iOS session, 
 
 This covers iOS sessions. `simulator:logs` reads live logs on iOS sessions only; it rejects a running Android session.
 
+An Android session uploads its logs as session artifacts after it stops. By
+default it keeps only the emulator output. On CLI 27.7.2+, choose the sources
+at start; the flag replaces the default, so repeat it to keep both:
+`simulator:start --platform android --log-source emulator-output --log-source device-logcat`.
+After `simulator:stop`, find **emulator-output.log** and **device-logcat.log** in
+the `artifacts` of `simulator:get --id <id> --json` (each keeps the last 20 MiB).
+Device logcat is not redacted and can contain other apps' credentials or
+personal data; enable it only when the task needs it, and keep the files private.
+
 | You need | Use | Works on |
 |---|---|---|
 | The device log | `simulator:logs` (eas-cli) | Every iOS session |
@@ -70,7 +79,7 @@ sim_api() {
 }
 ```
 
-If your shell does not keep variables between commands, repeat these lines at the start of each command. Each repeat runs `simulator:get` again, which takes a few seconds, so put related reads in one command. Only call `/crashes`, `/crashes/<id>`, and `/logs`. Don't call `/api`: its response includes the exec token. Calls to the preview server do not reset the session's idle timer.
+If your shell does not keep variables between commands, repeat these lines at the start of each command. Each repeat runs `simulator:get` again, which takes a few seconds, so put related reads in one command. Only call `/crashes`, `/crashes/<id>`, and `/logs`. Don't call `/api`: its response includes the exec token. Reading `/crashes` and `/logs` does not reset the session's idle timer.
 
 ## Catch a crash with its log tail
 
