@@ -39,21 +39,27 @@ If you need the id explicitly, it's `EAS_SIMULATOR_SESSION_ID` in `.env.eas-simu
 
 ## Targeting a device — iPad, or several at once
 
-**Boot a specific device at session start** with `eas simulator:start --device "<name|UDID>"` (eas-cli ≥ 22.4.0) — this is how you run on an iPad instead of the default iPhone:
+**Choose a device before starting a session.** Run `npx --yes eas-cli@latest simulator:devices --platform ios` (or `android`) for the server's current catalog; add `--json` for machine-readable identifiers and display names. Omit `--device` to use the server default, or pass the exact listed identifier to `simulator:start`:
 
 ```bash
+# iPad example; confirm the name is in the current iOS catalog.
 npx --yes eas-cli@latest simulator:start --platform ios --device "iPad Pro 13-inch (M5)" \
   --non-interactive --name "iPad run"
-# then install / launch / screenshot as usual — the iPad renders larger (e.g. 1032x1376).
+
+# Android tablet alternative; --device takes a hardware profile identifier.
+npx --yes eas-cli@latest simulator:start --platform android --device pixel_tablet \
+  --non-interactive --name "Android tablet run"
 ```
 
-The value must be a device the **remote runner** offers (NOT your local Xcode set), by name **or** UDID. List them from a live session:
+Choose the example for the requested platform, then install, launch, and inspect the app as usual. The catalog includes iPhones, iPads, Android phones, and Pixel Tablet; use the live list as the source of available names. Only `medium_phone` receives the 720 × 1600, density 300 screen override; other Android profiles retain their own screen configuration, so tablet screenshots and streaming performance can differ.
+
+**Inspect devices inside an existing session** with the controller:
 
 ```bash
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest devices --json
 ```
 
-Available iOS devices today: iPhone 17 (the default) / 17 Pro / 17 Pro Max / 17e / Air; iPad (A16), iPad Air 11-inch (M4), iPad Air 13-inch (M4), iPad mini (A17 Pro), iPad Pro 11-inch (M5), iPad Pro 13-inch (M5); plus Vision Pro and Apple TV. On Android, `--device` takes an AVD hardware profile id (e.g. `pixel_7`); all profiles render at 720x1600, density 300.
+This reports the session runner's devices and booted state. It is different from `simulator:devices`, which lists profiles for creating new sessions. Do not treat a local Xcode inventory or every device inside a runner as the service's supported startup catalog. The iOS start-time `--device` also accepts a Simulator UDID, but it must identify a device on the selected remote runner, not your local machine.
 
 **Add a second simulator mid-session:** a session boots only one simulator at start. Use a separate agent-device session for the second one: pass `--session <name> --device "<name>"` (boot takes about 46 seconds), and pass `--session <name>` on each later verb for that device. Passing `--device` in the default session fails with `INVALID_ARGS` "already bound".
 
