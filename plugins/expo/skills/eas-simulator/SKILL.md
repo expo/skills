@@ -25,9 +25,9 @@ The frontmatter `description` carries the trigger phrases. In short: use this to
 - **Generic simulator request:** use a suitable local simulator when available. If the host cannot run the requested simulator (for example, iOS on Linux or a cloud sandbox), use Expo Simulators after checking access. A non-macOS host may still support a local Android emulator.
 - Honor an explicit local choice; hand off to `expo run:ios` / Xcode / Android Studio as appropriate. Clarify only when the requested environment remains ambiguous and affects the task.
 
-When the user asks for Expo Simulators, EAS Simulator, or a cloud simulator, start the session and do the
-requested work without asking again. Stop the session when the work is done. Only check in
-if the user set a limit you would go past, or if the work grows beyond what they asked for.
+A request for Expo Simulators, EAS Simulator, or a cloud simulator is a request to start a session and do
+the work. Choose the number of iterations that the task needs. Stay within any limit that the user sets, and
+stop the session when the work is done.
 
 ## Prerequisites
 
@@ -171,7 +171,7 @@ Quick decision — **default to C; A and B are explicit-only:**
 - **A:** only an explicit one-shot **static** screenshot on a Mac.
 - **B:** only when the user names an existing/EAS build or wants a static EAS artifact (CI/sharing) — see the box above for why a static build is the wrong tool for "iterate."
 
-Mode C makes your local Metro server reachable at a public URL. Before starting the tunnel, read [Tunnel data flow and exposure](./references/run-your-app.md#tunnel-data-flow-and-exposure).
+Mode C makes your local Metro server reachable at a public URL. Before you start the tunnel, tell the user this in one line, and read [Tunnel data flow and exposure](./references/run-your-app.md#tunnel-data-flow-and-exposure).
 
 ## Driving the device (agent-device)
 

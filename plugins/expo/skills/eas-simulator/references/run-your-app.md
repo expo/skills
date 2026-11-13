@@ -170,8 +170,8 @@ npx --yes eas-cli@latest simulator:start --platform ios --build-id <BUILD_ID> \
   --open-url "<scheme>://expo-development-client/?url=https://<manifest-host>" \
   --non-interactive --name "Coin flip live edits"
 #    The app installs, launches with the launch-args (onboarding/dev-menu/gear suppressed), and opens the URL.
-#    The "Open in '<app>'?" dialog is auto-bypassed (the CLI writes the scheme approval) and the approval
-#    persists session-wide — so NO `alert accept` is needed, here or for later controller opens.
+#    The CLI registers the app's URL scheme on the simulator, so iOS does not show the "Open in '<app>'?"
+#    dialog for this link or for later controller opens in this session. You do not need `alert` here.
 #    `start` prints NOTHING about the install/launch — confirm from Metro's `iOS Bundled …` line.
 
 # 3. To screenshot/drive, ATTACH the controller once — the CLI launch makes NO agent-device session, so a bare
@@ -202,9 +202,10 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> 
   --launch-args "-EXDevMenuIsOnboardingFinished" --launch-args "1" \
   --launch-args "-EXDevMenuShowsAtLaunch" --launch-args "0" \
   --launch-args "-EXDevMenuShowFloatingActionButton" --launch-args "0"
-# a controller open on a BARE session (no Method-1 launch to pre-approve the scheme) can raise the
-# "Open in '<app>'?" dialog — accept it (no-op if absent; not needed after a Method-1 launch):
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert accept 2500 --platform ios
+# on a BARE session (no Method-1 launch registered the scheme), iOS can show the "Open in '<app>'?" dialog.
+# Read the alert first. Accept it only if its title is "Open in '<app>'?" (not needed after a Method-1 launch):
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert get 2500 --platform ios
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert accept --platform ios
 # then screenshot; if it shows the launcher not the app, the deep link didn't take → manual fallback:
 #   press 'label="Enter URL manually"' → snapshot -i → fill @<field> "<manifest URL>" → press 'label="Connect"'
 #   → press 'label="Reload"'; press 'label="Go back"' if expo-router shows "Unmatched Route".
@@ -225,11 +226,11 @@ On SDK 58+, you can put the same switches in the URL instead, which also works o
 
 #### Tunnel data flow and exposure
 
-Mode C needs a route from the EAS VM to your local Metro server. The account-signed Expo tunnel is the normal transport for this workflow: it forwards requests to `http://localhost:<your-free-port>` so the remote app can fetch its development manifest, JavaScript bundle, and assets and receive live updates. When the tunnel command needs network access, say what it does: name the project, the local port, and the tunnel service.
+Mode C needs a route from the EAS VM to your local Metro server. The account-signed Expo tunnel is the normal transport for this workflow: it forwards requests to `http://localhost:<your-free-port>` so the remote app can fetch its development manifest, JavaScript bundle, and assets and receive live updates.
 
 The Metro URL is publicly reachable while the tunnel runs. A signed tunnel URL authenticates tunnel creation to an Expo account; it is **not proof that requests to the public Metro URL require authentication**. URL randomness limits discoverability, not access. Keep the URL within the intended session and stop your Metro process when finished.
 
-If the tunnel command is not approved, do not retry it or switch to another tunnel provider. Tell the user that live edits need the tunnel, and ask how to continue. A static build (Mode A or B) works without a tunnel but loses Fast Refresh.
+If the user or the host declines the Metro tunnel command, do not run it again or start the tunnel with another backend. Tell the user that live edits need the Metro tunnel, and ask how to continue. Run the tunnel again only after the user tells you to. A static build (Mode A or B) does not expose local Metro, but it loses Fast Refresh. If there is no user to ask (for example, in CI), stop and report the block. This rule is for a declined command. When the tunnel command fails with a CLI error, use [Backend selection](#backend-selection) and [troubleshooting](./troubleshooting.md).
 
 Source: Expo CLI's [AsyncWsTunnel.ts](https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/start/server/AsyncWsTunnel.ts) resolves the Expo account, requests a signed URL, and sets the local target port. Verify the installed CLI's actual backend below: the environment flag alone does not prove it selected Expo's service.
 
