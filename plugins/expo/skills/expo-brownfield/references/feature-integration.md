@@ -10,7 +10,7 @@ Read after choosing the build approach. Packaging a framework and displaying its
 
 ## Register the component that receives input
 
-For a small standalone producer, set `package.json`'s `main` to `index.ts` and register a component explicitly. If the scaffold has no TypeScript setup, first run `npx expo install typescript @types/react`:
+For a small standalone producer, set `package.json`'s `main` to `index.ts` and register a component explicitly. If the scaffold has no TypeScript setup, first run `npx --yes @expo/agent-cli@latest install typescript @types/react`:
 
 ```ts
 import { registerRootComponent } from 'expo';

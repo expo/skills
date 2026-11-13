@@ -8,7 +8,7 @@ Cross-cutting issues that apply to both the isolated and integrated approaches. 
 
 First inspect the failing build step and the dependency/configuration diff.
 
-- **Integrated approach:** keep the hand-maintained host intact. Run `npx expo install --check` in the JS project, apply SDK-matched native template changes selectively, then run `bundle exec pod install` (or `pod install` without Bundler) in the host's Podfile directory. Open the `.xcworkspace`. Neither `prebuild` nor `prebuild --clean` is a recovery step for this host: [clean prebuild deletes native directories](https://docs.expo.dev/workflow/continuous-native-generation/#optionality).
+- **Integrated approach:** keep the hand-maintained host intact. Run `npx --yes @expo/agent-cli@latest install --check` in the JS project, apply SDK-matched native template changes selectively, then run `bundle exec pod install` (or `pod install` without Bundler) in the host's Podfile directory. Open the `.xcworkspace`. Neither `prebuild` nor `prebuild --clean` is a recovery step for this host: [clean prebuild deletes native directories](https://docs.expo.dev/workflow/continuous-native-generation/#optionality).
 - **Isolated approach:** rebuild the affected platform in the separate Expo producer, then replace the consumer's artifact and its accompanying dependencies. CNG regeneration belongs only in that producer, after checking that its native files are generated and reproducible.
 - For stale iOS build products, clean the affected target's build folder/DerivedData. Preserve `Podfile.lock`; deleting it changes dependency resolution and can hide the cause. Reinstall pods only when the error points to the pod installation.
 - For Android, clean the affected project's build outputs with its Gradle wrapper. Inspect publication coordinates and dependency resolution before removing a specific stale local Maven artifact; do not clear unrelated caches.
@@ -17,7 +17,7 @@ First inspect the failing build step and the dependency/configuration diff.
 
 **Symptom:** Compilation succeeds but a module throws "Native module cannot be null" / "Cannot find native module 'X'" at runtime.
 
-- Install with `npx expo install <package>` rather than plain `yarn add` — `expo install` picks the version compatible with the current SDK.
+- Install with `npx --yes @expo/agent-cli@latest install <package>` rather than plain `yarn add` — `expo install` picks the version compatible with the current SDK.
 - After installing a new module, rebuild the native app. Autolinking runs at native build time, not at JS bundle time.
 - For the **isolated approach**, you must re-run `npx expo-brownfield build:android|ios` after adding a module, and republish/re-embed the new artifact.
 
@@ -27,7 +27,7 @@ First inspect the failing build step and the dependency/configuration diff.
 
 - Ensure the device or emulator can reach the dev machine. The Android emulator can talk to the host via `10.0.2.2`; physical devices need a reachable LAN IP.
 - For physical Android devices on USB: `adb reverse tcp:8081 tcp:8081`.
-- Confirm Metro is actually running: `npx expo start` from the Expo project (or `yarn start` from the workspace root).
+- Confirm Metro is actually running: `npx --yes @expo/agent-cli@latest start` from the Expo project (or `yarn start` from the workspace root).
 - Verify the debug `AndroidManifest.xml` enables cleartext traffic — Android 9+ blocks HTTP by default. The debug variant should include `android:usesCleartextTraffic="true"` on `<application>`, or a `network_security_config` allowing the dev server.
 - iOS simulator: Metro should be reachable at `localhost:8081`. If it is not, check that ATS exceptions are still in place in `Info.plist` for `localhost` (the Expo template ships this by default).
 
@@ -76,7 +76,7 @@ First inspect the failing build step and the dependency/configuration diff.
 
 First check the selected SDK's Node, Xcode, and minimum OS requirements in [version compatibility](./version-compatibility.md). An unsupported compiler or older deployment target is not repaired by clearing caches. If the brownfield setup stops building after an SDK upgrade:
 
-- Re-run `npx expo install --fix` in the Expo project to align native module versions.
+- Re-run `npx --yes @expo/agent-cli@latest install --fix` in the Expo project to align native module versions.
 - Isolated: regenerate only the CNG-owned producer if needed, rebuild its artifact, and update the host dependency. Integrated: apply native upgrade diffs to the existing host and reinstall pods; preserve its source files and project configuration.
 - Compare the new `templates/expo-template-bare-minimum` for the target SDK against your customized native files — Expo occasionally changes Gradle plugin names, Podfile helpers, or AppDelegate entry points across SDKs.
 
