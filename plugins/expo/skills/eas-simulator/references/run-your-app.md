@@ -139,7 +139,7 @@ npx --yes eas-cli@latest simulator:stop          # omit --id → stops the doten
 
 The agentic edit-and-see loop: a **dev (Debug) build** loads JS from your **Metro** over a tunnel, so edits appear on the remote sim via Fast Refresh. Two ways to connect the dev client to Metro:
 
-- **Method 1 (recommended, eas-cli ≥ 22.4.0):** launch at session start — `simulator:start` installs the build, applies launch-args, and opens the Metro URL in one command, and the "Open in?" dialog is auto-handled. Needs a **remote** build source (`--build-id`, `--build-fingerprint`, `--application-archive-url`, or `--expo-go`); a local `.app` can't be passed here. `--build-fingerprint` selects the most recent finished, non-expired build with that hash (iOS: it must be a simulator build; Android: any distribution type can match, so use an APK profile). An iOS `--application-archive-url` must be a `.tar.gz` or `.tgz` that contains a `.app` (`.zip`, `.app.zip`, and `.ipa` fail); Android needs an `.apk`.
+- **Method 1 (recommended, eas-cli ≥ 22.4.0):** launch at session start — `simulator:start` installs the build, applies launch-args, and opens the Metro URL in one command, and iOS does not show the "Open in?" dialog for that link. Needs a **remote** build source (`--build-id`, `--build-fingerprint`, `--application-archive-url`, or `--expo-go`); a local `.app` can't be passed here. `--build-fingerprint` selects the most recent finished, non-expired build with that hash (iOS: it must be a simulator build; Android: any distribution type can match, so use an APK profile). An iOS `--application-archive-url` must be a `.tar.gz` or `.tgz` that contains a `.app` (`.zip`, `.app.zip`, and `.ipa` fail); Android needs an `.apk`.
 - **Method 2 (fallback):** drive the connect with the controller — for a **local `.app`** build, or eas-cli < 22.4.0.
 
 ⚠️ **Don't install a release build as a "quick interim" and screenshot it** — it shows stale, build-time code. Use a dev build + Metro; screenshot only after the dev client is connected.
@@ -170,8 +170,8 @@ npx --yes eas-cli@latest simulator:start --platform ios --build-id <BUILD_ID> \
   --open-url "<scheme>://expo-development-client/?url=https://<manifest-host>" \
   --non-interactive --name "Coin flip live edits"
 #    The app installs, launches with the launch-args (onboarding/dev-menu/gear suppressed), and opens the URL.
-#    The CLI registers the app's URL scheme on the simulator, so iOS does not show the "Open in '<app>'?"
-#    dialog for this link or for later controller opens in this session. You do not need `alert` here.
+#    After this launch, iOS does not show the "Open in '<app>'?" dialog for this link or for later
+#    controller opens in this session. You do not need `alert` here.
 #    `start` prints NOTHING about the install/launch — confirm from Metro's `iOS Bundled …` line.
 
 # 3. To screenshot/drive, ATTACH the controller once — the CLI launch makes NO agent-device session, so a bare
@@ -202,10 +202,18 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest open <bundleId> 
   --launch-args "-EXDevMenuIsOnboardingFinished" --launch-args "1" \
   --launch-args "-EXDevMenuShowsAtLaunch" --launch-args "0" \
   --launch-args "-EXDevMenuShowFloatingActionButton" --launch-args "0"
-# on a BARE session (no Method-1 launch registered the scheme), iOS can show the "Open in '<app>'?" dialog.
-# Read the alert first. Accept it only if its title is "Open in '<app>'?" (not needed after a Method-1 launch):
-npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert get 2500 --platform ios
+# on a BARE session (no Method-1 launch first), iOS can show the "Open in '<app>'?" dialog. Read the alert
+# (not needed after a Method-1 launch):
+npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert get --platform ios
+```
+
+Run the next command only if `alert get` shows the "Open in '<app>'?" dialog. If it shows no alert or a different alert, do not accept it:
+
+```bash
 npx --yes eas-cli@latest simulator:exec npx agent-device@latest alert accept --platform ios
+```
+
+```bash
 # then screenshot; if it shows the launcher not the app, the deep link didn't take → manual fallback:
 #   press 'label="Enter URL manually"' → snapshot -i → fill @<field> "<manifest URL>" → press 'label="Connect"'
 #   → press 'label="Reload"'; press 'label="Go back"' if expo-router shows "Unmatched Route".

@@ -26,8 +26,8 @@ The frontmatter `description` carries the trigger phrases. In short: use this to
 - Honor an explicit local choice; hand off to `expo run:ios` / Xcode / Android Studio as appropriate. Clarify only when the requested environment remains ambiguous and affects the task.
 
 A request for Expo Simulators, EAS Simulator, or a cloud simulator is a request to start a session and do
-the work. Choose the number of iterations that the task needs. Stay within any limit that the user sets, and
-stop the session when the work is done.
+the work. Choose the number of iterations that the task needs. Stay within the requested work and any limit
+that the user sets, and stop the session when the work is done.
 
 ## Prerequisites
 
@@ -171,7 +171,7 @@ Quick decision — **default to C; A and B are explicit-only:**
 - **A:** only an explicit one-shot **static** screenshot on a Mac.
 - **B:** only when the user names an existing/EAS build or wants a static EAS artifact (CI/sharing) — see the box above for why a static build is the wrong tool for "iterate."
 
-Mode C makes your local Metro server reachable at a public URL. Before you start the tunnel, tell the user this in one line, and read [Tunnel data flow and exposure](./references/run-your-app.md#tunnel-data-flow-and-exposure).
+Mode C makes your local Metro server reachable at a public URL. Before you start the tunnel, tell the user this, and read [Tunnel data flow and exposure](./references/run-your-app.md#tunnel-data-flow-and-exposure).
 
 ## Driving the device (agent-device)
 
@@ -184,7 +184,7 @@ If a controller fails to download a recording, retrieve it from [EAS session art
 | `apps --platform ios` | List user-installed apps (the blank sim shows none); add `--all` to include system apps |
 | `install <appId> <path> --platform ios` | Install a local `.app` (uploads it) |
 | `install-from-source <url> --platform ios` | Install from a URL — the VM downloads it (use for EAS artifacts) |
-| `open <appId\|deep-link> --platform ios` | Launch an app (bundle id) or follow an app **deep link** (`exp+slug://…`). A first-time deep link raises a system **"Open in '<app>'?"** dialog — expect it (don't burn a snapshot discovering it) and `press 'label="Open"'` to hand off; it can be slow, so bound it with agent-device's own `--timeout` (e.g. `press 'label="Open"' --timeout 120000`) — **not** a shell `timeout` wrapper (macOS has no `timeout` binary). (Mode C sidesteps this dialog for the Metro-connect link via "Enter URL manually" — see run-your-app.md.) **Not** for the `webPreviewUrl` — that's a browser preview for the user, never the device. |
+| `open <appId\|deep-link> --platform ios` | Launch an app (bundle id) or follow an app **deep link** (`exp+slug://…`). A first-time deep link raises a system **"Open in '<app>'?"** dialog. Read it first with `alert get`, and only if it is that dialog, `press 'label="Open"'` to hand off; the hand-off can be slow, so bound it with agent-device's own `--timeout` (e.g. `press 'label="Open"' --timeout 120000`) — **not** a shell `timeout` wrapper (macOS has no `timeout` binary). (Mode C sidesteps this dialog for the Metro-connect link via "Enter URL manually" — see run-your-app.md.) **Not** for the `webPreviewUrl` — that's a browser preview for the user, never the device. |
 | `snapshot -i` | Interactive accessibility tree → `@e1`-style refs |
 | `press <ref\|selector>` | Tap (e.g. `press @e2` or `press 'label="Open"'`). `click <target>` also works. Use `press` or `click`: `tap` is a hidden alias that older versions reject |
 | `fill <ref> "text"` | Type into a field |
