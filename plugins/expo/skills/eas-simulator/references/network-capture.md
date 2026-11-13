@@ -39,9 +39,10 @@ The live recording is removed when capture is turned off or the session ends.
 It is not currently uploaded as a retained HAR artifact. Download it first from
 the panel's **Download session as HAR** button or use the helper below.
 
-`simulator:network-requests`, `simulator:logs`, `simulator:crashes`, and
-`--network-capture-recording` are not part of released CLI 25.3.0. Use existing
-capture, controller logs, and browser diagnostics rather than those proposals.
+`simulator:network-requests`, `simulator:crashes`, and `--network-capture-recording`
+are not released (eas-cli 27.2.0). Use existing capture, controller logs, and
+browser diagnostics rather than those proposals. For app logs, use
+`simulator:logs` (see [logs and crashes](./logs-and-crashes.md)).
 
 ### Authenticated private session
 
