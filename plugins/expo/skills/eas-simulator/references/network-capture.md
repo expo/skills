@@ -40,7 +40,7 @@ It is not currently uploaded as a retained HAR artifact. Download it first from
 the panel's **Download session as HAR** button or use the helper below.
 
 `simulator:network-requests`, `simulator:crashes`, and `--network-capture-recording`
-are not released (eas-cli 27.5.0). Use existing capture, controller logs, and
+are not released (eas-cli 27.9.0). Use existing capture, controller logs, and
 browser diagnostics rather than those proposals. For app logs, use
 `simulator:logs` (see [logs and crashes](./logs-and-crashes.md)).
 
