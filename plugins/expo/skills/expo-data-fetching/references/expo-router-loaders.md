@@ -11,7 +11,7 @@ You write one function and the framework manages when and how it executes.
 
 ## Configuration
 
-**Requirements:** Expo SDK 55+, web output mode (`npx expo serve` or `npx expo export --platform web`) set in `app.json` or `app.config.js`.
+**Requirements:** Expo SDK 55+, web output mode (`npx --yes @expo/agent-cli@latest serve` or `npx --yes @expo/agent-cli@latest export --platform web`) set in `app.json` or `app.config.js`.
 
 **Server rendering:**
 
@@ -315,7 +315,7 @@ When a loader throws (including `StatusError`), the nearest `ErrorBoundary` catc
 
 | | Server (`"server"`) | Static (`"static"`) |
 |---|---|---|
-| **When loader runs** | Every request (live) | At build time (`npx expo export`) |
+| **When loader runs** | Every request (live) | At build time (`npx --yes @expo/agent-cli@latest export`) |
 | **Data freshness** | Fresh on initial server request | Stale until next build |
 | **`request` object** | Full access | Not available |
 | **Hosting** | Node.js server (EAS Hosting) | Any static host |
