@@ -115,7 +115,7 @@ argent link '<ARGENT_TOOLS_URL>' --token '<ARGENT_AUTH_TOKEN>' --yes
 
 Reload the agent after linking so its `argent mcp` process picks up the remote session.
 
-**Sandboxed shells** (Claude Code, some CI environments) can't write to `~/.argent/` so `argent link` won't work there. Use env vars in the MCP config file instead — this is argent's highest-precedence resolution and overrides any link:
+**If `argent link` cannot write to `~/.argent/`** (for example, in a sandboxed shell or some CI environments), put the session credentials in the MCP config file instead. argent reads these env vars before the credentials that `argent link` stores:
 
 ```json
 {
@@ -132,7 +132,7 @@ Reload the agent after linking so its `argent mcp` process picks up the remote s
 }
 ```
 
-MCP config file location: `.cursor/mcp.json` (Cursor), `.claude/mcp.json` (Claude Code), `mcp.json` in the Codex project root. It carries a session token — **add it to `.gitignore`**.
+MCP config file location: `.cursor/mcp.json` (Cursor), `.claude/mcp.json` (Claude Code), `mcp.json` in the Codex project root. It holds a session token: **add it to `.gitignore`**, and tell the user which file holds the token.
 
 **Known issues:**
 - `argent init --help` launches an interactive wizard regardless of the flag — use `--yes` to skip it, or read the package source for non-interactive flags.
