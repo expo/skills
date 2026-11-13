@@ -34,7 +34,7 @@ if the user set a limit you would go past, or if the work grows beyond what they
 - **Run every `eas` command via `npx --yes eas-cli@latest …`** — guarantees a CLI new enough to have `simulator:*` (a global `eas` is often too old), and `--yes` skips npx's prompt. (Bare `eas` is fine if `eas --version` is current.)
 - **Authenticated.** Interactive machine → `npx --yes eas-cli@latest login`. **Cloud sandbox / CI / headless agent has no browser login — set `EXPO_TOKEN`** (expo.dev → Account → Access Tokens) in the env instead. Verify either way with `npx --yes eas-cli@latest whoami`.
 - Run from an Expo **project directory.** A fresh app needs one-time setup: `npx --yes eas-cli@latest init` to create/link the project (when there's no `projectId`), and **set `ios.bundleIdentifier`** in app config if it's missing — a fresh `create-expo-app` often has none, and `prebuild`/`eas build` need it (they prompt or fail without it; e.g. `dev.<owner>.<slug>`). Read current config with `npx expo config --json` (it may live in `app.config.js`). The first Mode-C run is slow (native build); later runs reuse it.
-- A controller to drive the device. This skill uses **agent-device** (open source, MIT), run on demand via `npx agent-device@latest` — nothing globally installed. **Appium** and **argent** are alternative automation interfaces; `web-preview-only` has no automation interface. See [references/controllers.md](./references/controllers.md).
+- A controller to drive the device. This skill uses **agent-device** (open source, MIT), run on demand via `npx agent-device@latest` — nothing globally installed. **Appium** and **argent** are alternative automation interfaces. On iOS, `simulator:control` can also run preview-host actions, including in a `web-preview-only` session with no separate automation daemon. See [references/controllers.md](./references/controllers.md).
 - **`.env.eas-simulator`** is written/managed by eas-cli (not this skill): it holds the session id (`EAS_SIMULATOR_SESSION_ID`) + the daemon URL/**token**, so `get`/`stop`/`exec` default to that session (usually **omit `--id`**; pass `--id <id>` to target another). It carries a **token → keep it gitignored** (eas-cli marks it "do not commit" but may not add the ignore rule, and a fresh app's `.gitignore` won't cover it — add `.env.eas-simulator` if missing).
 - **The command blocks assume a POSIX shell** (bash/zsh) — `printf`, `lsof`, `$(seq …)` loops won't run in cmd/PowerShell. On Windows, run them in WSL or Git Bash, or translate as you go (the `eas-cli`/`agent-device` invocations themselves are cross-platform).
 
@@ -63,7 +63,7 @@ If it's **not** available, don't call `simulator:start` (it will fail). Instead,
 
 ## The core loop (always the same)
 
-A session is: **start → (install your app) → drive → stop.** `eas-cli` owns the *session*; the device *verbs* (open/tap/screenshot) come from the controller, which `npx --yes eas-cli@latest simulator:exec` runs for you with the session's connection env loaded.
+A session is: **start → (install your app) → drive → stop.** `eas-cli` owns the *session*; the interactive device verbs come from the controller, which `npx --yes eas-cli@latest simulator:exec` runs with the session's connection env loaded.
 
 ```bash
 # 1. Start a session (boots the remote sim + agent-device daemon; writes .env.eas-simulator).
@@ -88,7 +88,7 @@ npx --yes eas-cli@latest simulator:stop
 printf '# managed by eas-cli\n' > .env.eas-simulator
 ```
 
-To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in `--json`, `remoteConfig.webPreviewUrl`; for `web-preview-only` sessions, `remoteConfig.previewUrl`). All current session types include a browser preview, on iOS and Android; `agent-device`, `appium`, and `argent` also provide automation, while `web-preview-only` provides no automation interface. On Android, the expo.dev session page does not show the preview inline yet: **Open preview** opens it in a new tab. Some features are iOS-only, such as crash reports and the device log API (see [references/logs-and-crashes.md](./references/logs-and-crashes.md)); check `--help` for platform notes.
+To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in `--json`, `remoteConfig.webPreviewUrl`; for `web-preview-only` sessions, `remoteConfig.previewUrl`). All current session types include a browser preview, on iOS and Android; `agent-device`, `appium`, and `argent` also provide automation, while `web-preview-only` has no separate automation daemon but can use iOS host actions through `simulator:control`. On Android, the expo.dev session page does not show the preview inline yet: **Open preview** opens it in a new tab. Some features are iOS-only, such as crash reports and the device log API (see [references/logs-and-crashes.md](./references/logs-and-crashes.md)); check `--help` for platform notes.
 
 **Preview links are private by default.** The `webPreviewUrl` opens only for a person who signs in to an Expo account that can view the project. `simulator:start --public-link` turns on the preview's Share button and prints a link that contains an access token: **anyone with that link can view the simulator without an Expo login, and on iOS, control it**, including the app and its logs. Pass `--public-link` only when the user asks for a link they can share with people who can't sign in, and tell them about that risk. `simulator:get` shows links that follow the session's saved choice.
 
@@ -258,6 +258,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 ## References
 
 - [references/run-your-app.md](./references/run-your-app.md) — full command sequences for modes A, B, and C (read before running a mode).
+- [references/remote-controls.md](./references/remote-controls.md) — direct iOS actions, settings, clipboard, screenshots, and app data files.
 - [references/controllers.md](./references/controllers.md) — agent-device verb reference and the `argent` alternative.
 - [references/logs-and-crashes.md](./references/logs-and-crashes.md) — device logs and crash reports from an iOS session (read when the app crashes or misbehaves).
 - [references/troubleshooting.md](./references/troubleshooting.md) — concrete errors and fixes.
