@@ -281,14 +281,9 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 Source of truth: Expo docs and the `eas` / `agent-device` CLIs (`npx --yes eas-cli@latest simulator:* --help`, `npx --yes eas-cli@latest simulator:exec npx agent-device@latest help [topic]`; `--help` after `simulator:exec` shows the EAS CLI help instead). This skill teaches how to apply them; it doesn't replace them.
 
 ## Submitting Feedback
-You can report problems to Expo with `@expo/agent-cli`:
+You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "eas-simulator" --message "<actionable feedback>"
 ```
-- `--category skills`: errors, misleading or outdated information in this skill.
-- `--category agent-cli`: an `@expo/agent-cli` command fails, gives a wrong answer, or is hard to use. Use the command name as `--subject`, such as `status`.
-- `--category evals`: an agent repeatedly fails at an Expo task, or the user has to step in. Describe the task, the expected result, and what went wrong. Use the relevant Expo package or command as `--subject`.
-
-Each `feedback` command, in every category, sends the message to Expo. It also sends the category, the subject, the Expo project name and slug, the SDK and package versions, and the agent, CI, OS, and Node details. If the user is signed in to Expo, Expo links the report to that account.
-Before each report, show the user the full message, tell them what else the command sends, and ask if they want to send it. Send it only if the user agrees. If you cannot ask the user in this run (for example, in CI, a headless run, or a subagent), do not send it. Put the proposed message in your final output instead.
-Report only specific, actionable problems. Do not include secrets, tokens, personal data, or private code. Messages need 40-5,000 characters.
+Use `--category agent-cli` for a problem with the agent CLI, and `--category evals` when an agent repeatedly fails at an Expo task. Run `feedback --help` for subjects and the data that the command sends.
+Each report goes to Expo with project and environment details. Show the user the message, and send it only if the user agrees. If you cannot ask the user, do not send it. Do not include secrets or personal data.
