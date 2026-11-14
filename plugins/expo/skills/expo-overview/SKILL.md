@@ -84,7 +84,7 @@ Apply the rules that match the project and the requested task.
 
   EAS commands (`eas build`, `eas update`, `eas submit`) stay on `eas-cli`. The agent CLI is
   experimental: if a command fails because of the CLI itself, run the underlying command
-  directly and report the failure with `--category agent-cli` (see Submitting Feedback).
+  directly. You can offer to report the failure with `--category agent-cli` (see Submitting Feedback).
 - **Native app using EAS for delivery?** Route to `eas-app-stores`; its
   `references/native-ios.md` covers SwiftUI/UIKit on iOS. Keep the existing native
   project. Apply EAS auth/linking below; Expo scaffolding, SDK, and package-install
@@ -127,10 +127,13 @@ Apply the rules that match the project and the requested task.
   to the matching leaf skill.
 
 ## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+You can report problems to Expo with `@expo/agent-cli`:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-overview" --message "<actionable feedback>"
 ```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible. Messages need 40-5,000 characters.
-If an `@expo/agent-cli` command fails, gives a wrong answer, or is hard to use, report it with `--category agent-cli` and the command name as `--subject`, such as `status`.
-If an agent repeatedly fails at an Expo task or the user has to step in, submit a brief report of the task, expected result, and what went wrong using `--category evals` and the relevant Expo package or command as `--subject`.
+- `--category skills`: errors, misleading or outdated information in this skill.
+- `--category agent-cli`: an `@expo/agent-cli` command fails, gives a wrong answer, or is hard to use. Use the command name as `--subject`, such as `status`.
+- `--category evals`: an agent repeatedly fails at an Expo task, or the user has to step in. Describe the task, the expected result, and what went wrong. Use the relevant Expo package or command as `--subject`.
+
+This command sends the message to Expo. Before you run it, show the user the full message and ask if they want to send it. Send it only if the user agrees. If there is no user to ask, do not send it.
+Report only specific, actionable problems. Do not include secrets, tokens, personal data, or private code. Messages need 40-5,000 characters.
