@@ -229,10 +229,9 @@ Human-readable group details plus 30 days of launches/failures per platform — 
 - **Crashes are self-reported**: `failedInstalls` / "Crashes" counts updates that errored during install/launch and were reported on the next update check. Crashes that don't trigger an update request (e.g. process kill before recovery) won't appear.
 
 ## Submitting Feedback
-If you encounter errors, misleading or outdated information in this skill, report it so Expo can improve:
+You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
 ```bash
 npx --yes @expo/agent-cli@latest feedback --category skills --subject "eas-update-insights" --message "<actionable feedback>"
 ```
-Only submit when you have something specific and actionable to report. Include as much relevant context as possible. Messages need 40-5,000 characters.
-If an `@expo/agent-cli` command fails, gives a wrong answer, or is hard to use, report it with `--category agent-cli` and the command name as `--subject`, such as `status`.
-If an agent repeatedly fails at an Expo task or the user has to step in, submit a brief report of the task, expected result, and what went wrong using `--category evals` and the relevant Expo package or command as `--subject`.
+Use `--category agent-cli` for a problem with the agent CLI, and `--category evals` when an agent repeatedly fails at an Expo task. Run `feedback --help` for subjects and the data that the command sends.
+Each report goes to Expo with project and environment details. Show the user the message, and send it only if the user agrees. If you cannot ask the user, do not send it. Do not include secrets or personal data.
