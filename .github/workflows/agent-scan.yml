@@ -1,0 +1,218 @@
+name: agent-scan
+
+# Runs Snyk Agent Scan (https://github.com/snyk/agent-scan), the scanner behind
+# the skills.sh security badge, on the skills a change touches.
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  # A manual run scans every skill.
+  workflow_dispatch:
+
+concurrency:
+  group: agent-scan-${{ github.event.pull_request.number || github.ref }}
+  # A push run scans only the skills that push changed, so a cancelled run
+  # would leave them unscanned.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  # v0.5.x reports the E*/W* issue codes that skills.sh shows. v0.6 and later
+  # report named risks instead, with a different JSON schema.
+  AGENT_SCAN_VERSION: 0.5.17
+  REPORT_DIR: .context/agent-scan
+
+jobs:
+  agent-scan:
+    name: scan changed skills
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Identify skills to scan
+        id: targets
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          # A pull request checks out the merge commit, so its first parent is
+          # the base branch.
+          case "$EVENT_NAME" in
+            pull_request) base="HEAD^1" ;;
+            push) base="$BEFORE_SHA" ;;
+            *) base="" ;;
+          esac
+
+          if [ -n "$base" ] && git cat-file -e "$base^{commit}" 2>/dev/null; then
+            # Any changed file marks its skill, not only SKILL.md: findings
+            # also come from references/ and scripts/.
+            targets=$(
+              git diff --name-only "$base" HEAD \
+                | awk -F/ '$1 == "plugins" && $3 == "skills" && NF >= 5 { print $1 "/" $2 "/" $3 "/" $4 }' \
+                | sort -u \
+                | while IFS= read -r dir; do
+                    if [ -f "$dir/SKILL.md" ]; then echo "$dir"; fi
+                  done
+            )
+          else
+            # The scanner finds skills one level below the path it gets, so
+            # each plugin's skills/ folder is one request for all its skills.
+            targets=$(ls -d plugins/*/skills)
+          fi
+
+          if [ -z "$targets" ]; then
+            echo "No skills to scan."
+          else
+            echo "Scanning:"
+            echo "$targets"
+          fi
+
+          {
+            echo "paths<<EOF"
+            echo "$targets"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up uv
+        if: steps.targets.outputs.paths != ''
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          enable-cache: false
+
+      - name: Run Snyk Agent Scan
+        if: steps.targets.outputs.paths != ''
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          TARGETS: ${{ steps.targets.outputs.paths }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -uo pipefail
+          shopt -s nullglob
+
+          # GitHub gives no secrets to pull requests from forks or Dependabot.
+          # Those skills get their scan from the push run after the merge.
+          if [ -z "$SNYK_TOKEN" ]; then
+            if [ "$EVENT_NAME" = "pull_request" ]; then
+              echo "::notice title=Agent scan skipped::SNYK_TOKEN is not available to this pull request. The scan runs on main after the merge."
+              exit 0
+            fi
+            echo "::error title=Agent scan cannot run::The SNYK_TOKEN secret is not set."
+            exit 1
+          fi
+
+          mkdir -p "$REPORT_DIR"
+          crashed=""
+          count=0
+
+          while IFS= read -r target; do
+            [ -z "$target" ] && continue
+            count=$((count + 1))
+            echo "::group::Scanning $target"
+            if ! uvx --python 3.13 "snyk-agent-scan@$AGENT_SCAN_VERSION" scan --json "$target" > "$REPORT_DIR/$count.json"; then
+              rm -f "$REPORT_DIR/$count.json"
+              crashed+="unscanned"$'\t'"$target"$'\t'"crash"$'\t'"snyk-agent-scan exited non-zero"$'\n'
+            fi
+            echo "::endgroup::"
+          done <<< "$TARGETS"
+
+          # The scanner exits 0 when it finds issues, and also when Snyk
+          # rejects the analysis request (a 429 at the daily usage limit, for
+          # example). That rejection only shows as an error object in the
+          # JSON, next to an empty issue list. So read the JSON, and count a
+          # skill that was not analysed as a failure, not as a clean scan.
+          if ! findings=$(jq -rs '
+            def flat: (. // "") | gsub("[\\r\\n\\t\\\\]+"; " ") | .[0:500];
+            .[] | to_entries[] | .value as $result
+            | (
+                $result.issues[]?
+                | ((.reference // [])[0]) as $index
+                | [
+                    (if .code | startswith("W") then "advisory" else "blocking" end),
+                    (if $index == null then "-" else ($result.servers[$index].name // "-") end),
+                    .code,
+                    (.message | flat)
+                  ]
+              ),
+              (
+                $result.error | select(. != null and .is_failure != false)
+                | ["unscanned", ($result.path // "-"), (.category // "error"), (.message | flat)]
+              ),
+              (
+                $result.servers[]? | select(.error != null and .error.is_failure != false)
+                | ["unscanned", (.name // "-"), (.error.category // "error"), (.error.message | flat)]
+              )
+            | @tsv
+          ' /dev/null "$REPORT_DIR"/*.json); then
+            echo "::error title=Agent scan failed::Could not parse the scanner output."
+            exit 1
+          fi
+          findings="$crashed$findings"
+
+          blocking=0
+          advisory=0
+          unscanned=0
+
+          {
+            echo "## Snyk Agent Scan"
+            echo ""
+            echo "Scanner: \`snyk-agent-scan@$AGENT_SCAN_VERSION\`. Issue codes: https://github.com/snyk/agent-scan/blob/main/docs/issue-codes.md"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -z "$findings" ]; then
+            echo "No findings." >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "| Result | Skill | Code | Message |"
+              echo "| --- | --- | --- | --- |"
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            while IFS=$'\t' read -r kind skill code message; do
+              [ -z "$kind" ] && continue
+              echo "| $kind | $skill | $code | ${message//|/\\|} |" >> "$GITHUB_STEP_SUMMARY"
+              case "$kind" in
+                blocking)
+                  blocking=$((blocking + 1))
+                  echo "::error title=$code in $skill::$message"
+                  ;;
+                advisory)
+                  advisory=$((advisory + 1))
+                  echo "::warning title=$code in $skill::$message"
+                  ;;
+                unscanned)
+                  unscanned=$((unscanned + 1))
+                  echo "::error title=$skill was not scanned::$message"
+                  ;;
+              esac
+            done <<< "$findings"
+          fi
+
+          echo "Blocking findings: $blocking"
+          echo "Advisory findings: $advisory"
+          echo "Skills not scanned: $unscanned"
+
+          # E* findings fail the run. W* findings are advisory.
+          if [ "$blocking" -gt 0 ] || [ "$unscanned" -gt 0 ]; then
+            exit 1
+          fi
+
+      - name: Upload scan reports
+        if: always() && steps.targets.outputs.paths != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: agent-scan-report
+          path: ${{ env.REPORT_DIR }}
+          if-no-files-found: ignore
+          include-hidden-files: true
