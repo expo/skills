@@ -42,7 +42,7 @@ eas login
 ### Initialize EAS
 
 ```bash
-npx eas-cli@latest init
+npx --yes eas-cli@latest init
 ```
 
 `eas init` links or creates the EAS project. Run `eas build:configure` to create build profiles in `eas.json`; preserve existing project and store identifiers when a release setup already exists.
@@ -53,13 +53,13 @@ npx eas-cli@latest init
 
 ```bash
 # iOS App Store build
-npx eas-cli@latest build -p ios --profile production
+npx --yes eas-cli@latest build -p ios --profile production
 
 # Android Play Store build
-npx eas-cli@latest build -p android --profile production
+npx --yes eas-cli@latest build -p android --profile production
 
 # Both platforms
-npx eas-cli@latest build --profile production
+npx --yes eas-cli@latest build --profile production
 ```
 
 ### Submit to Stores
@@ -77,7 +77,7 @@ npx testflight
 
 ## Web & API Route Hosting
 
-Deploying an Expo website or Expo Router API routes to EAS Hosting (`npx expo export -p web` then `eas deploy`) is covered by the `eas-hosting` skill. This skill focuses on native app store releases.
+Deploying an Expo website or Expo Router API routes to EAS Hosting (`npx expo export -p web` then `npx --yes eas-cli@latest deploy`) is covered by the `eas-hosting` skill. This skill focuses on native app store releases.
 
 ## EAS Configuration
 
@@ -122,7 +122,7 @@ Example for an Expo / React Native project (native Swift profiles are in `refere
 
 - For native Swift apps, use the explicit build/submit flow in `references/native-ios.md`
 - For Expo / React Native apps, `npx testflight` provides a quick TestFlight flow
-- Configure Apple credentials via `eas credentials`
+- Configure Apple credentials via `npx --yes eas-cli@latest credentials`
 - See ./references/testflight.md for credential setup
 - See ./references/ios-app-store.md for App Store submission
 
@@ -142,10 +142,10 @@ EAS manages version numbers automatically with `appVersionSource: "remote"`:
 
 ```bash
 # Check current versions
-eas build:version:get
+npx --yes eas-cli@latest build:version:get
 
 # Manually set version
-eas build:version:set -p ios
+npx --yes eas-cli@latest build:version:set -p ios
 ```
 
 The version-set command prompts for the value. When setting up or changing native iOS versioning, or diagnosing a duplicate build number, inspect the archived `CFBundleVersion`: the remote counter alone does not prove that Xcode used it.

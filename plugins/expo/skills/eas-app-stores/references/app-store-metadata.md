@@ -33,7 +33,7 @@ EAS Metadata automates App Store presence management from the command line using
 If your app is already published, pull current metadata:
 
 ```bash
-eas metadata:pull
+npx --yes eas-cli@latest metadata:pull
 ```
 
 This creates `store.config.json` with your current App Store configuration.
@@ -43,10 +43,10 @@ This creates `store.config.json` with your current App Store configuration.
 After editing your config, push changes:
 
 ```bash
-eas metadata:push
+npx --yes eas-cli@latest metadata:push
 ```
 
-**Important:** You must submit a binary via `eas submit` before pushing metadata for new apps.
+**Important:** You must submit a binary via `npx --yes eas-cli@latest submit` before pushing metadata for new apps.
 
 ## Configuration File
 
@@ -455,7 +455,7 @@ Install the [Expo Tools extension](https://marketplace.visualstudio.com/items?it
 
 ### "Binary not found"
 
-Push a binary with `eas submit` before pushing metadata.
+Push a binary with `npx --yes eas-cli@latest submit` before pushing metadata.
 
 ### "Invalid keywords"
 
@@ -469,7 +469,7 @@ Description maximum is 4000 characters.
 
 ### Pull doesn't update JS config
 
-`eas metadata:pull` creates a JSON file; import it into your JS config.
+`npx --yes eas-cli@latest metadata:pull` creates a JSON file; import it into your JS config.
 
 ## CI/CD Integration
 
@@ -484,7 +484,7 @@ jobs:
         run: eas submit -p ios --latest
 
       - name: Push Metadata
-        run: eas metadata:push
+        run: npx --yes eas-cli@latest metadata:push
 ```
 
 ## Tips

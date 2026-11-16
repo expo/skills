@@ -7,14 +7,14 @@ For a SwiftUI/UIKit app with no React Native runtime, start with [native-ios.md]
 Use a store-distribution profile and record the source revision and returned build ID:
 
 ```bash
-eas build --platform ios --profile testflight --no-wait --non-interactive
+npx --yes eas-cli@latest build --platform ios --profile testflight --no-wait --non-interactive
 # After checking that build's result:
-eas submit --platform ios --profile testflight --id BUILD_ID --non-interactive
+npx --yes eas-cli@latest submit --platform ios --profile testflight --id BUILD_ID --non-interactive
 ```
 
 Use the project's actual profile name. If `--non-interactive` exposes missing first-time credentials, configure them with `eas credentials -p ios`; repeated noninteractive retries will not complete that setup. Keep an existing EAS project, Apple team, bundle ID, and App Store Connect app record aligned.
 
-`eas build --auto-submit` can submit the finished build with its matching submit profile. For separate jobs, pass the explicit build ID rather than selecting whichever unrelated build is newest.
+`npx --yes eas-cli@latest build --auto-submit` can submit the finished build with its matching submit profile. For separate jobs, pass the explicit build ID rather than selecting whichever unrelated build is newest.
 
 ## Read status without reopening a submission
 

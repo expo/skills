@@ -81,7 +81,7 @@ The app-specific password is for the upload flow. Interactive Apple Developer si
 eas build -p ios --profile production --auto-submit
 
 # Submit the verified build
-eas submit -p ios --profile production --id BUILD_ID
+npx --yes eas-cli@latest submit -p ios --profile production --id BUILD_ID
 
 # Expo / React Native TestFlight shortcut
 npx testflight
@@ -293,10 +293,10 @@ Use EAS Metadata to manage App Store listing from code:
 
 ```bash
 # Pull existing metadata
-eas metadata:pull
+npx --yes eas-cli@latest metadata:pull
 
 # Push changes
-eas metadata:push
+npx --yes eas-cli@latest metadata:push
 ```
 
 See ./app-store-metadata.md for detailed configuration.
