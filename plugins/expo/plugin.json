@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "expo",
   "version": "1.15.5",
-  "description": "Build, test, and deploy iOS and Android apps with official Expo and React Native guides and tools.",
+  "description": "Develop, Verify, Deploy, and Monitor mobile apps with Expo and React Native.",
   "author": {
     "name": "Expo Team",
     "email": "support@expo.dev",
@@ -34,8 +34,8 @@
     "com.openai": {
       "interface": {
         "displayName": "Expo",
-        "shortDescription": "Build, test, and ship apps",
-        "longDescription": "Expo helps developers build, test, and deploy iOS and Android apps. Create screens and navigation, connect APIs, add native features, and troubleshoot or upgrade Expo and React Native projects.\n\nRun and inspect your app on an iOS simulator or Android emulator, including cloud devices through Expo Application Services (EAS). Build releases, send beta builds to TestFlight, publish to the App Store and Google Play, deploy web apps, and deliver compatible over-the-air updates.\n\nIncludes official Expo guides and tools for projects available to your connected Expo account. Cloud services have plan limits and may incur usage charges. Publishing to app stores requires the relevant Apple or Google developer accounts.",
+        "shortDescription": "Build, test & ship mobile apps",
+        "longDescription": "Develop, Verify, Deploy, and Monitor mobile apps with Expo and React Native. Create screens and navigation, connect APIs, add native features, and troubleshoot or upgrade projects.\n\nRun and inspect your app on an iOS simulator or Android emulator, including cloud devices through Expo Application Services (EAS). Build releases, send beta builds to TestFlight, publish to the App Store and Google Play, deploy web apps, and deliver compatible over-the-air updates. Monitor app performance and update health with EAS Observe and Update Insights.\n\nIncludes official Expo guides and tools for projects available to your connected Expo account. Cloud services have plan limits and may incur usage charges. Publishing to app stores requires the relevant Apple or Google developer accounts.",
         "developerName": "Expo",
         "category": "Developer Tools",
         "capabilities": [

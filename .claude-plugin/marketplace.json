@@ -11,7 +11,7 @@
     {
       "name": "expo",
       "source": "./plugins/expo",
-      "description": "Build, test, and deploy iOS and Android apps with official Expo and React Native guides and tools."
+      "description": "Develop, Verify, Deploy, and Monitor mobile apps with Expo and React Native."
     },
     {
       "name": "expo-experiments",
