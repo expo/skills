@@ -30,8 +30,8 @@ Don't use when the user needs per-user crash detail or device-level reporting; t
 
 ## Prerequisites
 
-- `eas-cli` installed (`npm install -g eas-cli`).
-- Logged in: `eas login`.
+- Run EAS commands with `npx --yes eas-cli@latest <command>` from Expo's official package. Check its resolved version and command help.
+- Check the existing account with `npx --yes eas-cli@latest whoami`. If sign-in is needed, let the user complete `npx --yes eas-cli@latest login --browser`.
 - For `channel:insights`: run from an Expo project directory (the command resolves the project ID from `app.json`). `update:insights` only needs a login.
 
 ## Commands at a glance
@@ -114,7 +114,7 @@ Fields that matter for health assessment:
 
 - `Could not find any updates with group ID: "<id>"` — group doesn't exist or you lack access.
 - `Update group "<id>" has no ios update (available platforms: android)` — `--platform ios` was used but the group wasn't published for iOS.
-- `EAS Update insights is not supported by this version of eas-cli. Please upgrade ...` — the server deprecated a field the CLI relies on. Run `npm install -g eas-cli@latest`.
+- `EAS Update insights is not supported by this version of eas-cli. Please upgrade ...` — retry with `npx --yes eas-cli@latest` from Expo's official package after checking its resolved version and command help; report the incompatibility if it persists.
 
 ## `npx --yes eas-cli@latest update:view <groupId> --insights`
 
