@@ -30,6 +30,12 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
+      - name: Check evaluation CI helpers
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_ci.py'
+          bash -n scripts/ci.sh
+          bash -n scripts/run-focused-evals.sh
+
       - name: Ensure that plugin version bump script is healthy
         id: version-check-test
         continue-on-error: true
