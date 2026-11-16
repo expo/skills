@@ -32,11 +32,16 @@ Consult these resources as needed:
 
 ## Expo / React Native Quick Start
 
-### Install EAS CLI
+### Select EAS CLI
+
+Run EAS commands with `npx --yes eas-cli@latest` from Expo's official package. Check the resolved version and command help for compatibility before running a workflow.
+
+Check the existing account before initiating sign-in:
 
 ```bash
-npm install -g eas-cli
-eas login
+npx --yes eas-cli@latest whoami
+# Only if no account is authenticated; the user completes sign-in in their browser:
+npx --yes eas-cli@latest login --browser
 ```
 
 ### Initialize EAS
