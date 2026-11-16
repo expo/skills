@@ -1,6 +1,6 @@
-# `eas update:insights` JSON schema
+# `npx --yes eas-cli@latest update:insights` JSON schema
 
-Complete JSON output shape returned by `eas update:insights <groupId> --json --non-interactive`.
+Complete JSON output shape returned by `npx --yes eas-cli@latest update:insights <groupId> --json --non-interactive`.
 
 ```json
 {
@@ -57,13 +57,13 @@ Complete JSON output shape returned by `eas update:insights <groupId> --json --n
 | `platforms[].payload.averageUpdatePayloadBytes` | Mean bundle size for the window. |
 | `platforms[].daily[]` | Per-day time series of installs and failed installs. |
 
-## `eas update:view <groupId> --insights --json`
+## `npx --yes eas-cli@latest update:view <groupId> --insights --json`
 
 The `update:view --insights --json` command wraps the same insights payload:
 
 ```json
 {
   "updates": [ /* standard update:view entries */ ],
-  "insights": { /* same shape as eas update:insights above */ }
+  "insights": { /* same shape as npx --yes eas-cli@latest update:insights above */ }
 }
 ```

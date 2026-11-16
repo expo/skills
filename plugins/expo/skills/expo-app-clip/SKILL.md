@@ -171,7 +171,7 @@ The AASA file must be live before iOS will trust the association. Use [EAS Hosti
 
 ```sh
 bunx expo export -p web
-eas deploy --prod
+npx --yes eas-cli@latest deploy --prod
 ```
 
 This publishes the site (including `/.well-known/apple-app-site-association`) at `https://<slug>.expo.app`. Verify:
@@ -222,7 +222,7 @@ This will:
 Pull existing App Store metadata to local:
 
 ```sh
-eas metadata:pull
+npx --yes eas-cli@latest metadata:pull
 ```
 
 Add `apple.appClip` to `store.config.json`. Up to 3 invocation URLs can launch the Clip from a web page:
@@ -255,7 +255,7 @@ The `headerImage` must be a 1800x1200 PNG with no opacity.
 Push back to the store:
 
 ```sh
-eas metadata:push
+npx --yes eas-cli@latest metadata:push
 ```
 
 Apple's recommended App Clip metadata guidelines: https://sosumi.ai/documentation/appclip/configuring-the-launch-experience-of-your-app-clip

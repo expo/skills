@@ -6,7 +6,7 @@
 2. **App Created in Console** - Create your app listing before first submission
 3. **Service Account** - For automated submissions via EAS
 
-Once these are complete, the default `eas submit` works for a first-time submission and creates the app's first release on the internal testing track. Store listing, content rating, and pricing are only required before promoting a release to production.
+Once these are complete, the default `npx --yes eas-cli@latest submit` works for a first-time submission and creates the app's first release on the internal testing track. Store listing, content rating, and pricing are only required before promoting a release to production.
 
 ## Service Account Setup
 
@@ -222,7 +222,7 @@ For quick internal distribution without Play Store:
 
 ```bash
 # Build with internal distribution
-eas build -p android --profile development
+npx --yes eas-cli@latest build -p android --profile development
 
 # Share the APK link with testers
 ```
@@ -231,7 +231,7 @@ Or use EAS Update for OTA updates to existing installs.
 
 ## Monitoring Submissions
 
-Follow the submission URL returned by `eas submit` for status and logs. Check Play Console for the resulting track and release state.
+Follow the submission URL returned by `npx --yes eas-cli@latest submit` for status and logs. Check Play Console for the resulting track and release state.
 
 With EAS CLI 23.2.0, `eas submit:list -p android --json` and `eas submit:view SUBMISSION_ID --json` report EAS submission jobs. `submit:status` currently reads Apple status only; do not treat an EAS job's success as confirmation of Play Console rollout.
 

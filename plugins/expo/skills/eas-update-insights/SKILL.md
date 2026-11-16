@@ -38,16 +38,16 @@ Don't use when the user needs per-user crash detail or device-level reporting; t
 
 | Command | Purpose |
 |---|---|
-| `eas update:list` | Discover recent update groups, their `group` IDs, and branch names |
-| `eas update:insights <groupId>` | Per-platform launches, failed launches, crash rate, unique users, payload size, daily breakdown |
-| `eas update:view <groupId> --insights` | Update group details + the same metrics appended |
-| `eas channel:insights --channel <name> --runtime-version <version>` | Embedded/OTA user counts, most popular updates, cumulative metrics for a channel + runtime |
+| `npx --yes eas-cli@latest update:list` | Discover recent update groups, their `group` IDs, and branch names |
+| `npx --yes eas-cli@latest update:insights <groupId>` | Per-platform launches, failed launches, crash rate, unique users, payload size, daily breakdown |
+| `npx --yes eas-cli@latest update:view <groupId> --insights` | Update group details + the same metrics appended |
+| `npx --yes eas-cli@latest channel:insights --channel <name> --runtime-version <version>` | Embedded/OTA user counts, most popular updates, cumulative metrics for a channel + runtime |
 
 All of these support `--json --non-interactive` for programmatic parsing.
 
 ## Discovering IDs
 
-Before querying insights for an update group, you need its `group` ID. Use `eas update:list` with either `--branch <name>` (updates on that branch) or `--all` (updates across all branches). Always pass `--json --non-interactive` when running non-interactively; without a branch/`--all` flag the command will otherwise prompt for a branch selection:
+Before querying insights for an update group, you need its `group` ID. Use `npx --yes eas-cli@latest update:list` with either `--branch <name>` (updates on that branch) or `--all` (updates across all branches). Always pass `--json --non-interactive` when running non-interactively; without a branch/`--all` flag the command will otherwise prompt for a branch selection:
 
 ```bash
 # Latest group id across all branches
@@ -78,7 +78,7 @@ Entries also carry `codeSigningKey` and `rolloutPercentage`, but only when those
 
 When called with `--branch <name>`, the response also includes `name` (the branch name) and `id` (the branch ID) at the top level.
 
-## `eas update:insights <groupId>`
+## `npx --yes eas-cli@latest update:insights <groupId>`
 
 Shows launches, failed launches, crash rate, unique users, launch asset count, and average payload size for a single update group, broken down **per platform** (iOS, Android), plus a daily breakdown of launches and failures.
 
@@ -116,7 +116,7 @@ Fields that matter for health assessment:
 - `Update group "<id>" has no ios update (available platforms: android)` — `--platform ios` was used but the group wasn't published for iOS.
 - `EAS Update insights is not supported by this version of eas-cli. Please upgrade ...` — the server deprecated a field the CLI relies on. Run `npm install -g eas-cli@latest`.
 
-## `eas update:view <groupId> --insights`
+## `npx --yes eas-cli@latest update:view <groupId> --insights`
 
 Extends the standard `update:view` output with the same per-platform insights, inline.
 
@@ -131,7 +131,7 @@ eas update:view 03d5dfcf-... --json --insights
 
 Without `--insights`, `update:view` behaves exactly as before — no JSON shape change for existing consumers. The `--days` / `--start` / `--end` flags only apply when `--insights` is set; passing them alone errors.
 
-## `eas channel:insights --channel <name> --runtime-version <version>`
+## `npx --yes eas-cli@latest channel:insights --channel <name> --runtime-version <version>`
 
 Shows, per channel, how many users are on the embedded build vs over-the-air updates and which updates are pulling the most traffic. Must be run from an Expo project directory.
 
@@ -178,7 +178,7 @@ GROUP_ID=$(eas update:list --branch production --json --non-interactive \
   | jq -r '.currentPage[0].group')
 
 # 2. Give it some adoption time (minutes to hours), then check crash rate
-eas update:insights "$GROUP_ID" --json --non-interactive \
+npx --yes eas-cli@latest update:insights "$GROUP_ID" --json --non-interactive \
   | jq '.platforms[] | {platform, installs: .totals.installs, crashRate: .totals.crashRatePercent}'
 ```
 
@@ -189,7 +189,7 @@ Compare the `crashRate` across platforms and against previous releases; sudden s
 ```bash
 for channel in production staging; do
   echo "--- $channel ---"
-  eas channel:insights --channel "$channel" --runtime-version 1.0.6 --json --non-interactive \
+  npx --yes eas-cli@latest channel:insights --channel "$channel" --runtime-version 1.0.6 --json --non-interactive \
     | jq '{
         channel,
         embedded: .embeddedUpdateTotalUniqueUsers,
@@ -202,7 +202,7 @@ done
 ### Detect a rollout regression in the last 24 hours
 
 ```bash
-eas update:insights "$GROUP_ID" --days 1 --json --non-interactive \
+npx --yes eas-cli@latest update:insights "$GROUP_ID" --days 1 --json --non-interactive \
   | jq '.platforms[] | select(.totals.crashRatePercent > 1)'
 ```
 
