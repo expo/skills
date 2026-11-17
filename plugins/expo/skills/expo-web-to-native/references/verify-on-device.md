@@ -33,7 +33,7 @@ agent-browser screenshot web.png   # visual reference
 2. Open the route: `npx --yes @expo/agent-cli@latest navigate "/<route>?<params>" --ios`, or argent `launch-app` + `gesture-tap`.
 3. Capture: `xcrun simctl io booted screenshot native.png`, or `argent run describe --udid <udid>` for structure.
 
-> **Android:** `simctl` / `expo run:ios` are iOS-only. Use an Android emulator: `npx --yes @expo/agent-cli@latest dev --android --go --detach --wait-ready` (or `--dev-client` for a dev build), then `npx --yes @expo/agent-cli@latest navigate "/<route>" --android`. Capture with `adb exec-out screencap -p > native.png`, and `adb shell screenrecord` for motion.
+> **Android:** `simctl` is iOS-only. Use an Android emulator: `npx --yes @expo/agent-cli@latest dev --android --go --detach --wait-ready` (or `--dev-client` for a dev build), then `npx --yes @expo/agent-cli@latest navigate "/<route>" --android`. Capture with `adb exec-out screencap -p > native.png`, and `adb shell screenrecord` for motion.
 
 **C. Compare** the two for the same route — layout, content, behavior. Diff the structures (agent-browser `snapshot` against argent `describe` / `debugger-component-tree`), not just pixels. Pass only on parity: same data, and params passed into a DOM webview must produce the same result.
 
