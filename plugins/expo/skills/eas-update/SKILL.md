@@ -2,7 +2,7 @@
 name: eas-update
 description: "Configure and use EAS Update for over-the-air JavaScript and asset updates with expo-updates and EAS CLI. Use when setting up OTA updates, configuring branches/channels/runtime versions, publishing to preview/staging/production, testing updates, or debugging why an installed build still shows old code. Load for TestFlight, preview, or production updates that do not appear, including questions about cold launches or reopening the app. Not for update health metrics; use eas-update-insights for adoption, crashes, and rollout monitoring."
 license: MIT
-allowed-tools: "Bash(npx expo *), Bash(npx *eas-cli@*), Bash(eas *), Bash(npx --yes @expo/agent-cli@latest *)"
+allowed-tools: "Bash(npx *eas-cli@*), Bash(eas *), Bash(npx --yes @expo/agent-cli@latest *)"
 ---
 
 # EAS Update
