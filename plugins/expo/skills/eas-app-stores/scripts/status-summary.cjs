@@ -2,10 +2,23 @@ const fs = require("node:fs");
 
 const uuid = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const isId = (value) => typeof value === "string" && uuid.test(value);
+const errorCode = /^[A-Z0-9_]{1,80}$/;
 const statuses = new Set([
   "NEW", "AWAITING_BUILD", "IN_QUEUE", "IN_PROGRESS", "PENDING_CANCEL",
   "FINISHED", "ERRORED", "CANCELED",
 ]);
+
+function isExpoDocsUrl(value) {
+  if (typeof value !== "string" || value.length > 300) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "docs.expo.dev" &&
+      !url.username && !url.password && !url.port && !url.search && !url.hash &&
+      /^\/[a-z0-9/-]+$/.test(url.pathname) && url.href === value;
+  } catch {
+    return false;
+  }
+}
 
 function summarize(job) {
   if (!job || !isId(job.id) || !statuses.has(job.status) ||
@@ -26,6 +39,12 @@ function summarize(job) {
     if (typeof job.gitCommitHash !== "string" ||
         !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(job.gitCommitHash)) throw new Error();
     summary.gitCommitHash = job.gitCommitHash;
+  }
+  if (typeof job.error?.errorCode === "string" && errorCode.test(job.error.errorCode)) {
+    summary.errorCode = job.error.errorCode;
+  }
+  if (isExpoDocsUrl(job.error?.docsUrl)) {
+    summary.docsUrl = job.error.docsUrl;
   }
   return summary;
 }

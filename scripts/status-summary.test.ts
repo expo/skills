@@ -43,6 +43,36 @@ describe("Summarizing EAS release jobs", () => {
     expect(JSON.parse(result.stdout)).toEqual([]);
   });
 
+  it("should show validated failure diagnostics without exposing the error message", () => {
+    const failedJob = {
+      ...job, status: "ERRORED",
+      error: {
+        errorCode: "APP_BUILD_FAILED",
+        docsUrl: "https://docs.expo.dev/build-reference/troubleshooting/",
+        message: "PRIVATE_FIXTURE",
+      },
+    };
+    const result = run(JSON.stringify(failedJob), id);
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({
+      ...job, status: "ERRORED", errorCode: "APP_BUILD_FAILED",
+      docsUrl: "https://docs.expo.dev/build-reference/troubleshooting/",
+    });
+    expect(result.stdout).not.toContain("PRIVATE_FIXTURE");
+  });
+
+  it.each([
+    ["free-text error code", { errorCode: "PRIVATE_FIXTURE: bad credentials" }],
+    ["untrusted docs host", { docsUrl: "https://docs.expo.dev.evil.invalid/PRIVATE_FIXTURE" }],
+    ["tokenized docs link", { docsUrl: "https://docs.expo.dev/build-reference/?token=PRIVATE_FIXTURE" }],
+    ["encoded docs path", { docsUrl: "https://docs.expo.dev/build-reference/%50RIVATE_FIXTURE" }],
+  ])("should omit %s while keeping the failed job status", (_label, error) => {
+    const result = run(JSON.stringify({ ...job, status: "ERRORED", error }));
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual({ ...job, status: "ERRORED" });
+    expect(result.stdout).not.toContain("PRIVATE_FIXTURE");
+  });
+
   it.each([
     ["malformed JSON", "PRIVATE_FIXTURE"],
     ["null response", "null"],

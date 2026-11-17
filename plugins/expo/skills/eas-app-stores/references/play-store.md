@@ -37,7 +37,7 @@ Add the service account key path to `eas.json`:
 
 Prefer existing EAS-managed credentials. The example path denotes protected local storage outside the upload directory; replace it with the existing protected file location rather than copying a key into the project. Hosted workflow jobs need managed credentials or a protected file provisioned for that job; they cannot read a sibling file on your machine. If an existing key is inside the project, exclude its exact path in `.gitignore` and in a custom `.easignore`; the latter overrides `.gitignore`. Verify the upload archive excludes the key and private environment files before building. Never print the file contents. Preserve an existing valid upload key and Play App Signing setup.
 
-## Environment Variables
+## Credential Storage
 
 For managed credentials, use the official `npx --yes eas-cli@latest credentials -p android` flow to configure the Google service-account key for the selected project. The user supplies the key through that credential flow, not chat.
 

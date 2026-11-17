@@ -36,7 +36,7 @@ Use the bundled `scripts/status-summary.cjs` for the saved EAS job/list JSON. Ap
 
 Use the project's actual profile. `submit:view` reports the EAS job; `submit:status` reads App Store Connect. The latter needs an existing App Store Connect API key from the selected profile, environment, or EAS credentials. A missing key is a setup error for the owner to resolve privately, not evidence the build failed or permission to create a key. A beta state alone does not establish that a particular tester has access.
 
-Older CLIs such as 18.6.0 lack these commands. Check `npx --yes eas-cli@latest --version` and command help, or use `npx --yes eas-cli@latest`. Prefer the supported CLI over importing internal Node modules or writing private GraphQL queries. An errored `submit:view --json` result can omit the underlying error; verify the selected worker-log destination and handle it privately as described in Monitoring.
+Older CLIs such as 18.6.0 lack these commands. Check the resolved EAS CLI version and command help before using them. Prefer the supported CLI over importing internal Node modules or writing private GraphQL queries. An errored `submit:view --json` result can omit the underlying error; verify the selected worker-log destination and handle it privately as described in Monitoring.
 
 ## Track the release state
 
