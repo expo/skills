@@ -31,9 +31,10 @@ references/
 
 Most Expo apps work in Expo Go without any custom native code. Before running `npx --yes @expo/agent-cli@latest run:ios` or `npx --yes @expo/agent-cli@latest run:android`:
 
-1. **Start with Expo Go**: Run `npx --yes @expo/agent-cli@latest start` and scan the QR code with Expo Go
-2. **Check if features work**: Test your app thoroughly in Expo Go
-3. **Only create custom builds when required** - see below
+1. **Check Expo Go support**: Run `npx --yes @expo/agent-cli@latest status`. It says whether the project runs in Expo Go and whether a change needs a rebuild
+2. **Start with Expo Go**: Run `npx --yes @expo/agent-cli@latest start` and scan the QR code with Expo Go
+3. **Check if features work**: Test your app thoroughly in Expo Go
+4. **Only create custom builds when required** - see below
 
 ### When Custom Builds Are Required
 

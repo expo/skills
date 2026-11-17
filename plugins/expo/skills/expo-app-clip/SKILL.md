@@ -182,13 +182,13 @@ curl https://may20.expo.app/.well-known/apple-app-site-association
 
 ## 8. Mirror permissions
 
-Inspect the parent app's permissions after prebuild:
+Inspect the Info.plist that the parent app's config plugins produce (no prebuild needed):
 
 ```sh
-npx --yes @expo/agent-cli@latest config --type introspect
+npx --yes @expo/agent-cli@latest inspect:config-plugins --platform ios --file infoPlist
 ```
 
-Look at the `infoPlist` object — mirror the permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.
+Mirror the permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.
 
 Set `deploymentTarget: "17.6"` in the Clip's target config — App Clips have a higher minimum size limit in iOS 17.6.
 

@@ -27,7 +27,7 @@ First inspect the failing build step and the dependency/configuration diff.
 
 - Ensure the device or emulator can reach the dev machine. The Android emulator can talk to the host via `10.0.2.2`; physical devices need a reachable LAN IP.
 - For physical Android devices on USB: `adb reverse tcp:8081 tcp:8081`.
-- Confirm Metro is actually running: `npx --yes @expo/agent-cli@latest start` from the Expo project (or `yarn start` from the workspace root).
+- Confirm Metro is actually running: `npx --yes @expo/agent-cli@latest status` from the Expo project reports the dev server. If none is running, start it with `npx --yes @expo/agent-cli@latest start` (or `yarn start` from the workspace root).
 - Verify the debug `AndroidManifest.xml` enables cleartext traffic — Android 9+ blocks HTTP by default. The debug variant should include `android:usesCleartextTraffic="true"` on `<application>`, or a `network_security_config` allowing the dev server.
 - iOS simulator: Metro should be reachable at `localhost:8081`. If it is not, check that ATS exceptions are still in place in `Info.plist` for `localhost` (the Expo template ships this by default).
 

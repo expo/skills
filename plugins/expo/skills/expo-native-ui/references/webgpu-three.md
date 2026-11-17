@@ -497,9 +497,10 @@ npm install <packages> --legacy-peer-deps
 WebGPU requires a custom build:
 
 ```bash
-npx --yes @expo/agent-cli@latest prebuild
-npx --yes @expo/agent-cli@latest run:ios
+npx --yes @expo/agent-cli@latest dev --ios --dev-client --detach --wait-ready
 ```
+
+`dev` runs prebuild and the native build when the project needs them. When this machine cannot build, the build runs on EAS. Run it with `--plan` first to see what it will do.
 
 **Note:** WebGPU does NOT work in Expo Go.
 
