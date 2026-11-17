@@ -143,6 +143,9 @@ Skill guidelines:
 - Write descriptions that match how users naturally ask for help.
 - Include keywords users are likely to mention, but do not stuff descriptions with unrelated terms.
 - Prefer concrete commands, APIs, and Expo package names over vague advice.
+- In runnable shell examples and skill shell scripts, use `npx --yes eas-cli@latest <command>`.
+  Descriptions, headings, and prose can use `eas <command>` when that matches how users ask for help.
+  CI enforces the runnable-command rule with `bun scripts/check-eas-cli-commands.ts`.
 
 ## Supporting Files
 
