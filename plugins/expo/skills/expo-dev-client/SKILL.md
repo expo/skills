@@ -145,13 +145,18 @@ Once installed, the dev client provides:
 Connect to local development:
 
 ```bash
-# Start Metro bundler
-npx --yes @expo/agent-cli@latest start --dev-client
+# Simulator or emulator: start the dev server and open the dev client (or --android; add --device <serial> for an Android phone)
+npx --yes @expo/agent-cli@latest dev --ios --dev-client --detach --wait-ready
 
-# Scan QR code with dev client or enter URL manually
+# Physical iPhone: start the dev server, then scan the QR code with the dev client
+npx --yes @expo/agent-cli@latest start --dev-client
 ```
 
-When you launch the dev client yourself to screenshot or drive it, skip the onboarding sheet, the dev menu at launch, and the Tools button. On SDK 58+, Expo CLI does this for launches it starts from a non-interactive shell; for a URL you open yourself, use `<scheme>://?__expo_url=<encoded dev server URL>&__expo_disable_onboarding=1&__expo_disable_fab=1&__expo_disable_auto_launch=1`. On SDK 57 and earlier, launch the iOS app with the `-EXDevMenu*` launch arguments, and on Android open `<scheme>://expo-development-client/?url=<encoded dev server URL>&disableOnboarding=1&disableFab=1&disableAutoLaunch=1`. See `../expo-overview/references/launch-without-dev-menu.md` for the exact commands.
+If no dev client is installed, `dev` builds one, and the build can run on EAS. Run `dev --ios --dev-client --plan` first to see what it will do.
+
+To open a route in the running dev client, run `npx --yes @expo/agent-cli@latest navigate /<route>`.
+
+When you launch the dev client yourself to screenshot or drive it, skip the onboarding sheet, the dev menu at launch, and the Tools button. On SDK 58+, Expo CLI does this for launches it starts from a non-interactive shell, and `navigate` adds the flags to the URL it opens; for a URL you open yourself, use `<scheme>://?__expo_url=<encoded dev server URL>&__expo_disable_onboarding=1&__expo_disable_fab=1&__expo_disable_auto_launch=1`. On SDK 57 and earlier, launch the iOS app with the `-EXDevMenu*` launch arguments, and on Android open `<scheme>://expo-development-client/?url=<encoded dev server URL>&disableOnboarding=1&disableFab=1&disableAutoLaunch=1`. See `../expo-overview/references/launch-without-dev-menu.md` for the exact commands.
 
 ## Troubleshooting
 

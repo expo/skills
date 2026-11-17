@@ -67,6 +67,8 @@ Use an update for changes to JavaScript, styling, and bundled assets that the in
 
 Create a new native build when a change adds or modifies native code or native configuration, including most native-library additions and SDK upgrades. Do not work around a runtime mismatch or imply that publishing can add native capabilities to an existing build. See https://docs.expo.dev/eas-update/runtime-versions.md.
 
+To check, run `npx --yes @expo/agent-cli@latest status`. Its `ota` line says whether an update published now reaches the installed builds. Add `--build <id>` to compare with one EAS build.
+
 Do not change the project's runtime-version policy as an incidental fix. Explain how the current policy affects compatibility; treat changing it as a separate decision because it changes which installed builds can receive future updates.
 
 ## Publish deliberately

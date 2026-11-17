@@ -111,9 +111,10 @@ Apply the rules that match the project and the requested task.
 - **Launching the app yourself?** When you open Expo Go or a development build to look
   at, screenshot, or drive it, skip the first-launch onboarding, the dev menu that opens
   at launch, and the floating Tools button. On SDK 58+, Expo CLI does this for launches
-  it starts from a non-interactive shell. On SDK 57 and earlier, and for any URL you open
-  yourself (`simctl openurl`, `adb`, a controller), follow
-  `./references/launch-without-dev-menu.md`.
+  it starts from a non-interactive shell. To open a route, use
+  `npx --yes @expo/agent-cli@latest navigate /<route>`: for a development build it adds
+  these flags to the URL. On SDK 57 and earlier, and for any URL you open yourself
+  (`simctl openurl`, `adb`, a controller), follow `./references/launch-without-dev-menu.md`.
 - **EAS auth & linking** (only needed for build/submit/update/observe/workflows): check
   login with `npx --yes eas-cli@latest whoami`, log in with `npx --yes eas-cli@latest login`. A project is linked when
   `extra.eas.projectId` exists in the app config; create it with `npx --yes eas-cli@latest init` if missing.
