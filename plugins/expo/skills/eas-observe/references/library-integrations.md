@@ -58,7 +58,7 @@ Observe.configure({
 **Fix reported images:** serve images close to their display size, for example resized variants from an image CDN. With `useImage`, set `maxWidth` and `maxHeight` to downscale at decode time.
 
 ```bash
-eas observe:events expo-image.oversized
+npx --yes eas-cli@latest observe:events expo-image.oversized
 ```
 
 ## Reanimated
@@ -109,8 +109,8 @@ Observe.configure({
 
 ```bash
 # Errors, including reanimated.error
-eas observe:errors
+npx --yes eas-cli@latest observe:errors
 
 # Warnings, when reportWarnings is true
-eas observe:events reanimated.warning
+npx --yes eas-cli@latest observe:events reanimated.warning
 ```

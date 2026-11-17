@@ -89,7 +89,7 @@ Emitted only when a navigation integration is enabled (SDK 56+). Measured per ro
 
 `observe:metrics` also accepts a full metric name in place of an alias, for example `npx --yes eas-cli@latest observe:metrics expo.app_startup.tti`. `observe:routes` accepts full navigation names the same way. The `--metric` flags on `metrics-summary` and `routes` are strict oclif options, so they take aliases only.
 
-## `npx --yes eas-cli@latest observe:metrics-summary`
+## `eas observe:metrics-summary`
 
 Shows per-version statistical aggregates for one or more metrics, with separate tables per platform.
 
@@ -146,7 +146,7 @@ This command has no `--limit`, `--after`, `--app-version`, `--build-number`, or 
 }
 ```
 
-## `npx --yes eas-cli@latest observe:metrics`
+## `eas observe:metrics`
 
 Shows individual performance metric samples, paginated. The metric is a positional argument, not a flag. If omitted and running interactively, prompts for selection; in non-interactive mode it throws an error.
 
@@ -181,7 +181,7 @@ npx --yes eas-cli@latest observe:metrics tti --after <cursor>
 - When `hasNextPage` is true, prints `Next page: --after <endCursor>` hint below the table
 - JSON output also includes `sessionId`, `easClientId`, and a `customParams` object per sample
 
-## `npx --yes eas-cli@latest observe:routes`
+## `eas observe:routes`
 
 Shows per-route statistical aggregates for navigation metrics (Cold TTR, Warm TTR, Nav TTI), grouped by route name with separate sections per platform.
 
@@ -243,7 +243,7 @@ npx --yes eas-cli@latest observe:routes --after <cursor>
 }
 ```
 
-## `npx --yes eas-cli@latest observe:events`
+## `eas observe:events`
 
 Shows custom events emitted by the app via the `logEvent` API in `expo-observe`. Behavior depends on what is passed:
 
@@ -318,7 +318,7 @@ npx --yes eas-cli@latest observe:events login_failed --after <cursor>
 
 The name-summary mode returns `{ "names": [{ "eventName": "...", "count": 123 }], "isTruncated": false }`.
 
-## `npx --yes eas-cli@latest observe:session`
+## `eas observe:session`
 
 Shows the full timeline of metric and log events for a single session — the CLI equivalent of the dashboard's session view. Use it after `observe:metrics` surfaces a slow sample: take that sample's `sessionId` (present in `--json` output) and replay everything that session recorded.
 
@@ -355,7 +355,7 @@ This command has no `--platform`, `--limit`, or `--after` flag. It takes the sha
 
 `entries` interleaves metric and log events for the session. The two `hasMore*` flags report truncation per event kind; there is no cursor to page with.
 
-## `npx --yes eas-cli@latest observe:errors`
+## `eas observe:errors`
 
 Shows error and exception groups, grouped by fingerprint, with event, user, and session counts for each group. The fingerprint is in the first column. Pass `--fingerprint` to list the occurrences of one group, with stack traces, instead of the grouped summary. Error reporting setup is in [`./setup.md`](./setup.md).
 
@@ -379,7 +379,7 @@ npx --yes eas-cli@latest observe:errors --fingerprint <fingerprint>
 
 `--limit` or `--after` without `--fingerprint` fails with an error. The grouped summary has no pagination.
 
-## `npx --yes eas-cli@latest observe:event`
+## `eas observe:event`
 
 Shows one metric, log, or error event by its ID. Event IDs are in the `--json` output of `observe:metrics`, `observe:events`, and `observe:session`, and in the occurrences from `observe:errors --fingerprint`.
 
@@ -390,7 +390,7 @@ npx --yes eas-cli@latest observe:event <event-id> --json
 
 `ID` is a required positional argument. The command takes only `--project-id`, `--json`, and `--non-interactive`.
 
-## `npx --yes eas-cli@latest observe:versions`
+## `eas observe:versions`
 
 Shows app version hierarchy with build numbers, OTA update IDs, and event counts per version.
 

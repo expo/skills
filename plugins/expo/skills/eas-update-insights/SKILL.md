@@ -51,10 +51,10 @@ Before querying insights for an update group, you need its `group` ID. Use `npx 
 
 ```bash
 # Latest group id across all branches
-eas update:list --all --json --non-interactive | jq -r '.currentPage[0].group'
+npx --yes eas-cli@latest update:list --all --json --non-interactive | jq -r '.currentPage[0].group'
 
 # Latest group id on a specific branch
-eas update:list --branch production --json --non-interactive | jq -r '.currentPage[0].group'
+npx --yes eas-cli@latest update:list --branch production --json --non-interactive | jq -r '.currentPage[0].group'
 ```
 
 The JSON response has a `currentPage` array with one entry per update group (both platforms of the same publish are collapsed into one entry):
@@ -78,14 +78,14 @@ Entries also carry `codeSigningKey` and `rolloutPercentage`, but only when those
 
 When called with `--branch <name>`, the response also includes `name` (the branch name) and `id` (the branch ID) at the top level.
 
-## `npx --yes eas-cli@latest update:insights <groupId>`
+## `eas update:insights <groupId>`
 
 Shows launches, failed launches, crash rate, unique users, launch asset count, and average payload size for a single update group, broken down **per platform** (iOS, Android), plus a daily breakdown of launches and failures.
 
 ### Basic use
 
 ```bash
-eas update:insights 03d5dfcf-736c-475a-8730-af039c3f4d06
+npx --yes eas-cli@latest update:insights 03d5dfcf-736c-475a-8730-af039c3f4d06
 ```
 
 ### Flags
@@ -116,29 +116,29 @@ Fields that matter for health assessment:
 - `Update group "<id>" has no ios update (available platforms: android)` — `--platform ios` was used but the group wasn't published for iOS.
 - `EAS Update insights is not supported by this version of eas-cli. Please upgrade ...` — retry with `npx --yes eas-cli@latest` from Expo's official package after checking its resolved version and command help; report the incompatibility if it persists.
 
-## `npx --yes eas-cli@latest update:view <groupId> --insights`
+## `eas update:view <groupId> --insights`
 
 Extends the standard `update:view` output with the same per-platform insights, inline.
 
 ```bash
 # Human-readable
-eas update:view 03d5dfcf-... --insights
-eas update:view 03d5dfcf-... --insights --days 30
+npx --yes eas-cli@latest update:view 03d5dfcf-... --insights
+npx --yes eas-cli@latest update:view 03d5dfcf-... --insights --days 30
 
 # JSON: wrapped as { updates: [...], insights: {...} }
-eas update:view 03d5dfcf-... --json --insights
+npx --yes eas-cli@latest update:view 03d5dfcf-... --json --insights
 ```
 
 Without `--insights`, `update:view` behaves exactly as before — no JSON shape change for existing consumers. The `--days` / `--start` / `--end` flags only apply when `--insights` is set; passing them alone errors.
 
-## `npx --yes eas-cli@latest channel:insights --channel <name> --runtime-version <version>`
+## `eas channel:insights --channel <name> --runtime-version <version>`
 
 Shows, per channel, how many users are on the embedded build vs over-the-air updates and which updates are pulling the most traffic. Must be run from an Expo project directory.
 
 ### Basic use
 
 ```bash
-eas channel:insights --channel production --runtime-version 1.0.6
+npx --yes eas-cli@latest channel:insights --channel production --runtime-version 1.0.6
 ```
 
 ### Flags
@@ -174,7 +174,7 @@ Fields that matter:
 
 ```bash
 # 1. Grab the latest publish on production
-GROUP_ID=$(eas update:list --branch production --json --non-interactive \
+GROUP_ID=$(npx --yes eas-cli@latest update:list --branch production --json --non-interactive \
   | jq -r '.currentPage[0].group')
 
 # 2. Give it some adoption time (minutes to hours), then check crash rate
@@ -209,7 +209,7 @@ npx --yes eas-cli@latest update:insights "$GROUP_ID" --days 1 --json --non-inter
 ### Summarize group metrics for release notes
 
 ```bash
-eas update:view "$GROUP_ID" --insights --days 30
+npx --yes eas-cli@latest update:view "$GROUP_ID" --insights --days 30
 ```
 
 Human-readable group details plus 30 days of launches/failures per platform — suitable for pasting into a changelog or incident review.

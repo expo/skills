@@ -478,7 +478,7 @@ Production JS stack traces point into the minified bundle unless a source map is
 **EAS Updates** — publish with `--upload-source-maps` (EAS CLI 24.9.0+):
 
 ```bash
-eas update --channel production --upload-source-maps
+npx --yes eas-cli@latest update --channel production --upload-source-maps
 ```
 
 - Uploads the map `expo export` emits for each native platform, with `sourcesContent` stripped.

@@ -55,7 +55,7 @@ EXPO_ANDROID_SERVICE_ACCOUNT_KEY_BASE64=...
 Or use EAS Secrets:
 
 ```bash
-eas secret:create --name GOOGLE_SERVICE_ACCOUNT --value "$(cat google-service-account.json)" --type file
+npx --yes eas-cli@latest secret:create --name GOOGLE_SERVICE_ACCOUNT --value "$(cat google-service-account.json)" --type file
 ```
 
 Then reference in `eas.json`:
@@ -133,13 +133,13 @@ This releases to 10% of users. Increase via Play Console or subsequent submissio
 
 ```bash
 # Build and submit to internal track
-eas build -p android --profile production --auto-submit
+npx --yes eas-cli@latest build -p android --profile production --auto-submit
 
 # Submit existing build to Play Store
-eas submit -p android --latest
+npx --yes eas-cli@latest submit -p android --latest
 
 # Submit specific build
-eas submit -p android --id BUILD_ID
+npx --yes eas-cli@latest submit -p android --id BUILD_ID
 ```
 
 ## App Signing
@@ -155,7 +155,7 @@ EAS uses Google Play App Signing by default:
 ### Checking Signing Status
 
 ```bash
-eas credentials -p android
+npx --yes eas-cli@latest credentials -p android
 ```
 
 ## Version Codes

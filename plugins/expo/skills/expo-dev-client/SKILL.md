@@ -171,7 +171,6 @@ npx --yes eas-cli@latest build -p ios --profile development --clear-cache
 
 ```bash
 npx --yes eas-cli@latest --version
-npx --yes eas-cli@latest update
 ```
 
 ## Submitting Feedback

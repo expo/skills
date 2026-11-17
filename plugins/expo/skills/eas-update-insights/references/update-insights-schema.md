@@ -57,7 +57,7 @@ Complete JSON output shape returned by `npx --yes eas-cli@latest update:insights
 | `platforms[].payload.averageUpdatePayloadBytes` | Mean bundle size for the window. |
 | `platforms[].daily[]` | Per-day time series of installs and failed installs. |
 
-## `npx --yes eas-cli@latest update:view <groupId> --insights --json`
+## `eas update:view <groupId> --insights --json`
 
 The `update:view --insights --json` command wraps the same insights payload:
 
