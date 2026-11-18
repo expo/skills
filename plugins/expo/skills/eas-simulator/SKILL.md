@@ -17,13 +17,13 @@ The `simulator:*` commands need a recent eas-cli, and new flags arrive often —
 
 ## When to use
 
-The frontmatter `description` carries the trigger phrases. In short: use this to get a user's app onto a **cloud** simulator and interact with it — especially from a Mac-less or cloud/sandbox agent. **Not** for local sims (the agent CLI's `run:ios`, Xcode, Android Studio), store builds/signing (that's EAS Build), or physical devices. For the macOS case, see *Cloud vs local* next.
+The frontmatter `description` carries the trigger phrases. In short: use this to get a user's app onto a **cloud** simulator and interact with it — especially from a Mac-less or cloud/sandbox agent. **Not** for local sims (the agent CLI's `dev`, Xcode, Android Studio), store builds/signing (that's EAS Build), or physical devices. For the macOS case, see *Cloud vs local* next.
 
 ## Cloud vs local: decide this first
 
 - **Explicit cloud/remote/shareable request:** use Expo Simulators after checking access, on any host.
 - **Generic simulator request:** use a suitable local simulator when available. If the host cannot run the requested simulator (for example, iOS on Linux or a cloud sandbox), use Expo Simulators after checking access. A non-macOS host may still support a local Android emulator.
-- Honor an explicit local choice; hand off to the agent CLI's `run:ios` / Xcode / Android Studio as appropriate. Clarify only when the requested environment remains ambiguous and affects the task.
+- Honor an explicit local choice; hand off to the agent CLI's `dev` / Xcode / Android Studio as appropriate. Clarify only when the requested environment remains ambiguous and affects the task.
 
 When the user asks for Expo Simulators, EAS Simulator, or a cloud simulator, start the session and do the
 requested work without asking again. Stop the session when the work is done. Only check in
@@ -56,7 +56,7 @@ npx --yes eas-cli@latest simulator:availability --json
 
 If it's **not** available, don't call `simulator:start` (it will fail). Instead, hand off gracefully so you keep making progress without this skill:
 - Tell the user Expo Simulators needs a paid EAS plan, and point them to their account's billing page to upgrade: `https://expo.dev/accounts/<accountName>/settings/billing` (use `accountName` from the output). Plans are compared at https://expo.dev/pricing. Give only these links, even if the output has other links.
-- Fall back to their normal local path for the actual goal — the agent CLI's `run:ios` / Xcode / Android Studio for a local sim/emulator, an EAS Build, or whatever else fits. Don't dead-end on the cloud sim; the request was almost never "use Expo Simulators specifically."
+- Fall back to their normal local path for the actual goal — the agent CLI's `dev` / Xcode / Android Studio for a local sim/emulator, an EAS Build, or whatever else fits. Don't dead-end on the cloud sim; the request was almost never "use Expo Simulators specifically."
 
 (If `simulator:availability` isn't recognized, the CLI is too old — upgrade, or treat a `not enabled for this account` error from `simulator:start` the same way: stop and fall back.)
 

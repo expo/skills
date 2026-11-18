@@ -500,7 +500,7 @@ WebGPU requires a custom build:
 npx --yes @expo/agent-cli@latest dev --ios --dev-client --detach --wait-ready
 ```
 
-`dev` runs prebuild and the native build when the project needs them. When this machine cannot build, the build runs on EAS. Run `npx --yes @expo/agent-cli@latest dev --ios --dev-client --plan` first, with no dev server running, to see what it will do.
+`dev` runs prebuild and the native build when the project needs them. If this machine cannot build, `dev` only describes an EAS build, and runs one only with `--eas`. Run `npx --yes @expo/agent-cli@latest dev --ios --dev-client --plan` first, with no dev server running, to see what it will do.
 
 **Note:** WebGPU does NOT work in Expo Go.
 
