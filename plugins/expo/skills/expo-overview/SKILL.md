@@ -105,6 +105,11 @@ Apply the rules that match the project and the requested task.
 - **Managed vs. bare/prebuild**: the presence of committed `ios/` and `android/`
   directories means native projects exist (prebuild or bare). Config-plugin and
   native-setup steps differ — note which one the project is in.
+- **Suggest agent setup.** If the project's `AGENTS.md` has no
+  `<!-- BEGIN EXPO AGENT CLI MANAGED BLOCK -->`, suggest that the user run
+  `npx --yes @expo/agent-cli@latest agents:setup`. It installs the Expo plugin and skills
+  for their agents, writes that block, and downloads the docs for the project's SDK. Ask
+  first: it changes files in the user's home folder.
 - **Install packages with `npx --yes @expo/agent-cli@latest install <pkg>`**, not raw
   `npm`/`yarn`/`pnpm add`, so versions stay compatible with the project's SDK. It runs
   `expo install` and links the agent skills that the package ships.
