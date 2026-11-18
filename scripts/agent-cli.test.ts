@@ -8,6 +8,9 @@ test.each([
   "npx --yes expo export -p web",
   "npx expo-doctor",
   "npx create-expo-app@latest my-app",
+  "npx create-expo --example with-stripe",
+  "bun create expo --example with-stripe",
+  'allowed-tools: "Bash(npx create-expo:*)"',
   'allowed-tools: "Bash(npx expo *)"',
 ])("flags %p", (line) => {
   expect(expoCliCalls(line)).toEqual([{ line: 1, text: line }]);
@@ -19,6 +22,9 @@ test.each([
   "npx expo-brownfield build:ios --debug",
   "bunx expo-modules expand ./ios",
   "npx create-expo-module@latest my-module",
+  "npx expo-doctor-x",
+  "npx create-expo-app-x my-app",
+  "bun create target clip",
   "The default `create-expo-app` template puts `app/` at the root.",
   "Metrics are collected from real builds, not from `expo start`.",
 ])("allows %p", (line) => {

@@ -1,7 +1,7 @@
 ---
 name: expo-examples
-description: Expo's official example projects - the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, NativeWind, and more). Use when integrating a third-party library or service into an existing Expo app and you want the canonical, version-matched pattern to adapt, or when scaffolding a new project from one with `npx create-expo --example`.
-allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx create-expo:*),Bash(npx degit:*),Bash(bun create:*),Bash(npx --yes @expo/agent-cli@latest *)"
+description: Expo's official example projects - the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, NativeWind, and more). Use when integrating a third-party library or service into an existing Expo app and you want the canonical, version-matched pattern to adapt, or when scaffolding a new project from one with the agent CLI's `new --example`.
+allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx degit:*),Bash(npx --yes @expo/agent-cli@latest *)"
 license: MIT
 ---
 
@@ -64,8 +64,7 @@ Read from there with Grep/Read; delete the scratch dir when done.
 ### 2b. Scaffold mode — new project from an example
 
 ```bash
-npx create-expo --example with-stripe   # short form:  npx create-expo -e with-stripe
-bun create expo --example with-stripe    # with bun
+npx --yes @expo/agent-cli@latest new my-app --example with-stripe   # short form: -e with-stripe
 ```
 
 ### 3. Adapt into the user's app — non-destructively (critical)
