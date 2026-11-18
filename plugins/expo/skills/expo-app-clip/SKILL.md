@@ -170,7 +170,7 @@ To make the website show the App Clip card instead of the install card, use:
 The AASA file must be live before iOS will trust the association. Use [EAS Hosting](https://docs.expo.dev/eas/hosting/):
 
 ```sh
-npx --yes @expo/agent-cli@latest export -p web
+npx expo export -p web
 npx --yes eas-cli@latest deploy --prod
 ```
 

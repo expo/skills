@@ -82,7 +82,9 @@ Apply the rules that match the project and the requested task.
     for the project's SDK. Prefer them to manual steps. Read a command's `--help` before its
     first use, and run `help workflow` for the order to run them in.
 
-  EAS commands (`eas build`, `eas update`, `eas submit`) stay on `eas-cli`. The agent CLI is
+  Web commands (`npx expo export --platform web`, `npx expo serve`, `npx expo start --web`)
+  stay on Expo CLI, and EAS commands (`eas build`, `eas update`, `eas submit`) stay on
+  `eas-cli`. The agent CLI is
   experimental: if a command fails because of the CLI itself, run the underlying command
   directly. Then tell the user and offer to report the failure with `--category agent-cli` (see Submitting Feedback).
 - **Native app using EAS for delivery?** Route to `eas-app-stores`; its
