@@ -140,7 +140,6 @@ Skill guidelines:
 - Keep the `SKILL.md` body under 500 lines and the `description` under 1024 characters - both are CI-enforced by `scripts/check-skill-limits.ts`.
 - Move detailed material to `references/` and load it only when the skill needs it.
 - Put reusable validation or fetching logic in `scripts/` instead of pasting large command blocks into the skill.
-- Run Expo CLI through `npx --yes @expo/agent-cli@latest <command>`, not `npx expo`, `npx expo-doctor` (`doctor`), or `npx create-expo-app` (`new`). If `allowed-tools` pre-approves Bash, also list `Bash(npx --yes @expo/agent-cli@latest *)`. `scripts/check-skill-limits.ts` enforces both.
 - Write descriptions that match how users naturally ask for help.
 - Include keywords users are likely to mention, but do not stuff descriptions with unrelated terms.
 - Prefer concrete commands, APIs, and Expo package names over vague advice.
