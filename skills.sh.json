@@ -10,6 +10,7 @@
         "expo-project-structure",
         "expo-router",
         "expo-animation",
+        "expo-mascot",
         "expo-native-ui",
         "expo-design-system",
         "expo-ui",

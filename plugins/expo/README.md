@@ -12,6 +12,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Recommends a starting folder structure for new projects
 - Provides UI guidelines following Apple Human Interface Guidelines
 - Builds polished, accessible React Native animations and gestures that stay off the JS thread
+- Creates 2D mascot artwork, Rive rigs and idle loops, and swappable outfits
 - Builds in-app design systems: token themes, reusable component conventions, and style audits
 - Covers Expo Router navigation patterns (stacks, tabs, modals, sheets)
 - Explains native iOS controls, SF Symbols, and visual effects
@@ -42,6 +43,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - Building new Expo apps from scratch
 - Adding navigation, styling, or animations
 - Building or fixing animations, gestures, transitions, press feedback, or haptics
+- Designing a 2D mascot, adding Rive idle motion, or binding interchangeable outfits
 - Setting up a theme with design tokens, or standardizing styles across screens
 - Wiring up data fetching
 - Integrating web libraries via DOM components
@@ -76,6 +78,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 - **expo-project-structure** - Recommended folder structure for new Expo projects
 - **expo-router** - Navigation and routing: file-based routes, links, native stacks, modals, sheets, native tabs, and headers
 - **expo-animation** - Build polished animations and gestures with Reanimated, Gesture Handler, Expo Router, and expo-haptics
+- **expo-mascot** - Create a customizable 2D mascot with a concept sheet, a Rive rig and idle loop, and swappable outfits
 - **expo-native-ui** - Build beautiful native-feeling screens: styling, semantic colors, controls, icons, media, and visual effects
 - **expo-design-system** - Build a design system inside an app: token theme (color, spacing, typography, radius, shadow, motion), reusable component conventions, and design-system drift audits
 - **expo-ui** - Native UI with @expo/ui: universal cross-platform components first, with SwiftUI and Jetpack Compose for platform-specific needs

@@ -29,6 +29,7 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 - `expo-native-ui` — screens, styling, semantic colors, native controls, SF Symbols, media, layout
 - `expo-router` — navigation: file-based routes, tabs / stacks / modals / sheets, links, headers
 - `expo-animation` — motion and gestures: Reanimated worklets, Gesture Handler, screen transitions, sheet and press feedback, haptics, and fixing animation that stutters on device
+- `expo-mascot` — 2D mascot concept sheets, transparent base art, Rive rigging and idle motion, and swappable outfits
 - `expo-ui` — native UI components via `@expo/ui`: BottomSheet, Picker, Slider, Switch, Menu, Button, FieldGroup (grouped form sections), List / ListItem, and more — real SwiftUI on iOS, Jetpack Compose on Android. The universal layer needs SDK 56+ and runs in Expo Go; the drop-in replacements (`@gorhom/bottom-sheet`, `datetimepicker`, …) and platform-specific layers also exist on SDK 55.
 - `expo-design-system` — one visual source of truth: design tokens (color, spacing, typography, radius, shadow, motion), reusable component conventions, and audits for drift (hardcoded colors, spacing, fonts)
 - `expo-tailwind-setup` — Tailwind / NativeWind styling
