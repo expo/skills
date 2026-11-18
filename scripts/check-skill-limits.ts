@@ -23,11 +23,11 @@ function findFiles(dir: string, matches: (name: string) => boolean): string[] {
   return results;
 }
 
-function parseSkill(path: string): { name: string; description: string; body: string; bodyLines: number } {
+function parseSkill(path: string): { name: string; description: string; allowedTools: string | undefined; body: string; bodyLines: number } {
   const content = readFileSync(path, "utf8");
   // captures everything between the two --- fences (group 1 = frontmatter, group 2 = body)
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (!match) return { name: "", description: "", body: "", bodyLines: 0 };
+  if (!match) return { name: "", description: "", allowedTools: undefined, body: "", bodyLines: 0 };
   const frontmatter = match[1];
   const body = match[2];
   // matches "description: <value>" — optional quotes, multiline value
@@ -35,7 +35,9 @@ function parseSkill(path: string): { name: string; description: string; body: st
   const description = descMatch ? descMatch[1].replace(/^"|"$/g, "") : "";
   const nameMatch = frontmatter.match(/^name:\s*(.+?)\s*$/m);
   const name = nameMatch ? nameMatch[1] : "";
-  return { name, description, body, bodyLines: body.split("\n").length };
+  // undefined: no allowed-tools key. "": a YAML block list, which the checks below cannot read.
+  const allowedTools = frontmatter.match(/^allowed-tools:[ \t]*(.*)$/m)?.[1];
+  return { name, description, allowedTools, body, bodyLines: body.split("\n").length };
 }
 
 function syncFeedbackBlock(path: string, skillName: string): void {
@@ -76,7 +78,7 @@ const seenDirs = new Set<string>();
 const errors: string[] = [];
 
 for (const path of skills) {
-  const { name, description, body, bodyLines } = parseSkill(path);
+  const { name, description, allowedTools, body, bodyLines } = parseSkill(path);
   const rel = path.replace(process.cwd() + "/", "");
   const dirName = dirname(path).split("/").pop() ?? "";
   seenDirs.add(dirName);
@@ -100,8 +102,9 @@ for (const path of skills) {
     errors.push(`${rel}: missing canonical feedback block; run "bun scripts/check-skill-limits.ts --fix-feedback"`);
 
   // Skills that pre-approve Bash also pre-approve the agent CLI, which the feedback block runs.
-  const allowedTools = readFileSync(path, "utf8").match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? "";
-  if (allowedTools.includes("Bash(") && !allowedTools.includes(AGENT_CLI_ALLOWED_TOOL))
+  if (allowedTools === "")
+    errors.push(`${rel}: write allowed-tools as one quoted line, so this check can read it`);
+  else if (allowedTools?.includes("Bash(") && !allowedTools.includes(AGENT_CLI_ALLOWED_TOOL))
     errors.push(`${rel}: allowed-tools pre-approves Bash but not ${AGENT_CLI_ALLOWED_TOOL}`);
 
   // paid skills disclose costs up front (dash style varies: em dash or hyphen)

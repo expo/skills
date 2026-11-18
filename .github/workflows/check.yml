@@ -36,7 +36,7 @@ jobs:
       - name: Check skill requirements
         id: skill-limits
         continue-on-error: true
-        run: bun scripts/check-skill-limits.ts
+        run: bun test scripts/agent-cli.test.ts && bun scripts/check-skill-limits.ts
 
       - name: Check EAS CLI command examples
         id: eas-command-check
@@ -101,7 +101,7 @@ jobs:
             echo "| --- | --- | --- |"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun scripts/check-skill-limits.ts"
+          report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun test scripts/agent-cli.test.ts && bun scripts/check-skill-limits.ts"
           report "EAS CLI command examples" "$EAS_COMMAND_CHECK_OUTCOME" "bun test scripts/check-eas-cli-commands.test.ts && bun scripts/check-eas-cli-commands.ts"
           report "private release status summaries" "$STATUS_SUMMARY_TEST_OUTCOME" "bun test scripts/status-summary.test.ts"
           report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
