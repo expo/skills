@@ -14,6 +14,9 @@ test.each([
   'allowed-tools: "Bash(npx expo *)"',
   "npx expo export -p ios --clear",
   "npx expo export",
+  "npx expo install expo-image && npx expo export --platform web",
+  "`npx expo serve` or `npx expo prebuild`",
+  "`npx expo start --clear`, then `--web`",
 ])("flags %p", (line) => {
   expect(expoCliCalls(line)).toEqual([{ line: 1, text: line }]);
 });
