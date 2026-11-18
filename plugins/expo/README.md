@@ -101,7 +101,7 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ## Feedback
 
-Every skill includes instructions to submit specific, actionable feedback with `npx --yes @expo/agent-cli@latest feedback`. The agent asks the user before it sends a report.
+Every skill tells the agent to offer a report to Expo when the agent finds a problem in a skill or an Expo tool. The agent asks the user before it sends a report with the `feedback` command of `@expo/agent-cli`.
 
 ## License
 
