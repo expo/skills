@@ -29,7 +29,7 @@ references/
 
 **CRITICAL: Always try Expo Go first before creating custom builds.**
 
-Most Expo apps work in Expo Go without any custom native code. Before running `npx --yes @expo/agent-cli@latest run:ios` or `npx --yes @expo/agent-cli@latest run:android`:
+Most Expo apps work in Expo Go without any custom native code. Before you make a custom build with `npx --yes @expo/agent-cli@latest dev --ios --dev-client` (or `--android`):
 
 1. **Check Expo Go support**: Run `npx --yes @expo/agent-cli@latest status`. It says whether the project runs in Expo Go and whether a change needs a rebuild
 2. **Start with Expo Go**: Run `npx --yes @expo/agent-cli@latest start` and scan the QR code with Expo Go
@@ -38,7 +38,7 @@ Most Expo apps work in Expo Go without any custom native code. Before running `n
 
 ### When Custom Builds Are Required
 
-You need `npx --yes @expo/agent-cli@latest run:ios/android` or `npx --yes eas-cli@latest build` ONLY when using:
+You need a custom build (`npx --yes @expo/agent-cli@latest dev --ios --dev-client`, or `npx --yes eas-cli@latest build`) ONLY when using:
 
 - **Local Expo modules** (custom native code in `modules/`)
 - **Apple targets** (widgets, app clips, extensions via `@bacons/apple-targets`)

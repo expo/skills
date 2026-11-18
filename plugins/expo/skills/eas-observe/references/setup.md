@@ -514,7 +514,7 @@ If the user needs ANR/OOM capture or native symbolication today, a separate cras
 { "expo": { "extra": { "eas": { "observe": { "endpointUrl": "https://your-endpoint.com" } } } } }
 ```
 
-The URL is baked into the native layer at build time, so run `npx --yes @expo/agent-cli@latest prebuild` and rebuild after changing it. If the backend expects standard OTLP paths without the project-ID prefix, route through a collector.
+The URL is baked into the native layer at build time, so rebuild after changing it: `npx --yes @expo/agent-cli@latest dev --ios --dev-client` (or `--android`) runs prebuild and the native build when the native config changed. If the backend expects standard OTLP paths without the project-ID prefix, route through a collector.
 
 ## Quick checklist
 
