@@ -152,7 +152,7 @@ npx --yes @expo/agent-cli@latest dev --ios --dev-client --detach --wait-ready
 npx --yes @expo/agent-cli@latest start --dev-client
 ```
 
-If no dev client is installed, `dev` builds one, and the build can run on EAS. Run `dev --ios --dev-client --plan` first to see what it will do.
+If no dev client is installed, `dev` builds one, and the build can run on EAS. Run `dev --ios --dev-client --plan` first, with no dev server running, to see what it will do.
 
 To open a route in the running dev client, run `npx --yes @expo/agent-cli@latest navigate /<route>`.
 
