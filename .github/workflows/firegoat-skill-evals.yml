@@ -1,0 +1,35 @@
+name: Firegoat skill evals
+
+on:
+  workflow_run:
+    workflows: [Request Firegoat evals]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  evaluate:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.path == '.github/workflows/request-firegoat-evals.yml' &&
+      github.event.workflow_run.head_repository != null
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    concurrency:
+      group: firegoat-${{ github.event.workflow_run.head_repository.id }}-${{ github.event.workflow_run.head_branch }}
+    steps:
+      # Only the controller from the default branch executes on this runner.
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check skill coverage and run reviewed evals
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FIREGOAT_API_KEY: ${{ secrets.FIREGOAT_API_KEY }}
+        run: python3 scripts/firegoat/pr_evals.py

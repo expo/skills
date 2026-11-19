@@ -149,6 +149,20 @@ run that skill's own validation.
 costs callout (step 4), the Codex agent file (step 7), the `skills.sh.json` grouping (step 8),
 and the feedback block (step 9) all fail CI when violated.
 
+## Firegoat evals on pull requests
+
+Every PR that adds or edits an installable skill needs a passing Firegoat eval for each changed skill. Edits to references and scripts count. Apply the `no-eval` PR label to skip the check. Removing the label requests the check again.
+
+CI finds active prompts in Expo's Firegoat organization tagged `expo-skills-ci` whose titles start with the skill name in brackets and a space, for example `[expo-router] Navigate from a recipe list to a detail screen`. Multiple matching cases all run. The PR comment lists their scenario titles. Review the task and checks against the PR diff to decide whether they cover the changed behavior.
+
+If a skill lacks a valid case, the check fails before queuing runs. Copy the [authoring prompt](scripts/firegoat/authoring-prompt.md) from the PR comment into your coding agent. It checks your Firegoat MCP connection and skills, then proposes the agent's task (`text`), the expected result (`endGoal`), and the verifier criteria (`checks`). The install command in the comment contains the exact PR head commit. In the saved case, use `{{skill_owner}}/{{skill_repo}}/plugins#{{skill_sha}}` as the install source. CI supplies the owner, repository name, and commit SHA on each run. Review the draft, approve the case, then select **Re-run jobs** on the Firegoat workflow.
+
+Setup installs every skill under `plugins/` from the exact PR head commit for every agent the skills CLI supports. This includes `expo-overview`, the other Expo and EAS skills, and the experimental skills. Each case runs once with Claude Code and Sonnet 4.6. It checks the trace for activation of its target skill and grades at least one observable task outcome. The PR comment links to each result and names any required checks or end goal that scored zero. Setup errors, unmet checks, and timeouts fail the commit status. Rerunning the Firegoat workflow can retry a finished case on the same commit.
+
+When a case needs an authenticated EAS CLI command, bind the Expo Firegoat workspace's saved credential named `EXPO_TOKEN` to the agent's `EXPO_TOKEN` environment variable with `envCredentials`. Use a token scoped to the test account. Firegoat supplies it to the agent after setup. On a fork or bot-authored PR, a repository writer must review the linked revision and rerun the Firegoat job to authorize that commit to use the token. Cases that need no login run with an empty environment.
+
+The workflow uses the GitHub Actions secret `FIREGOAT_API_KEY` for an Expo Firegoat account with hosted runs enabled. Only the default-branch controller receives the key. To enforce the result before merging, select the `Firegoat skill evals` commit status in the repository's branch rules.
+
 ### Syncing `expo-animation`
 
 `expo-animation` mirrors `skills/animate-expo` from `emilkowalski/skills`. Pull upstream changes

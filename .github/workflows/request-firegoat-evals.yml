@@ -1,0 +1,14 @@
+name: Request Firegoat evals
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions: {}
+
+jobs:
+  request:
+    runs-on: ubuntu-latest
+    steps:
+      # The companion workflow on main handles the Firegoat credential, even for forks.
+      - run: echo "Requested a Firegoat coverage check."
