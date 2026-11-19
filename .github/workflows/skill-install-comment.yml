@@ -71,17 +71,31 @@ jobs:
             }
 
             const source = `${pr.head.repo.full_name}#${pr.head.sha}`;
-            const sections = [...skills].sort().map(name => {
+            const isFork = pr.head.repo.id !== pr.base.repo.id;
+            const sections = [marker];
+            if (isFork) {
+              const revision = `${pr.head.repo.html_url}/tree/${pr.head.sha}`;
+              sections.push([
+                "> [!WARNING]",
+                `> This PR comes from the fork \`${pr.head.repo.full_name}\`.`,
+                `> Review the skill and its scripts at [\`${pr.head.sha}\`](${revision}) before installing.`,
+              ].join("\n"));
+            }
+            for (const name of [...skills].sort()) {
               const command = `npx --yes skills@latest add '${source}' --skill '${name}' --yes`;
-              return [
+              sections.push(
                 `### Test \`${name}\``,
                 "Local install (current project)",
                 ["```sh", command, "```"].join("\n"),
-                "Global install (user account)",
-                ["```sh", `${command} --global`, "```"].join("\n"),
-              ].join("\n\n");
-            });
-            const body = [marker, ...sections].join("\n\n");
+              );
+              if (!isFork) {
+                sections.push(
+                  "Global install (user account)",
+                  ["```sh", `${command} --global`, "```"].join("\n"),
+                );
+              }
+            }
+            const body = sections.join("\n\n");
             if (!existing) {
               await github.rest.issues.createComment({ ...issue, body });
             } else if (body !== existing.body) {
