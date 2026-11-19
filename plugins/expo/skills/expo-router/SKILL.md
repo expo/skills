@@ -64,7 +64,7 @@ import { Link } from 'expo-router';
 </Link>
 ```
 
-Whenever possible, include a `<Link.Preview>` to follow iOS conventions. Add context menus and previews frequently to enhance navigation.
+Add preview/context-menu actions when they serve a real task. Every enabled action must work; do not add placeholder Share/Delete handlers or previews to every link.
 
 ## Stack
 
@@ -105,12 +105,12 @@ import { Link } from "expo-router";
       onPress={handleBlockPress}
     />
     <Link.Menu title="More" icon="ellipsis">
-      <Link.MenuAction title="Copy" icon="doc.on.doc" onPress={() => {}} />
+      <Link.MenuAction title="Copy" icon="doc.on.doc" onPress={handleCopyPress} />
       <Link.MenuAction
         title="Delete"
         icon="trash"
         destructive
-        onPress={() => {}}
+        onPress={handleDeletePress}
       />
     </Link.Menu>
   </Link.Menu>
@@ -119,7 +119,7 @@ import { Link } from "expo-router";
 
 ## Link Previews
 
-Use link previews frequently to enhance navigation:
+Use a link preview when the destination has a useful preview:
 
 ```tsx
 <Link href="/settings">
