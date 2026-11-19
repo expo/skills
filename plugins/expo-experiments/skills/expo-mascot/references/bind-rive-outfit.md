@@ -4,13 +4,13 @@ Follow the CLI and sign-in checks in [Set up a Rive project](./set-up-rive-proje
 
 ## Resolve the garment
 
-Use a fitted transparent PNG if the user provided one. If the request supplies a photo or description, use [Create an outfit image](./create-outfit-image.md) to identify the slot, prepare the garment PNG on the approved base canvas, and check the overlay. Honor a slot or placement the user specified. Ask where to attach the garment only when the intended placement cannot be inferred.
+Accept a fitted image with alpha, including a PNG supplied by the user. Encode the app-ready garment as lossless WebP while preserving its full canvas and placement. If the request supplies a photo or description, use [Create an outfit image](./create-outfit-image.md) to identify the slot, prepare the garment WebP on the approved base canvas, and check the overlay. Honor a slot or placement the user specified. Ask where to attach the garment only when the intended placement cannot be inferred.
 
 Inspect the current artboard, state machine, view model, and rig. Reuse their names, IDs, and existing slot bindings. A hat follows the head, while sleeves follow the torso and arm deformation. Match the base image's scale, origin, and transform in the artboard. For garments spanning moving regions, use the relevant bones or matching mesh weights. A pair of shoes must follow the two feet as each moves. Check draw order against the base, other slots, and any occluding limbs.
 
 ## Author the image binding
 
-Bind a drawable image in the target slot to a View Model `Image` property. Give the node and its default instance a transparent asset at the full base canvas size if the slot starts empty. Keep the same canvas registration for every replacement. If the slot needs multiple drawables, bind each to the same image property and crop or mesh each to the region it follows.
+Bind a drawable image in the target slot to a View Model `Image` property. Give the node and its default instance a fully transparent lossless WebP at the full base canvas size if the slot starts empty. Keep the same canvas registration for every replacement. If the slot needs multiple drawables, bind each to the same image property and crop or mesh each to the region it follows.
 
 Use `rive docs data` and `rive schema Image --bindable` for the installed RML syntax. In the CLI, `ViewModelPropertyAssetImage` declares the property, `ViewModelInstanceAssetImage` sets its default asset, and a `DataBindContext` nested under the `Image` connects it to `Image.assetId`.
 
@@ -21,7 +21,7 @@ This example defines an empty `hat` slot. Set the artboard's `viewModelId` to `0
     <DataBindContext sourcePathIds="0:50-0:51" propertyKey="206"/>
 </Image>
 
-<ImageAsset file="assets/transparent.png" name="Transparent Outfit" id="0:60"/>
+<ImageAsset file="assets/transparent.webp" name="Transparent Outfit" id="0:60"/>
 
 <ViewModel defaultInstanceId="0:52" name="MascotOutfit" id="0:50">
     <ViewModelPropertyAssetImage name="hat" id="0:51"/>
@@ -37,7 +37,7 @@ Add to the existing view model when one is already bound. Verify the property ke
 
 Run `rive <project-dir> --verify` and `rive inspect <project-dir>` to check the scene and binding. Preview the garment through a full `idle` loop. If needed, use a temporary copy of the project with the garment as the test instance's default image. Rive's CLI preview can show authored assets, while Expo verifies a new image supplied at runtime. Restore the intended default before exporting and verify again. Use [Add mascot idle motion](./add-mascot-idle-motion.md) for capture guidance.
 
-Export the updated runtime file using the local export instructions in [Set up a Rive project](./set-up-rive-project.md). In an Expo development build using the exported asset, load a fitted PNG that was absent from the exported file. Keep one bound View Model instance on `RiveView`. Load the new image with `RiveImages.loadFromBytesAsync` or `RiveImages.loadFromURLAsync` and set it with `instance.imageProperty(slot)?.set(image)`. Reapply the transparent image to clear an empty slot. Verify equip, swap, and clear while the same idle loop continues, and inspect alignment and overlap at the motion extremes. See [Adding Rive to Expo](https://rive.app/docs/runtimes/react-native/adding-rive-to-expo) and [React Native Image data binding](https://rive.app/docs/runtimes/react-native/data-binding#images).
+Export the updated runtime file using the local export instructions in [Set up a Rive project](./set-up-rive-project.md). In an Expo development build using the exported asset, load a fitted WebP that was absent from the exported file. Keep one bound View Model instance on `RiveView`. Load the new image with `RiveImages.loadFromBytesAsync` or `RiveImages.loadFromURLAsync`. Get the bound property with `instance.imageProperty(slot)`, check that it exists, and call `set(image)` on it. Reapply the transparent WebP to clear the slot. To wait for the native binding before displaying the first outfit, await the property’s `setValueAsync(image)` method with `@rive-app/react-native` 0.5.16 or later. Verify equip, swap, and clear while the same idle loop continues, and inspect alignment and overlap at the motion extremes. See [Adding Rive to Expo](https://rive.app/docs/runtimes/react-native/adding-rive-to-expo) and [React Native Image data binding](https://rive.app/docs/runtimes/react-native/data-binding#images).
 
 For a catalog, make a contact sheet of worn items with the neutral frame and both extremes of the idle motion. Include tops with the paws visible and shoes with both soles in frame. Inspect the actual runtime rendering at display size for sliding cuffs, exposed paws inside closed shoes, and rear edges drawn over the body. Correct the art, attachment, or draw order at its source and render the affected combinations again before recording the result.
 

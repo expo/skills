@@ -38,9 +38,9 @@ Before any Rive action, check CLI installation and sign-in using the [Rive setup
 
 ## Create an outfit image
 
-`create-outfit-image` uses a description or reference image to make a fitted garment on the approved mascot's canvas. Return the transparent outfit image and a try-on preview. Follow [Create an outfit image](./references/create-outfit-image.md).
+`create-outfit-image` uses a description or reference image to make a fitted garment on the approved mascot's canvas. Return the fitted outfit as a lossless WebP with alpha and include a try-on preview. Follow [Create an outfit image](./references/create-outfit-image.md).
 
-> Use this raincoat photo to make a transparent outfit PNG that fits my mascot.
+> Use this raincoat photo to make a transparent outfit WebP that fits my mascot.
 
 ## Bind a Rive outfit
 
