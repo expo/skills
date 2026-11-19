@@ -1,6 +1,6 @@
 # Create an outfit image
 
-Use the approved base PNG and an outfit description, reference image, or existing garment asset. If the mascot already has a Rive rig, read its attachment points and artwork-to-artboard transform before positioning the garment.
+Use the approved base image and an outfit description, reference image, or existing garment asset. If the mascot already has a Rive rig, read its attachment points and artwork-to-artboard transform before positioning the garment.
 
 ## Identify the slot and placement
 
@@ -24,4 +24,4 @@ Use a slot named in the request. Otherwise, infer the slot from the garment and 
 
 For a top, compare the dressed and bare silhouettes at the chin, shoulders, cuffs, and waist. The back of a hood or collar disappears behind the neck. Sleeves wrap around the arms and end at the wrists or upper arms appropriate to the design. Check for exposed strips of the original torso, doubled outlines, and a flat hem floating across the belly. For shoes, inspect each heel, toe, and ankle separately. Preserve the shoe’s proportions and let the opening surround the ankle. Redraw the affected edge or use a front/back layer when a single flat overlay cannot produce that overlap.
 
-Return the fitted `.webp` and the try-on preview. If requested, include a smaller WebP thumbnail separately. State the slot and what it should follow in the rig. To make the image swappable, continue with [Bind a Rive outfit](./bind-rive-outfit.md).
+Return the fitted `.webp` and a WebP try-on preview. If requested, include a smaller WebP thumbnail separately. State the slot and what it should follow in the rig. To make the image swappable, continue with [Bind a Rive outfit](./bind-rive-outfit.md).

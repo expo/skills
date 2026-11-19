@@ -20,10 +20,10 @@ Recheck setup before resuming. Treat signing or sync failures the same way if th
 
 1. Open the existing CLI project or create a new one in an empty directory with `rive create <project>`. To start from a local editable file, use `rive create <project> --from-rev=<file.rev>`. To start from an Editor file, use `rive create <project> --from-remote-file=<fileId>`. Preserve the existing project's names and IDs.
 2. Read the generated project instructions. Use `rive docs rigging`, `rive docs state-machines`, and `rive schema <Type>` to check the local RML syntax.
-3. Add the approved transparent base as source art. Record how its full canvas maps to the artboard so outfit images use the same origin and scale. Leave room for motion and wearables.
+3. Add the approved transparent base as an `ImageAsset` in the Rive project. Record how its full canvas maps to the artboard so outfit images use the same origin and scale. Leave room for motion and wearables.
 4. Rig the head, torso, and visible limbs with movable pivots and named attachment points. Skin the source image with a triangulated mesh and weighted bones where the art needs to bend. For a rigid part such as an accessory, use a separate layer attached to its joint. Preserve the approved pixels, especially at the face and overlapping joints. Keep the paw baseline stable.
 5. Select or create the artboard and state machine. Wire the artboard to the machine and use `rive inspect` to read their exact names. Use those names, including case and spaces, in the handoff and any Expo code that loads the asset.
-6. Verify the scene and capture the neutral pose. Compare it with the approved PNG at the same scale. Test a small motion on the rig to confirm the joints deform or follow as intended. Inspect the face, seams, silhouette, and paw baseline before proceeding.
+6. Verify the scene and capture the neutral pose. Compare it with the approved base at the same scale. Test a small motion on the rig to confirm the joints deform or follow as intended. Inspect the face, seams, silhouette, and paw baseline before proceeding.
 
 ```bash
 rive "$project" --verify

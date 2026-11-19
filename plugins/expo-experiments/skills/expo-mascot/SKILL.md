@@ -10,6 +10,8 @@ Pick the action that matches the request and open its reference. Start with any 
 
 Default generated artwork to a square canvas, including each cell of the concept sheet. Use a front-facing, standing idle pose unless requested otherwise. Use the approved base as the reference for the silhouette, proportions, placement, and outfit registration. Keep the base and outfit art aligned on the same full canvas.
 
+Return generated mascot artwork as lossless WebP. Preserve transparency where the artwork needs it. If the image tool returns another format, encode the finished artwork as WebP before handing it off.
+
 Before any Rive action, check CLI installation and sign-in using the [Rive setup checks](./references/set-up-rive-project.md#check-the-cli-and-sign-in). If a prerequisite fails, tell the user the specific next step and pause that action.
 
 ## Create a mascot image sheet
@@ -20,15 +22,15 @@ Before any Rive action, check CLI installation and sign-in using the [Rive setup
 
 ## Create a base image
 
-`create-base-image` turns a selected concept into one high-resolution PNG with a transparent background. Use a square canvas by default. Follow [Create a base image](./references/create-base-image.md).
+`create-base-image` turns a selected concept into one high-resolution lossless WebP with alpha. Use a square canvas by default. Follow [Create a base image](./references/create-base-image.md).
 
-> Turn concept 4 into a high-resolution transparent PNG and preserve its proportions.
+> Turn concept 4 into a high-resolution transparent WebP and preserve its proportions.
 
 ## Create a Rive asset
 
 `create-rive-asset` builds a deformable rig from the approved base and returns the project, runtime asset, and Rive Editor link. Follow [Set up the Rive project](./references/set-up-rive-project.md).
 
-> Build a Rive rig from this base PNG and send me the Editor link.
+> Build a Rive rig from this base image and send me the Editor link.
 
 ## Add idle motion
 
