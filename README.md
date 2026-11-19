@@ -138,10 +138,11 @@ Skills whose core purpose uses paid Expo Application Services (EAS).
 
 ### Experimental
 
-Skills for Expo APIs that are not finalized. Content may change or be retired; skills graduate to the groups above when the underlying API stabilizes. These ship in the separate `expo-experiments` plugin (install it alongside `expo`), or individually via the skills CLI.
+Skills for experimental workflows and Expo APIs that are still evolving. These ship in the separate `expo-experiments` plugin (install it alongside `expo`) and are also available individually via the skills CLI.
 
 | Skill | Use it for |
 | --- | --- |
+| `expo-mascot` | Create a customizable 2D mascot with a concept sheet, a Rive rig and idle loop, and swappable outfits. |
 | `expo-migrate-module` | Migrating a Swift Expo module from the Modules API 1.0 definition DSL to the 2.0 macro API. |
 
 ## Expo MCP Server

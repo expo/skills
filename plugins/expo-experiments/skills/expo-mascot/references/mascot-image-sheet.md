@@ -1,0 +1,6 @@
+# Create a mascot image sheet
+
+1. Use the supplied character description, reference image, or video. If the user supplies none, ask: "Describe the mascot you want, or attach a reference image or video." For a video, use representative frames to understand the character and pose.
+2. Give the available image-generation tool the references and a single sheet brief. Request nine original 2D concepts in a square 3 × 3 grid with equal square cells. Use the same framing, pose, and display scale so the user can compare silhouettes, proportions, and features. Default to front-facing, full-body figures in a standing idle pose. Keep every figure inside its cell and place numbers 1 through 9 in reading order, clear of the artwork.
+3. Inspect the result. Check the count, grid geometry, legible numbers, and whether all nine silhouettes are visible and meaningfully different. If the generator cannot lay out the exact grid or labels, arrange the generated concepts into equal square cells and add the labels during composition. If image generation is unavailable, tell the user which capability is missing and ask them to enable an image-generation tool or supply a concept sheet.
+4. Return one lossless WebP sheet and ask the user which number to develop. Use that exact tile as the visual source for the base image.
