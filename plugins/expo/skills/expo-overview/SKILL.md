@@ -17,7 +17,7 @@ the filesystem but need different skills.
 2. **Read the user's goal** — what outcome do they want, in plain terms?
 3. **Classify it** using the Skill Map below, translating casual phrasing to a goal.
 4. **Confirm intent** if ambiguous ("Sounds like you want to ship to the stores — that's
-   `eas-app-stores`. Right?"), then load that skill's `SKILL.md` and follow it.
+   `expo-app-stores`. Right?"), then load that skill's `SKILL.md` and follow it.
 5. **Trust the leaf skill** — it has its own detection logic and steps. Don't improvise.
 
 ## Skill Map (by goal)
@@ -39,14 +39,14 @@ Match the goal to a category, then the skill, then load that leaf's `SKILL.md`.
 > **Component selection rule:** whenever you need a UI component (list rows, bottom sheets, pickers, sliders, menus, buttons, segmented controls, toggles), **consult `expo-ui` first** to check whether `@expo/ui` has a native equivalent before reaching for a React Native built-in or a community library. Native `@expo/ui` components give the best platform fit, and on SDK 56+ the universal ones run in Expo Go with no custom build. Load `expo-ui` alongside `expo-native-ui` for any app that renders lists, detail sheets, or form controls. One exception: `@expo/ui` `List` renders native grouped rows (an iOS Settings screen), **not** a virtualized list — use `FlatList` / `FlashList` for large datasets.
 
 **Ship & operate**
-- `eas-app-stores` — build and submit iOS/Android apps (Expo and other React Native projects, plus existing native apps), TestFlight, versions, and store metadata
-- `eas-hosting` — deploy the web bundle to EAS Hosting; also author Expo Router API routes (`+api.ts` handlers) and their environments / domains
-- `eas-workflows` — EAS Workflow YAML and CI/CD pipelines
-- `eas-simulator` — run and drive the app on a remote iOS / Android simulator with Expo Simulators (also called EAS Simulator)
+- `expo-app-stores` — build and submit iOS/Android apps (Expo and other React Native projects, plus existing native apps), TestFlight, versions, and store metadata
+- `expo-hosting` — deploy the web bundle to EAS Hosting; also author Expo Router API routes (`+api.ts` handlers) and their environments / domains
+- `expo-workflows` — EAS Workflow YAML and CI/CD pipelines
+- `expo-simulator` — run and drive the app on a remote iOS / Android simulator with Expo Simulators (also called EAS Simulator)
 - `expo-dev-client` — custom development builds
-- `eas-update` — configure, publish, test, and debug compatible over-the-air updates
-- `eas-update-insights` — OTA update health: crash rate, adoption, payload size
-- `eas-observe` — startup / launch / TTI performance with EAS Observe
+- `expo-update` — configure, publish, test, and debug compatible over-the-air updates
+- `expo-update-insights` — OTA update health: crash rate, adoption, payload size
+- `expo-observe` — startup / launch / TTI performance with EAS Observe
 
 **Extend natively**
 - `expo-module` — native modules and views (Swift / Kotlin) with the Expo Modules API
@@ -64,7 +64,7 @@ Some everyday phrasings don't obviously map to a skill name — translate before
 - "Make it look native" → grouped controls / settings forms = `expo-ui`; screens, styling = `expo-native-ui`; motion = `expo-animation`; navigation = `expo-router`.
 - "Make the screens consistent" / "clean up the styling" / "set up a theme or design tokens" → `expo-design-system`.
 - "It looks AI-generated" / "too generic, not native" → `expo-design-system` (named native-slop tells + audit), with `expo-native-ui` for the platform idioms.
-- "Ship it" / "get an .ipa or .apk" / "release to the stores" / "put my Swift app on TestFlight" → `eas-app-stores` (build + submit, TestFlight, versions, store metadata).
+- "Ship it" / "get an .ipa or .apk" / "release to the stores" / "put my Swift app on TestFlight" → `expo-app-stores` (build + submit, TestFlight, versions, store metadata).
 - "I'm new / where do I start" → scaffold first (see Shared setup rules), then route by goal.
 
 ## Shared setup rules
@@ -85,7 +85,7 @@ Apply the rules that match the project and the requested task.
   EAS commands (`eas build`, `eas update`, `eas submit`) stay on `eas-cli`. The agent CLI is
   experimental: if a command fails because of the CLI itself, run the underlying command
   directly. You can offer to report the failure with `--category agent-cli` (see Submitting Feedback).
-- **Native app using EAS for delivery?** Route to `eas-app-stores`; its
+- **Native app using EAS for delivery?** Route to `expo-app-stores`; its
   `references/native-ios.md` covers SwiftUI/UIKit on iOS. Keep the existing native
   project. Apply EAS auth/linking below; Expo scaffolding, SDK, and package-install
   rules do not apply to this path.
@@ -120,7 +120,7 @@ Apply the rules that match the project and the requested task.
 
 ## When to skip the router hop
 
-- Only when the user explicitly named a specific `expo-*` / `eas-*` skill → load that
+- Only when the user explicitly named a specific `expo-*` skill → load that
   skill directly.
 - A fully-specified task (SDK version pinned, file layout given, libraries named) is
   **not** a reason to skip: the shared rules above still apply — check them, then route

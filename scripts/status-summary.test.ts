@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
-const script = join(import.meta.dir, "../plugins/expo/skills/eas-app-stores/scripts/status-summary.cjs");
+const script = join(import.meta.dir, "../plugins/expo/skills/expo-app-stores/scripts/status-summary.cjs");
 const id = "03d5dfcf-736c-475a-8730-af039c3f4d06";
 const otherId = "13d5dfcf-736c-475a-8730-af039c3f4d06";
 const job = { id, status: "FINISHED", platform: "IOS" };

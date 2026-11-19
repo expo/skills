@@ -23,19 +23,13 @@ plugins/expo/skills/<skill-name>/
   agents/openai.yaml  # Codex trigger metadata
 ```
 
-### 2. Name it `expo-*` or `eas-*`
+### 2. Name it `expo-*`
 
-Names are lowercase kebab-case (max 64 chars). The prefix signals the free/paid boundary:
+Use lowercase kebab-case (max 64 chars) with the `expo-` prefix. Choose names that reflect
+what users ask for, such as `expo-router`, `expo-hosting`, and `expo-app-stores`.
 
-- **`expo-*`** - open-source framework skills: the Expo SDK, Expo Router, React Native, and
-  local tooling. Examples: `expo-router`, `expo-dom`, `expo-module`, `expo-web-to-native`.
-- **`eas-*`** - skills whose core purpose is a paid Expo Application Services product.
-  Examples: `eas-hosting`, `eas-app-stores`, `eas-workflows`, `eas-observe`, `eas-simulator`.
-
-Name after what users say, and prefer the real product or package name (e.g. `eas-hosting`,
-not `expo-api-routes`). To rename an existing skill, `git mv` the directory (to preserve
-history), update the frontmatter `name:`, and fix every reference (catalogs, `agents/openai.yaml`,
-cross-links in other skills).
+To rename a skill, move the directory and update the frontmatter `name`, catalogs,
+`agents/openai.yaml`, feedback subject, and references from other skills.
 
 ### 3. Decide free vs paid - and be strict about it
 
@@ -46,10 +40,10 @@ EAS product** (EAS Build, Submit, Hosting, Update, Workflows, Observe, Simulator
   is app-store distribution, not EAS. `expo-app-clip` is a framework skill even though shipping a
   Clip needs an Apple account.
 - If authoring is free and only *deploying* is paid, it is usually still framework - unless the
-  skill is fundamentally about the paid service. (`eas-hosting` is the deploy skill, so it is
+  skill is fundamentally about the paid service. (`expo-hosting` is the deploy skill, so it is
   paid; free API-route authoring lives inside it.)
 - Litmus test: *can a developer get the main value of this skill without paying Expo?*
-  Yes → framework (`expo-*`). No → paid (`eas-*`).
+  Yes → **Framework (open source)**. No → **Services & paid distribution**.
 
 ### 4. Add a costs note for paid skills
 
@@ -82,8 +76,8 @@ When a skill triggers, its whole `SKILL.md` loads into the agent's context. Shor
 - In runnable shell examples, use `npx --yes eas-cli@latest <command>` instead of bare `eas <command>`.
   Prose and headings can use `eas <command>` so they match how users ask for help. CI checks this
   with `bun scripts/check-eas-cli-commands.ts`.
-- One skill = one job. If it grows two distinct triggers, split it (that is why `eas-hosting` and
-  `eas-app-stores` are separate skills).
+- One skill = one job. If it grows two distinct triggers, split it (that is why `expo-hosting` and
+  `expo-app-stores` are separate skills).
 - Keep skills and references focused on requirements, supported workflows, and instructions.
   Put test results and validation history in fixture READMEs or PR descriptions.
 

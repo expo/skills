@@ -136,7 +136,7 @@ Do not add a `version` key. Anthropic and OpenAI skill validators reject it. Ver
 
 Skill guidelines:
 
-- Name skills `expo-*` (open-source framework) or `eas-*` (paid EAS service). Paid skills open the body with a costs/plan-limits callout. See `CONTRIBUTING.md` for the full rules.
+- Use the `expo-*` prefix for every skill. Skills in the **Services & paid distribution** catalog group open with a costs/plan-limits callout. See `CONTRIBUTING.md` for the full rules.
 - Keep the `SKILL.md` body under 500 lines and the `description` under 1024 characters - both are CI-enforced by `scripts/check-skill-limits.ts`.
 - Move detailed material to `references/` and load it only when the skill needs it.
 - Put reusable validation or fetching logic in `scripts/` instead of pasting large command blocks into the skill.
@@ -240,7 +240,7 @@ Marketplace entries are `expo` and `expo-experiments` only. Do not add compatibi
 
 Follow the full guide in `CONTRIBUTING.md`. In short:
 
-1. Pick the name per the naming rule: `expo-*` for open-source framework skills, `eas-*` for paid EAS service skills.
+1. Pick a name with the `expo-*` prefix and choose the catalog group based on the skill's core purpose.
 2. Create `plugins/expo/skills/<skill-name>/SKILL.md` with a description that says what the skill does and when to use it. Paid skills open with a costs/plan-limits callout.
 3. Add focused reference files under `references/` when the skill needs more detail than belongs in the main `SKILL.md`, scripts under `scripts/` only for reusable logic, and `agents/openai.yaml` for Codex triggering.
 4. Add the canonical feedback block with `bun scripts/check-skill-limits.ts --fix-feedback`; CI verifies that its subject matches the skill name.

@@ -15,7 +15,7 @@ flowchart TD
     A3 --> A4[4 · Strangle screens to native<br/>highest-value first · expo-router]
     A4 -->|more screens| A4
     A4 --> A5[5 · Wire data / auth / storage<br/>· expo-data-fetching]
-    A5 --> A6[6 · Ship · eas-app-stores]
+    A5 --> A6[6 · Ship · expo-app-stores]
 ```
 
 ## Principles
@@ -39,7 +39,7 @@ The migration is a long repeat-until-done loop, so the first move is to **write 
 
 Read the repo and produce `migration-progress.md`, the durable worklist the rest of the migration checks off. Make two cuts:
 
-- **Screens vs backend.** Page routes (`page.tsx`) are screens you migrate; server routes (`route.ts`), the ORM, and auth handlers stay server-side. Decide the backend once: keep it deployed (the native app becomes an HTTP client) or move it to EAS Hosting (`eas-hosting`).
+- **Screens vs backend.** Page routes (`page.tsx`) are screens you migrate; server routes (`route.ts`), the ORM, and auth handlers stay server-side. Decide the backend once: keep it deployed (the native app becomes an HTTP client) or move it to EAS Hosting (`expo-hosting`).
 - **Bucket each screen** by how it should land: **port-as-is** (presentational → ships in a DOM webview), **nativize-now** (hot, or needs native feel — gestures, lists, keyboard), **nativize-later**, or **hybrid** (a native shell around a web sub-tree, e.g. a chat list wrapping a markdown renderer).
 
 Note the framework signals as you read — RSC vs client, Tailwind/shadcn, where data is fetched — since they decide how each screen ports (false-friends has the mappings; async Server Components in particular must be split into a client fetch + a presentational component before they can move). **Flag third-party services/SDKs too** — browser SDKs don't carry over (`false-friends` → *Services & SDKs*); payments especially is a *fork, not a swap* (in-app digital goods must use store IAP via RevenueCat, ~30% — not Stripe), a business-model call to make now, not at App Store review. The worklist is only trustworthy once every route is sorted and every screen bucketed.
@@ -58,11 +58,11 @@ Walk `migration-progress.md` top-down. For each screen, *redesign* it native - d
 
 ### 5. Wire data, auth, and storage
 
-The web data layer doesn't survive the move - relative fetches, cookie sessions, `localStorage`, and env vars all change (swaps in false-friends). Use `expo-data-fetching` for requests and caching; add `eas-hosting` if the backend moved to EAS Hosting.
+The web data layer doesn't survive the move - relative fetches, cookie sessions, `localStorage`, and env vars all change (swaps in false-friends). Use `expo-data-fetching` for requests and caching; add `expo-hosting` if the backend moved to EAS Hosting.
 
 ### 6. Ship
 
-`eas-app-stores` for the store builds (App Store / Play / TestFlight), EAS Update for OTA pushes after.
+`expo-app-stores` for the store builds (App Store / Play / TestFlight), EAS Update for OTA pushes after.
 
 ## Verify by running, not compiling
 

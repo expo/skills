@@ -77,6 +77,10 @@ To update a single Expo skill, pass its name:
 npx skills@latest update expo-router
 ```
 
+Skills that used the `eas-` prefix now use `expo-`. Update explicit skill references in
+prompts and scripts. To install a renamed skill individually, use its new ID, for example
+`npx skills@latest add expo/skills --skill expo-hosting`.
+
 ## Try It
 
 After installing, ask your agent Expo-specific questions like:
@@ -128,13 +132,13 @@ Skills whose core purpose uses paid Expo Application Services (EAS).
 
 | Skill | Use it for |
 | --- | --- |
-| `eas-app-stores` | Build and submit iOS/Android apps: Expo and other React Native projects, plus existing native apps; TestFlight, profiles, versioning, and metadata. |
-| `eas-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. |
-| `eas-workflows` | EAS Workflow YAML files and CI/CD automation. |
-| `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. |
-| `eas-update` | EAS Update setup, OTA publishing, runtime compatibility, testing, and debugging. |
-| `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
-| `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator with Expo Simulators - from the CLI or an agent, with a live browser preview. |
+| `expo-app-stores` | Build and submit iOS/Android apps: Expo and other React Native projects, plus existing native apps; TestFlight, profiles, versioning, and metadata. |
+| `expo-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. |
+| `expo-workflows` | EAS Workflow YAML files and CI/CD automation. |
+| `expo-observe` | EAS Observe setup and launch, route, event, and version metrics. |
+| `expo-update` | EAS Update setup, OTA publishing, runtime compatibility, testing, and debugging. |
+| `expo-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
+| `expo-simulator` | Run and drive your app on a remote iOS simulator or Android emulator with Expo Simulators - from the CLI or an agent, with a live browser preview. |
 
 ### Experimental
 
