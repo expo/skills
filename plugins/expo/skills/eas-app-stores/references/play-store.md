@@ -6,7 +6,7 @@
 2. **App Created in Console** - Create your app listing before first submission
 3. **Service Account** - For automated submissions via EAS
 
-Once these are complete, the default `eas submit` works for a first-time submission and creates the app's first release on the internal testing track. Store listing, content rating, and pricing are only required before promoting a release to production.
+Once these are complete, the default `npx --yes eas-cli@latest submit` works for a first-time submission and creates the app's first release on the internal testing track. Store listing, content rating, and pricing are only required before promoting a release to production.
 
 ## Service Account Setup
 
@@ -55,7 +55,7 @@ EXPO_ANDROID_SERVICE_ACCOUNT_KEY_BASE64=...
 Or use EAS Secrets:
 
 ```bash
-eas secret:create --name GOOGLE_SERVICE_ACCOUNT --value "$(cat google-service-account.json)" --type file
+npx --yes eas-cli@latest secret:create --name GOOGLE_SERVICE_ACCOUNT --value "$(cat google-service-account.json)" --type file
 ```
 
 Then reference in `eas.json`:
@@ -133,13 +133,13 @@ This releases to 10% of users. Increase via Play Console or subsequent submissio
 
 ```bash
 # Build and submit to internal track
-eas build -p android --profile production --auto-submit
+npx --yes eas-cli@latest build -p android --profile production --auto-submit
 
 # Submit existing build to Play Store
-eas submit -p android --latest
+npx --yes eas-cli@latest submit -p android --latest
 
 # Submit specific build
-eas submit -p android --id BUILD_ID
+npx --yes eas-cli@latest submit -p android --id BUILD_ID
 ```
 
 ## App Signing
@@ -155,7 +155,7 @@ EAS uses Google Play App Signing by default:
 ### Checking Signing Status
 
 ```bash
-eas credentials -p android
+npx --yes eas-cli@latest credentials -p android
 ```
 
 ## Version Codes
@@ -222,7 +222,7 @@ For quick internal distribution without Play Store:
 
 ```bash
 # Build with internal distribution
-eas build -p android --profile development
+npx --yes eas-cli@latest build -p android --profile development
 
 # Share the APK link with testers
 ```
@@ -231,7 +231,7 @@ Or use EAS Update for OTA updates to existing installs.
 
 ## Monitoring Submissions
 
-Follow the submission URL returned by `eas submit` for status and logs. Check Play Console for the resulting track and release state.
+Follow the submission URL returned by `npx --yes eas-cli@latest submit` for status and logs. Check Play Console for the resulting track and release state.
 
 With EAS CLI 23.2.0, `eas submit:list -p android --json` and `eas submit:view SUBMISSION_ID --json` report EAS submission jobs. `submit:status` currently reads Apple status only; do not treat an EAS job's success as confirmation of Play Console rollout.
 

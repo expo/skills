@@ -1,6 +1,6 @@
-# `eas update:insights` JSON schema
+# `npx --yes eas-cli@latest update:insights` JSON schema
 
-Complete JSON output shape returned by `eas update:insights <groupId> --json --non-interactive`.
+Complete JSON output shape returned by `npx --yes eas-cli@latest update:insights <groupId> --json --non-interactive`.
 
 ```json
 {
@@ -64,6 +64,6 @@ The `update:view --insights --json` command wraps the same insights payload:
 ```json
 {
   "updates": [ /* standard update:view entries */ ],
-  "insights": { /* same shape as eas update:insights above */ }
+  "insights": { /* same shape as npx --yes eas-cli@latest update:insights above */ }
 }
 ```

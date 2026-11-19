@@ -7,23 +7,23 @@ For a SwiftUI/UIKit app with no React Native runtime, start with [native-ios.md]
 Use a store-distribution profile and record the source revision and returned build ID:
 
 ```bash
-eas build --platform ios --profile testflight --no-wait --non-interactive
+npx --yes eas-cli@latest build --platform ios --profile testflight --no-wait --non-interactive
 # After checking that build's result:
-eas submit --platform ios --profile testflight --id BUILD_ID --non-interactive
+npx --yes eas-cli@latest submit --platform ios --profile testflight --id BUILD_ID --non-interactive
 ```
 
 Use the project's actual profile name. If `--non-interactive` exposes missing first-time credentials, configure them with `eas credentials -p ios`; repeated noninteractive retries will not complete that setup. Keep an existing EAS project, Apple team, bundle ID, and App Store Connect app record aligned.
 
-`eas build --auto-submit` can submit the finished build with its matching submit profile. For separate jobs, pass the explicit build ID rather than selecting whichever unrelated build is newest.
+`npx --yes eas-cli@latest build --auto-submit` can submit the finished build with its matching submit profile. For separate jobs, pass the explicit build ID rather than selecting whichever unrelated build is newest.
 
 ## Read status without reopening a submission
 
 The following commands were verified with EAS CLI 23.2.0, including read-only checks of a completed iOS submission and its actual TestFlight state:
 
 ```bash
-eas submit:list --platform ios --json
-eas submit:view SUBMISSION_ID --json
-eas submit:status --platform ios --profile testflight --json --non-interactive
+npx --yes eas-cli@latest submit:list --platform ios --json
+npx --yes eas-cli@latest submit:view SUBMISSION_ID --json
+npx --yes eas-cli@latest submit:status --platform ios --profile testflight --json --non-interactive
 ```
 
 Use the project's actual profile. `submit:view` reports the EAS job; `submit:status` reads App Store Connect and reports App Store versions and TestFlight processing/internal/external states. The latter needs an App Store Connect API key from the selected profile, environment, or existing EAS credentials. In noninteractive mode, a missing key is a setup error; it does not mean the build failed or does not exist. A beta state alone does not establish that a particular tester has access.

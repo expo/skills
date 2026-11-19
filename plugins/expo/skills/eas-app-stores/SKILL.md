@@ -32,17 +32,22 @@ Consult these resources as needed:
 
 ## Expo / React Native Quick Start
 
-### Install EAS CLI
+### Select EAS CLI
+
+Run EAS commands with `npx --yes eas-cli@latest` from Expo's official package. Check the resolved version and command help for compatibility before running a workflow.
+
+Check the existing account before initiating sign-in:
 
 ```bash
-npm install -g eas-cli
-eas login
+npx --yes eas-cli@latest whoami
+# Only if no account is authenticated; the user completes sign-in in their browser:
+npx --yes eas-cli@latest login --browser
 ```
 
 ### Initialize EAS
 
 ```bash
-npx eas-cli@latest init
+npx --yes eas-cli@latest init
 ```
 
 `eas init` links or creates the EAS project. Run `eas build:configure` to create build profiles in `eas.json`; preserve existing project and store identifiers when a release setup already exists.
@@ -53,13 +58,13 @@ npx eas-cli@latest init
 
 ```bash
 # iOS App Store build
-npx eas-cli@latest build -p ios --profile production
+npx --yes eas-cli@latest build -p ios --profile production
 
 # Android Play Store build
-npx eas-cli@latest build -p android --profile production
+npx --yes eas-cli@latest build -p android --profile production
 
 # Both platforms
-npx eas-cli@latest build --profile production
+npx --yes eas-cli@latest build --profile production
 ```
 
 ### Submit to Stores
@@ -77,7 +82,7 @@ npx testflight
 
 ## Web & API Route Hosting
 
-Deploying an Expo website or Expo Router API routes to EAS Hosting (`npx expo export -p web` then `eas deploy`) is covered by the `eas-hosting` skill. This skill focuses on native app store releases.
+Deploying an Expo website or Expo Router API routes to EAS Hosting (`npx expo export -p web` then `npx --yes eas-cli@latest deploy`) is covered by the `eas-hosting` skill. This skill focuses on native app store releases.
 
 ## EAS Configuration
 
@@ -122,7 +127,7 @@ Example for an Expo / React Native project (native Swift profiles are in `refere
 
 - For native Swift apps, use the explicit build/submit flow in `references/native-ios.md`
 - For Expo / React Native apps, `npx testflight` provides a quick TestFlight flow
-- Configure Apple credentials via `eas credentials`
+- Configure Apple credentials via `npx --yes eas-cli@latest credentials`
 - See ./references/testflight.md for credential setup
 - See ./references/ios-app-store.md for App Store submission
 
@@ -142,10 +147,10 @@ EAS manages version numbers automatically with `appVersionSource: "remote"`:
 
 ```bash
 # Check current versions
-eas build:version:get
+npx --yes eas-cli@latest build:version:get
 
 # Manually set version
-eas build:version:set -p ios
+npx --yes eas-cli@latest build:version:set -p ios
 ```
 
 The version-set command prompts for the value. When setting up or changing native iOS versioning, or diagnosing a duplicate build number, inspect the archived `CFBundleVersion`: the remote counter alone does not prove that Xcode used it.
@@ -154,14 +159,14 @@ The version-set command prompts for the value. When setting up or changing nativ
 
 ```bash
 # List recent builds
-eas build:list
+npx --yes eas-cli@latest build:list
 
 # Check build status
-eas build:view BUILD_ID
+npx --yes eas-cli@latest build:view BUILD_ID
 
 # Inspect submissions (verified with EAS CLI 23.2.0)
-eas submit:list -p ios --json
-eas submit:view SUBMISSION_ID --json
+npx --yes eas-cli@latest submit:list -p ios --json
+npx --yes eas-cli@latest submit:view SUBMISSION_ID --json
 ```
 
 Check the CLI version before interpreting a missing command: these submission commands are available in 23.2.0 but not in the tested 18.6.0 installation. A pinned `npx eas-cli@23.2.0` invocation can use them without changing the global installation. See `references/testflight.md` for live Apple status and retry guidance. Follow the returned log URLs when the JSON result omits the underlying failure. Report the exact build ID/version and the furthest verified release state.

@@ -30,7 +30,7 @@ For native SwiftUI/UIKit apps without a React Native runtime, configure the Xcod
 ### Using EAS Credentials
 
 ```bash
-eas credentials -p ios
+npx --yes eas-cli@latest credentials -p ios
 ```
 
 This interactive flow helps you:
@@ -78,10 +78,10 @@ The app-specific password is for the upload flow. Interactive Apple Developer si
 
 ```bash
 # Build and submit to App Store Connect
-eas build -p ios --profile production --auto-submit
+npx --yes eas-cli@latest build -p ios --profile production --auto-submit
 
 # Submit the verified build
-eas submit -p ios --profile production --id BUILD_ID
+npx --yes eas-cli@latest submit -p ios --profile production --id BUILD_ID
 
 # Expo / React Native TestFlight shortcut
 npx testflight
@@ -284,7 +284,7 @@ Rollout: Day 1 (1%) → Day 2 (2%) → Day 3 (5%) → Day 4 (10%) → Day 5 (20%
 ### Check Current Credentials
 
 ```bash
-eas credentials -p ios
+npx --yes eas-cli@latest credentials -p ios
 ```
 
 ## App Store Metadata
@@ -293,10 +293,10 @@ Use EAS Metadata to manage App Store listing from code:
 
 ```bash
 # Pull existing metadata
-eas metadata:pull
+npx --yes eas-cli@latest metadata:pull
 
 # Push changes
-eas metadata:push
+npx --yes eas-cli@latest metadata:push
 ```
 
 See ./app-store-metadata.md for detailed configuration.
@@ -332,7 +332,7 @@ For a checked-in Swift app, the equivalent declaration belongs in its native Inf
 ### "Invalid provisioning profile"
 
 ```bash
-eas credentials -p ios
+npx --yes eas-cli@latest credentials -p ios
 ```
 
 ### Build stuck in "Processing"

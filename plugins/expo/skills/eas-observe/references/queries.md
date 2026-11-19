@@ -8,14 +8,14 @@ EAS Observe collects app performance telemetry and custom events from Expo apps 
 
 | Command | Purpose |
 |---------|---------|
-| `eas observe:metrics-summary` | Per-version statistical aggregates for startup and navigation metrics (median, p90, etc.) |
-| `eas observe:metrics` | Individual metric samples ordered by value or timestamp (paginated) |
-| `eas observe:routes` | Per-route statistical aggregates for navigation metrics (Nav Cold TTR, Nav Warm TTR, Nav TTI) |
-| `eas observe:events` | Custom events emitted by the app via `logEvent` — name summary, all events, or filtered by event name (paginated) |
-| `eas observe:session` | Full timeline of metric and log events for one session |
-| `eas observe:versions` | App version hierarchy with build numbers, OTA update IDs, and event counts |
-| `eas observe:errors` | Error groups by fingerprint; `--fingerprint <id>` lists one group's occurrences with stack traces |
-| `eas observe:event` | One metric, log, or error event by its ID, taken from the `--json` output of `observe:session`, `observe:metrics`, or `observe:events`, or from the occurrences listed by `observe:errors --fingerprint` |
+| `npx --yes eas-cli@latest observe:metrics-summary` | Per-version statistical aggregates for startup and navigation metrics (median, p90, etc.) |
+| `npx --yes eas-cli@latest observe:metrics` | Individual metric samples ordered by value or timestamp (paginated) |
+| `npx --yes eas-cli@latest observe:routes` | Per-route statistical aggregates for navigation metrics (Nav Cold TTR, Nav Warm TTR, Nav TTI) |
+| `npx --yes eas-cli@latest observe:events` | Custom events emitted by the app via `logEvent` — name summary, all events, or filtered by event name (paginated) |
+| `npx --yes eas-cli@latest observe:session` | Full timeline of metric and log events for one session |
+| `npx --yes eas-cli@latest observe:versions` | App version hierarchy with build numbers, OTA update IDs, and event counts |
+| `npx --yes eas-cli@latest observe:errors` | Error groups by fingerprint; `--fingerprint <id>` lists one group's occurrences with stack traces |
+| `npx --yes eas-cli@latest observe:event` | One metric, log, or error event by its ID, taken from the `--json` output of `observe:session`, `observe:metrics`, or `observe:events`, or from the occurrences listed by `observe:errors --fingerprint` |
 
 All commands take these flags:
 
@@ -87,7 +87,7 @@ Emitted only when a navigation integration is enabled (SDK 56+). Measured per ro
 
 **Which command takes which alias.** `observe:metrics` (positional argument) and `observe:metrics-summary --metric` accept **all nine** aliases — startup and navigation. `observe:routes --metric` accepts only the three navigation aliases. Use the `nav_` prefix everywhere; there are no bare `cold_ttr` / `warm_ttr` aliases.
 
-`observe:metrics` also accepts a full metric name in place of an alias, for example `eas observe:metrics expo.app_startup.tti`. `observe:routes` accepts full navigation names the same way. The `--metric` flags on `metrics-summary` and `routes` are strict oclif options, so they take aliases only.
+`observe:metrics` also accepts a full metric name in place of an alias, for example `npx --yes eas-cli@latest observe:metrics expo.app_startup.tti`. `observe:routes` accepts full navigation names the same way. The `--metric` flags on `metrics-summary` and `routes` are strict oclif options, so they take aliases only.
 
 ## `eas observe:metrics-summary`
 
@@ -95,22 +95,22 @@ Shows per-version statistical aggregates for one or more metrics, with separate 
 
 ```bash
 # All default metrics, last 60 days, both platforms
-eas observe:metrics-summary
+npx --yes eas-cli@latest observe:metrics-summary
 
 # Single metric
-eas observe:metrics-summary --metric tti
+npx --yes eas-cli@latest observe:metrics-summary --metric tti
 
 # Multiple metrics — each renders as its own table
-eas observe:metrics-summary --metric tti --metric cold_launch
+npx --yes eas-cli@latest observe:metrics-summary --metric tti --metric cold_launch
 
 # Navigation metrics aggregate per version here, per route in observe:routes
-eas observe:metrics-summary --metric nav_tti
+npx --yes eas-cli@latest observe:metrics-summary --metric nav_tti
 
 # Choose which statistics to display
-eas observe:metrics-summary --metric tti --stat median --stat p90 --stat eventCount
+npx --yes eas-cli@latest observe:metrics-summary --metric tti --stat median --stat p90 --stat eventCount
 
 # Narrow time range and platform
-eas observe:metrics-summary --metric tti --days 14 --platform ios
+npx --yes eas-cli@latest observe:metrics-summary --metric tti --days 14 --platform ios
 ```
 
 **Stat flags:** exactly `min`, `median`, `max`, `average`, `p80`, `p90`, `p99`, `eventCount`. This command takes **no aliases** — `med`, `avg`, and `count` are rejected here (they work only on `observe:routes`).
@@ -152,19 +152,19 @@ Shows individual performance metric samples, paginated. The metric is a position
 
 ```bash
 # Interactive: prompts for metric
-eas observe:metrics
+npx --yes eas-cli@latest observe:metrics
 
 # Specify metric as positional arg
-eas observe:metrics tti
+npx --yes eas-cli@latest observe:metrics tti
 
 # Navigation metrics work here too
-eas observe:metrics nav_tti --sort slowest
+npx --yes eas-cli@latest observe:metrics nav_tti --sort slowest
 
 # Filter by version or update, sort by slowest
-eas observe:metrics tti --app-version 1.2.0 --sort slowest --limit 20
+npx --yes eas-cli@latest observe:metrics tti --app-version 1.2.0 --sort slowest --limit 20
 
 # Pagination — pass the endCursor from the previous run
-eas observe:metrics tti --after <cursor>
+npx --yes eas-cli@latest observe:metrics tti --after <cursor>
 ```
 
 **Sample-specific flags:**
@@ -187,22 +187,22 @@ Shows per-route statistical aggregates for navigation metrics (Cold TTR, Warm TT
 
 ```bash
 # All three navigation metrics, default stats, last 60 days, both platforms
-eas observe:routes
+npx --yes eas-cli@latest observe:routes
 
 # Single metric, last 7 days, iOS only
-eas observe:routes --metric nav_tti --days 7 --platform ios
+npx --yes eas-cli@latest observe:routes --metric nav_tti --days 7 --platform ios
 
 # Multiple metrics and stats
-eas observe:routes --metric nav_cold_ttr --metric nav_warm_ttr --stat median --stat p90 --stat count
+npx --yes eas-cli@latest observe:routes --metric nav_cold_ttr --metric nav_warm_ttr --stat median --stat p90 --stat count
 
 # Filter to a single build
-eas observe:routes --app-version 1.2.0 --build-number 42
+npx --yes eas-cli@latest observe:routes --app-version 1.2.0 --build-number 42
 
 # Narrow to specific routes (repeat the flag for multiple routes)
-eas observe:routes --route-name /new --route-name /settings
+npx --yes eas-cli@latest observe:routes --route-name /new --route-name /settings
 
 # Pagination — each platform has its own cursor; pass the relevant endCursor
-eas observe:routes --after <cursor>
+npx --yes eas-cli@latest observe:routes --after <cursor>
 ```
 
 **Routes-specific flags:**
@@ -255,19 +255,19 @@ Shows custom events emitted by the app via the `logEvent` API in `expo-observe`.
 
 ```bash
 # List the available custom event names and their counts (last 60 days)
-eas observe:events
+npx --yes eas-cli@latest observe:events
 
 # All events across all names, last 7 days, iOS only
-eas observe:events --all-events --days 7 --platform ios
+npx --yes eas-cli@latest observe:events --all-events --days 7 --platform ios
 
 # Only events with the given name
-eas observe:events login_failed --limit 50
+npx --yes eas-cli@latest observe:events login_failed --limit 50
 
 # Drill into a single session
-eas observe:events --all-events --session-id <session-id>
+npx --yes eas-cli@latest observe:events --all-events --session-id <session-id>
 
 # Pagination
-eas observe:events login_failed --after <cursor>
+npx --yes eas-cli@latest observe:events login_failed --after <cursor>
 ```
 
 **Events-specific flags:**
@@ -324,13 +324,13 @@ Shows the full timeline of metric and log events for a single session — the CL
 
 ```bash
 # Interactive: pick a metric, then pick a session from the candidate list
-eas observe:session
+npx --yes eas-cli@latest observe:session
 
 # Inspect a known session
-eas observe:session <session-id>
+npx --yes eas-cli@latest observe:session <session-id>
 
 # Pick a session from the slowest TTI events in the last 7 days
-eas observe:session --event-name tti --sort slowest --days 7
+npx --yes eas-cli@latest observe:session --event-name tti --sort slowest --days 7
 ```
 
 **Session-specific flags:**
@@ -361,13 +361,13 @@ Shows error and exception groups, grouped by fingerprint, with event, user, and 
 
 ```bash
 # Error groups, last 7 days
-eas observe:errors --days 7
+npx --yes eas-cli@latest observe:errors --days 7
 
 # Only fatal errors on Android
-eas observe:errors --severity fatal --platform android
+npx --yes eas-cli@latest observe:errors --severity fatal --platform android
 
 # Occurrences of one group, with stack traces
-eas observe:errors --fingerprint <fingerprint>
+npx --yes eas-cli@latest observe:errors --fingerprint <fingerprint>
 ```
 
 **Errors-specific flags:**
@@ -384,8 +384,8 @@ eas observe:errors --fingerprint <fingerprint>
 Shows one metric, log, or error event by its ID. Event IDs are in the `--json` output of `observe:metrics`, `observe:events`, and `observe:session`, and in the occurrences from `observe:errors --fingerprint`.
 
 ```bash
-eas observe:event <event-id>
-eas observe:event <event-id> --json
+npx --yes eas-cli@latest observe:event <event-id>
+npx --yes eas-cli@latest observe:event <event-id> --json
 ```
 
 `ID` is a required positional argument. The command takes only `--project-id`, `--json`, and `--non-interactive`.
@@ -396,10 +396,10 @@ Shows app version hierarchy with build numbers, OTA update IDs, and event counts
 
 ```bash
 # Both platforms, last 60 days
-eas observe:versions
+npx --yes eas-cli@latest observe:versions
 
 # iOS only, last 14 days
-eas observe:versions --days 14 --platform ios
+npx --yes eas-cli@latest observe:versions --days 14 --platform ios
 ```
 
 No metric-related flags. Output shows separate iOS and Android tables with columns: **App Version, First Seen, Events, Users, Builds (count), Updates (count)**.
@@ -410,62 +410,62 @@ JSON output returns the full nested hierarchy with `buildNumbers[].easBuilds[]` 
 
 **"What are my app's startup times right now?"**
 ```bash
-eas observe:metrics-summary --days 7 --stat median --stat p90
+npx --yes eas-cli@latest observe:metrics-summary --days 7 --stat median --stat p90
 ```
 
 **"Which TTI samples were slowest this week?"**
 ```bash
-eas observe:metrics tti --sort slowest --days 7 --limit 20
+npx --yes eas-cli@latest observe:metrics tti --sort slowest --days 7 --limit 20
 ```
 
 **"How fast are over-the-air updates downloading in the field?"**
 ```bash
-eas observe:metrics-summary --metric update_download --days 7
+npx --yes eas-cli@latest observe:metrics-summary --metric update_download --days 7
 ```
 
 **"Which screens are slowest to navigate to?"**
 ```bash
-eas observe:routes --metric nav_tti --stat median --stat p90 --days 7
+npx --yes eas-cli@latest observe:routes --metric nav_tti --stat median --stat p90 --days 7
 ```
 
 **"What happened during that one slow session?"**
 ```bash
-eas observe:metrics tti --sort slowest --days 7 --json   # read sessionId from a sample
-eas observe:session <session-id>
+npx --yes eas-cli@latest observe:metrics tti --sort slowest --days 7 --json   # read sessionId from a sample
+npx --yes eas-cli@latest observe:session <session-id>
 ```
 
 **"How does navigation perform on just the routes I care about?"**
 ```bash
-eas observe:routes --route-name /home --route-name /checkout --days 7
+npx --yes eas-cli@latest observe:routes --route-name /home --route-name /checkout --days 7
 ```
 
 **"What custom events is my app emitting?"**
 ```bash
-eas observe:events --days 7
+npx --yes eas-cli@latest observe:events --days 7
 ```
 
 **"Show me every error event from one user's session."**
 ```bash
-eas observe:events --all-events --session-id <session-id>
+npx --yes eas-cli@latest observe:events --all-events --session-id <session-id>
 ```
 
 **"What versions of my app are in the field?"**
 ```bash
-eas observe:versions
+npx --yes eas-cli@latest observe:versions
 ```
 
 **"Show me metrics for a specific project without needing to be in the repo"**
 ```bash
-eas observe:metrics-summary --project-id <uuid> --metric tti
+npx --yes eas-cli@latest observe:metrics-summary --project-id <uuid> --metric tti
 ```
 
 **"Get JSON for scripting"**
 ```bash
-eas observe:metrics-summary --metric tti --json --non-interactive
+npx --yes eas-cli@latest observe:metrics-summary --metric tti --json --non-interactive
 ```
 
 ## Notes
 
-- Requires the user to be logged in (`eas login`).
+- Requires the user to be logged in (`npx --yes eas-cli@latest login`).
 - When `--project-id` is provided, the command does not require running inside an EAS project directory; otherwise the project ID is read from the local `app.config` / `app.json`. If using this option, ensure that you are logged in as a user that has access to the specified project.
 - `observe:metrics-summary` does not print update IDs in the table but still returns them in JSON for scripting or piping into other commands.

@@ -1,6 +1,6 @@
 ---
 name: eas-update
-description: "Configure and use EAS Update for over-the-air JavaScript and asset updates with expo-updates and EAS CLI. Use when setting up OTA updates, running eas update:configure or eas update, publishing to preview/staging/production channels, explaining branches/channels/runtime versions, testing updates, or debugging why an installed build still shows old code. Load for TestFlight, preview, or production updates that do not appear, including questions about cold launches or reopening the app. Not for update health metrics; use eas-update-insights for adoption, crashes, and rollout monitoring."
+description: "Configure and use EAS Update for over-the-air JavaScript and asset updates with expo-updates and EAS CLI. Use when setting up OTA updates, configuring branches/channels/runtime versions, publishing to preview/staging/production, testing updates, or debugging why an installed build still shows old code. Load for TestFlight, preview, or production updates that do not appear, including questions about cold launches or reopening the app. Not for update health metrics; use eas-update-insights for adoption, crashes, and rollout monitoring."
 license: MIT
 allowed-tools: "Bash(npx expo *), Bash(npx *eas-cli@*), Bash(eas *)"
 ---
@@ -17,7 +17,7 @@ Before changing anything, inspect `package.json`, the Expo app config, `eas.json
 
 - Preserve existing dynamic or platform-specific app configuration.
 - If `eas.json` exists, preserve its profiles and existing channel assignments. The CLI adds a channel matching the profile name only to build profiles that do not already have one.
-- If `eas.json` is absent, do not create it by hand. The CLI may direct the user to run `eas build:configure` separately.
+- If `eas.json` is absent, do not create it by hand. The CLI may direct the user to run `npx --yes eas-cli@latest build:configure` separately.
 - With tracked native projects, expect the CLI to synchronize the platform's native Update configuration. Without them, expect Continuous Native Generation to apply the native configuration during a later build.
 
 Detect the Expo SDK version before installing packages or interpreting version-specific behavior.
@@ -31,10 +31,10 @@ npx expo install expo-updates
 Configure from the project root:
 
 ```bash
-npx eas-cli@latest update:configure
+npx --yes eas-cli@latest update:configure
 ```
 
-Use `eas update:configure` rather than manually inventing `updates.url`, `runtimeVersion`, native metadata, or build-profile channels. The command understands EAS project linking, Continuous Native Generation, and projects with committed native directories. Review and explain its resulting diff.
+Use `npx --yes eas-cli@latest update:configure` rather than manually inventing `updates.url`, `runtimeVersion`, native metadata, or build-profile channels. The command understands EAS project linking, Continuous Native Generation, and projects with committed native directories. Review and explain its resulting diff.
 
 If the command cannot proceed because the project is not linked or the user has not authorized the required remote operation, stop after any independently valid package installation and explain what remains. Do not partially reproduce `update:configure` by adding a runtime-version policy, config plugin, update URL, or channels by hand.
 
@@ -57,7 +57,7 @@ installed build (channel: production, runtime: 1.1.1, platform: ios)
   -> newest update for runtime 1.1.1 and ios
 ```
 
-Channels and branches commonly have the same name, but they are separate objects. `eas channel:edit` changes a channel's server-side branch mapping for every build on that channel. It does not change an individual installation's embedded channel.
+Channels and branches commonly have the same name, but they are separate objects. `npx --yes eas-cli@latest channel:edit` changes a channel's server-side branch mapping for every build on that channel. It does not change an individual installation's embedded channel.
 
 Use this model to make decisions, but explain only the concepts needed for the user's request rather than reciting the entire model every time.
 
@@ -74,13 +74,13 @@ Do not change the project's runtime-version policy as an incidental fix. Explain
 Check the current CLI help before relying on remembered flags:
 
 ```bash
-npx eas-cli@latest update --help
+npx --yes eas-cli@latest update --help
 ```
 
 For the common channel-based flow:
 
 ```bash
-npx eas-cli@latest update \
+npx --yes eas-cli@latest update \
   --channel <channel> \
   --message "<message>" \
   --environment <environment>
