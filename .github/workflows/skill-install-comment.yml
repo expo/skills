@@ -1,0 +1,103 @@
+name: PR skill install commands
+
+on:
+  workflow_run:
+    workflows: [check]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.head_repository != null
+    runs-on: ubuntu-latest
+    concurrency:
+      group: skill-install-${{ github.event.workflow_run.head_repository.id }}-${{ github.event.workflow_run.head_branch }}
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            // Fork runs can have an empty pull_requests array. Look up the open PR
+            // by its source branch so even a rerun uses the current head commit.
+            const { data: pulls } = await github.rest.pulls.list({
+              ...context.repo,
+              state: "open",
+              base: "main",
+              head: `${run.head_repository.owner.login}:${run.head_branch}`,
+            });
+            const pr = pulls.find(({ head }) => head.repo?.id === run.head_repository.id);
+            if (!pr) return;
+
+            const { data: comparison } = await github.rest.repos.compareCommitsWithBasehead({
+              ...context.repo,
+              basehead: `${pr.base.sha}...${pr.head.sha}`,
+              per_page: 1,
+            });
+
+            async function readTree(sha) {
+              const { data } = await github.rest.git.getTree({
+                ...context.repo, tree_sha: sha, recursive: "1",
+              });
+              if (data.truncated) throw new Error(`Incomplete Git tree for ${sha}`);
+              return new Map(data.tree.map(entry => [entry.path, entry]));
+            }
+
+            const [before, after] = await Promise.all([
+              readTree(comparison.merge_base_commit.sha),
+              readTree(pr.head.sha),
+            ]);
+            const skills = new Set();
+            for (const [path, entry] of after) {
+              const match = path.match(/^(plugins\/[^/]+\/skills\/((?:expo|eas)-[a-z0-9-]+))\/SKILL\.md$/);
+              if (!match || entry.type !== "blob") continue;
+              const [, directory, name] = match;
+              // The directory SHA also changes when a reference or script is removed.
+              if (before.get(directory)?.sha !== after.get(directory).sha) skills.add(name);
+            }
+
+            const issue = { ...context.repo, issue_number: pr.number };
+            const marker = "<!-- expo-skill-install-commands -->";
+            const comments = await github.paginate(github.rest.issues.listComments, { ...issue, per_page: 100 });
+            const existing = comments.find(comment =>
+              comment.user?.login === "github-actions[bot]" && comment.body?.startsWith(marker)
+            );
+
+            if (!skills.size) {
+              if (existing) await github.rest.issues.deleteComment({ ...context.repo, comment_id: existing.id });
+              return;
+            }
+
+            const source = `${pr.head.repo.full_name}#${pr.head.sha}`;
+            const isFork = pr.head.repo.id !== pr.base.repo.id;
+            const sections = [marker];
+            if (isFork) {
+              const revision = `${pr.head.repo.html_url}/tree/${pr.head.sha}`;
+              sections.push([
+                "> [!WARNING]",
+                `> This PR comes from the fork \`${pr.head.repo.full_name}\`.`,
+                `> Review the skill and its scripts at [\`${pr.head.sha}\`](${revision}) before installing.`,
+              ].join("\n"));
+            }
+            for (const name of [...skills].sort()) {
+              const command = `npx --yes skills@latest add '${source}' --skill '${name}' --yes`;
+              sections.push(
+                `### Test \`${name}\``,
+                "Local install (current project)",
+                ["```sh", command, "```"].join("\n"),
+              );
+              if (!isFork) {
+                sections.push(
+                  "Global install (user account)",
+                  ["```sh", `${command} --global`, "```"].join("\n"),
+                );
+              }
+            }
+            const body = sections.join("\n\n");
+            if (!existing) {
+              await github.rest.issues.createComment({ ...issue, body });
+            } else if (body !== existing.body) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+            }
