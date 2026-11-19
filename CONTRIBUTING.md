@@ -79,6 +79,9 @@ When a skill triggers, its whole `SKILL.md` loads into the agent's context. Shor
 - Move anything the agent needs only *sometimes* into `references/*.md` and link to it; references
   load on demand.
 - Put reusable validation or fetching logic in `scripts/` instead of long inline command blocks.
+- In runnable shell examples, use `npx --yes eas-cli@latest <command>` instead of bare `eas <command>`.
+  Prose and headings can use `eas <command>` so they match how users ask for help. CI checks this
+  with `bun scripts/check-eas-cli-commands.ts`.
 - One skill = one job. If it grows two distinct triggers, split it (that is why `eas-hosting` and
   `eas-app-stores` are separate skills).
 - Keep skills and references focused on requirements, supported workflows, and instructions.
