@@ -109,7 +109,6 @@ Free, open-source Expo SDK and React Native skills.
 | `expo-project-structure` | Folder structure for a new Expo app: `src/` layout, routes-only `app/`, screens, server code, platform-specific files. |
 | `expo-router` | Expo Router navigation: file-based routes, links, native stacks, modals, sheets, native tabs, and headers. |
 | `expo-animation` | Polished React Native animations and gestures with Reanimated, Gesture Handler, Expo Router, and expo-haptics. |
-| `expo-mascot` | Create a customizable 2D mascot with a concept sheet, a Rive rig and idle loop, and swappable outfits. |
 | `expo-native-ui` | Native-feeling screen styling, semantic colors, controls, icons, media, and visual effects. |
 | `expo-design-system` | In-app design systems: a token theme (color, spacing, typography, radius, shadow, motion), reusable component conventions, and design-system drift audits. |
 | `expo-ui` | `@expo/ui` native components: universal cross-platform first, with SwiftUI and Jetpack Compose for platform-specific needs. |
@@ -139,10 +138,11 @@ Skills whose core purpose uses paid Expo Application Services (EAS).
 
 ### Experimental
 
-Skills for Expo APIs that are not finalized. Content may change or be retired; skills graduate to the groups above when the underlying API stabilizes. These ship in the separate `expo-experiments` plugin (install it alongside `expo`), or individually via the skills CLI.
+Skills for experimental workflows and Expo APIs that are still evolving. These ship in the separate `expo-experiments` plugin (install it alongside `expo`) and are also available individually via the skills CLI.
 
 | Skill | Use it for |
 | --- | --- |
+| `expo-mascot` | Create a customizable 2D mascot with a concept sheet, a Rive rig and idle loop, and swappable outfits. |
 | `expo-migrate-module` | Migrating a Swift Expo module from the Modules API 1.0 definition DSL to the 2.0 macro API. |
 
 ## Expo MCP Server
