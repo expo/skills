@@ -77,7 +77,7 @@ for (const path of skills) {
   const rel = path.replace(process.cwd() + "/", "");
   const dirName = dirname(path).split("/").pop() ?? "";
   seenDirs.add(dirName);
-  const isPaid = dirName.startsWith("eas-");
+  const group = catalogGroups.get(dirName);
 
   if (description.trim().length === 0)
     errors.push(`${rel}: description is empty`);
@@ -86,9 +86,8 @@ for (const path of skills) {
   if (bodyLines > MAX_BODY_LINES)
     errors.push(`${rel}: body ${bodyLines} lines (max ${MAX_BODY_LINES})`);
 
-  // naming: expo-* (framework) or eas-* (paid EAS service), frontmatter name matches directory
-  if (!dirName.startsWith("expo-") && !dirName.startsWith("eas-"))
-    errors.push(`${rel}: skill directory must be named expo-* or eas-* (got "${dirName}")`);
+  if (!dirName.startsWith("expo-"))
+    errors.push(`${rel}: skill directory must be named expo-* (got "${dirName}")`);
   if (name !== dirName)
     errors.push(`${rel}: frontmatter name "${name}" does not match directory "${dirName}"`);
 
@@ -98,7 +97,7 @@ for (const path of skills) {
 
   // paid skills disclose costs up front (dash style varies: em dash or hyphen)
   const normalizedBody = body.replace(/—/g, "-");
-  if (isPaid && (!normalizedBody.includes(PAID_CALLOUT) || !normalizedBody.includes(PAID_PRICING_LINK)))
+  if (group === "paid" && (!normalizedBody.includes(PAID_CALLOUT) || !normalizedBody.includes(PAID_PRICING_LINK)))
     errors.push(`${rel}: paid skill body must include the "${PAID_CALLOUT}" callout with a ${PAID_PRICING_LINK} link`);
 
   // Codex trigger metadata
@@ -106,12 +105,7 @@ for (const path of skills) {
   if (!existsSync(openaiYamlPath))
     errors.push(`${rel}: missing agents/openai.yaml (Codex trigger metadata)`);
 
-  // catalog sync with skills.sh.json groups; the experimental group accepts either
-  // expo-* or eas-* names
-  const group = catalogGroups.get(dirName);
   if (!group) errors.push(`${rel}: skill is not listed in skills.sh.json`);
-  else if (group !== "experimental" && group !== (isPaid ? "paid" : "framework"))
-    errors.push(`${rel}: skills.sh.json lists this skill in the ${group} group, but the ${isPaid ? "eas-" : "expo-"} prefix requires the ${isPaid ? "paid" : "framework"} group`);
 }
 
 for (const [skill] of catalogGroups) {

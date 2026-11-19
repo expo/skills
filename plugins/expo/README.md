@@ -91,13 +91,13 @@ Skills come in two groups so the free vs paid boundary stays clear: open-source 
 
 ### Services & paid distribution
 
-- **eas-app-stores** - Build and submit iOS/Android apps to the stores and TestFlight: Expo and other React Native projects, plus existing native apps
-- **eas-hosting** - Deploy Expo websites and API routes to EAS Hosting (secrets, custom domains, Cloudflare Workers)
-- **eas-workflows** - EAS workflow YAML files for CI/CD pipelines
-- **eas-observe** - EAS Observe setup and launch, route, event, and version metrics
-- **eas-update** - Configure, publish, test, and debug over-the-air updates
-- **eas-update-insights** - Check EAS Update health, crash rates, adoption, and payload size
-- **eas-simulator** - Run and drive your app on a remote iOS/Android simulator with Expo Simulators, from the CLI or an AI agent
+- **expo-app-stores** - Build and submit iOS/Android apps to the stores and TestFlight: Expo and other React Native projects, plus existing native apps
+- **expo-hosting** - Deploy Expo websites and API routes to EAS Hosting (secrets, custom domains, Cloudflare Workers)
+- **expo-workflows** - EAS workflow YAML files for CI/CD pipelines
+- **expo-observe** - EAS Observe setup and launch, route, event, and version metrics
+- **expo-update** - Configure, publish, test, and debug over-the-air updates
+- **expo-update-insights** - Check EAS Update health, crash rates, adoption, and payload size
+- **expo-simulator** - Run and drive your app on a remote iOS/Android simulator with Expo Simulators, from the CLI or an AI agent
 
 ## Feedback
 
