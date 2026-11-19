@@ -66,12 +66,14 @@ Use the server's current device catalog instead of guessing names or copying a s
 
 ```bash
 npx --yes eas-cli@latest simulator:devices                         # both platforms
-npx --yes eas-cli@latest simulator:devices --platform ios          # iPhones and iPads
-npx --yes eas-cli@latest simulator:devices --platform android      # phones and tablets
+npx --yes eas-cli@latest simulator:devices --platform ios          # iOS and tvOS simulators
+npx --yes eas-cli@latest simulator:devices --platform android      # Android emulator profiles
 npx --yes eas-cli@latest simulator:devices --json                  # identifiers and display names by platform
 ```
 
 This read-only command requires an Expo login or `EXPO_TOKEN`, but no running session or linked project. Copy the exact `identifier` (the table's `--device value`) into `simulator:start --platform <ios|android> --device <identifier>`. Quote names containing spaces or parentheses. For example, use `--device "iPad mini (A17 Pro)"` on iOS or `--device pixel_tablet` on Android when listed.
+
+**Experimental TV support.** For Apple TV, use `--platform ios` with an Apple TV device listed in the catalog, such as `--device "Apple TV 4K (3rd generation)"`. Install a build for the tvOS simulator, not an iOS build. For Android TV, use `--platform android --device tv_1080p --system-image "system-images;android-36;android-tv;x86_64"`; the default image is not a TV image. Do not assume phone preview or control parity. See [Experimental TV support](https://docs.expo.dev/eas/simulators/reference/devices/#experimental-tv-support).
 
 **Omit `--device` to let the server choose its current default.** Do not hardcode a default or infer it from the first catalog entry. The CLI's JSON output contains `identifier` and `displayName`; it does not currently expose the API's `isDefault` field. A listed device is not a promise that it is pre-warmed or starts faster.
 
