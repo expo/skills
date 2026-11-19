@@ -6,7 +6,7 @@ Follow the CLI and sign-in checks in [Set up a Rive project](./set-up-rive-proje
 
 Accept a fitted image with alpha, including a PNG supplied by the user. Encode the app-ready garment as lossless WebP while preserving its full canvas and placement. If the request supplies a photo or description, use [Create an outfit image](./create-outfit-image.md) to identify the slot, prepare the garment WebP on the approved base canvas, and check the overlay. Honor a slot or placement the user specified. Ask where to attach the garment only when the intended placement cannot be inferred.
 
-Inspect the current artboard, state machine, view model, and rig. Reuse their names, IDs, and existing slot bindings. A hat follows the head, while sleeves follow the torso and arm deformation. Match the base image's scale, origin, and transform in the artboard. For garments spanning moving regions, use the relevant bones or matching mesh weights. A pair of shoes must follow the two feet as each moves. Check draw order against the base, other slots, and any occluding limbs.
+Inspect the current artboard, state machine, view model, and rig. Reuse their names, IDs, and existing slot bindings. A hat follows the head, while sleeves follow the torso and arm deformation. Match the base image's scale, origin, and transform in the artboard. For garments spanning moving regions, use the relevant bones or matching mesh weights. A pair of shoes must follow the two feet as each moves. Check draw order against the base, other slots, and any occluding limbs. Among sibling drawables in RML, write a front outfit image before the body image it should cover. Check the rendered garment at rest and in motion. A valid image binding can be hidden behind the body.
 
 ## Author the image binding
 
