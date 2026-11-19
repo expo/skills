@@ -1,6 +1,6 @@
 # Expo
 
-Official AI agent skills from the Expo team for building, deploying, upgrading, and debugging Expo apps.
+Official guides and tools from the Expo team for developing, verifying, deploying, and monitoring mobile apps with Expo and React Native. Run apps on iOS simulators and Android emulators, ship beta builds and production releases, and monitor performance and update health.
 
 Skills come in two groups so the free vs paid boundary stays clear: open-source **framework** skills, and **services & paid distribution** skills whose core purpose uses paid Expo Application Services (EAS). Each services skill opens with a costs/plan-limits note.
 

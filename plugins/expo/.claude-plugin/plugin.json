@@ -1,7 +1,7 @@
 {
   "name": "expo",
-  "version": "1.15.4",
-  "description": "Official Expo skills for building, deploying, upgrading, and debugging Expo apps",
+  "version": "1.15.5",
+  "description": "Develop, Verify, Deploy, and Monitor mobile apps with Expo and React Native.",
   "author": {
     "name": "Expo Team",
     "email": "support@expo.dev"
