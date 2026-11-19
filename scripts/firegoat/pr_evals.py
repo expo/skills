@@ -5,15 +5,54 @@ import re
 import subprocess
 import time
 from pathlib import Path
+from string import Template
 
-from authoring import authoring_prompt
-from changes import changed_skills
-from hosted import list_cases, read_run, start_run, validate_case
+from hosted import SOURCE_TEMPLATE, list_cases, read_run, setup_command, skill_tag, start_run, validate_case
 
 MARKER = "<!-- expo-firegoat-skill-evals -->"
 CONTEXT = "Firegoat skill evals"
 AWAITING_TOKEN_APPROVAL = "Awaiting EXPO_TOKEN approval"
 COMMENT_LIMIT = 65_536
+AUTHORING_PROMPT_PATH = Path(__file__).with_name("authoring-prompt.md")
+SKILL_ROOTS = ("plugins/expo/skills/", "plugins/expo-experiments/skills/")
+SLUG = re.compile(r"(?:expo|eas)-[a-z0-9]+(?:-[a-z0-9]+)*")
+GIT = ("git", "--no-replace-objects", "--literal-pathspecs", "-c", "core.fsmonitor=false")
+
+
+def _git(*args):
+    return subprocess.check_output([*GIT, *args])
+
+
+def _directories(commit):
+    result = {}
+    for entry in _git("ls-tree", "-dz", commit, "--", *SKILL_ROOTS).split(b"\0"):
+        if entry:
+            metadata, path = entry.split(b"\t", 1)
+            directory = os.fsdecode(path)
+            name = directory.rsplit("/", 1)[-1]
+            if len(name) <= 64 and SLUG.fullmatch(name):
+                result[directory] = metadata.split()[2].decode("ascii")
+    return result
+
+
+def changed_skills(base_sha, head_sha):
+    """Return added and edited skills relative to the PR's merge base."""
+    for sha in (base_sha, head_sha):
+        if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", sha):
+            raise ValueError("expected a full Git commit SHA")
+    base = _git("merge-base", base_sha, head_sha).decode("ascii").strip()
+    before = _directories(base)
+    after = _directories(head_sha)
+    skills = []
+    for directory, tree in sorted(after.items()):
+        if before.get(directory) == tree:
+            continue
+        # Git also stores symlinks as blobs. Only a regular file defines a skill.
+        entry = _git("ls-tree", "-z", tree, "--", "SKILL.md")
+        if not entry.startswith((b"100644 blob ", b"100755 blob ")):
+            continue
+        skills.append({"name": directory.rsplit("/", 1)[-1], "directory": directory})
+    return skills
 
 
 def github(path, *, method="GET", body=None, fields=None):
@@ -81,6 +120,27 @@ def eval_title_cell(title):
     return f"{fence} {title} {fence}"
 
 
+def authoring_prompt(skill, pr):
+    name, directory = skill["name"], skill["directory"]
+    if not SLUG.fullmatch(name) or directory not in {root + name for root in SKILL_ROOTS}:
+        raise ValueError("Invalid skill directory")
+    base, head = pr["base"], pr["head"]
+    for revision in (base, head):
+        if (not re.fullmatch(r"[a-zA-Z0-9-]+/[a-zA-Z0-9_.-]+", revision["repo"]["full_name"])
+                or not re.fullmatch(r"[0-9a-f]{40}", revision["sha"])):
+            raise ValueError("Invalid GitHub revision")
+
+    template = Template(AUTHORING_PROMPT_PATH.read_text())
+    return template.substitute(
+        skill=name,
+        skill_tag=skill_tag(name),
+        source_template=SOURCE_TEMPLATE,
+        skill_url=f"https://github.com/{head['repo']['full_name']}/blob/{head['sha']}/{directory}/SKILL.md",
+        diff_url=f"https://github.com/{base['repo']['full_name']}/compare/{base['sha']}...{head['sha']}",
+        setup=setup_command(name).replace(SOURCE_TEMPLATE, f"{head['repo']['full_name']}/plugins#{head['sha']}"),
+    ).rstrip()
+
+
 def render(pr, rows, missing, actions_url, *, comment=False):
     sha = pr["head"]["sha"]
     sections = [f"{MARKER}\n### Firegoat skill evals\nPR revision `{sha[:12]}`.\n\n"
@@ -95,7 +155,8 @@ def render(pr, rows, missing, actions_url, *, comment=False):
         elif result == "Invalid eval configuration":
             result = f"[{result}]({actions_url})"
         title = eval_title_cell(row["title"]) if "title" in row else "—"
-        sections.append(f"\n| `{row['name']}` | {title} | {result} |")
+        names = ", ".join(f"`{name}`" for name in row["names"])
+        sections.append(f"\n| {names} | {title} | {result} |")
     for skill in missing:
         prompt = authoring_prompt(skill, pr)
         sections.append(f"\n\n<details><summary>Prepare a reviewed eval for {skill['name']}</summary>\n\n"
@@ -162,25 +223,29 @@ def evaluate(repo, pr, actions_url):
             body = render(pr, rows, missing, actions_url, comment=True)
         publish(repo, number, body)
 
+    covered, invalid = set(), set()
+    for case in cases:
+        names = [skill["name"] for skill in skills if skill_tag(skill["name"]) in case["tags"]]
+        if not names:
+            continue
+        covered.update(names)
+        row = {"names": names, "title": case["title"], "result": "Invalid eval configuration"}
+        rows.append(row)
+        try:
+            row["required"], row["uses_token"] = validate_case(api_key, case["id"], names)
+        except ValueError as exc:
+            print(f"Firegoat case {case['id']}: {exc}", flush=True)
+            invalid.update(names)
+            continue
+        row["id"] = case["id"]
+        row["result"] = "Ready"
+
     for skill in skills:
-        name = skill["name"]
-        prefix = f"[{name}] "
-        matched = [case for case in cases if case["title"].startswith(prefix)]
-        if not matched:
+        if skill["name"] not in covered:
+            rows.append({"names": [skill["name"]], "result": "Missing eval"})
             missing.append(skill)
-            rows.append({"name": name, "result": "Missing eval"})
-        for index, case in enumerate(matched, start=1):
-            row = {"name": name, "title": case["title"].removeprefix(prefix), "result": "Invalid eval configuration"}
-            rows.append(row)
-            try:
-                row["required"], row["uses_token"] = validate_case(api_key, case["id"], name)
-            except ValueError as exc:
-                print(f"{name}, eval {index}: {exc}", flush=True)
-                if skill not in missing:
-                    missing.append(skill)
-                continue
-            row["id"] = case["id"]
-            row["result"] = "Ready"
+        elif skill["name"] in invalid:
+            missing.append(skill)
 
     if not current():
         return None

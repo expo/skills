@@ -1,8 +1,95 @@
 import json
+import os
+import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import mock_open, patch
 
 import pr_evals
+
+
+class ChangedSkillsTest(unittest.TestCase):
+    def setUp(self):
+        work = tempfile.TemporaryDirectory()
+        self.addCleanup(work.cleanup)
+        self.addCleanup(os.chdir, os.getcwd())
+        os.chdir(work.name)
+        self.git("init", "-qb", "main")
+        self.git("config", "user.name", "Test")
+        self.git("config", "user.email", "test@example.org")
+        self.git("config", "commit.gpgsign", "false")
+        self.skill = Path("plugins/expo/skills/expo-ui")
+        self.experimental = Path("plugins/expo-experiments/skills/eas-example")
+
+    def git(self, *args):
+        return subprocess.check_output(["git", *args], text=True).strip()
+
+    def write(self, path, text):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+    def add_skill(self, directory, description="A test skill"):
+        self.write(directory / "SKILL.md", f"---\nname: {directory.name}\ndescription: {description}\n---\n\n# Example\n")
+
+    def commit(self, message):
+        self.git("add", "-A")
+        self.git("commit", "-qm", message)
+        return self.git("rev-parse", "HEAD")
+
+    def test_uses_merge_base_and_reads_pr_objects_without_checkout(self):
+        self.add_skill(self.skill)
+        self.write(self.skill / "references/setup.md", "Configure the app.\nSet timeout to 2.\nRestart it.\n")
+        self.write(self.skill / "scripts/old.sh", "retired command\n")
+        self.add_skill(self.experimental)
+        self.commit("initial")
+        self.git("branch", "candidate")
+        self.add_skill(self.experimental, "Change that landed on main only")
+        base = self.commit("main advanced")
+        self.git("switch", "-q", "candidate")
+        self.write(self.skill / "references/setup.md", "Configure the app.\nSet timeout to 3.\nRestart it.\n")
+        (self.skill / "scripts/old.sh").unlink()
+        head = self.commit("edit reference and remove script")
+        self.git("switch", "-q", "main")
+
+        result = pr_evals.changed_skills(base, head)
+        self.assertEqual(result, [{"name": "expo-ui", "directory": self.skill.as_posix()}])
+        self.assertEqual(self.git("rev-parse", "HEAD"), base)
+
+    def test_new_skill_in_existing_directory_and_removed_skills(self):
+        self.add_skill(self.skill)
+        self.write(self.experimental / "README.md", "A placeholder.\n")
+        base = self.commit("initial")
+        (self.skill / "SKILL.md").unlink()
+        self.add_skill(self.experimental)
+        self.add_skill(Path("plugins/expo/skills/expo-Upper"))
+        self.add_skill(Path("plugins/expo/skills/eas-example-"))
+        self.add_skill(Path("plugins/other/skills/expo-other"))
+        link = self.skill.parent / "expo-link/SKILL.md"
+        link.parent.mkdir()
+        link.symlink_to("../../../expo-experiments/skills/eas-example/SKILL.md")
+        head = self.commit("add new skill")
+
+        result = pr_evals.changed_skills(base, head)
+        self.assertEqual(result, [{"name": "eas-example", "directory": self.experimental.as_posix()}])
+
+    def test_no_changed_skills_and_option_rejection(self):
+        self.add_skill(self.skill)
+        base = self.commit("initial")
+        self.write(Path("README.md"), "Updated docs.\n")
+        head = self.commit("docs")
+        self.assertEqual(pr_evals.changed_skills(base, head), [])
+        with self.assertRaises(ValueError):
+            pr_evals.changed_skills("--help", head)
+
+    def test_copy_edit_in_either_plugin_counts(self):
+        for directory in (self.skill, self.experimental):
+            self.add_skill(directory)
+        base = self.commit("initial")
+        for directory in (self.skill, self.experimental):
+            self.add_skill(directory, "A test skill.")
+        head = self.commit("add punctuation")
+        self.assertEqual({s["name"] for s in pr_evals.changed_skills(base, head)}, {"expo-ui", "eas-example"})
 
 
 class PullRequestEvalsTest(unittest.TestCase):
@@ -29,7 +116,8 @@ class PullRequestEvalsTest(unittest.TestCase):
         self.statuses = []
         self.skill = {"name": "expo-router", "directory": "plugins/expo/skills/expo-router", "added": False}
         self.changed_skills.return_value = [self.skill]
-        self.list_cases.return_value = [{"id": "case-id", "title": "[expo-router] Open a page"}]
+        self.router_case = {"id": "case-id", "title": "Open a page", "tags": ["expo-skills-ci", "expo-router"]}
+        self.list_cases.return_value = [self.router_case]
         self.required = {"skill-activation", "task-page"}
         self.validate_case.return_value = self.required, False
         self.start_run.return_value = {"id": "run-id", "url": "https://firegoat.ai/evals/expo.dev/runs/example"}
@@ -98,8 +186,8 @@ class PullRequestEvalsTest(unittest.TestCase):
                 self.assertIn(block + summary.split(block)[1].split("</details>")[0] + "</details>", comment)
 
     def test_oversized_table_fits_in_pending_and_final_comments(self):
-        self.list_cases.return_value[0]["title"] = "[expo-router] " + "x" * pr_evals.COMMENT_LIMIT
-        self.list_cases.return_value.append({"id": "short-case", "title": "[expo-router] Open settings"})
+        self.router_case["title"] = "x" * pr_evals.COMMENT_LIMIT
+        self.list_cases.return_value.append({**self.router_case, "id": "short-case", "title": "Open settings"})
         pr_evals.main()
         self.assertEqual(self.statuses, ["pending", "success"])
         summary = self.summary.write.call_args_list[0].args[0]
@@ -113,7 +201,7 @@ class PullRequestEvalsTest(unittest.TestCase):
             self.assertIn("in the run summary.", comment)
 
     def test_fork_runs_credential_free_case_while_token_case_waits(self):
-        self.list_cases.return_value.append({"id": "auth-case", "title": "[expo-router] Publish an update"})
+        self.list_cases.return_value.append({**self.router_case, "id": "auth-case", "title": "Publish an update"})
         self.validate_case.side_effect = [(self.required, False), (self.required, True)]
         with self.assertRaisesRegex(SystemExit, "rerun to authorize EXPO_TOKEN"):
             pr_evals.main()
@@ -182,20 +270,22 @@ class PullRequestEvalsTest(unittest.TestCase):
                 self.assertNotIn("other-check", final)
                 self.start_run.assert_called_once_with("test-key", "case-id", f"contributor/skills/plugins#{self.sha}", rerun=False)
 
-    def test_comments_identify_each_scenario_and_render_titles_as_literal_text(self):
-        unusual = "Handle | deep links\r\nwith ``segments``, <b>@expo</b> and [links](https://example.com)"
+    def test_runs_every_exactly_tagged_case_and_shows_full_titles_as_literal_text(self):
+        unusual = "[expo-router] Handle | deep links\r\nwith ``segments``, <b>@expo</b> and [links](https://example.com)"
         self.list_cases.return_value += [
-            {"id": "second-case", "title": f"[expo-router] {unusual}"},
-            {"id": "unrelated-case", "title": "[expo-ui] Other skill"},
+            {**self.router_case, "id": "second-case", "title": unusual},
+            {"id": "unrelated-case", "title": "[expo-router] Other skill", "tags": ["expo-skills-ci", "expo-router-tabs"]},
+            {"id": "legacy-case", "title": "[expo-router] Title only", "tags": ["expo-skills-ci"]},
         ]
         pr_evals.main()
         self.assertEqual(self.start_run.call_count, 2)
         for update in self.publish.call_args_list:
             comment = update.args[2]
             self.assertIn("| `expo-router` | ` Open a page ` |", comment)
-            self.assertIn(r"| `expo-router` | ``` Handle \| deep links with ``segments``, "
+            self.assertIn(r"| `expo-router` | ``` [expo-router] Handle \| deep links with ``segments``, "
                           "<b>@expo</b> and [links](https://example.com) ``` |", comment)
             self.assertNotIn("Other skill", comment)
+            self.assertNotIn("Title only", comment)
 
     def test_event_for_obsolete_head_leaves_new_revision_alone(self):
         self.pr["head"]["sha"] = "c" * 40
@@ -204,6 +294,17 @@ class PullRequestEvalsTest(unittest.TestCase):
         self.fetch.assert_not_called()
         self.list_cases.assert_not_called()
         self.publish.assert_not_called()
+
+    def test_shared_case_runs_once_for_both_changed_skills(self):
+        long_name = "expo-example-with-long-name"
+        self.changed_skills.return_value.append({"name": long_name, "directory": f"plugins/expo/skills/{long_name}"})
+        self.router_case["tags"].extend(["nightly", "expo-exampl-c1a6f2e806b6"])
+        pr_evals.main()
+        self.assertEqual(self.statuses, ["pending", "success"])
+        self.validate_case.assert_called_once_with("test-key", "case-id", ["expo-router", long_name])
+        self.start_run.assert_called_once()
+        self.read_run.assert_called_once()
+        self.assertIn(f"| `expo-router`, `{long_name}` | ` Open a page ` | [Passed]", self.publish.call_args.args[2])
 
 
 if __name__ == "__main__":

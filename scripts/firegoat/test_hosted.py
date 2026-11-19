@@ -23,11 +23,11 @@ EXPO_CREDENTIAL = {
 }
 CASE = {
     "id": CASE_ID,
-    "title": "[expo-example] Build a working example",
+    "title": "Build a working example",
     "text": "Build an example I can run.",
     "endGoal": "The example runs.",
     "status": "active",
-    "tags": ["expo-skills-ci"],
+    "tags": ["expo-example", "expo-skills-ci"],
     "templateVars": ["skill_sha", "skill_owner", "skill_repo"],
     "setupCommand": hosted.setup_command("expo-example") + "\nprintf 'fixture' > example.txt",
     "checks": {"skill-activation": "Claude loaded the skill.", "task-example": "The example works."},
@@ -43,7 +43,7 @@ CASE = {
 
 class HostedTest(unittest.TestCase):
     def test_lists_only_active_reviewed_cases_across_pages(self):
-        second = {**CASE, "title": "[expo-example] Diagnose an example"}
+        second = {**CASE, "title": "Diagnose an example"}
         pages = [[CASE, {**CASE, "status": "archived"}], [second, {**CASE, "tags": ["other"]}], []]
         with patch.object(hosted, "PAGE_SIZE", 2), patch.object(hosted, "_request", side_effect=pages) as request:
             self.assertEqual(hosted.list_cases("test"), [CASE, second])
@@ -53,15 +53,37 @@ class HostedTest(unittest.TestCase):
     def test_validates_full_reviewed_case_and_allows_a_fixture(self):
         checks = {**CASE["checks"], "build": None, "installed": "The dependencies are installed."}
         with patch.object(hosted, "_request", return_value={**CASE, "checks": checks}) as request:
-            self.assertEqual(hosted.validate_case("test", CASE_ID, "expo-example"), ({
+            self.assertEqual(hosted.validate_case("test", CASE_ID, ["expo-example"]), ({
                 "skill-activation", "task-example", "installed",
             }, False))
         request.assert_called_once_with("test", "GET", f"/prompts/{CASE_ID}")
 
+    def test_long_skill_names_have_distinct_tags_within_the_firegoat_limit(self):
+        self.assertNotEqual(hosted.skill_tag(hosted.CI_TAG), hosted.CI_TAG)
+        self.assertEqual(hosted.skill_tag("eas-12345678901234567890"), "eas-12345678901234567890")
+        for skill, tag in (("expo-example-with-long-name", "expo-exampl-c1a6f2e806b6"),
+                           ("expo-example-with-long-link", "expo-exampl-2a05cc3ce8d6")):
+            self.assertEqual(hosted.skill_tag(skill), tag)
+            case = {**CASE, "tags": ["expo-skills-ci", tag], "setupCommand": hosted.setup_command(skill)}
+            with self.subTest(skill=skill), patch.object(hosted, "_request", return_value=case):
+                self.assertEqual(hosted.validate_case("test", CASE_ID, [skill]), (set(CASE["checks"]), False))
+
+    def test_checks_each_changed_target_of_a_shared_case(self):
+        names = ["expo-example", "expo-ui"]
+        case = {**CASE, "tags": ["expo-skills-ci", *names, "nightly"]}
+        with patch.object(hosted, "_request", return_value=case):
+            with self.assertRaisesRegex(ValueError, "installation block for expo-ui"):
+                hosted.validate_case("test", CASE_ID, names)
+            case["setupCommand"] += "\n" + hosted.setup_command("expo-ui")
+            self.assertEqual(hosted.validate_case("test", CASE_ID, names), (set(CASE["checks"]), False))
+            case["tags"].remove("expo-ui")
+            with self.assertRaisesRegex(ValueError, "expo-ui tag"):
+                hosted.validate_case("test", CASE_ID, names)
+
     def test_accepts_a_reference_to_the_saved_expo_token(self):
         case = {**CASE, "envMode": "set", "env": ["EXPO_TOKEN"], "envCredentials": [EXPO_CREDENTIAL]}
         with patch.object(hosted, "_request", return_value=case):
-            self.assertEqual(hosted.validate_case("test", CASE_ID, "expo-example"), (set(CASE["checks"]), True))
+            self.assertEqual(hosted.validate_case("test", CASE_ID, ["expo-example"]), (set(CASE["checks"]), True))
 
     def test_rejects_missing_or_blank_prompt_text_and_end_goal(self):
         for field in ("text", "endGoal"):
@@ -70,15 +92,15 @@ class HostedTest(unittest.TestCase):
             for override in ({}, {field: None}, {field: ""}, {field: "  \n"}, {field: 42}):
                 with self.subTest(field=field, override=override), patch.object(hosted, "_request", return_value={**case, **override}):
                     with self.assertRaisesRegex(ValueError, field):
-                        hosted.validate_case("test", CASE_ID, "expo-example")
+                        hosted.validate_case("test", CASE_ID, ["expo-example"])
 
     def test_handles_template_variables_only_present_in_setup(self):
         case = {**CASE, "templateVars": []}
         with patch.object(hosted, "_request", return_value=case):
-            self.assertEqual(hosted.validate_case("test", CASE_ID, "expo-example"), (set(CASE["checks"]), False))
+            self.assertEqual(hosted.validate_case("test", CASE_ID, ["expo-example"]), (set(CASE["checks"]), False))
         with patch.object(hosted, "_request", return_value={**case, "setupCommand": case["setupCommand"] + "\necho '{{other}}'"}):
             with self.assertRaisesRegex(ValueError, "exactly these"):
-                hosted.validate_case("test", CASE_ID, "expo-example")
+                hosted.validate_case("test", CASE_ID, ["expo-example"])
 
     def test_rejects_literal_inherited_extra_or_malformed_token_bindings(self):
         case = {**CASE, "envMode": "set", "env": ["EXPO_TOKEN"], "envCredentials": [EXPO_CREDENTIAL]}
@@ -98,7 +120,7 @@ class HostedTest(unittest.TestCase):
         ):
             with self.subTest(override), patch.object(hosted, "_request", return_value={**case, **override}):
                 with self.assertRaises(ValueError):
-                    hosted.validate_case("test", CASE_ID, "expo-example")
+                    hosted.validate_case("test", CASE_ID, ["expo-example"])
 
     def test_installs_all_skills_for_every_agent_regardless_of_target(self):
         for skill in ("expo-overview", "expo-example"):
@@ -112,7 +134,8 @@ class HostedTest(unittest.TestCase):
 
     def test_rejects_mismatched_or_unsafe_cases(self):
         for override in (
-            {"title": "[expo-examples] Other skill"}, {"tags": []}, {"status": "archived"},
+            {"tags": ["expo-example"]}, {"tags": ["expo-skills-ci"], "title": "[expo-example] Former convention"},
+            {"tags": ["expo-skills-ci", "expo-examples"]}, {"tags": "expo-skills-ci expo-example"}, {"status": "archived"},
             {"templateVars": ["skill_source"]}, {"templateVars": ["skill_owner", "skill_repo"]},
             {"templateVars": ["skill_owner", "skill_sha", "skill_sha"]},
             {"templateVars": None}, {"setupCommand": hosted.setup_command("expo-other")},
@@ -126,7 +149,7 @@ class HostedTest(unittest.TestCase):
         ):
             with self.subTest(override), patch.object(hosted, "_request", return_value={**CASE, **override}):
                 with self.assertRaises(ValueError):
-                    hosted.validate_case("test", CASE_ID, "expo-example")
+                    hosted.validate_case("test", CASE_ID, ["expo-example"])
 
     def test_reuses_existing_run_across_pages(self):
         matched = {**RUN, "status": "failed", "templateArgs": SOURCE_ARGS}

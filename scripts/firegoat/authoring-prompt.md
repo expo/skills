@@ -1,16 +1,22 @@
-Help me test `$skill` on this PR. First check that you can call the Firegoat MCP tool `list_prompts` in the Expo workspace and load the Firegoat skill `suggesting-eval-prompts`. If either is missing, walk me through signing in to https://firegoat.ai with my Expo Google account and connecting the MCP server using https://firegoat.ai/docs/mcp. For missing skills, give me `npx --yes skills@latest add firegoat-ai/skills --global --all`. Resume once both are available.
+Help me test `$skill`. Read the [PR diff]($diff_url), the [skill at this commit]($skill_url), and its relevant references. Pick one behavior this PR changes.
 
-Use the [skill at this commit]($skill_url), its references, and the [PR diff]($diff_url) as source material. Pick one behavior the PR changes. Use `list_prompts` and `get_prompt` to check active and suggested cases. If an active `expo-skills-ci` case for `[$skill]` already covers the change, show me its link and the check that would catch a regression. Otherwise show me a draft top-level `create_prompt` payload. If a scheduled case is close, use a copy as the starting point. Fill in each field for the behavior you picked.
+Check that you can use the Firegoat MCP server in the Expo workspace and load the `suggesting-eval-prompts` skill. If the connection is missing, help me sign in to https://firegoat.ai with my Expo Google account and connect the MCP using https://firegoat.ai/docs/mcp. If the skills are missing, give me `npx --yes skills@latest add firegoat-ai/skills --global --all`.
 
-- `text` — the exact request an Expo user would make. Keep the skill name, install command, and answer out of it.
-- `endGoal` — one observable end state. Name the artifact, output, or service state that would show the user's request succeeded.
-- `checks` — a flat JSON object. Give `skill-activation` a criterion for trace evidence that Claude loaded `$skill`. Add a descriptive `task-*` key for each result the verifier should inspect. Each value is one pass/fail criterion.
-- `setupCommand` — start with the block below, which installs all published skills from this PR for all agents. Append only the fixtures the task needs. For the reusable saved case, replace the quoted source with `'$source_template'`. CI supplies the repository owner, repository name, and commit separately on each run.
+Use `list_prompts` and `get_prompt` to check coverage. CI runs every active eval with both tags `expo-skills-ci` and `$skill_tag`. If one already covers this change, link it and show me the check that would catch a regression. Otherwise draft a case for the uncovered behavior. You can use a suggested case or a copy of a scheduled case as a starting point.
+
+Show me the draft in plain language:
+
+1. **User task** — the exact request an Expo user would make, without naming the skill or giving away the solution.
+2. **Expected outcome** — one observable result that would tell the user the task succeeded.
+3. **Pass/fail checks** — what trace evidence would show that Claude loaded `$skill`, and what evidence would prove each task result.
+4. **Setup and login** — which fixtures the task needs and whether any EAS CLI command requires authentication. If so, name the command and bind the saved Firegoat credential `EXPO_TOKEN` by ID in `envCredentials.EXPO_TOKEN`. If the credential is missing, ask me to add a scoped test token in Firegoat. The agent receives it after setup. Use an empty environment for tasks that need no login.
+
+Start the sandbox with this setup. It installs all published skills from this PR for all agents. Append any fixture steps, including a linked test project ID if needed.
 
 ```sh
 $setup
 ```
 
-Check the EAS CLI commands the agent needs to run. If one requires Expo authentication, tell me which one. Use `list_credentials` to find the saved `EXPO_TOKEN` in the Expo workspace and set `envCredentials.EXPO_TOKEN` to its credential ID. If it is missing, ask me to save a scoped test token in Firegoat. The agent receives it after setup. If the command also needs a linked EAS project, use the test project's ID in the fixture. Keep token values out of chat, commands, and fixtures. For a task that needs no login, use `env: {}` and omit `envCredentials`.
+Wait for my approval before saving. Give the case a descriptive title and both tags above. Save the user task as `text`, the expected outcome as `endGoal`, and the checks as a flat map with `skill-activation` and one `task-*` entry per result. In the saved `setupCommand`, replace the quoted install source with `'$source_template'` so CI can supply the next PR revision.
 
-Use a title beginning `[$skill] `, `tags: ["expo-skills-ci"]`, `status: active`, `run: false`, `frequency: none`, `runsPerEval: 1`, `scaffold: blank`, and `loginHints: false`. Set `harnessModel` to `{"harness":"claude-code","model":"claude-sonnet-4-6"}`. Wait for my approval before saving. Then read the case back with `get_prompt`, check the three variables in `setupCommand`, and share its link.
+Create an active, top-level case with `run: false`, `frequency: none`, `runsPerEval: 1`, `scaffold: blank`, `loginHints: false`, and Claude Code on `claude-sonnet-4-6`. Read it back with `get_prompt`, verify its tags and setup, and give me the link.

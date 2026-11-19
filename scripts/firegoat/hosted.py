@@ -1,5 +1,6 @@
 """Discover reviewed Firegoat cases, request their runs, and read the results."""
 
+import hashlib
 import http.client
 import json
 import re
@@ -113,8 +114,14 @@ def _pages(api_key, path, **params):
 def list_cases(api_key):
     return [
         case for case in _pages(api_key, "/prompts", tags=CI_TAG, status="active")
-        if case["status"] == "active" and CI_TAG in (case["tags"] or [])
+        if case["status"] == "active" and isinstance(case.get("tags"), list) and CI_TAG in case["tags"]
     ]
+
+
+def skill_tag(skill):
+    if len(skill) <= 24 and skill != CI_TAG:
+        return skill
+    return skill[:11] + "-" + hashlib.sha256(skill.encode()).hexdigest()[:12]
 
 
 def setup_command(skill):
@@ -144,18 +151,20 @@ def _case_uses_expo_token(case):
     raise ValueError("Use an empty environment or bind only EXPO_TOKEN to the saved EXPO_TOKEN credential")
 
 
-def validate_case(api_key, case_id, skill):
+def validate_case(api_key, case_id, skills):
     case = _request(api_key, "GET", f"/prompts/{_uuid(case_id)}")
-    if case.get("status") != "active" or CI_TAG not in (case.get("tags") or []):
+    tags = case.get("tags")
+    if case.get("status") != "active" or not isinstance(tags, list) or CI_TAG not in tags:
         raise ValueError(f"Expected an active Firegoat prompt tagged {CI_TAG}")
-    if not (case.get("title") or "").startswith(f"[{skill}] "):
-        raise ValueError(f"Firegoat case title must start with '[{skill}] '")
     for field in ("text", "endGoal"):
         if not isinstance(case.get(field), str) or not case[field].strip():
             raise ValueError(f"The Firegoat case needs a nonempty {field}")
     setup = (case.get("setupCommand") or "").replace("\r\n", "\n")
-    if f"\n{setup_command(skill)}\n" not in f"\n{setup}\n":
-        raise ValueError(f"The case setup must include the reviewed PR installation block for {skill}")
+    for skill in skills:
+        if skill_tag(skill) not in tags:
+            raise ValueError(f"Expected the Firegoat prompt to have the {skill_tag(skill)} tag")
+        if f"\n{setup_command(skill)}\n" not in f"\n{setup}\n":
+            raise ValueError(f"The case setup must include the reviewed PR installation block for {skill}")
     # Firegoat reports an empty list for variables used only in setupCommand.
     variables = set(re.findall(r"\{\{\s*([a-zA-Z_][\w.-]*)\s*\}\}", case["text"] + "\n" + setup))
     expected = set(SOURCE_PATTERN.groupindex)
