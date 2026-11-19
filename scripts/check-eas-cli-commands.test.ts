@@ -118,4 +118,60 @@ describe("Checking EAS CLI command examples", () => {
       { line: 7, text: 'echo "ignore && eas build" && EXPO_TOKEN="$TOKEN" eas submit' },
     ]);
   });
+
+  it("should find bare CLI flags and version checks", () => {
+    const content = [
+      "```bash",
+      "eas --version",
+      "eas --help",
+      "eas -V",
+      "eas",
+      "npx --yes eas-cli@latest --version",
+      "```",
+    ].join("\n");
+
+    expect(findBareEasCommands(content, "SKILL.md")).toEqual([
+      { line: 2, text: "eas --version" },
+      { line: 3, text: "eas --help" },
+      { line: 4, text: "eas -V" },
+      { line: 5, text: "eas" },
+    ]);
+  });
+
+  it("should check only executable YAML fields and their block values", () => {
+    const content = [
+      "```yaml",
+      "name: eas build && eas submit",
+      "description: eas --help",
+      "steps:",
+      "  - name: eas --version",
+      "  - run: npx --yes eas-cli@latest build",
+      "  - run: |",
+      "      echo ready",
+      "      eas build",
+      "  - command: 'eas --help'",
+      "```",
+    ].join("\n");
+
+    expect(findBareEasCommands(content, "SKILL.md")).toEqual([
+      { line: 9, text: "eas build" },
+      { line: 10, text: "- command: 'eas --help'" },
+    ]);
+  });
+
+  it("should ignore shell text quoted across lines while checking later commands", () => {
+    const shell = [
+      'echo "To build the app, run:',
+      'eas build"',
+      "eas --version",
+    ].join("\n");
+    const content = ["```bash", shell, "```"].join("\n");
+
+    expect(findBareEasCommands(content, "SKILL.md")).toEqual([
+      { line: 4, text: "eas --version" },
+    ]);
+    expect(findBareEasCommands(shell, "scripts/example.sh")).toEqual([
+      { line: 3, text: "eas --version" },
+    ]);
+  });
 });

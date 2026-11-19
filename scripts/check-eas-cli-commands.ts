@@ -7,21 +7,37 @@ export type BareEasCommand = { line: number; text: string };
 
 const runnableFences = new Set(["", "bash", "sh", "shell", "zsh", "console", "terminal", "yaml", "yml"]);
 const shellExtensions = new Set([".sh", ".bash", ".zsh"]);
-const commandPosition = /(?:^\s*(?:\$\s+)?|(?:&&|\|\||[;|]|\$\(|`)\s*|\b(?:then|do)\s+)(?:(?:if|elif|while|until)\s+)?(?:!\s+)?(?:env\s+)?(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*eas\s+[a-z][\w:-]*/;
-const yamlCommand = /^\s*(?:-\s*)?(?:run|command):\s*(.*)$/;
+const commandBoundary = /(?:^\s*(?:\$\s+)?|(?:&&|\|\||[;|]|\$\(|`)\s*|\b(?:then|do)\s+)/;
+const commandPrefix = /(?:(?:if|elif|while|until)\s+)?(?:!\s+)?(?:env\s+)?/;
+const environmentAssignments = /(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*/;
+const bareEas = /eas(?=$|[\s;&|()<>])/;
+const commandPosition = new RegExp(
+  [commandBoundary, commandPrefix, environmentAssignments, bareEas]
+    .map((part) => part.source)
+    .join("")
+);
+const yamlCommand = /^(\s*)(?:-\s+)?(?:run|command):\s*(.*)$/;
 
-function executableShellText(line: string): string {
+type Quote = "'" | '"';
+type ShellState = {
+  quote?: Quote;
+  substitutions: { end: ")" | "`"; returnQuote?: Quote; depth: number }[];
+};
+
+function newShellState(): ShellState {
+  return { substitutions: [] };
+}
+
+function executableShellText(line: string, state: ShellState): string {
   // Preserve command substitutions while hiding quoted arguments and comments from the command match.
   const text = line.split("");
-  let quote: "'" | '"' | undefined;
-  const substitutions: { end: ")" | "`"; returnQuote: typeof quote; depth: number }[] = [];
 
   for (let index = 0; index < line.length; index++) {
     const char = line[index];
 
-    if (quote === "'") {
+    if (state.quote === "'") {
       text[index] = " ";
-      if (char === "'") quote = undefined;
+      if (char === "'") state.quote = undefined;
       continue;
     }
     if (char === "\\") {
@@ -29,42 +45,42 @@ function executableShellText(line: string): string {
       if (index + 1 < line.length) text[++index] = " ";
       continue;
     }
-    if (quote === '"' && char === '"') {
+    if (state.quote === '"' && char === '"') {
       text[index] = " ";
-      quote = undefined;
+      state.quote = undefined;
       continue;
     }
-    if (quote === '"' && char !== "`" && line.slice(index, index + 2) !== "$(") {
+    if (state.quote === '"' && char !== "`" && line.slice(index, index + 2) !== "$(") {
       text[index] = " ";
       continue;
     }
     if (char === "'" || char === '"') {
       text[index] = " ";
-      quote = char;
+      state.quote = char;
       continue;
     }
     if (line.slice(index, index + 2) === "$(") {
-      substitutions.push({ end: ")", returnQuote: quote, depth: 0 });
-      quote = undefined;
+      state.substitutions.push({ end: ")", returnQuote: state.quote, depth: 0 });
+      state.quote = undefined;
       index++;
       continue;
     }
-    const currentSubstitution = substitutions.at(-1);
+    const currentSubstitution = state.substitutions.at(-1);
     if (char === "`") {
       if (currentSubstitution?.end === "`") {
-        quote = currentSubstitution.returnQuote;
-        substitutions.pop();
+        state.quote = currentSubstitution.returnQuote;
+        state.substitutions.pop();
       } else {
-        substitutions.push({ end: "`", returnQuote: quote, depth: 0 });
-        quote = undefined;
+        state.substitutions.push({ end: "`", returnQuote: state.quote, depth: 0 });
+        state.quote = undefined;
       }
       continue;
     }
     if (char === "(" && currentSubstitution?.end === ")") currentSubstitution.depth++;
     if (char === ")" && currentSubstitution?.end === ")") {
       if (currentSubstitution.depth === 0) {
-        quote = currentSubstitution.returnQuote;
-        substitutions.pop();
+        state.quote = currentSubstitution.returnQuote;
+        state.substitutions.pop();
       } else {
         currentSubstitution.depth--;
       }
@@ -79,19 +95,22 @@ function executableShellText(line: string): string {
   return text.join("");
 }
 
-function isBareCommand(line: string): boolean {
-  if (line.trimStart().startsWith("#")) return false;
-  let shell = yamlCommand.exec(line)?.[1]?.trim() ?? line;
+function unquoteYamlValue(value: string): string {
+  const shell = value.trim();
   if (
     (shell.startsWith('"') && shell.lastIndexOf('"') > 0) ||
     (shell.startsWith("'") && shell.lastIndexOf("'") > 0)
   ) {
     const closingQuote = shell.lastIndexOf(shell[0] as string);
     if (/^\s*(?:#.*)?$/.test(shell.slice(closingQuote + 1))) {
-      shell = shell.slice(1, closingQuote);
+      return shell.slice(1, closingQuote);
     }
   }
-  return commandPosition.test(executableShellText(shell));
+  return shell;
+}
+
+function isBareCommand(line: string, state: ShellState): boolean {
+  return commandPosition.test(executableShellText(line, state));
 }
 
 export function findBareEasCommands(content: string, filePath: string): BareEasCommand[] {
@@ -99,7 +118,9 @@ export function findBareEasCommands(content: string, filePath: string): BareEasC
   if (!isMarkdown && !shellExtensions.has(extname(filePath))) return [];
 
   const findings: BareEasCommand[] = [];
-  let fence: { marker: string; length: number; runnable: boolean } | undefined;
+  let fence: { marker: string; length: number; language: string; runnable: boolean } | undefined;
+  let shellState = newShellState();
+  let yamlBlock: { indent: number; state: ShellState } | undefined;
   for (const [index, line] of content.split(/\r?\n/).entries()) {
     if (isMarkdown) {
       const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
@@ -110,8 +131,11 @@ export function findBareEasCommands(content: string, filePath: string): BareEasC
           fence = {
             marker: sequence[0] as string,
             length: sequence.length,
+            language,
             runnable: runnableFences.has(language),
           };
+          shellState = newShellState();
+          yamlBlock = undefined;
           continue;
         }
         if (
@@ -124,8 +148,30 @@ export function findBareEasCommands(content: string, filePath: string): BareEasC
         }
       }
       if (!fence?.runnable) continue;
+      if (fence.language === "yaml" || fence.language === "yml") {
+        // YAML labels and metadata are inert; only run/command values contain shell code.
+        const field = yamlCommand.exec(line);
+        if (field) {
+          yamlBlock = undefined;
+          const value = (field[2] as string).trim();
+          if (/^[|>][+-]?(?:\s+#.*)?$/.test(value)) {
+            yamlBlock = { indent: (field[1] as string).length, state: newShellState() };
+          } else if (isBareCommand(unquoteYamlValue(value), newShellState())) {
+            findings.push({ line: index + 1, text: line.trim() });
+          }
+          continue;
+        }
+        if (yamlBlock && line.trim()) {
+          if (line.length - line.trimStart().length > yamlBlock.indent) {
+            if (isBareCommand(line, yamlBlock.state)) findings.push({ line: index + 1, text: line.trim() });
+            continue;
+          }
+          yamlBlock = undefined;
+        }
+        continue;
+      }
     }
-    if (isBareCommand(line)) findings.push({ line: index + 1, text: line.trim() });
+    if (isBareCommand(line, shellState)) findings.push({ line: index + 1, text: line.trim() });
   }
   return findings;
 }
