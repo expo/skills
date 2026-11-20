@@ -26,7 +26,7 @@ Simulator UDID. These are named actions, not an arbitrary remote shell or
 `simctl` interface. Keep using agent-device or another selected controller for
 UI-tree snapshots and element references.
 
-In released CLIs (through 27.9.0), quoting or `--` does not make a recognized
+In released CLIs (through 27.11.0), quoting or `--` does not make a recognized
 `name=value` token literal text. To send exact text, put it in `params` in a
 saved action file (see below), or avoid that parser shape. Do not use unreleased
 interactive syntax.
@@ -60,6 +60,14 @@ curl -fsS -X POST -H "Authorization: Bearer <token>" -o shot.jpg \
 
 Check the response `Content-Type`: an older host ignores the options and
 returns a full PNG. Keep the token out of logs and reports.
+
+On Android with Device Hub 0.26.0+, the same query works at
+`https://<preview-host>/vendor/serve-emu/api/screenshot`. For a session started
+with `--public-link`, `remoteConfig.previewApiUrl` in `simulator:get --json` holds
+the host and the `token` query value; send that token as the bearer token. The
+response also has `X-Expo-Screenshot-Metadata` (Device Hub 0.23.1+). Android
+ignores the `automation` body: an Android screenshot never resets the idle
+timer, and the session saves each one as an artifact.
 
 With serve-sim 0.14.2+, the `X-Expo-Screenshot-Metadata` response header holds
 the returned image's `width`, `height`, and `displayRotation` as JSON. For
