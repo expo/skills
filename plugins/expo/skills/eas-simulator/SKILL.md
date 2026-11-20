@@ -42,7 +42,7 @@ if the user set a limit you would go past, or if the work grows beyond what they
 
 - `--max-duration-minutes N` is the hard automatic-stop deadline. You can set it up to the plan limit (115 minutes on paid plans). The timer starts when the session is ready.
 - `--max-idle-time-minutes N` stops a session after that many inactive minutes. Omitted means **no idle timeout**: the session runs until its maximum duration or an explicit stop.
-- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands, which are recorded as session events with producer `appium`). On iOS, browser input and some `simulator:control` actions (such as app launches and screenshots) also reset it. Settings, permissions, and app-file actions do not. **Watching the preview does not reset it, and neither does browser input on Android.** For a user-driven browser preview, rely on the maximum duration, not idle time, to bound the session. Android `web-preview-only` sessions reject `--max-idle-time-minutes`.
+- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands, which are recorded as session events with producer `appium`). Browser input in the preview also resets it on both platforms (on Android, rotation and screenshots do not count). On iOS, some `simulator:control` actions (such as app launches and screenshots) also reset it. Settings, permissions, and app-file actions do not. **Watching the preview does not reset it.** For a user-driven browser preview, rely on the maximum duration, not idle time, to bound the session. Android `web-preview-only` sessions reject `--max-idle-time-minutes`.
 - `npx --yes eas-cli@latest account:usage` shows the selected account's Simulator minutes.
 
 ## Check availability first
@@ -69,12 +69,12 @@ Use the server's current device catalog instead of guessing names or copying a s
 npx --yes eas-cli@latest simulator:devices                         # both platforms
 npx --yes eas-cli@latest simulator:devices --platform ios          # iPhones and iPads
 npx --yes eas-cli@latest simulator:devices --platform android      # phones and tablets
-npx --yes eas-cli@latest simulator:devices --json                  # identifiers and display names by platform
+npx --yes eas-cli@latest simulator:devices --json                  # identifiers, display names, isDefault (27.11.0+)
 ```
 
 This read-only command requires an Expo login or `EXPO_TOKEN`, but no running session or linked project. Copy the exact `identifier` (the table's `--device value`) into `simulator:start --platform <ios|android> --device <identifier>`. Quote names containing spaces or parentheses. For example, use `--device "iPad mini (A17 Pro)"` on iOS or `--device pixel_tablet` on Android when listed.
 
-**Omit `--device` to let the server choose its current default.** Do not hardcode a default or infer it from the first catalog entry. The CLI's JSON output contains `identifier` and `displayName`; it does not currently expose the API's `isDefault` field. A listed device is not a promise that it is pre-warmed or starts faster.
+**Omit `--device` to let the server choose its current default.** Do not hardcode a default or infer it from the first catalog entry. The JSON output contains `identifier` and `displayName`. On CLI 27.11.0+, it also has `isDefault`, and the table marks that device with `(default)`. A listed device is not a promise that it is pre-warmed or starts faster.
 
 If `simulator:devices` is unrecognized, update the CLI and check `simulator:devices --help`. Do not create a session just to discover device names. For selecting a device at startup versus inspecting or targeting devices inside an existing session, see [references/run-your-app.md](./references/run-your-app.md#targeting-a-device--ipad-or-several-at-once).
 
@@ -113,7 +113,7 @@ To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in 
 - **"Open it here" (Cursor/VS Code)** → print the URL on its own line and tell the user to open Simple Browser (`Cmd/Ctrl+Shift+P` → "Simple Browser: Show") and paste it. Then **stop**: do not shell out to a system browser or a Cursor/VS Code URL handler, and do not ask "did a tab appear?" — you can't confirm it, the handoff is done.
 - **Never `open` the `webPreviewUrl` on the sim.** It's a browser preview, not a deep link and not an `agent-device open` argument; routing it to the device renders a browser-in-a-browser (a real past failure).
 - **Headless agent** (no display) → just return the URL as the deliverable.
-- **Keeping it alive for the user to drive** → use `--max-duration-minutes N` (up to the plan limit). Watching the preview (and any browser input on Android) does not reset `--max-idle-time-minutes`, so idle timeout is not a reliable lifetime bound for this case. Tell the user when the session expires, using the CLI's reported duration or expiry. Keep it running for the requested preview; stop sessions created for one-shot tasks when the task finishes.
+- **Keeping it alive for the user to drive** → use `--max-duration-minutes N` (up to the plan limit). Watching the preview does not reset `--max-idle-time-minutes`, so idle timeout is not a reliable lifetime bound for this case. Tell the user when the session expires, using the CLI's reported duration or expiry. Keep it running for the requested preview; stop sessions created for one-shot tasks when the task finishes.
 
 `start` also prints a job-run URL.
 
