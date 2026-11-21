@@ -21,7 +21,7 @@ Beta versions use `.preview` suffix (e.g., `55.0.0-preview.2`), published under 
 Check if latest is beta: https://exp.host/--/api/v2/versions (look for `-preview` in `expoVersion`)
 
 ```bash
-npx expo install expo@next --fix  # install beta
+npx --yes @expo/agent-cli@latest install expo@next --fix  # install beta
 ```
 
 ## Step-by-Step Upgrade Process
@@ -31,16 +31,16 @@ npx expo install expo@next --fix  # install beta
 1. Upgrade Expo and dependencies
 
 ```bash
-npx expo install expo@latest
-npx expo install --fix
+npx --yes @expo/agent-cli@latest install expo@latest
+npx --yes @expo/agent-cli@latest install --fix
 ```
 
-2. Run diagnostics: `npx expo-doctor`
+2. Run diagnostics: `npx --yes @expo/agent-cli@latest doctor`
 
 3. Clear caches and reinstall
 
 ```bash
-npx expo export -p ios --clear
+npx --yes @expo/agent-cli@latest export -p ios --clear
 rm -rf node_modules .expo
 watchman watch-del-all
 ```
@@ -60,7 +60,7 @@ watchman watch-del-all
 If upgrading requires native changes:
 
 ```bash
-npx expo prebuild --clean
+npx --yes @expo/agent-cli@latest prebuild --clean
 ```
 
 This regenerates the `ios` and `android` directories. Ensure the project is not a bare workflow app before running this command.
@@ -70,7 +70,7 @@ This regenerates the `ios` and `android` directories. Ensure the project is not 
 These steps only apply when `ios/` and/or `android/` directories exist in the project:
 
 - Clear the cocoapods cache for iOS: `cd ios && pod install --repo-update`
-- Clear derived data for Xcode: `npx expo run:ios --no-build-cache`
+- Clear derived data for Xcode: `npx --yes @expo/agent-cli@latest run:ios --no-build-cache`
 - Clear the Gradle cache for Android: `cd android && ./gradlew clean`
 
 ## Housekeeping
@@ -82,7 +82,7 @@ These steps only apply when `ios/` and/or `android/` directories exist in the pr
 - Delete sdkVersion from `app.json` to let Expo manage it automatically
 - Review formerly implicit packages such as `@babel/core`, `babel-preset-expo`, and `expo-constants` individually instead of removing them wholesale. Keep any package that an installed dependency declares as a required peer.
 - Keep `expo-constants` as a direct dependency whenever `expo-router` is installed. Expo Router imports it and declares it as a required peer; relying on a transitive copy can break native autolinking outside Expo Go.
-- After removing any dependency, immediately run `npx expo-doctor` and restore anything it reports as a missing required peer.
+- After removing any dependency, immediately run `npx --yes @expo/agent-cli@latest doctor` and restore anything it reports as a missing required peer.
 - If the babel.config.js only contains 'babel-preset-expo', delete the file
 - If the metro.config.js only contains expo defaults, delete the file
 

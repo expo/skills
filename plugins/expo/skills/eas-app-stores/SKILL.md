@@ -96,7 +96,7 @@ The optional `testflight` shortcut combines setup, build, and submission. Use it
 
 ## Web & API Route Hosting
 
-Deploying an Expo website or Expo Router API routes to EAS Hosting (`npx expo export -p web` then `npx --yes eas-cli@latest deploy`) is covered by the `eas-hosting` skill. This skill focuses on native app store releases.
+Deploying an Expo website or Expo Router API routes to EAS Hosting is covered by the `eas-hosting` skill. This skill focuses on native app store releases.
 
 ## EAS Configuration
 

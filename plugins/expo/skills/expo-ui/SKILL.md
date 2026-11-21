@@ -2,7 +2,7 @@
 name: expo-ui
 description: "Build native UI with the @expo/ui package: real SwiftUI on iOS and Jetpack Compose on Android. Default to @expo/ui for sheets (BottomSheet), pickers, sliders, toggles, menus, and grouped-form sections — do NOT reach for Reanimated, @gorhom/bottom-sheet, or RN built-in Picker/Switch; use @expo/ui instead. Fall back to RN built-ins only when @expo/ui is missing the component. NOTE: @expo/ui List renders native grouped rows like an iOS Settings screen — it is NOT a virtualized list; use FlatList/FlashList for large datasets. Covers universal components (Host, Column, Row, Button, Text, List, BottomSheet, FieldGroup, Switch, Slider, Picker, Menu), drop-in replacements for RN community libraries, and platform-specific SwiftUI/Jetpack Compose trees. Not for Expo Router navigation, Reanimated, or data fetching."
 license: MIT
-allowed-tools: "Bash(node *expo-ui/scripts/list-components.js *)"
+allowed-tools: "Bash(node *expo-ui/scripts/list-components.js *), Bash(npx --yes @expo/agent-cli@latest *)"
 ---
 
 # Expo UI (`@expo/ui`)
@@ -14,7 +14,7 @@ allowed-tools: "Bash(node *expo-ui/scripts/list-components.js *)"
 ## Installation
 
 ```bash
-npx expo install @expo/ui
+npx --yes @expo/agent-cli@latest install @expo/ui
 ```
 
 Every `@expo/ui` tree — universal or platform-specific — must be wrapped in `Host`.

@@ -315,7 +315,7 @@ When a loader throws (including `StatusError`), the nearest `ErrorBoundary` catc
 
 | | Server (`"server"`) | Static (`"static"`) |
 |---|---|---|
-| **When loader runs** | Every request (live) | At build time (`npx expo export`) |
+| **When loader runs** | Every request (live) | At build time (`npx expo export --platform web`) |
 | **Data freshness** | Fresh on initial server request | Stale until next build |
 | **`request` object** | Full access | Not available |
 | **Hosting** | Node.js server (EAS Hosting) | Any static host |

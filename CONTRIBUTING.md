@@ -147,7 +147,8 @@ run that skill's own validation.
 
 `check-skill-limits.ts` enforces more than the size caps: the naming rule (step 2), the paid
 costs callout (step 4), the Codex agent file (step 7), the `skills.sh.json` grouping (step 8),
-and the feedback block (step 9) all fail CI when violated.
+and the feedback block (step 9) all fail CI when violated. It also enforces the agent CLI rule
+in Conventions below.
 
 ### Syncing `expo-animation`
 
@@ -160,6 +161,7 @@ preserves this repository's skill name, collaboration notice, and feedback block
 - MIT license for every skill; use `@expo.io` or `@expo.dev` author emails.
 - Do not add a `version` key to `SKILL.md` frontmatter. Official skill validators reject it. Versions live on the plugin manifests.
 - Keep `references/` next to the skill that uses them.
+- Run Expo CLI through the agent CLI: write `npx --yes @expo/agent-cli@latest <command>`, not `npx expo <command>`, `npx expo-doctor` (use `doctor`), or `npx create-expo-app` (use `new`). Web commands stay on Expo CLI: `npx expo export --platform web`, `npx expo serve`, and `npx expo start --web`. A skill whose `allowed-tools` pre-approves Bash also lists `Bash(npx --yes @expo/agent-cli@latest *)`. CI enforces both rules. `expo-animation` is exempt, because it is synced from upstream.
 - Don't broaden a skill's scope or trigger intent when editing it - keep changes focused.
 
 ## Runnable brownfield fixtures

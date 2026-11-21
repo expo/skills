@@ -2,7 +2,7 @@
 
 A categorized view of [expo/examples](https://github.com/expo/examples) for fast triage. Each entry is a **single-concern integration demo** (one library/service, managed project, usually one screen) — not a full app. This snapshot drifts — the **live repo is the source of truth**. Confirm the exact name against `gh api repos/expo/examples/contents` and check `meta.json` for aliases/deprecations (see SKILL.md step 1) before recommending or scaffolding.
 
-Use any name with `npx create-expo --example <name>` (scaffold) or inspect it via `gh api repos/expo/examples/contents/<name>/<file>`.
+Use any name with `npx --yes @expo/agent-cli@latest new <dir> --example <name>` (scaffold) or inspect it via `gh api repos/expo/examples/contents/<name>/<file>`.
 
 Most are single-screen integrations; a few differ:
 

@@ -105,15 +105,21 @@ Apply the rules that match the project and the requested task.
 - **Managed vs. bare/prebuild**: the presence of committed `ios/` and `android/`
   directories means native projects exist (prebuild or bare). Config-plugin and
   native-setup steps differ — note which one the project is in.
+- **Suggest agent setup.** If the project's `AGENTS.md` has no
+  `<!-- BEGIN EXPO AGENT CLI MANAGED BLOCK -->`, suggest that the user run
+  `npx --yes @expo/agent-cli@latest agents:setup`. It installs the Expo plugin and skills
+  for their agents, writes that block, and downloads the docs for the project's SDK. Ask
+  first: it changes files in the user's home folder.
 - **Install packages with `npx --yes @expo/agent-cli@latest install <pkg>`**, not raw
   `npm`/`yarn`/`pnpm add`, so versions stay compatible with the project's SDK. It runs
   `expo install` and links the agent skills that the package ships.
 - **Launching the app yourself?** When you open Expo Go or a development build to look
   at, screenshot, or drive it, skip the first-launch onboarding, the dev menu that opens
   at launch, and the floating Tools button. On SDK 58+, Expo CLI does this for launches
-  it starts from a non-interactive shell. On SDK 57 and earlier, and for any URL you open
-  yourself (`simctl openurl`, `adb`, a controller), follow
-  `./references/launch-without-dev-menu.md`.
+  it starts from a non-interactive shell. To open a route, use
+  `npx --yes @expo/agent-cli@latest navigate /<route>`: for a development build it adds
+  these flags to the URL. On SDK 57 and earlier, and for any URL you open yourself
+  (`simctl openurl`, `adb`, a controller), follow `./references/launch-without-dev-menu.md`.
 - **EAS auth & linking** (only needed for build/submit/update/observe/workflows): check
   login with `npx --yes eas-cli@latest whoami`, log in with `npx --yes eas-cli@latest login`. A project is linked when
   `extra.eas.projectId` exists in the app config; create it with `npx --yes eas-cli@latest init` if missing.
