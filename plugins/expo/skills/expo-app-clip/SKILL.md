@@ -185,7 +185,7 @@ curl https://may20.expo.app/.well-known/apple-app-site-association
 Inspect the Info.plist that the parent app's config plugins produce (no prebuild needed):
 
 ```sh
-npx --yes @expo/agent-cli@latest inspect:config-plugins --platform ios --file infoPlist
+npx --yes @expo/agent-cli@latest config --type introspect
 ```
 
 Mirror the permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.

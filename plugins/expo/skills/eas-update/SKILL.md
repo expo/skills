@@ -2,7 +2,7 @@
 name: eas-update
 description: "Configure and use EAS Update for over-the-air JavaScript and asset updates with expo-updates and EAS CLI. Use when setting up OTA updates, configuring branches/channels/runtime versions, publishing to preview/staging/production, testing updates, or debugging why an installed build still shows old code. Load for TestFlight, preview, or production updates that do not appear, including questions about cold launches or reopening the app. Not for update health metrics; use eas-update-insights for adoption, crashes, and rollout monitoring."
 license: MIT
-allowed-tools: "Bash(npx *eas-cli@*), Bash(eas *), Bash(npx --yes @expo/agent-cli@latest *)"
+allowed-tools: "Bash(npx *eas-cli@*), Bash(npx --yes @expo/agent-cli@latest *)"
 ---
 
 # EAS Update
@@ -67,7 +67,7 @@ Use an update for changes to JavaScript, styling, and bundled assets that the in
 
 Create a new native build when a change adds or modifies native code or native configuration, including most native-library additions and SDK upgrades. Do not work around a runtime mismatch or imply that publishing can add native capabilities to an existing build. See https://docs.expo.dev/eas-update/runtime-versions.md.
 
-To check, run `npx --yes @expo/agent-cli@latest status`. Its `ota` line says whether publishing an update now is safe for the installed builds. Safe does not mean they receive it: with a `fingerprint` runtime version, a native change gives the update a new runtime version, so the installed builds are not offered it. Add `--build <id>` to compare with one EAS build. To confirm that a build receives an update, check its platform, runtime version, and channel (see Debug a build that did not update).
+To check, run `npx --yes @expo/agent-cli@latest status`. Its `ota` line says whether publishing an update now is safe for the installed builds. A safe result does not mean that the installed builds get the update. With a `fingerprint` runtime version, a native change gives the update a new runtime version. The installed builds do not have that runtime version, so they are not offered the update. Add `--build <id>` to compare with one EAS build. To confirm that a build receives an update, check its platform, runtime version, and channel (see Debug a build that did not update).
 
 Do not change the project's runtime-version policy as an incidental fix. Explain how the current policy affects compatibility; treat changing it as a separate decision because it changes which installed builds can receive future updates.
 
