@@ -38,7 +38,7 @@ Most Expo apps work in Expo Go without any custom native code. Before you make a
 
 ### When Custom Builds Are Required
 
-You need a custom build (`npx --yes @expo/agent-cli@latest dev --ios --dev-client`, or `npx --yes eas-cli@latest build`) ONLY when using:
+You need a custom build (`npx --yes @expo/agent-cli@latest dev --ios --dev-client` or `--android --dev-client`, or `npx --yes eas-cli@latest build`) ONLY when using:
 
 - **Local Expo modules** (custom native code in `modules/`)
 - **Apple targets** (widgets, app clips, extensions via `@bacons/apple-targets`)
