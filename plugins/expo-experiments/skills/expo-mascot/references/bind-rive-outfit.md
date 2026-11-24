@@ -35,7 +35,7 @@ Add to the existing view model when one is already bound. Verify the property ke
 
 ## Validate and return the result
 
-Run `rive <project-dir> --verify` and `rive inspect <project-dir>` to check the scene and binding. Preview the garment through a full `idle` loop. If needed, use a temporary copy of the project with the garment as the test instance's default image. Rive's CLI preview can show authored assets, while Expo verifies a new image supplied at runtime. Restore the intended default before exporting and verify again. Use [Add mascot idle motion](./add-mascot-idle-motion.md) for capture guidance.
+Run `rive <project-dir> --verify` and `rive inspect <project-dir>` to check the scene and binding. Preview the garment through a full `idle` loop. If needed, use a temporary copy of the project with the garment as the test instance's default image. Keep any returned preview outside the temporary directory and remove the copy after the check. If you changed the default in the authored project, restore the intended default before exporting and verify again. Use [Add mascot idle motion](./add-mascot-idle-motion.md) for capture guidance.
 
 Export the [updated runtime file](./set-up-rive-project.md#export-and-return-the-editor-link) and load it in an [Expo development build](./add-to-expo-screen.md). Keep one bound View Model instance on `RiveView`. Resolve its authored View Model with `riveFile.defaultArtboardViewModelAsync(ArtboardByName(artboardName))` for the artboard's default binding or `riveFile.viewModelByNameAsync(viewModelName)` for a model you explicitly bound. Read and reuse the schema from `await viewModel.getPropertiesAsync()`. Before looking up the image property, require an exact name and the runtime type `assetImage`:
 
