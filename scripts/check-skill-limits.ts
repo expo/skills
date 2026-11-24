@@ -45,16 +45,29 @@ function syncFeedbackBlock(path: string, skillName: string): void {
   if (updated !== content) writeFileSync(path, updated);
 }
 
-function loadCatalogGroups(): Map<string, "framework" | "paid" | "experimental"> {
-  const groups = new Map<string, "framework" | "paid" | "experimental">();
+type CatalogGroup = "framework" | "paid" | "experimental";
+
+function catalogGroupKind(title: string): CatalogGroup | undefined {
+  if (title.startsWith("Framework")) return "framework";
+  if (title.startsWith("Services")) return "paid";
+  if (title.startsWith("Experimental")) return "experimental";
+  return undefined;
+}
+
+function loadCatalogGroups(errors: string[]): Map<string, CatalogGroup> {
+  const groups = new Map<string, CatalogGroup>();
   const catalog = JSON.parse(readFileSync("skills.sh.json", "utf8"));
   for (const grouping of catalog.groupings ?? []) {
-    const kind = grouping.title.startsWith("Framework")
-      ? "framework"
-      : grouping.title.startsWith("Experimental")
-        ? "experimental"
-        : "paid";
-    for (const skill of grouping.skills ?? []) groups.set(skill, kind);
+    const kind = catalogGroupKind(grouping.title ?? "");
+    if (!kind) {
+      errors.push(`skills.sh.json: unknown group "${grouping.title}"; use Framework, Services, or Experimental`);
+      continue;
+    }
+    for (const skill of grouping.skills ?? []) {
+      // A second listing would decide which rules apply, so a paid skill could skip its callout.
+      if (groups.has(skill)) errors.push(`skills.sh.json: "${skill}" is listed in more than one group`);
+      else groups.set(skill, kind);
+    }
   }
   return groups;
 }
@@ -68,9 +81,9 @@ if (FIX_FEEDBACK) {
   }
 }
 
-const catalogGroups = loadCatalogGroups();
-const seenDirs = new Set<string>();
 const errors: string[] = [];
+const catalogGroups = loadCatalogGroups(errors);
+const seenDirs = new Set<string>();
 
 for (const path of skills) {
   const { name, description, body, bodyLines } = parseSkill(path);
@@ -97,8 +110,11 @@ for (const path of skills) {
 
   // paid skills disclose costs up front (dash style varies: em dash or hyphen)
   const normalizedBody = body.replace(/—/g, "-");
-  if (group === "paid" && (!normalizedBody.includes(PAID_CALLOUT) || !normalizedBody.includes(PAID_PRICING_LINK)))
+  const hasPaidCallout = normalizedBody.includes(PAID_CALLOUT);
+  if (group === "paid" && (!hasPaidCallout || !normalizedBody.includes(PAID_PRICING_LINK)))
     errors.push(`${rel}: paid skill body must include the "${PAID_CALLOUT}" callout with a ${PAID_PRICING_LINK} link`);
+  if (group === "framework" && hasPaidCallout)
+    errors.push(`${rel}: skill has the "${PAID_CALLOUT}" callout but skills.sh.json lists it in the framework group; move it to Services`);
 
   // Codex trigger metadata
   const openaiYamlPath = join(dirname(path), "agents", "openai.yaml");
