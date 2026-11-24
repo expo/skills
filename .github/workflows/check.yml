@@ -33,6 +33,11 @@ jobs:
         continue-on-error: true
         run: bun test scripts/check-plugin-version-bump.test.ts
 
+      - name: Ensure that skill limits script is healthy
+        id: skill-limits-test
+        continue-on-error: true
+        run: bun test scripts/check-skill-limits.test.ts
+
       - name: Check skill requirements
         id: skill-limits
         continue-on-error: true
@@ -72,6 +77,7 @@ jobs:
           EAS_COMMAND_CHECK_OUTCOME: ${{ steps.eas-command-check.outcome }}
           STATUS_SUMMARY_TEST_OUTCOME: ${{ steps.status-summary-test.outcome }}
           VERSION_CHECK_TEST_OUTCOME: ${{ steps.version-check-test.outcome }}
+          SKILL_LIMITS_TEST_OUTCOME: ${{ steps.skill-limits-test.outcome }}
           VERSION_CHECK_OUTCOME: ${{ steps.version-check.outcome }}
           ROUTING_CHECK_OUTCOME: ${{ steps.routing-check.outcome }}
         run: |
@@ -105,6 +111,7 @@ jobs:
           report "EAS CLI command examples" "$EAS_COMMAND_CHECK_OUTCOME" "bun test scripts/check-eas-cli-commands.test.ts && bun scripts/check-eas-cli-commands.ts"
           report "private release status summaries" "$STATUS_SUMMARY_TEST_OUTCOME" "bun test scripts/status-summary.test.ts"
           report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
+          report "skill limits script" "$SKILL_LIMITS_TEST_OUTCOME" "bun test scripts/check-skill-limits.test.ts"
           report "plugin version bump" "$VERSION_CHECK_OUTCOME" "bun scripts/check-plugin-version-bump.ts origin/main"
           report "expo-overview routing" "$ROUTING_CHECK_OUTCOME" "bun scripts/check-overview-routing.ts"
 
