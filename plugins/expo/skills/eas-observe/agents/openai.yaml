@@ -1,4 +1,4 @@
 interface:
   display_name: "EAS Observe"
-  short_description: "Set up expo-observe app metrics and query launch, route, event, and version performance with the EAS CLI"
-  default_prompt: "Use $eas-observe to add expo-observe instrumentation (AppMetricsRoot/ObserveRoot, useObserve, ObserveInteractiveMarker, the router integrations, error reporting), query metrics with npx --yes eas-cli@latest observe:* commands, and interpret cold/warm launch, TTR, and TTI results."
+  short_description: "Set up expo-observe and query launch, route, event, error, and trace data with the EAS CLI"
+  default_prompt: "Use $eas-observe to add expo-observe instrumentation (AppMetricsRoot/ObserveRoot, useObserve, ObserveInteractiveMarker, the router integrations, error reporting, network traces), query metrics, errors, and traces with npx --yes eas-cli@latest observe:* commands, and interpret cold/warm launch, TTR, and TTI results."
