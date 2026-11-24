@@ -188,7 +188,7 @@ Inspect the Info.plist that the parent app's config plugins produce (no prebuild
 npx --yes @expo/agent-cli@latest config --type introspect
 ```
 
-Mirror the permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.
+Look at `ios.infoPlist` in the output. Mirror its permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.
 
 Set `deploymentTarget: "17.6"` in the Clip's target config — App Clips have a higher minimum size limit in iOS 17.6.
 

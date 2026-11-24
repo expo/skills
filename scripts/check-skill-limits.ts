@@ -101,7 +101,7 @@ for (const path of skills) {
   if (!body.trimEnd().endsWith(feedbackBlock(name)))
     errors.push(`${rel}: missing canonical feedback block; run "bun scripts/check-skill-limits.ts --fix-feedback"`);
 
-  // Skills that pre-approve Bash also pre-approve the agent CLI, which the feedback block runs.
+  // Skills that pre-approve Bash also pre-approve the agent CLI, because skills run Expo CLI through it.
   if (allowedTools === "")
     errors.push(`${rel}: write allowed-tools as one quoted line, so this check can read it`);
   else if (allowedTools?.includes("Bash(") && !allowedTools.includes(AGENT_CLI_ALLOWED_TOOL))
