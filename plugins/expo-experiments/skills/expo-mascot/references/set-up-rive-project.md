@@ -2,23 +2,27 @@
 
 Use this workflow for `create-rive-asset`. The CLI checks also apply before `add-mascot-idle-motion` and `bind-rive-outfit`.
 
-## Check the CLI and sign-in
+## Check the CLI
 
-Run `rive --version` and `rive whoami` in the environment that will author and export the project. Use the actual failure to decide what to ask for. Pause the Rive action and give the user a next step.
+Run `rive --version` in the environment that will author the project. If the command is missing, point the user to the [official setup guide](https://rive.app/agents). If the CLI reports that its version is unsupported, ask the user to update it using their original installation method.
+
+Local RML authoring, `rive inspect`, `--verify`, and preview capture work while signed out.
+
+## Check sign-in for export or Editor access
+
+Run `rive whoami` when you need to export a signed `.riv` or an editable `.rev`, import an Editor project with `--from-remote-file`, or sync changes with the Editor. Use the actual failure to decide the next step. Continue any local work that can proceed.
 
 | What failed | What to tell the user |
 | --- | --- |
-| The `rive` command is missing | "Install the Rive CLI using the [official setup guide](https://rive.app/agents), make sure `rive --version` works in your terminal, then tell me when it's ready." |
 | The session is missing or expired | "Run `rive login`, approve the sign-in in your browser, then tell me when you're signed in." |
-| The CLI reports that its version is unsupported | "Update Rive CLI using the same method you installed it with, then tell me when `rive --version` works." |
 | The account service is unreachable | "The Rive CLI couldn't reach the account service. Check your connection, then tell me when `rive whoami` succeeds." |
 | The signed-in account lacks access to the target file or project | "Send me the Editor link for a file you can edit, or choose a project where this account can create a Rive file." |
 
-Recheck setup before resuming. Treat signing or sync failures the same way if they occur later. The user completes browser sign-in.
+Recheck sign-in before retrying the operation. If signing or sync reports a missing write scope, ask the user to run `rive login` again. The user completes browser sign-in.
 
 ## Build the rig from the approved base
 
-1. Open the existing CLI project or create a new one in an empty directory with `rive create <project>`. To start from a local editable file, use `rive create <project> --from-rev=<file.rev>`. To start from an Editor file, use `rive create <project> --from-remote-file=<fileId>`. Preserve the existing project's names and IDs.
+1. Open the existing CLI project or create a new one in an empty directory with `rive create <project>`. To start from a local editable file, use `rive create <project> --from-rev=<file.rev>`. To start from an Editor file, [check sign-in](#check-sign-in-for-export-or-editor-access) and use `rive create <project> --from-remote-file=<fileId>`. Preserve the existing project's names and IDs.
 2. Read the generated project instructions. Use `rive docs rigging`, `rive docs state-machines`, and `rive schema <Type>` to check the local RML syntax.
 3. Add the approved transparent base as an `ImageAsset` in the Rive project. Record how its full canvas maps to the artboard so outfit images use the same origin and scale. Leave room for motion and wearables.
 4. Rig the head, torso, and visible limbs with movable pivots and named attachment points. Skin the source image with a triangulated mesh and weighted bones where the art needs to bend. For a rigid part such as an accessory, use a separate layer attached to its joint. Preserve the approved pixels, especially at the face and overlapping joints. Keep the paw baseline stable.
@@ -33,7 +37,7 @@ rive "$project" --artboard="$artboard" --screenshot="$neutral_png"
 
 ## Export and return the Editor link
 
-Use local export for the runtime and editable files. Pick output paths that preserve any previous exports the user still needs.
+[Check sign-in](#check-sign-in-for-export-or-editor-access), then use local export for the runtime and editable files. Pick output paths that preserve any previous exports the user still needs.
 
 ```bash
 rive "$project" --publish --rev="$editable_rev"

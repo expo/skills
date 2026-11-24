@@ -1,6 +1,6 @@
 {
   "name": "expo-experiments",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Expo skills for experimental workflows and evolving APIs. Skills may change, be retired, or move to the expo plugin.",
   "author": {
     "name": "Expo Team",

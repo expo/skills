@@ -1,6 +1,6 @@
 ---
 name: expo-mascot
-description: Create a customizable 2D mascot for an Expo app. Use for a numbered mascot concept sheet, a transparent base image, a Rive rig or idle loop, fitted outfit images, or swappable Rive outfit slots.
+description: Create a customizable 2D mascot for an Expo app. Use for a numbered mascot concept sheet, a transparent base image, a Rive rig or idle loop, fitted outfit images, swappable Rive outfit slots, or placing an animated mascot on an Expo screen.
 license: MIT
 ---
 
@@ -12,7 +12,9 @@ Default generated artwork to a square canvas, including each cell of the concept
 
 Return generated mascot artwork as lossless WebP. Preserve transparency where the artwork needs it. If the image tool returns another format, encode the finished artwork as WebP before handing it off.
 
-Before any Rive action, check CLI installation and sign-in using the [Rive setup checks](./references/set-up-rive-project.md#check-the-cli-and-sign-in). If a prerequisite fails, tell the user the specific next step and pause that action.
+Before a Rive action, check the [CLI setup](./references/set-up-rive-project.md#check-the-cli). Start local authoring, verification, and capture without signing in. Check sign-in when exporting `.riv` or `.rev` files or accessing the user's project in the Rive Editor.
+
+When the user asks for the mascot on a specific Expo screen, follow [Add the mascot to an Expo screen](./references/add-to-expo-screen.md) with the supplied or newly exported runtime asset.
 
 ## Create a mascot image sheet
 

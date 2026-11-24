@@ -1,6 +1,6 @@
 # Bind a Rive outfit
 
-Follow the CLI and sign-in checks in [Set up a Rive project](./set-up-rive-project.md) before editing the project.
+Run the [Rive CLI setup check](./set-up-rive-project.md#check-the-cli) before editing the project.
 
 ## Resolve the garment
 
@@ -37,7 +37,18 @@ Add to the existing view model when one is already bound. Verify the property ke
 
 Run `rive <project-dir> --verify` and `rive inspect <project-dir>` to check the scene and binding. Preview the garment through a full `idle` loop. If needed, use a temporary copy of the project with the garment as the test instance's default image. Rive's CLI preview can show authored assets, while Expo verifies a new image supplied at runtime. Restore the intended default before exporting and verify again. Use [Add mascot idle motion](./add-mascot-idle-motion.md) for capture guidance.
 
-Export the updated runtime file using the local export instructions in [Set up a Rive project](./set-up-rive-project.md). In an Expo development build using the exported asset, load a fitted WebP that was absent from the exported file. Keep one bound View Model instance on `RiveView`. Load the new image with `RiveImages.loadFromBytesAsync` or `RiveImages.loadFromURLAsync`. Get the bound property with `instance.imageProperty(slot)`, check that it exists, and call `set(image)` on it. Reapply the transparent WebP to clear the slot. To wait for the native binding before displaying the first outfit, await the property’s `setValueAsync(image)` method with `@rive-app/react-native` 0.5.16 or later. Verify equip, swap, and clear while the same idle loop continues, and inspect alignment and overlap at the motion extremes. See [Adding Rive to Expo](https://rive.app/docs/runtimes/react-native/adding-rive-to-expo) and [React Native Image data binding](https://rive.app/docs/runtimes/react-native/data-binding#images).
+Export the [updated runtime file](./set-up-rive-project.md#export-and-return-the-editor-link) and load it in an [Expo development build](./add-to-expo-screen.md). Keep one bound View Model instance on `RiveView`. Resolve its authored View Model with `riveFile.defaultArtboardViewModelAsync(ArtboardByName(artboardName))` for the artboard's default binding or `riveFile.viewModelByNameAsync(viewModelName)` for a model you explicitly bound. Read and reuse the schema from `await viewModel.getPropertiesAsync()`. Before looking up the image property, require an exact name and the runtime type `assetImage`:
+
+```ts
+const properties = await viewModel.getPropertiesAsync();
+if (!properties.some(({ name, type }) => name === slot && type === 'assetImage')) {
+  throw new Error(`Unknown image slot "${slot}"`);
+}
+```
+
+Run the check before every write path, including clear. On iOS, `instance.imageProperty(slot)` can return a proxy for an unknown name and `setValueAsync(image)` can resolve without changing the image.
+
+Use `RiveImages.loadFromBytesAsync` or `RiveImages.loadFromURLAsync` to load a fitted WebP that was absent from the exported file. Get the validated property with `instance.imageProperty(slot)` and call `set(image)` on it. Reapply the transparent WebP to clear the slot. To wait for the native binding before displaying the first outfit, await `setValueAsync(image)` with `@rive-app/react-native` 0.5.16 or later. Confirm that a misspelled slot and a property of the wrong type are rejected before the setter. Verify equip, swap, and clear while the same idle loop continues, and inspect alignment and overlap at the motion extremes. See [React Native Image data binding](https://rive.app/docs/runtimes/react-native/data-binding#images).
 
 For a catalog, make a contact sheet of worn items with the neutral frame and both extremes of the idle motion. Include tops with the paws visible and shoes with both soles in frame. Inspect the actual runtime rendering at display size for sliding cuffs, exposed paws inside closed shoes, and rear edges drawn over the body. Correct the art, attachment, or draw order at its source and render the affected combinations again before recording the result.
 
