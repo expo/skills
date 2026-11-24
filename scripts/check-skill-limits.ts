@@ -9,6 +9,17 @@ const MAX_BODY_LINES = 500;
 const PAID_CALLOUT = "**EAS service - costs apply.**";
 const PAID_PRICING_LINK = "expo.dev/pricing";
 const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
+// These skills used the eas- prefix, which marked them as paid.
+// Without the prefix, keep them in the Services group so they cannot drop the pricing callout.
+const FORMER_EAS_SKILLS = new Set([
+  "expo-app-stores",
+  "expo-hosting",
+  "expo-workflows",
+  "expo-observe",
+  "expo-update",
+  "expo-update-insights",
+  "expo-simulator",
+]);
 
 function findSkillFiles(dir: string): string[] {
   const results: string[] = [];
@@ -45,16 +56,29 @@ function syncFeedbackBlock(path: string, skillName: string): void {
   if (updated !== content) writeFileSync(path, updated);
 }
 
-function loadCatalogGroups(): Map<string, "framework" | "paid" | "experimental"> {
-  const groups = new Map<string, "framework" | "paid" | "experimental">();
+type CatalogGroup = "framework" | "paid" | "experimental";
+
+function catalogGroupKind(title: string): CatalogGroup | undefined {
+  if (title.startsWith("Framework")) return "framework";
+  if (title.startsWith("Services")) return "paid";
+  if (title.startsWith("Experimental")) return "experimental";
+  return undefined;
+}
+
+function loadCatalogGroups(errors: string[]): Map<string, CatalogGroup> {
+  const groups = new Map<string, CatalogGroup>();
   const catalog = JSON.parse(readFileSync("skills.sh.json", "utf8"));
   for (const grouping of catalog.groupings ?? []) {
-    const kind = grouping.title.startsWith("Framework")
-      ? "framework"
-      : grouping.title.startsWith("Experimental")
-        ? "experimental"
-        : "paid";
-    for (const skill of grouping.skills ?? []) groups.set(skill, kind);
+    const kind = catalogGroupKind(grouping.title ?? "");
+    if (!kind) {
+      errors.push(`skills.sh.json: unknown group "${grouping.title}"; use Framework, Services, or Experimental`);
+      continue;
+    }
+    for (const skill of grouping.skills ?? []) {
+      // A second listing would decide which rules apply, so a paid skill could skip its callout.
+      if (groups.has(skill)) errors.push(`skills.sh.json: "${skill}" is listed in more than one group`);
+      else groups.set(skill, kind);
+    }
   }
   return groups;
 }
@@ -68,16 +92,16 @@ if (FIX_FEEDBACK) {
   }
 }
 
-const catalogGroups = loadCatalogGroups();
-const seenDirs = new Set<string>();
 const errors: string[] = [];
+const catalogGroups = loadCatalogGroups(errors);
+const seenDirs = new Set<string>();
 
 for (const path of skills) {
   const { name, description, body, bodyLines } = parseSkill(path);
   const rel = path.replace(process.cwd() + "/", "");
   const dirName = dirname(path).split("/").pop() ?? "";
   seenDirs.add(dirName);
-  const isPaid = dirName.startsWith("eas-");
+  const group = catalogGroups.get(dirName);
 
   if (description.trim().length === 0)
     errors.push(`${rel}: description is empty`);
@@ -86,9 +110,8 @@ for (const path of skills) {
   if (bodyLines > MAX_BODY_LINES)
     errors.push(`${rel}: body ${bodyLines} lines (max ${MAX_BODY_LINES})`);
 
-  // naming: expo-* (framework) or eas-* (paid EAS service), frontmatter name matches directory
-  if (!dirName.startsWith("expo-") && !dirName.startsWith("eas-"))
-    errors.push(`${rel}: skill directory must be named expo-* or eas-* (got "${dirName}")`);
+  if (!dirName.startsWith("expo-"))
+    errors.push(`${rel}: skill directory must be named expo-* (got "${dirName}")`);
   if (name !== dirName)
     errors.push(`${rel}: frontmatter name "${name}" does not match directory "${dirName}"`);
 
@@ -98,20 +121,20 @@ for (const path of skills) {
 
   // paid skills disclose costs up front (dash style varies: em dash or hyphen)
   const normalizedBody = body.replace(/—/g, "-");
-  if (isPaid && (!normalizedBody.includes(PAID_CALLOUT) || !normalizedBody.includes(PAID_PRICING_LINK)))
+  const hasPaidCallout = normalizedBody.includes(PAID_CALLOUT);
+  if (group === "paid" && (!hasPaidCallout || !normalizedBody.includes(PAID_PRICING_LINK)))
     errors.push(`${rel}: paid skill body must include the "${PAID_CALLOUT}" callout with a ${PAID_PRICING_LINK} link`);
+  if (FORMER_EAS_SKILLS.has(dirName) && group && group !== "paid")
+    errors.push(`${rel}: skill used the eas- prefix, so skills.sh.json must list it in the Services group`);
+  if (group === "framework" && hasPaidCallout)
+    errors.push(`${rel}: skill has the "${PAID_CALLOUT}" callout but skills.sh.json lists it in the framework group; move it to Services`);
 
   // Codex trigger metadata
   const openaiYamlPath = join(dirname(path), "agents", "openai.yaml");
   if (!existsSync(openaiYamlPath))
     errors.push(`${rel}: missing agents/openai.yaml (Codex trigger metadata)`);
 
-  // catalog sync with skills.sh.json groups; the experimental group accepts either
-  // expo-* or eas-* names
-  const group = catalogGroups.get(dirName);
   if (!group) errors.push(`${rel}: skill is not listed in skills.sh.json`);
-  else if (group !== "experimental" && group !== (isPaid ? "paid" : "framework"))
-    errors.push(`${rel}: skills.sh.json lists this skill in the ${group} group, but the ${isPaid ? "eas-" : "expo-"} prefix requires the ${isPaid ? "paid" : "framework"} group`);
 }
 
 for (const [skill] of catalogGroups) {

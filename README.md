@@ -77,6 +77,28 @@ To update a single Expo skill, pass its name:
 npx skills@latest update expo-router
 ```
 
+Skills that used the `eas-` prefix now use `expo-`:
+
+| Old ID | New ID |
+| --- | --- |
+| `eas-app-stores` | `expo-app-stores` |
+| `eas-hosting` | `expo-hosting` |
+| `eas-workflows` | `expo-workflows` |
+| `eas-observe` | `expo-observe` |
+| `eas-update` | `expo-update` |
+| `eas-update-insights` | `expo-update-insights` |
+| `eas-simulator` | `expo-simulator` |
+
+Update explicit skill references in prompts and scripts, such as `$eas-hosting` in Codex or
+`expo:eas-hosting` in Claude Code. If you installed a renamed skill with the skills CLI,
+`update` does not remove the old copy. Add the new ID and remove the old one in the same
+scope, so the two copies do not trigger together:
+
+```bash
+npx skills@latest add expo/skills --skill expo-hosting
+npx skills@latest remove eas-hosting
+```
+
 ## Try It
 
 After installing, ask your agent Expo-specific questions like:
@@ -128,13 +150,13 @@ Skills whose core purpose uses paid Expo Application Services (EAS).
 
 | Skill | Use it for |
 | --- | --- |
-| `eas-app-stores` | Build and submit iOS/Android apps: Expo and other React Native projects, plus existing native apps; TestFlight, profiles, versioning, and metadata. |
-| `eas-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. |
-| `eas-workflows` | EAS Workflow YAML files and CI/CD automation. |
-| `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. |
-| `eas-update` | EAS Update setup, OTA publishing, runtime compatibility, testing, and debugging. |
-| `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
-| `eas-simulator` | Run and drive your app on a remote iOS simulator or Android emulator with Expo Simulators - from the CLI or an agent, with a live browser preview. |
+| `expo-app-stores` | Build and submit iOS/Android apps: Expo and other React Native projects, plus existing native apps; TestFlight, profiles, versioning, and metadata. |
+| `expo-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. |
+| `expo-workflows` | EAS Workflow YAML files and CI/CD automation. |
+| `expo-observe` | EAS Observe setup and launch, route, event, and version metrics. |
+| `expo-update` | EAS Update setup, OTA publishing, runtime compatibility, testing, and debugging. |
+| `expo-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. |
+| `expo-simulator` | Run and drive your app on a remote iOS simulator or Android emulator with Expo Simulators - from the CLI or an agent, with a live browser preview. |
 
 ### Experimental
 

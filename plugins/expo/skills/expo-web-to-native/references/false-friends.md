@@ -57,7 +57,7 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 | Async Server Component (`async function Page()`) | client component + data fetch | No RSC on native (Expo's is experimental and different). Split into a client component that fetches via the API + a presentational child *before* porting. |
 | Server actions (`'use server'`) | API route + `fetch` | No server actions. Expose an endpoint and call it. |
 | `cookies()` / `headers()` (server) | token in `expo-secure-store` | Server-only. Auth moves to a bearer token sent as a header. |
-| ORM / DB client in a page (Drizzle, Prisma) | server only - call over HTTP | The device never talks to the DB. Keep the backend deployed, or move routes to EAS Hosting (`eas-hosting`); the app fetches. |
+| ORM / DB client in a page (Drizzle, Prisma) | server only - call over HTTP | The device never talks to the DB. Keep the backend deployed, or move routes to EAS Hosting (`expo-hosting`); the app fetches. |
 | `next/navigation` (`notFound`, `redirect`) | `expo-router` | `redirect()` → `router.replace`; `notFound()` → a native `+not-found` route. |
 | `_layout` as a DOM component | always native | Layout routes can't be DOM components — they *are* the native shell. Rewrite web-only layout logic (theme scripts, providers) with native APIs. |
 
@@ -91,7 +91,7 @@ This is the single source of truth for the mapping; the SKILL.md steps name a fe
 | `fetch('/api/x')` (relative) | absolute URL | Native has no origin — relative paths fail. Use a configured base URL (`EXPO_PUBLIC_API_URL`). |
 | CORS | n/a | No browser CORS, but you still need a reachable absolute host. |
 | `fetch`, React Query, SWR | same | The libraries themselves work on native - see `expo-data-fetching`. |
-| Next.js API routes | Expo Router API routes | Move server endpoints to Expo API routes on EAS Hosting - see `eas-hosting`. |
+| Next.js API routes | Expo Router API routes | Move server endpoints to Expo API routes on EAS Hosting - see `expo-hosting`. |
 | Streaming responses (SSE, AI SDK `useChat`) | `expo/fetch` with `textStreaming` | RN's built-in `fetch` can't read a streaming response body. Use `expo/fetch` (streams, and works with the Vercel AI SDK) or an XHR-based polyfill. |
 
 ## Third-party services & SDKs

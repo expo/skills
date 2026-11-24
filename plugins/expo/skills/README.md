@@ -38,13 +38,13 @@ Skills whose core purpose uses paid Expo Application Services (EAS). Each `SKILL
 
 | Skill | Use it for | Paid dependency |
 | --- | --- | --- |
-| `eas-app-stores` | Build and submit iOS/Android apps: Expo and other React Native projects, plus existing native apps; TestFlight, profiles, versioning, and metadata. | EAS + Apple/Google accounts |
-| `eas-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. | EAS Hosting usage |
-| `eas-workflows` | EAS Workflow YAML files and CI/CD automation. | EAS build/compute minutes |
-| `eas-observe` | EAS Observe setup and launch, route, event, and version metrics. | EAS Observe usage |
-| `eas-update` | EAS Update setup, OTA publishing, runtime compatibility, testing, and debugging. | EAS Update usage |
-| `eas-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. | EAS Update usage |
-| `eas-simulator` | Remote iOS/Android simulators with Expo Simulators, driven from the CLI or an agent, with browser preview. | Expo Simulators (EAS Simulator) usage |
+| `expo-app-stores` | Build and submit iOS/Android apps: Expo and other React Native projects, plus existing native apps; TestFlight, profiles, versioning, and metadata. | EAS + Apple/Google accounts |
+| `expo-hosting` | Deploying Expo websites and Expo Router API routes to EAS Hosting: secrets, custom domains, Cloudflare Workers. | EAS Hosting usage |
+| `expo-workflows` | EAS Workflow YAML files and CI/CD automation. | EAS build/compute minutes |
+| `expo-observe` | EAS Observe setup and launch, route, event, and version metrics. | EAS Observe usage |
+| `expo-update` | EAS Update setup, OTA publishing, runtime compatibility, testing, and debugging. | EAS Update usage |
+| `expo-update-insights` | EAS Update health, crash rates, launch counts, payload size, and rollout gates. | EAS Update usage |
+| `expo-simulator` | Remote iOS/Android simulators with Expo Simulators, driven from the CLI or an agent, with browser preview. | Expo Simulators (EAS Simulator) usage |
 
 ## Adding a skill
 
