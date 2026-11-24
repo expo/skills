@@ -9,6 +9,17 @@ const MAX_BODY_LINES = 500;
 const PAID_CALLOUT = "**EAS service - costs apply.**";
 const PAID_PRICING_LINK = "expo.dev/pricing";
 const FIX_FEEDBACK = process.argv.includes("--fix-feedback");
+// These skills used the eas- prefix, which marked them as paid.
+// Without the prefix, keep them in the Services group so they cannot drop the pricing callout.
+const FORMER_EAS_SKILLS = new Set([
+  "expo-app-stores",
+  "expo-hosting",
+  "expo-workflows",
+  "expo-observe",
+  "expo-update",
+  "expo-update-insights",
+  "expo-simulator",
+]);
 
 function findSkillFiles(dir: string): string[] {
   const results: string[] = [];
@@ -113,6 +124,8 @@ for (const path of skills) {
   const hasPaidCallout = normalizedBody.includes(PAID_CALLOUT);
   if (group === "paid" && (!hasPaidCallout || !normalizedBody.includes(PAID_PRICING_LINK)))
     errors.push(`${rel}: paid skill body must include the "${PAID_CALLOUT}" callout with a ${PAID_PRICING_LINK} link`);
+  if (FORMER_EAS_SKILLS.has(dirName) && group && group !== "paid")
+    errors.push(`${rel}: skill used the eas- prefix, so skills.sh.json must list it in the Services group`);
   if (group === "framework" && hasPaidCallout)
     errors.push(`${rel}: skill has the "${PAID_CALLOUT}" callout but skills.sh.json lists it in the framework group; move it to Services`);
 

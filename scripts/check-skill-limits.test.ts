@@ -96,6 +96,15 @@ describe("Checking skill catalog groups", () => {
     expect(output).toContain("lists it in the framework group; move it to Services");
   });
 
+  it("should reject a former eas- skill outside the services group", () => {
+    writeSkill("expo-hosting");
+    writeCatalog({ framework: ["expo-hosting"] });
+
+    const { status, output } = runCheck();
+    expect(status).toBe(1);
+    expect(output).toContain("expo-hosting/SKILL.md: skill used the eas- prefix");
+  });
+
   it("should reject a services skill that is also listed in another group", () => {
     writeSkill("expo-hosting");
     writeCatalog({ services: ["expo-hosting"], experimental: ["expo-hosting"] });
