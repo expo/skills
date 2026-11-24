@@ -51,7 +51,8 @@ jobs:
             ]);
             const skills = new Set();
             for (const [path, entry] of after) {
-              const match = path.match(/^(plugins\/[^/]+\/skills\/(expo-[a-z0-9-]+))\/SKILL\.md$/);
+              // Keep eas-* so open PRs from before the rename keep their install commands.
+              const match = path.match(/^(plugins\/[^/]+\/skills\/((?:expo|eas)-[a-z0-9-]+))\/SKILL\.md$/);
               if (!match || entry.type !== "blob") continue;
               const [, directory, name] = match;
               // The directory SHA also changes when a reference or script is removed.

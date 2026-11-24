@@ -77,9 +77,27 @@ To update a single Expo skill, pass its name:
 npx skills@latest update expo-router
 ```
 
-Skills that used the `eas-` prefix now use `expo-`. Update explicit skill references in
-prompts and scripts. To install a renamed skill individually, use its new ID, for example
-`npx skills@latest add expo/skills --skill expo-hosting`.
+Skills that used the `eas-` prefix now use `expo-`:
+
+| Old ID | New ID |
+| --- | --- |
+| `eas-app-stores` | `expo-app-stores` |
+| `eas-hosting` | `expo-hosting` |
+| `eas-workflows` | `expo-workflows` |
+| `eas-observe` | `expo-observe` |
+| `eas-update` | `expo-update` |
+| `eas-update-insights` | `expo-update-insights` |
+| `eas-simulator` | `expo-simulator` |
+
+Update explicit skill references in prompts and scripts, such as `$eas-hosting` in Codex or
+`expo:eas-hosting` in Claude Code. If you installed a renamed skill with the skills CLI,
+`update` does not remove the old copy. Add the new ID and remove the old one in the same
+scope, so the two copies do not trigger together:
+
+```bash
+npx skills@latest add expo/skills --skill expo-hosting
+npx skills@latest remove eas-hosting
+```
 
 ## Try It
 
