@@ -12,7 +12,7 @@ EAS Observe collects app performance telemetry and custom events from Expo apps 
 | `npx --yes eas-cli@latest observe:metrics` | Individual metric samples ordered by value or timestamp (paginated) |
 | `npx --yes eas-cli@latest observe:routes` | Per-route statistical aggregates for navigation metrics (Nav Cold TTR, Nav Warm TTR, Nav TTI) |
 | `npx --yes eas-cli@latest observe:events` | Custom events emitted by the app via `logEvent` — name summary, all events, or filtered by event name (paginated) |
-| `npx --yes eas-cli@latest observe:session` | Full timeline of metric and log events for one session |
+| `npx --yes eas-cli@latest observe:session` | Full timeline of metric events, log events, and trace spans for one session |
 | `npx --yes eas-cli@latest observe:versions` | App version hierarchy with build numbers, OTA update IDs, and event counts |
 | `npx --yes eas-cli@latest observe:errors` | Error groups by fingerprint; `--fingerprint <id>` lists one group's occurrences with stack traces |
 | `npx --yes eas-cli@latest observe:traces` | Network request trace spans: a summary of span names and kinds, or individual spans with span filters or `--all-spans` (paginated) |
@@ -61,13 +61,13 @@ The Expo MCP Server has read-only tools that return the same data as the CLI. Wh
 
 Differences from the CLI:
 
-- **Errors:** `observe_errors` and `observe_error_occurrences` take `kind` (`JS`, `NATIVE`, or `OTHER`), which the CLI does not have. `observe_errors` also takes `orderBy` (`MOST_FREQUENT`, `MOST_USERS`, `FIRST_SEEN`, or `LAST_SEEN`). `observe_error_occurrences` can filter by `sessionId` without a fingerprint.
-- **Spans:** `observe_spans` takes arrays (`names`, `hosts`, `httpStatusCodes`) and uppercase enum values (`kinds`, `statusCodes`) where the CLI repeats a lowercase flag. It also takes `scopes`, such as `expo-observe.network`.
+- **Errors:** `observe_errors` and `observe_error_occurrences` take `kind` (`JS`, `NATIVE`, or `OTHER`), which the CLI does not have. `observe_errors` also takes `orderBy` (`MOST_FREQUENT`, `MOST_USERS`, `FIRST_SEEN`, or `LAST_SEEN`). `observe_error_occurrences` can filter by `sessionId` without a fingerprint, and takes `sort` (`newest` or `oldest`).
+- **Spans:** `observe_spans` takes arrays (`names`, `hosts`, `httpStatusCodes`) and uppercase enum values (`kinds`, `statusCodes`) where the CLI repeats a lowercase flag. It also takes `scopes`, such as `expo-observe.network`, and `sort` (`newest` or `oldest`).
 - **Project:** pass `appId` or `appFullName` (such as `@owner/my-app`). In a project directory, read the project ID from the app config.
 - **Platform:** `platform` takes `ANDROID`, `IOS`, `IPADOS`, `MACOS`, or `TVOS`. There is no `apple` value. As in the CLI, `observe_versions`, `observe_metrics_summary`, and `observe_routes` return separate Android and iOS results without `platform`, and `observe_metrics`, `observe_event_names`, and `observe_events` return results from all platforms.
 - **Environment:** `observe_event_names`, `observe_events`, the error tools, `observe_span_names`, and `observe_spans` take `environment`. `observe_versions`, `observe_metrics_summary`, `observe_metrics`, and `observe_routes` have no environment input, unlike the CLI's `--environment` flag.
-- **Time range:** `days` (up to 365), or `start` and `end`. The default is the last 60 days. `start` and `end` must be ISO 8601 date-times with a timezone, such as `2026-10-01T00:00:00Z`. A date-only value fails. Unlike the CLI, `end` does not need `start`. `observe_session` takes no time range.
-- **Pagination:** pass `pageInfo.endCursor` from a response back as `nextCursor`. For `observe_metrics`, `observe_events`, and `observe_routes`, also pass the returned `startTime` and `endTime` as `start` and `end`, and keep the other inputs the same. Routes paginate per platform. Session timelines paginate metrics and logs separately.
+- **Time range:** `days` (up to 365), or `start` and `end`. The default is the last 60 days. `start` and `end` must be ISO 8601 date-times with a timezone, such as `2026-10-01T00:00:00Z`. A date-only value fails. Unlike the CLI, `end` does not need `start`. `observe_session` and `observe_trace` take no time range.
+- **Pagination:** pass `pageInfo.endCursor` from a response back as `nextCursor`. For `observe_metrics`, `observe_events`, `observe_routes`, `observe_spans`, and `observe_error_occurrences`, also pass the returned `startTime` and `endTime` as `start` and `end`, and keep the other inputs the same. Routes paginate per platform. Session timelines paginate metrics, logs, and spans separately.
 - **Plan gating and usage:** plan limits are the same as for the CLI. Each tool call counts toward the account's Expo MCP Server usage.
 - **Defaults and limits:** `observe_metrics` sorts `newest` first by default. The CLI's `--sort` defaults to `oldest`. `observe_routes` takes a `limit` of up to 100, and the CLI takes up to 200. `observe_events` takes `sort`, and the CLI's `observe:events` has no `--sort`.
 
@@ -329,7 +329,7 @@ The name-summary mode returns `{ "names": [{ "eventName": "...", "count": 123 }]
 
 ## `eas observe:session`
 
-Shows the full timeline of metric and log events for a single session — the CLI equivalent of the dashboard's session view. Use it after `observe:metrics` surfaces a slow sample: take that sample's `sessionId` (present in `--json` output) and replay everything that session recorded.
+Shows the full timeline of metric events, log events, and trace spans for a single session — the CLI equivalent of the dashboard's session view. Use it after `observe:metrics` surfaces a slow sample: take that sample's `sessionId` (present in `--json` output) and replay everything that session recorded.
 
 ```bash
 # Interactive: pick a metric, then pick a session from the candidate list
@@ -358,11 +358,12 @@ This command has no `--platform`, `--limit`, or `--after` flag. It takes the sha
   "metadata": { "...": "..." },
   "entries": [{ "...": "..." }],
   "hasMoreMetricEvents": false,
-  "hasMoreLogEvents": false
+  "hasMoreLogEvents": false,
+  "hasMoreSpans": false
 }
 ```
 
-`entries` interleaves metric and log events for the session. The two `hasMore*` flags report truncation per event kind; there is no cursor to page with.
+`entries` interleaves metric events, log events, and spans for the session. Each stream shows at most 100 entries. The three `hasMore*` flags report truncation per stream; there is no cursor to page with.
 
 ## `eas observe:errors`
 

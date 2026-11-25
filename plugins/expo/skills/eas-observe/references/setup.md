@@ -488,7 +488,7 @@ npx --yes eas-cli@latest update --channel production --upload-source-maps
 **Native frames.** On Android, Java and Kotlin frames already carry the class, method, and line. On iOS, frames in the app and its bundled frameworks show as a binary name and an offset (`MyApp + 19160`) until the app's dSYM files are uploaded:
 
 - Requires `expo-observe` 57.0.25+ (SDK 57) or 58.0.5+ (SDK 58). Earlier crash reports have no binary UUIDs to match.
-- On EAS Build, keep the dSYMs as a build artifact, then download `*.app.dSYM.zip` from the build page. `eas build --local` writes it next to the `.ipa`.
+- On EAS Build, keep the dSYMs as a build artifact, then download `*.app.dSYM.zip` from the build page. `eas build --local` writes the artifact next to the `.ipa`; when the pattern matches one file, the artifact is the `.app.dSYM.zip` renamed to `build-<timestamp>.zip`. Do not pass `--output`: the `.ipa` and the artifact then get the same path, and one replaces the other.
 
   ```json
   { "build": { "production": { "ios": { "buildArtifactPaths": ["ios/build/*.app.dSYM.zip"] } } } }
@@ -527,16 +527,14 @@ Observe.configure({
 | `dispatchingEnabled` | boolean | `true` | Master switch. While `false`, pending metrics are dropped, not queued. |
 | `dispatchInDebug` | boolean | `false` | Dispatch metrics collected from debug builds. No effect on release builds. |
 | `sampleRate` | number | `undefined` (all installations) | Fraction of installations that dispatch, in `[0, 1]`. |
-| `errorSampleRate` | number | `undefined` (errors follow `sampleRate`) | Fraction of installations that dispatch errors and crashes, in `[0, 1]`. A minimum: a value lower than `sampleRate` has no effect and `configure()` warns. |
-| `ignoredMetrics` | string[] | `[]` | Metric names that are not sent, such as `expo.app_startup.tti`. Each `configure()` call replaces the list. |
-| `ignoredEvents` | string[] | `[]` | Event names that are not sent, including custom `logEvent` names. Each `configure()` call replaces the list. |
+| `errorSampleRate` | number | `undefined` (errors follow `sampleRate`) | Fraction of installations that dispatch errors and crashes, in `[0, 1]` (SDK 58+). A minimum: a value lower than `sampleRate` has no effect and `configure()` warns. |
 | `errorHandlingEnabled` | boolean | `true` | Record unhandled JS errors as `exception` events. |
 | `integrations` | object | `undefined` | Opt in to `expo-router`, `react-navigation`, `expo-image`, `react-native-reanimated`, or a third-party integration. For `expo-image` and `react-native-reanimated`, see [`./library-integrations.md`](./library-integrations.md). |
 | `networkTraces` | boolean or object | `false` | Record network requests as trace spans (SDK 58+). See [Optional — network traces](#optional--network-traces-sdk-58). |
 
 **Network request monitoring is automatic and has no off switch.** `expo-observe` observes `URLSession` traffic on iOS and `OkHttpClient` traffic on Android from launch, and attaches a rollup of the launch window to the TTI event — including the **host** of the slowest request (see [`./metrics.md`](./metrics.md)). Observe's own uploads are excluded. No `configure()` option disables it as of `expo-observe` 57.0.9, so treat request hosts as data that leaves the device. `networkTraces` controls the separate trace spans, not this rollup.
 
-**Sampling** is deterministic per installation: an installation is permanently in-sample or out-of-sample for a given rate, so the slice is stable across launches rather than a random subset of sessions. Out-of-sample installations drop pending metrics instead of accumulating them, so lowering the rate later does not retroactively send earlier sessions. Values outside `[0, 1]` are clamped. Sampling depends on `dispatchingEnabled`. To keep more errors than metrics, set `errorSampleRate` higher, such as `sampleRate: 0.03` with `errorSampleRate: 1`. Ignored metrics and events are still recorded on the device but never sent.
+**Sampling** is deterministic per installation: an installation is permanently in-sample or out-of-sample for a given rate, so the slice is stable across launches rather than a random subset of sessions. Out-of-sample installations drop pending metrics instead of accumulating them, so lowering the rate later does not retroactively send earlier sessions. Values outside `[0, 1]` are clamped. Sampling depends on `dispatchingEnabled`. To keep more errors than metrics (SDK 58+), set `errorSampleRate` higher, such as `sampleRate: 0.03` with `errorSampleRate: 1`.
 
 **Manual flush.** Events dispatch automatically when the app backgrounds — on Android through a background worker once connectivity returns, on iOS when the app resigns active or is about to terminate. Call `await Observe.dispatchEvents()` to flush early, which is mainly useful while testing.
 
