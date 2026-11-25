@@ -29,16 +29,15 @@ agent-browser screenshot web.png   # visual reference
 **Tip:** capture web baselines for every screen once, up front, then diff against them instead of re-opening the web app each iteration.
 
 **B. Capture the native screen** (iOS shown via `simctl`; Android note below):
-1. Run the app: `npx expo start --ios` (Expo Go). To keep the onboarding sheet, dev menu, and Tools button out of your screenshots on SDK 57 and earlier, and on the URLs you open yourself in step 3, see `../../expo-overview/references/launch-without-dev-menu.md`. On **SDK 56+ both `@expo/ui` and DOM components run in Expo Go** — no dev build, no `react-native-webview` to install; reach for a dev build (the `expo-dev-client` skill) only for *custom* native modules. Stale-bundle trap: a CI-mode Metro + cached Expo Go can show an old build — terminate Expo Go and add `--clear` if a change doesn't appear.
-2. Boot a sim: `xcrun simctl boot <udid>` (`xcrun simctl list devices available`); `open -a Simulator`.
-3. Open the route: deep-link `xcrun simctl openurl booted "exp://<lan-ip>:8081/--/<route>?<params>"`, or argent `launch-app` + `gesture-tap`.
-4. Capture: `xcrun simctl io booted screenshot native.png`, or `argent run describe --udid <udid>` for structure.
+1. Run the app: `npx --yes @expo/agent-cli@latest dev --ios --go --detach --wait-ready`. It starts the dev server in the background, installs Expo Go when missing, and opens the app on a simulator. Its `Device` line names that simulator and its UDID; use that UDID below, because other simulators can also be booted. In Expo Go, `navigate` adds no launch flags, so the onboarding sheet, dev menu, and Tools button can still show. To keep them out of your screenshots, see `../../expo-overview/references/launch-without-dev-menu.md`. On **SDK 56+ both `@expo/ui` and DOM components run in Expo Go** — no dev build, no `react-native-webview` to install; reach for a dev build (the `expo-dev-client` skill) only for *custom* native modules. Stale-bundle trap: a CI-mode Metro + cached Expo Go can show an old build — terminate Expo Go and add `--clear` if a change doesn't appear.
+2. Open the route: `npx --yes @expo/agent-cli@latest navigate "/<route>?<params>" --ios`, or argent `launch-app` + `gesture-tap`.
+3. Capture: `xcrun simctl io <udid> screenshot native.png`, or `argent run describe --udid <udid>` for structure.
 
-> **Android:** `simctl` / `expo run:ios` are iOS-only. Use an Android emulator + `adb` — `adb exec-out screencap -p > native.png`, `adb shell am start -a android.intent.action.VIEW -d "<deep-link>"`, `adb shell screenrecord` for motion — or `npx expo run:android` for a dev build.
+> **Android:** `simctl` is iOS-only. Use an Android emulator: `npx --yes @expo/agent-cli@latest dev --android --go --detach --wait-ready` (or `--dev-client` for a dev build), then `npx --yes @expo/agent-cli@latest navigate "/<route>" --android`. The `Device` line of `dev` names the emulator serial. Capture with `adb -s <serial> exec-out screencap -p > native.png`, and `adb -s <serial> shell screenrecord` for motion.
 
 **C. Compare** the two for the same route — layout, content, behavior. Diff the structures (agent-browser `snapshot` against argent `describe` / `debugger-component-tree`), not just pixels. Pass only on parity: same data, and params passed into a DOM webview must produce the same result.
 
-**Feel needs motion, not a still.** For a nativized screen with transitions, gestures, or haptics, a screenshot can't catch a janky push or wrong easing — capture a short recording (iOS `xcrun simctl io booted recordVideo feel.mov`; Android `adb shell screenrecord`; or an argent flow) and confirm it moves like a native app (see `native-patterns.md` → Feel).
+**Feel needs motion, not a still.** For a nativized screen with transitions, gestures, or haptics, a screenshot can't catch a janky push or wrong easing — capture a short recording (iOS `xcrun simctl io <udid> recordVideo feel.mov`; Android `adb -s <serial> shell screenrecord`; or an argent flow) and confirm it moves like a native app (see `native-patterns.md` → Feel).
 
 ## What "pass" looks like
 - **DOM-shelled screen (step 3):** the web UI renders inside the native header/shell; params from the native route drive it the same as on web.
