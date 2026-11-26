@@ -29,15 +29,16 @@ references/
 
 **CRITICAL: Always try Expo Go first before creating custom builds.**
 
-Most Expo apps work in Expo Go without any custom native code. Before running `npx expo run:ios` or `npx expo run:android`:
+Most Expo apps work in Expo Go without any custom native code. Before you make a custom build with `npx --yes @expo/agent-cli@latest dev --ios --dev-client` (or `--android`):
 
-1. **Start with Expo Go**: Run `npx expo start` and scan the QR code with Expo Go
-2. **Check if features work**: Test your app thoroughly in Expo Go
-3. **Only create custom builds when required** - see below
+1. **Check Expo Go support**: Run `npx --yes @expo/agent-cli@latest status`. It says whether the project runs in Expo Go and whether a change needs a rebuild
+2. **Start with Expo Go**: Run `npx --yes @expo/agent-cli@latest start` and scan the QR code with Expo Go
+3. **Check if features work**: Test your app thoroughly in Expo Go
+4. **Only create custom builds when required** - see below. Stop the Expo Go dev server first with `npx --yes @expo/agent-cli@latest dev:stop`: `dev` does not run while this project's dev server runs
 
 ### When Custom Builds Are Required
 
-You need `npx expo run:ios/android` or `eas build` ONLY when using:
+You need a custom build (`npx --yes @expo/agent-cli@latest dev --ios --dev-client` or `--android --dev-client`, or `npx --yes eas-cli@latest build`) ONLY when using:
 
 - **Local Expo modules** (custom native code in `modules/`)
 - **Apple targets** (widgets, app clips, extensions via `@bacons/apple-targets`)
@@ -192,9 +193,5 @@ Use CSS `boxShadow` style prop. NEVER use legacy React Native shadow or elevatio
 'inset' shadows are supported.
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
-```bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-native-ui" --message "<actionable feedback>"
-```
-Use `--category agent-cli` for a problem with the agent CLI, and `--category evals` when an agent repeatedly fails at an Expo task. Run `feedback --help` for subjects and the data that the command sends.
-Each report goes to Expo with project and environment details. Show the user the message, and send it only if the user agrees. If you cannot ask the user, do not send it. Do not include secrets or personal data.
+If this skill has an error, or misleading or outdated information, tell the user and offer to report it to Expo. A report is optional, and the user decides. Do not send a report before the user agrees.
+The `feedback` command of the agent CLI sends a report. Its `--help` lists the categories (`skills` with the subject "expo-native-ui", `agent-cli` for a problem with the agent CLI, `evals` when an agent repeatedly fails at an Expo task) and the data that a report sends. Show the user the message, and tell the user that the report also carries project and environment details. If you cannot ask the user, put the command with your message in your final summary, so the user can send it. Do not include secrets or personal data.

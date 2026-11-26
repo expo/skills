@@ -21,8 +21,8 @@ Everything else — package name, build process, dashboard, debug-mode behavior 
 Before installing, confirm all of the following:
 
 1. **An Expo account.** Sign up at [expo.dev/signup](https://expo.dev/signup) if needed.
-2. **Expo SDK 55 or later.** Run `npx expo-doctor` to check, and `npx expo install --fix` to update dependencies. SDK 56+ unlocks the newer `ObserveRoot` / `useObserve` API.
-3. **An EAS project.** The app must have `extra.eas.projectId` set in its app config. If not, run `eas init` to create one.
+2. **Expo SDK 55 or later.** Run `npx --yes @expo/agent-cli@latest doctor` to check, and `npx --yes @expo/agent-cli@latest install --fix` to update dependencies. SDK 56+ unlocks the newer `ObserveRoot` / `useObserve` API.
+3. **An EAS project.** The app must have `extra.eas.projectId` set in its app config. If not, run `npx --yes eas-cli@latest init` to create one.
 4. **A development build or a production build.** `expo-observe` is a native library, so it does **not** work in Expo Go. Testing the integration requires a [development build](https://docs.expo.dev/develop/development-builds/introduction/).
 
 ## Step 1 — Install the library
@@ -30,8 +30,8 @@ Before installing, confirm all of the following:
 From the project root:
 
 ```sh
-npx expo install --fix
-npx expo install expo-observe
+npx --yes @expo/agent-cli@latest install --fix
+npx --yes @expo/agent-cli@latest install expo-observe
 ```
 
 ## Step 2 — Wrap the root layout
@@ -202,7 +202,7 @@ The marker fires **once**, on mount, so its `params` are read from the first ren
 Metrics are collected from real builds, not from `expo start`:
 
 ```sh
-eas build
+npx --yes eas-cli@latest build
 ```
 
 > By default, metrics collected from **debug builds** are not dispatched. A build is treated as a debug build when either the native app is a debug build or the JS bundle is a development bundle (`__DEV__` is `true`). To dispatch anyway while testing the integration, set `dispatchInDebug: true` when calling `configure()` — see [Enable metrics in development](https://docs.expo.dev/eas/observe/configuration/#enable-metrics-in-development). This has no effect on release builds.
@@ -215,7 +215,7 @@ To query metrics from the terminal with the EAS CLI, see [`./queries.md`](./quer
 
 ## Optional — per-route navigation metrics (SDK 56+)
 
-By default `expo-observe` records app-wide startup metrics only. To additionally get **per-route / per-screen** navigation metrics (`cold_ttr`, `warm_ttr`, and a per-navigation `tti`, each tagged with the route/screen), enable one of the navigation integrations. These require **SDK 56 or later**; on earlier SDKs they are silent no-ops. Query the resulting data with `eas observe:routes`, or with `observe:metrics` / `observe:metrics-summary` under the CLI aliases `nav_cold_ttr`, `nav_warm_ttr`, and `nav_tti` (see [`./queries.md`](./queries.md)).
+By default `expo-observe` records app-wide startup metrics only. To additionally get **per-route / per-screen** navigation metrics (`cold_ttr`, `warm_ttr`, and a per-navigation `tti`, each tagged with the route/screen), enable one of the navigation integrations. These require **SDK 56 or later**; on earlier SDKs they are silent no-ops. Query the resulting data with `npx --yes eas-cli@latest observe:routes`, or with `observe:metrics` / `observe:metrics-summary` under the CLI aliases `nav_cold_ttr`, `nav_warm_ttr`, and `nav_tti` (see [`./queries.md`](./queries.md)).
 
 Pick the integration that matches the app's router:
 
@@ -401,7 +401,7 @@ User-defined events are persisted on-device, batched, and dispatched on the next
 
 ### Viewing events
 
-User-defined events appear under the **Events** tab in the Observe dashboard, and are queryable from the terminal with `eas observe:events` — see [`./queries.md`](./queries.md).
+User-defined events appear under the **Events** tab in the Observe dashboard, and are queryable from the terminal with `npx --yes eas-cli@latest observe:events` — see [`./queries.md`](./queries.md).
 
 ## Optional — error and crash reporting
 
@@ -478,7 +478,7 @@ Production JS stack traces point into the minified bundle unless a source map is
 **EAS Updates** — publish with `--upload-source-maps` (EAS CLI 24.9.0+):
 
 ```bash
-eas update --channel production --upload-source-maps
+npx --yes eas-cli@latest update --channel production --upload-source-maps
 ```
 
 - Uploads the map `expo export` emits for each native platform, with `sourcesContent` stripped.
@@ -514,17 +514,17 @@ If the user needs ANR/OOM capture or native symbolication today, a separate cras
 { "expo": { "extra": { "eas": { "observe": { "endpointUrl": "https://your-endpoint.com" } } } } }
 ```
 
-The URL is baked into the native layer at build time, so run `npx expo prebuild` and rebuild after changing it. If the backend expects standard OTLP paths without the project-ID prefix, route through a collector.
+The URL is baked into the native layer at build time, so after changing it, run `npx --yes @expo/agent-cli@latest prebuild` and build the app again. If the backend expects standard OTLP paths without the project-ID prefix, route through a collector.
 
 ## Quick checklist
 
 - [ ] SDK ≥ 55, EAS project linked, development or production build (not Expo Go).
-- [ ] `expo-observe` installed via `npx expo install`.
+- [ ] `expo-observe` installed via `npx --yes @expo/agent-cli@latest install`.
 - [ ] Root component exported through `AppMetricsRoot.wrap(...)` (SDK 55) or `ObserveRoot.wrap(...)` (SDK 56+).
 - [ ] `markInteractive()` called from every entry screen once it is genuinely interactive — global `AppMetrics.markInteractive()` on SDK 55, or `useObserve()` hook on SDK 56+.
 - [ ] (Optional, SDK 56+) Per-route metrics enabled via `Observe.configure({ integrations: { ... } })`, plus `<ObserveNavigationContainer>` (dynamic) or `<ObserveNavigationProvider>` (static) for React Navigation.
 - [ ] (Optional, SDK 57+) Sensitive route/query params listed in `filteredParams`.
 - [ ] (Optional, SDK 56+) User-defined events emitted via `Observe.logEvent(name, { attributes })` with stable, lowercase, dot-separated names and no PII.
 - [ ] (Optional) Library problem reports enabled via `integrations: { 'expo-image': true }` (SDK 57+) or `integrations: { 'react-native-reanimated': true }` (SDK 58+, Reanimated 4.7.0+), with no `configureReanimatedLogger` call in the app. See [`./library-integrations.md`](./library-integrations.md).
-- [ ] (Optional, SDK 57+) `<ObserveErrorBoundary>` (or `errorBoundaryFallback` on `ObserveRoot`) around risky subtrees, `Observe.reportError` in recovery paths, `"uploadSourceMaps": true` in the `eas.json` build profile, and `eas update --upload-source-maps` when publishing updates.
-- [ ] New build produced with `eas build` and metrics visible in the Observe dashboard.
+- [ ] (Optional, SDK 57+) `<ObserveErrorBoundary>` (or `errorBoundaryFallback` on `ObserveRoot`) around risky subtrees, `Observe.reportError` in recovery paths, `"uploadSourceMaps": true` in the `eas.json` build profile, and `npx --yes eas-cli@latest update --upload-source-maps` when publishing updates.
+- [ ] New build produced with `npx --yes eas-cli@latest build` and metrics visible in the Observe dashboard.

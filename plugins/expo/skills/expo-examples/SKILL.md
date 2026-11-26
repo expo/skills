@@ -1,7 +1,7 @@
 ---
 name: expo-examples
-description: Expo's official example projects - the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, NativeWind, and more). Use when integrating a third-party library or service into an existing Expo app and you want the canonical, version-matched pattern to adapt, or when scaffolding a new project from one with `npx create-expo --example`.
-allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx create-expo:*),Bash(npx degit:*),Bash(bun create:*)"
+description: Expo's official example projects - the expo/examples repo of ~70 `with-*` integrations (Stripe, Clerk, Supabase, OpenAI, maps, Reanimated, SQLite, Skia, NativeWind, and more). Use when integrating a third-party library or service into an existing Expo app and you want the canonical, version-matched pattern to adapt, or when scaffolding a new project from one with the agent CLI's `new --example`.
+allowed-tools: "Read,Bash(gh api:*),Bash(git clone:*),Bash(npx degit:*),Bash(npx --yes @expo/agent-cli@latest *)"
 license: MIT
 ---
 
@@ -64,15 +64,14 @@ Read from there with Grep/Read; delete the scratch dir when done.
 ### 2b. Scaffold mode — new project from an example
 
 ```bash
-npx create-expo --example with-stripe   # short form:  npx create-expo -e with-stripe
-bun create expo --example with-stripe    # with bun
+npx --yes @expo/agent-cli@latest new my-app --example with-stripe   # short form: -e with-stripe
 ```
 
 ### 3. Adapt into the user's app — non-destructively (critical)
 
 When the user already has an app, **add only what the example introduces; never overwrite their setup.**
 
-- **Version-align — don't copy pinned versions.** Examples track the **latest** SDK, so their `package.json` pins won't match an older project. Add only the *missing* deps with `npx expo install <pkg>` (it resolves SDK-correct versions) instead of copying exact versions.
+- **Version-align — don't copy pinned versions.** Examples track the **latest** SDK, so their `package.json` pins won't match an older project. Add only the *missing* deps with `npx --yes @expo/agent-cli@latest install <pkg>` (it resolves SDK-correct versions) instead of copying exact versions.
 - **Merge config, don't replace it.** Add only the `app.json`/`app.config.*` plugins and permissions the example introduces that the user lacks — keep their existing config block intact.
 - **Port the integration code.**
 - **Recreate env vars** from the example's `.env` shape — it holds placeholders, never working secrets.
@@ -97,9 +96,5 @@ When the user already has an app, **add only what the example introduces; never 
 - `./references/catalog.md` — categorized snapshot of the example library for fast triage.
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
-```bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-examples" --message "<actionable feedback>"
-```
-Use `--category agent-cli` for a problem with the agent CLI, and `--category evals` when an agent repeatedly fails at an Expo task. Run `feedback --help` for subjects and the data that the command sends.
-Each report goes to Expo with project and environment details. Show the user the message, and send it only if the user agrees. If you cannot ask the user, do not send it. Do not include secrets or personal data.
+If this skill has an error, or misleading or outdated information, tell the user and offer to report it to Expo. A report is optional, and the user decides. Do not send a report before the user agrees.
+The `feedback` command of the agent CLI sends a report. Its `--help` lists the categories (`skills` with the subject "expo-examples", `agent-cli` for a problem with the agent CLI, `evals` when an agent repeatedly fails at an Expo task) and the data that a report sends. Show the user the message, and tell the user that the report also carries project and environment details. If you cannot ask the user, put the command with your message in your final summary, so the user can send it. Do not include secrets or personal data.

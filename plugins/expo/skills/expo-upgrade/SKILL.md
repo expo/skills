@@ -21,7 +21,7 @@ Beta versions use `.preview` suffix (e.g., `55.0.0-preview.2`), published under 
 Check if latest is beta: https://exp.host/--/api/v2/versions (look for `-preview` in `expoVersion`)
 
 ```bash
-npx expo install expo@next --fix  # install beta
+npx --yes @expo/agent-cli@latest install expo@next --fix  # install beta
 ```
 
 ## Step-by-Step Upgrade Process
@@ -31,16 +31,16 @@ npx expo install expo@next --fix  # install beta
 1. Upgrade Expo and dependencies
 
 ```bash
-npx expo install expo@latest
-npx expo install --fix
+npx --yes @expo/agent-cli@latest install expo@latest
+npx --yes @expo/agent-cli@latest install --fix
 ```
 
-2. Run diagnostics: `npx expo-doctor`
+2. Run diagnostics: `npx --yes @expo/agent-cli@latest doctor`
 
 3. Clear caches and reinstall
 
 ```bash
-npx expo export -p ios --clear
+npx --yes @expo/agent-cli@latest export -p ios --clear
 rm -rf node_modules .expo
 watchman watch-del-all
 ```
@@ -60,7 +60,7 @@ watchman watch-del-all
 If upgrading requires native changes:
 
 ```bash
-npx expo prebuild --clean
+npx --yes @expo/agent-cli@latest prebuild --clean
 ```
 
 This regenerates the `ios` and `android` directories. Ensure the project is not a bare workflow app before running this command.
@@ -70,7 +70,7 @@ This regenerates the `ios` and `android` directories. Ensure the project is not 
 These steps only apply when `ios/` and/or `android/` directories exist in the project:
 
 - Clear the cocoapods cache for iOS: `cd ios && pod install --repo-update`
-- Clear derived data for Xcode: `npx expo run:ios --no-build-cache`
+- Clear derived data for Xcode: `npx --yes @expo/agent-cli@latest run:ios --no-build-cache`
 - Clear the Gradle cache for Android: `cd android && ./gradlew clean`
 
 ## Housekeeping
@@ -82,7 +82,7 @@ These steps only apply when `ios/` and/or `android/` directories exist in the pr
 - Delete sdkVersion from `app.json` to let Expo manage it automatically
 - Review formerly implicit packages such as `@babel/core`, `babel-preset-expo`, and `expo-constants` individually instead of removing them wholesale. Keep any package that an installed dependency declares as a required peer.
 - Keep `expo-constants` as a direct dependency whenever `expo-router` is installed. Expo Router imports it and declares it as a required peer; relying on a transitive copy can break native autolinking outside Expo Go.
-- After removing any dependency, immediately run `npx expo-doctor` and restore anything it reports as a missing required peer.
+- After removing any dependency, immediately run `npx --yes @expo/agent-cli@latest doctor` and restore anything it reports as a missing required peer.
 - If the babel.config.js only contains 'babel-preset-expo', delete the file
 - If the metro.config.js only contains expo defaults, delete the file
 
@@ -141,9 +141,5 @@ Do not guide users to opt in to or out of Hermes V1. Changing the Hermes version
 The new architecture is enabled by default, the app.json field `"newArchEnabled": true` is no longer needed as it's the default. Expo Go only supports the new architecture as of SDK +53.
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
-```bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-upgrade" --message "<actionable feedback>"
-```
-Use `--category agent-cli` for a problem with the agent CLI, and `--category evals` when an agent repeatedly fails at an Expo task. Run `feedback --help` for subjects and the data that the command sends.
-Each report goes to Expo with project and environment details. Show the user the message, and send it only if the user agrees. If you cannot ask the user, do not send it. Do not include secrets or personal data.
+If this skill has an error, or misleading or outdated information, tell the user and offer to report it to Expo. A report is optional, and the user decides. Do not send a report before the user agrees.
+The `feedback` command of the agent CLI sends a report. Its `--help` lists the categories (`skills` with the subject "expo-upgrade", `agent-cli` for a problem with the agent CLI, `evals` when an agent repeatedly fails at an Expo task) and the data that a report sends. Show the user the message, and tell the user that the report also carries project and environment details. If you cannot ask the user, put the command with your message in your final summary, so the user can send it. Do not include secrets or personal data.

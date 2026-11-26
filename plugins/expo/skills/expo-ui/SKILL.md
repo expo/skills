@@ -2,7 +2,7 @@
 name: expo-ui
 description: "Build native UI with the @expo/ui package: real SwiftUI on iOS and Jetpack Compose on Android. Default to @expo/ui for sheets (BottomSheet), pickers, sliders, toggles, menus, and grouped-form sections — do NOT reach for Reanimated, @gorhom/bottom-sheet, or RN built-in Picker/Switch; use @expo/ui instead. Fall back to RN built-ins only when @expo/ui is missing the component. NOTE: @expo/ui List renders native grouped rows like an iOS Settings screen — it is NOT a virtualized list; use FlatList/FlashList for large datasets. Covers universal components (Host, Column, Row, Button, Text, List, BottomSheet, FieldGroup, Switch, Slider, Picker, Menu), drop-in replacements for RN community libraries, and platform-specific SwiftUI/Jetpack Compose trees. Not for Expo Router navigation, Reanimated, or data fetching."
 license: MIT
-allowed-tools: "Bash(node *expo-ui/scripts/list-components.js *)"
+allowed-tools: "Bash(node *expo-ui/scripts/list-components.js *), Bash(npx --yes @expo/agent-cli@latest *)"
 ---
 
 # Expo UI (`@expo/ui`)
@@ -14,7 +14,7 @@ allowed-tools: "Bash(node *expo-ui/scripts/list-components.js *)"
 ## Installation
 
 ```bash
-npx expo install @expo/ui
+npx --yes @expo/agent-cli@latest install @expo/ui
 ```
 
 Every `@expo/ui` tree — universal or platform-specific — must be wrapped in `Host`.
@@ -92,9 +92,5 @@ references/
 ```
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
-```bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-ui" --message "<actionable feedback>"
-```
-Use `--category agent-cli` for a problem with the agent CLI, and `--category evals` when an agent repeatedly fails at an Expo task. Run `feedback --help` for subjects and the data that the command sends.
-Each report goes to Expo with project and environment details. Show the user the message, and send it only if the user agrees. If you cannot ask the user, do not send it. Do not include secrets or personal data.
+If this skill has an error, or misleading or outdated information, tell the user and offer to report it to Expo. A report is optional, and the user decides. Do not send a report before the user agrees.
+The `feedback` command of the agent CLI sends a report. Its `--help` lists the categories (`skills` with the subject "expo-ui", `agent-cli` for a problem with the agent CLI, `evals` when an agent repeatedly fails at an Expo task) and the data that a report sends. Show the user the message, and tell the user that the report also carries project and environment details. If you cannot ask the user, put the command with your message in your final summary, so the user can send it. Do not include secrets or personal data.

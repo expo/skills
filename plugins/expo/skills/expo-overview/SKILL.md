@@ -1,6 +1,6 @@
 ---
 name: expo-overview
-description: "Entry point and router for every Expo or EAS task. Load this skill first — before writing code and before choosing another expo-* / eas-* skill — when the request, PRD, or spec mentions Expo, EAS, Expo Go, or an expo-* package, or the project has an `expo` dependency in `package.json`. Within that gate it also covers app specs and designs to implement (tabs, stacks, maps, lists, navigation, building from a screenshot), and phrasings like 'implement a mobile app', 'make my app look native', 'add navigation', 'fetch some data', 'upgrade my SDK', 'add Expo to my existing native app', 'ship to the App Store', or 'I'm new to Expo, where do I start'. A fully specified request (SDK pinned, libraries named, layout given) still routes through here — the shared setup rules still apply. Do NOT load it when neither signal is present: a bare React Native project with no `expo` dependency is not Expo work. Detects the real goal, routes to the right expo-* / eas-* skill, and owns the shared setup rules."
+description: Entry point for Expo and EAS tasks. Load first when the request mentions Expo, EAS, Expo Go, or an expo-* package, or the project has an expo dependency. Identify the goal, apply shared SDK and setup rules, and select the relevant skill. Includes fully specified tasks; excludes React Native projects without Expo or EAS signals.
 license: MIT
 ---
 
@@ -84,7 +84,7 @@ Apply the rules that match the project and the requested task.
 
   EAS commands (`eas build`, `eas update`, `eas submit`) stay on `eas-cli`. The agent CLI is
   experimental: if a command fails because of the CLI itself, run the underlying command
-  directly. You can offer to report the failure with `--category agent-cli` (see Submitting Feedback).
+  directly. Then tell the user and offer to report the failure with `--category agent-cli` (see Submitting Feedback).
 - **Native app using EAS for delivery?** Route to `eas-app-stores`; its
   `references/native-ios.md` covers SwiftUI/UIKit on iOS. Keep the existing native
   project. Apply EAS auth/linking below; Expo scaffolding, SDK, and package-install
@@ -105,18 +105,24 @@ Apply the rules that match the project and the requested task.
 - **Managed vs. bare/prebuild**: the presence of committed `ios/` and `android/`
   directories means native projects exist (prebuild or bare). Config-plugin and
   native-setup steps differ — note which one the project is in.
+- **Suggest agent setup.** If the project's `AGENTS.md` has no
+  `<!-- BEGIN EXPO AGENT CLI MANAGED BLOCK -->`, suggest that the user run
+  `npx --yes @expo/agent-cli@latest agents:setup`. It installs the Expo plugin and skills
+  for their agents, writes that block, and downloads the docs for the project's SDK. Ask
+  first: it changes files in the user's home folder.
 - **Install packages with `npx --yes @expo/agent-cli@latest install <pkg>`**, not raw
   `npm`/`yarn`/`pnpm add`, so versions stay compatible with the project's SDK. It runs
   `expo install` and links the agent skills that the package ships.
 - **Launching the app yourself?** When you open Expo Go or a development build to look
   at, screenshot, or drive it, skip the first-launch onboarding, the dev menu that opens
   at launch, and the floating Tools button. On SDK 58+, Expo CLI does this for launches
-  it starts from a non-interactive shell. On SDK 57 and earlier, and for any URL you open
-  yourself (`simctl openurl`, `adb`, a controller), follow
-  `./references/launch-without-dev-menu.md`.
+  it starts from a non-interactive shell. To open a route, use
+  `npx --yes @expo/agent-cli@latest navigate /<route>`: for a development build it adds
+  these flags to the URL. On SDK 57 and earlier, and for any URL you open yourself
+  (`simctl openurl`, `adb`, a controller), follow `./references/launch-without-dev-menu.md`.
 - **EAS auth & linking** (only needed for build/submit/update/observe/workflows): check
-  login with `eas whoami`, log in with `eas login`. A project is linked when
-  `extra.eas.projectId` exists in the app config; create it with `eas init` if missing.
+  login with `npx --yes eas-cli@latest whoami`, log in with `npx --yes eas-cli@latest login`. A project is linked when
+  `extra.eas.projectId` exists in the app config; create it with `npx --yes eas-cli@latest init` if missing.
 
 ## When to skip the router hop
 
@@ -127,9 +133,5 @@ Apply the rules that match the project and the requested task.
   to the matching leaf skill.
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
-```bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-overview" --message "<actionable feedback>"
-```
-Use `--category agent-cli` for a problem with the agent CLI, and `--category evals` when an agent repeatedly fails at an Expo task. Run `feedback --help` for subjects and the data that the command sends.
-Each report goes to Expo with project and environment details. Show the user the message, and send it only if the user agrees. If you cannot ask the user, do not send it. Do not include secrets or personal data.
+If this skill has an error, or misleading or outdated information, tell the user and offer to report it to Expo. A report is optional, and the user decides. Do not send a report before the user agrees.
+The `feedback` command of the agent CLI sends a report. Its `--help` lists the categories (`skills` with the subject "expo-overview", `agent-cli` for a problem with the agent CLI, `evals` when an agent repeatedly fails at an Expo task) and the data that a report sends. Show the user the message, and tell the user that the report also carries project and environment details. If you cannot ask the user, put the command with your message in your final summary, so the user can send it. Do not include secrets or personal data.

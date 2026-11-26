@@ -38,7 +38,7 @@ This installs [`@bacons/apple-targets`](https://github.com/EvanBacon/expo-apple-
 - `targets/clip/Info.plist` — Clip Info.plist
 - `targets/clip/AppDelegate.swift`, `Assets.xcassets`, etc.
 
-Pick a good icon or reuse the existing one defined in the app — check it with `bunx expo config` under the `icon` or `ios.icon` key.
+Pick a good icon or reuse the existing one defined in the app — check it with `npx --yes @expo/agent-cli@latest config` under the `icon` or `ios.icon` key.
 
 ## 3. Wire up associated domains
 
@@ -132,7 +132,7 @@ Notes:
 Create `src/app/+html.tsx` (Expo Router's HTML shell) and add the tag from `setup-safari`. Create the versioned template if it doesn't exist:
 
 ```sh
-bunx expo customize src/app/+html.tsx
+npx --yes @expo/agent-cli@latest customize src/app/+html.tsx
 ```
 
 Add the meta tag to the `<head>`:
@@ -170,8 +170,8 @@ To make the website show the App Clip card instead of the install card, use:
 The AASA file must be live before iOS will trust the association. Use [EAS Hosting](https://docs.expo.dev/eas/hosting/):
 
 ```sh
-bunx expo export -p web
-eas deploy --prod
+npx expo export -p web
+npx --yes eas-cli@latest deploy --prod
 ```
 
 This publishes the site (including `/.well-known/apple-app-site-association`) at `https://<slug>.expo.app`. Verify:
@@ -182,13 +182,13 @@ curl https://may20.expo.app/.well-known/apple-app-site-association
 
 ## 8. Mirror permissions
 
-Inspect the parent app's permissions after prebuild:
+Inspect the Info.plist that the parent app's config plugins produce (no prebuild needed):
 
 ```sh
-npx expo config --type introspect
+npx --yes @expo/agent-cli@latest config --type introspect
 ```
 
-Look at the `infoPlist` object — mirror the permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.
+Look at `ios.infoPlist` in the output. Mirror its permission keys in the App Clip's `Info.plist` so matching APIs can be used from the Clip.
 
 Set `deploymentTarget: "17.6"` in the Clip's target config — App Clips have a higher minimum size limit in iOS 17.6.
 
@@ -222,7 +222,7 @@ This will:
 Pull existing App Store metadata to local:
 
 ```sh
-eas metadata:pull
+npx --yes eas-cli@latest metadata:pull
 ```
 
 Add `apple.appClip` to `store.config.json`. Up to 3 invocation URLs can launch the Clip from a web page:
@@ -255,7 +255,7 @@ The `headerImage` must be a 1800x1200 PNG with no opacity.
 Push back to the store:
 
 ```sh
-eas metadata:push
+npx --yes eas-cli@latest metadata:push
 ```
 
 Apple's recommended App Clip metadata guidelines: https://sosumi.ai/documentation/appclip/configuring-the-launch-experience-of-your-app-clip
@@ -282,9 +282,5 @@ See [./references/native-module.md](./references/native-module.md) for the Swift
 - ./references/native-module.md — Local Expo module to detect App Clip context and present the SKOverlay install prompt
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
-```bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-app-clip" --message "<actionable feedback>"
-```
-Use `--category agent-cli` for a problem with the agent CLI, and `--category evals` when an agent repeatedly fails at an Expo task. Run `feedback --help` for subjects and the data that the command sends.
-Each report goes to Expo with project and environment details. Show the user the message, and send it only if the user agrees. If you cannot ask the user, do not send it. Do not include secrets or personal data.
+If this skill has an error, or misleading or outdated information, tell the user and offer to report it to Expo. A report is optional, and the user decides. Do not send a report before the user agrees.
+The `feedback` command of the agent CLI sends a report. Its `--help` lists the categories (`skills` with the subject "expo-app-clip", `agent-cli` for a problem with the agent CLI, `evals` when an agent repeatedly fails at an Expo task) and the data that a report sends. Show the user the message, and tell the user that the report also carries project and environment details. If you cannot ask the user, put the command with your message in your final summary, so the user can send it. Do not include secrets or personal data.

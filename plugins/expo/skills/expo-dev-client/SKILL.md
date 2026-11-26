@@ -56,7 +56,7 @@ Key settings:
 Build iOS dev client and submit to TestFlight in one command:
 
 ```bash
-eas build -p ios --profile development --submit
+npx --yes eas-cli@latest build -p ios --profile development --submit
 ```
 
 This will:
@@ -77,10 +77,10 @@ Build a development client on your machine:
 
 ```bash
 # iOS (requires Xcode)
-eas build -p ios --profile development --local
+npx --yes eas-cli@latest build -p ios --profile development --local
 
 # Android
-eas build -p android --profile development --local
+npx --yes eas-cli@latest build -p android --profile development --local
 ```
 
 Local builds output:
@@ -115,23 +115,23 @@ adb install build.apk
 
 ```bash
 # iOS only
-eas build -p ios --profile development
+npx --yes eas-cli@latest build -p ios --profile development
 
 # Android only
-eas build -p android --profile development
+npx --yes eas-cli@latest build -p android --profile development
 
 # Both platforms
-eas build --profile development
+npx --yes eas-cli@latest build --profile development
 ```
 
 ## Checking Build Status
 
 ```bash
 # List recent builds
-eas build:list
+npx --yes eas-cli@latest build:list
 
 # View build details
-eas build:view
+npx --yes eas-cli@latest build:view
 ```
 
 ## Using the Dev Client
@@ -145,39 +145,39 @@ Once installed, the dev client provides:
 Connect to local development:
 
 ```bash
-# Start Metro bundler
-npx expo start --dev-client
+# Simulator or emulator: start the dev server and open the dev client (or --android; add --device <serial> for an Android phone)
+npx --yes @expo/agent-cli@latest dev --ios --dev-client --detach --wait-ready
 
-# Scan QR code with dev client or enter URL manually
+# Physical iPhone: start the dev server, then scan the QR code with the dev client
+npx --yes @expo/agent-cli@latest start --dev-client
 ```
 
-When you launch the dev client yourself to screenshot or drive it, skip the onboarding sheet, the dev menu at launch, and the Tools button. On SDK 58+, Expo CLI does this for launches it starts from a non-interactive shell; for a URL you open yourself, use `<scheme>://?__expo_url=<encoded dev server URL>&__expo_disable_onboarding=1&__expo_disable_fab=1&__expo_disable_auto_launch=1`. On SDK 57 and earlier, launch the iOS app with the `-EXDevMenu*` launch arguments, and on Android open `<scheme>://expo-development-client/?url=<encoded dev server URL>&disableOnboarding=1&disableFab=1&disableAutoLaunch=1`. See `../expo-overview/references/launch-without-dev-menu.md` for the exact commands.
+If no dev client is installed, `dev` builds one on this machine. If this machine cannot build, `dev` only describes an EAS build. It runs one only with `--eas`, which uses EAS credits. Run `dev --ios --dev-client --plan` first, with no dev server running, to see what it will do.
+
+To open a route in the running dev client, run `npx --yes @expo/agent-cli@latest navigate /<route>`.
+
+When you launch the dev client yourself to screenshot or drive it, skip the onboarding sheet, the dev menu at launch, and the Tools button. On SDK 58+, Expo CLI does this for launches it starts from a non-interactive shell, and `navigate` adds the flags to the URL it opens. Use `navigate` in place of a URL you build yourself. On SDK 57 and earlier, launch the iOS app with the `-EXDevMenu*` launch arguments, and on Android open `<scheme>://expo-development-client/?url=<encoded dev server URL>&disableOnboarding=1&disableFab=1&disableAutoLaunch=1`. See `../expo-overview/references/launch-without-dev-menu.md` for the exact commands.
 
 ## Troubleshooting
 
 **Build fails with signing errors:**
 
 ```bash
-eas credentials
+npx --yes eas-cli@latest credentials
 ```
 
 **Clear build cache:**
 
 ```bash
-eas build -p ios --profile development --clear-cache
+npx --yes eas-cli@latest build -p ios --profile development --clear-cache
 ```
 
 **Check EAS CLI version:**
 
 ```bash
-eas --version
-eas update
+npx --yes eas-cli@latest --version
 ```
 
 ## Submitting Feedback
-You can voluntarily report errors, misleading or outdated information in this skill, so Expo can improve it:
-```bash
-npx --yes @expo/agent-cli@latest feedback --category skills --subject "expo-dev-client" --message "<actionable feedback>"
-```
-Use `--category agent-cli` for a problem with the agent CLI, and `--category evals` when an agent repeatedly fails at an Expo task. Run `feedback --help` for subjects and the data that the command sends.
-Each report goes to Expo with project and environment details. Show the user the message, and send it only if the user agrees. If you cannot ask the user, do not send it. Do not include secrets or personal data.
+If this skill has an error, or misleading or outdated information, tell the user and offer to report it to Expo. A report is optional, and the user decides. Do not send a report before the user agrees.
+The `feedback` command of the agent CLI sends a report. Its `--help` lists the categories (`skills` with the subject "expo-dev-client", `agent-cli` for a problem with the agent CLI, `evals` when an agent repeatedly fails at an Expo task) and the data that a report sends. Show the user the message, and tell the user that the report also carries project and environment details. If you cannot ask the user, put the command with your message in your final summary, so the user can send it. Do not include secrets or personal data.

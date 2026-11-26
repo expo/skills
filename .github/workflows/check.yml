@@ -2,8 +2,6 @@ name: check
 
 on:
   pull_request:
-    branches:
-      - main
   merge_group:
     branches:
       - main
@@ -38,7 +36,17 @@ jobs:
       - name: Check skill requirements
         id: skill-limits
         continue-on-error: true
-        run: bun scripts/check-skill-limits.ts
+        run: bun test scripts/agent-cli.test.ts && bun scripts/check-skill-limits.ts
+
+      - name: Check EAS CLI command examples
+        id: eas-command-check
+        continue-on-error: true
+        run: bun test scripts/check-eas-cli-commands.test.ts && bun scripts/check-eas-cli-commands.ts
+
+      - name: Check private release status summaries
+        id: status-summary-test
+        continue-on-error: true
+        run: bun test scripts/status-summary.test.ts
 
       - name: Check plugin version bump
         id: version-check
@@ -61,6 +69,8 @@ jobs:
         if: always()
         env:
           SKILL_LIMITS_OUTCOME: ${{ steps.skill-limits.outcome }}
+          EAS_COMMAND_CHECK_OUTCOME: ${{ steps.eas-command-check.outcome }}
+          STATUS_SUMMARY_TEST_OUTCOME: ${{ steps.status-summary-test.outcome }}
           VERSION_CHECK_TEST_OUTCOME: ${{ steps.version-check-test.outcome }}
           VERSION_CHECK_OUTCOME: ${{ steps.version-check.outcome }}
           ROUTING_CHECK_OUTCOME: ${{ steps.routing-check.outcome }}
@@ -91,7 +101,9 @@ jobs:
             echo "| --- | --- | --- |"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun scripts/check-skill-limits.ts"
+          report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun test scripts/agent-cli.test.ts && bun scripts/check-skill-limits.ts"
+          report "EAS CLI command examples" "$EAS_COMMAND_CHECK_OUTCOME" "bun test scripts/check-eas-cli-commands.test.ts && bun scripts/check-eas-cli-commands.ts"
+          report "private release status summaries" "$STATUS_SUMMARY_TEST_OUTCOME" "bun test scripts/status-summary.test.ts"
           report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
           report "plugin version bump" "$VERSION_CHECK_OUTCOME" "bun scripts/check-plugin-version-bump.ts origin/main"
           report "expo-overview routing" "$ROUTING_CHECK_OUTCOME" "bun scripts/check-overview-routing.ts"
