@@ -488,12 +488,13 @@ npx --yes eas-cli@latest update --channel production --upload-source-maps
 **Native frames.** On Android, Java and Kotlin frames already carry the class, method, and line. On iOS, frames in the app and its bundled frameworks show as a binary name and an offset (`MyApp + 19160`) until the app's dSYM files are uploaded:
 
 - Requires `expo-observe` 57.0.25+ (SDK 57) or 58.0.5+ (SDK 58). Earlier crash reports have no binary UUIDs to match.
-- On EAS Build, keep the dSYMs as a build artifact, then download `*.app.dSYM.zip` from the build page. `eas build --local` writes the artifact next to the `.ipa`; when the pattern matches one file, the artifact is the `.app.dSYM.zip` renamed to `build-<timestamp>.zip`. Do not pass `--output`: the `.ipa` and the artifact then get the same path, and one replaces the other.
+- On EAS Build, keep the dSYMs as a build artifact, then download `*.app.dSYM.zip` from the build page. If the download is a `.tar.gz` archive, extract it to get the `.app.dSYM.zip`. `eas build --local` writes the artifact next to the `.ipa`; when the pattern matches one file, the artifact is the `.app.dSYM.zip` renamed to `build-<timestamp>.zip`. Do not pass `--output`: the `.ipa` and the artifact then get the same path, and one replaces the other.
 
   ```json
   { "build": { "production": { "ios": { "buildArtifactPaths": ["ios/build/*.app.dSYM.zip"] } } } }
   ```
 
+- For an app archived in Xcode and not built on EAS: in **Window** > **Organizer** > **Archives**, right-click the archive and select **Show in Finder**, then right-click the `.xcarchive` file, select **Show Package Contents**, and compress the `dSYMs` folder into a `.zip` file.
 - Upload the `.zip` from a native crash in **Observe** > **Errors** (**Upload debug symbols**), or ahead of time in **Project settings** > **Observe debug symbols**. Upload the dSYMs of every build you release; an upload also applies to earlier crashes.
 - A prebuilt framework such as Hermes has no dSYM in the archive. Add its dSYM from the publisher to the `.zip`.
 
@@ -503,11 +504,12 @@ npx --yes eas-cli@latest update --channel production --upload-source-maps
 
 Network traces record completed network requests as spans: timed operations with a trace ID, a span ID, and an optional parent. Query them with `eas observe:traces` and `eas observe:trace` (see [`./queries.md`](./queries.md)). Each span counts toward the event quota.
 
-Recording is off by default. Turn on recording of completed network requests as spans, or record only the hosts and methods that matter:
+Recording is off by default. Add `networkTraces` to the app's existing `Observe.configure()` call, not a second call: `configure()` replaces the full configuration, so a separate call resets the other options, and a later call without `networkTraces` turns recording off. Record every completed request, or only the hosts and methods that matter:
 
 ```ts
 Observe.configure({ networkTraces: true });
 
+// Or, to record only some hosts and methods:
 Observe.configure({
   networkTraces: { filter: { hosts: ['api.myapp.com'], methods: ['GET', 'POST'] } },
 });

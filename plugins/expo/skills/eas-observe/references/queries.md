@@ -61,7 +61,7 @@ The Expo MCP Server has read-only tools that return the same data as the CLI. Wh
 
 Differences from the CLI:
 
-- **Errors:** `observe_errors` and `observe_error_occurrences` take `kind` (`JS`, `NATIVE`, or `OTHER`), which the CLI does not have. `observe_errors` also takes `orderBy` (`MOST_FREQUENT`, `MOST_USERS`, `FIRST_SEEN`, or `LAST_SEEN`). `observe_error_occurrences` can filter by `sessionId` without a fingerprint, and takes `sort` (`newest` or `oldest`).
+- **Errors:** `observe_errors`, `observe_error_occurrences`, and `observe_error_breakdown` take `kind` (`JS`, `NATIVE`, or `OTHER`), which the CLI does not have. `observe_errors` also takes `orderBy` (`MOST_FREQUENT`, `MOST_USERS`, `FIRST_SEEN`, or `LAST_SEEN`) and `severity` in uppercase (`FATAL` or `ERROR`), where the CLI takes `--severity fatal` or `--severity error`. `observe_error_occurrences` can filter by `sessionId` without a fingerprint, and takes `sort` (`newest` or `oldest`). `observe_error_breakdown` requires `fingerprint` and `dimension`.
 - **Spans:** `observe_spans` takes arrays (`names`, `hosts`, `httpStatusCodes`) and uppercase enum values (`kinds`, `statusCodes`) where the CLI repeats a lowercase flag. It also takes `scopes`, such as `expo-observe.network`, and `sort` (`newest` or `oldest`).
 - **Project:** pass `appId` or `appFullName` (such as `@owner/my-app`). In a project directory, read the project ID from the app config.
 - **Platform:** `platform` takes `ANDROID`, `IOS`, `IPADOS`, `MACOS`, or `TVOS`. There is no `apple` value. As in the CLI, `observe_versions`, `observe_metrics_summary`, and `observe_routes` return separate Android and iOS results without `platform`, and `observe_metrics`, `observe_event_names`, and `observe_events` return results from all platforms.
