@@ -16,7 +16,7 @@
     {
       "name": "expo-experiments",
       "source": "./plugins/expo-experiments",
-      "description": "Experimental Expo skills for APIs that are not finalized. Skills graduate to the expo plugin when stable."
+      "description": "Expo skills for experimental workflows and evolving APIs."
     }
   ]
 }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Expo Mascot"
+  short_description: "Design, rig, animate, and dress a 2D mascot for Expo"
+  default_prompt: "Use $expo-mascot to create a numbered 3 × 3 concept sheet from my mascot reference."

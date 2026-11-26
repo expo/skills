@@ -1,14 +1,13 @@
 # Expo Experiments
 
-Experimental skills from the Expo team, for Expo APIs that are still evolving and not covered by stability guarantees.
+Skills from the Expo team for experimental workflows and Expo APIs that are still evolving.
 
 This plugin is separate from the main `expo` plugin on purpose:
 
-- Skills here target **experimental or pre-release Expo APIs**. Their guidance can change or become outdated as those APIs evolve.
 - Skills may be **rewritten, renamed, or removed** between versions without the compatibility care the `expo` plugin gets.
-- When the underlying API stabilizes, its skill **graduates to the `expo` plugin** and is removed from here.
+- A skill can move to the `expo` plugin as its workflow or underlying API matures.
 
-If you are not deliberately using an experimental Expo API, install the main `expo` plugin instead.
+Install this plugin alongside `expo` to use the skills listed below.
 
 ## Installation
 
@@ -21,6 +20,7 @@ If you are not deliberately using an experimental Expo API, install the main `ex
 
 | Skill | Use it for |
 | --- | --- |
+| `expo-mascot` | Create a customizable 2D mascot with a concept sheet, a Rive rig and idle loop, and swappable outfits. |
 | `expo-migrate-module` | Migrating a Swift Expo module from the Modules API 1.0 definition DSL to the 2.0 macro API. |
 
 ## License
