@@ -9,7 +9,7 @@ Show me the draft in plain language:
 1. **User task** — the exact request an Expo user would make, without naming the skill or giving away the solution.
 2. **Expected outcome** — one observable result that would tell the user the task succeeded.
 3. **Pass/fail checks** — what trace evidence would show that Claude loaded `$skill`, and what evidence would prove each task result.
-4. **Setup and login** — which fixtures the task needs and whether any EAS CLI command requires authentication. If so, name the command and bind the saved Firegoat credential `EXPO_TOKEN` by ID in `envCredentials.EXPO_TOKEN`. If the credential is missing, ask me to add a scoped test token in Firegoat. The agent receives it after setup. Use an empty environment for tasks that need no login.
+4. **Setup and login** — list the fixtures and identify any EAS CLI command that needs authentication. The Expo workspace already has a global Firegoat credential named `EXPO_TOKEN`. If a command needs it, use `list_credentials` to find its ID and set `envCredentials.EXPO_TOKEN` to that ID. Run the authenticated command during the agent's task, after `setupCommand` finishes and Firegoat supplies the token. Leave the eval environment empty when no login is needed.
 
 Start the sandbox with this setup. It installs all published skills from this PR for all agents. Append any fixture steps, including a linked test project ID if needed.
 
