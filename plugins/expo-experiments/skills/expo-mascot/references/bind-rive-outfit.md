@@ -31,24 +31,54 @@ This example defines an empty `hat` slot. Set the artboard's `viewModelId` to `0
 </ViewModel>
 ```
 
-Add to the existing view model when one is already bound. Verify the property key and use project-local IDs. See [Rive View Model Image properties](https://rive.app/docs/editor/data-binding/property-types#image).
+Add to the existing view model when one is already bound. For a nested slot, place the image property in the linked model and include each intermediate `ViewModelPropertyViewModel` ID in `sourcePathIds`. Verify the property key and use project-local IDs. See [Rive View Model Image properties](https://rive.app/docs/editor/data-binding/property-types#image).
 
 ## Validate and return the result
 
 Run `rive <project-dir> --verify` and `rive inspect <project-dir>` to check the scene and binding. Preview the garment through a full `idle` loop. If needed, use a temporary copy of the project with the garment as the test instance's default image. Keep any returned preview outside the temporary directory and remove the copy after the check. If you changed the default in the authored project, restore the intended default before exporting and verify again. Use [Add mascot idle motion](./add-mascot-idle-motion.md) for capture guidance.
 
-Export the [updated runtime file](./set-up-rive-project.md#export-and-return-the-editor-link) and load it in an [Expo development build](./add-to-expo-screen.md). Keep one bound View Model instance on `RiveView`. Resolve its authored View Model with `riveFile.defaultArtboardViewModelAsync(ArtboardByName(artboardName))` for the artboard's default binding or `riveFile.viewModelByNameAsync(viewModelName)` for a model you explicitly bound. Read and reuse the schema from `await viewModel.getPropertiesAsync()`. Before looking up the image property, require an exact name and the runtime type `assetImage`:
+Export the [updated runtime file](./set-up-rive-project.md#export-and-return-the-editor-link) and load it in an [Expo development build](./add-to-expo-screen.md). Keep one bound View Model instance on `RiveView`. Resolve its root View Model definition with `riveFile.defaultArtboardViewModelAsync(ArtboardByName(artboardName))` for the artboard's default binding or `riveFile.viewModelByNameAsync(viewModelName)` for a model you explicitly bound.
+
+Validate the slot against that definition before looking up the image property. For `outfit/hat`, check that `outfit` is a `viewModel` property on the root, then check that `hat` is an `assetImage` on the model linked by `outfit`. Follow the same rule for paths such as `outfit/top` and `outfit/accessories/glasses`. Use exact property names at every step.
+
+Build `nestedModels` from the same project as the export, keyed by the full path to each nested property. In RML, follow the property's `viewModelReferenceId` to the referenced `ViewModel` and use that definition's name as the value. For example, `outfit` might map to `Wardrobe` and `outfit/accessories` to `Accessories`. Use an empty map for an export with only top-level slots. In Rive 0.5.17, `getPropertiesAsync()` on a model definition lists property names and types, and the nested instance returned by `viewModelAsync()` lacks the metadata needed to list its own properties. Use the linked definition to read the nested schema. [React Native View Model data binding](https://rive.app/docs/runtimes/react-native/data-binding#nested-view-models)
 
 ```ts
-const properties = await viewModel.getPropertiesAsync();
-if (!properties.some(({ name, type }) => name === slot && type === 'assetImage')) {
-  throw new Error(`Unknown image slot "${slot}"`);
+import type { RiveFile, ViewModel } from '@rive-app/react-native';
+
+async function hasImageSlot(
+  riveFile: RiveFile,
+  rootModel: ViewModel,
+  slot: string,
+  nestedModels: ReadonlyMap<string, string>,
+): Promise<boolean> {
+  const parents = slot.split('/');
+  const leaf = parents.pop();
+  if (!leaf || parents.includes('')) return false;
+
+  let model = rootModel;
+  let parentPath = '';
+  for (const parent of parents) {
+    const properties = await model.getPropertiesAsync();
+    if (!properties.some(({ name, type }) => name === parent && type === 'viewModel')) {
+      return false;
+    }
+    parentPath = parentPath ? `${parentPath}/${parent}` : parent;
+    const modelName = nestedModels.get(parentPath);
+    if (!modelName) return false;
+    const child = await riveFile.viewModelByNameAsync(modelName);
+    if (!child) return false;
+    model = child;
+  }
+
+  const properties = await model.getPropertiesAsync();
+  return properties.some(({ name, type }) => name === leaf && type === 'assetImage');
 }
 ```
 
-Run the check before every write path, including clear. On iOS, `instance.imageProperty(slot)` can return a proxy for an unknown name and `setValueAsync(image)` can resolve without changing the image.
+Reject a slot when `hasImageSlot` returns false, including on clear. If the nested instance can be unset, also verify that `await instance.viewModelAsync(parentPath)` returns an instance for the path before the final slash. On iOS, `instance.imageProperty(slot)` can return a proxy for an unknown path and `setValueAsync(image)` can resolve without changing the image.
 
-Use `RiveImages.loadFromBytesAsync` or `RiveImages.loadFromURLAsync` to load a fitted WebP that was absent from the exported file. Get the validated property with `instance.imageProperty(slot)` and call `set(image)` on it. Reapply the transparent WebP to clear the slot. To wait for the native binding before displaying the first outfit, await `setValueAsync(image)` with `@rive-app/react-native` 0.5.16 or later. Confirm that a misspelled slot and a property of the wrong type are rejected before the setter. Verify equip, swap, and clear while the same idle loop continues, and inspect alignment and overlap at the motion extremes. See [React Native Image data binding](https://rive.app/docs/runtimes/react-native/data-binding#images).
+Use `RiveImages.loadFromBytesAsync` or `RiveImages.loadFromURLAsync` to load a fitted WebP that was absent from the exported file. Pass the full validated path to `instance.imageProperty(slot)` on the root instance and call `set(image)` on the property. Reapply the transparent WebP to clear the slot. To wait for the native binding before displaying the first outfit, await `setValueAsync(image)` with `@rive-app/react-native` 0.5.16 or later. Check a valid top-level slot and, when present, a valid nested slot. Confirm that misspelled paths, non-model parents, and non-image leaves are rejected before the setter. Verify equip, swap, and clear while the same idle loop continues, and inspect alignment and overlap at the motion extremes. See [React Native Image data binding](https://rive.app/docs/runtimes/react-native/data-binding#images).
 
 For a catalog, make a contact sheet of worn items with the neutral frame and both extremes of the idle motion. Include tops with the paws visible and shoes with both soles in frame. Inspect the actual runtime rendering at display size for sliding cuffs, exposed paws inside closed shoes, and rear edges drawn over the body. Correct the art, attachment, or draw order at its source and render the affected combinations again before recording the result.
 
