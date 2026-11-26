@@ -485,9 +485,39 @@ npx --yes eas-cli@latest update --channel production --upload-source-maps
 - Maps over the 5 MiB upload limit are skipped with a warning; publishing never fails because of a source map.
 - The error detail page links the update that supplied the map next to **Stack trace**, as it does for the build.
 
-**Not available yet:** native symbolication (no dSYM or ProGuard mapping upload). Native frames show symbol names on iOS and class/method/line on Android.
+**Native frames.** On Android, Java and Kotlin frames already carry the class, method, and line. On iOS, frames in the app and its bundled frameworks show as a binary name and an offset (`MyApp + 19160`) until the app's dSYM files are uploaded:
 
-If the user needs ANR/OOM capture or native symbolication today, a separate crash reporter such as Sentry is still the option for that gap.
+- Requires `expo-observe` 57.0.25+ (SDK 57) or 58.0.5+ (SDK 58). Earlier crash reports have no binary UUIDs to match.
+- On EAS Build, keep the dSYMs as a build artifact, then download `*.app.dSYM.zip` from the build page. If the download is a `.tar.gz` archive, extract it to get the `.app.dSYM.zip`. `eas build --local` writes the artifact next to the `.ipa`; when the pattern matches one file, the artifact is the `.app.dSYM.zip` renamed to `build-<timestamp>.zip`. Do not pass `--output`: the `.ipa` and the artifact then get the same path, and one replaces the other.
+
+  ```json
+  { "build": { "production": { "ios": { "buildArtifactPaths": ["ios/build/*.app.dSYM.zip"] } } } }
+  ```
+
+- For an app archived in Xcode and not built on EAS: in **Window** > **Organizer** > **Archives**, right-click the archive and select **Show in Finder**, then right-click the `.xcarchive` file, select **Show Package Contents**, and compress the `dSYMs` folder into a `.zip` file.
+- Upload the `.zip` from a native crash in **Observe** > **Errors** (**Upload debug symbols**), or ahead of time in **Project settings** > **Observe debug symbols**. Upload the dSYMs of every build you release; an upload also applies to earlier crashes.
+- A prebuilt framework such as Hermes has no dSYM in the archive. Add its dSYM from the publisher to the `.zip`.
+
+**Not available yet:** Android ProGuard/R8 mapping upload, and ANR or out-of-memory capture. A separate crash reporter such as Sentry is still the option for those gaps.
+
+## Optional — network traces (SDK 58+)
+
+Network traces record completed network requests as spans: timed operations with a trace ID, a span ID, and an optional parent. Query them with `eas observe:traces` and `eas observe:trace` (see [`./queries.md`](./queries.md)). Each span counts toward the event quota.
+
+Recording is off by default. Add `networkTraces` to the app's existing `Observe.configure()` call, not a second call: `configure()` replaces the full configuration, so a separate call resets the other options, and a later call without `networkTraces` turns recording off. Record every completed request, or only the hosts and methods that matter:
+
+```ts
+Observe.configure({ networkTraces: true });
+
+// Or, to record only some hosts and methods:
+Observe.configure({
+  networkTraces: { filter: { hosts: ['api.myapp.com'], methods: ['GET', 'POST'] } },
+});
+```
+
+- Hosts match exactly and case-insensitively; subdomains are not implied. An omitted field matches every request, and an empty array matches none. `{ enabled: false, filter }` keeps a filter while recording nothing.
+- A request that is off or filtered out is never stored. The value persists across launches, so early-startup requests on the next launch follow the last value set, and removing the option takes effect only when `configure` runs again.
+- URL credentials and common signature query parameters (`Signature`, `sig`, `X-Amz-Signature`, `X-Amz-Credential`, `X-Amz-Security-Token`, `X-Goog-Signature`, `AWSAccessKeyId`) are replaced with `REDACTED`. A secret in any other query parameter is stored as-is.
 
 ## Optional — runtime configuration
 
@@ -499,12 +529,14 @@ If the user needs ANR/OOM capture or native symbolication today, a separate cras
 | `dispatchingEnabled` | boolean | `true` | Master switch. While `false`, pending metrics are dropped, not queued. |
 | `dispatchInDebug` | boolean | `false` | Dispatch metrics collected from debug builds. No effect on release builds. |
 | `sampleRate` | number | `undefined` (all installations) | Fraction of installations that dispatch, in `[0, 1]`. |
+| `errorSampleRate` | number | `undefined` (errors follow `sampleRate`) | Fraction of installations that dispatch errors and crashes, in `[0, 1]` (SDK 58+). A minimum: a value lower than `sampleRate` has no effect and `configure()` warns. |
 | `errorHandlingEnabled` | boolean | `true` | Record unhandled JS errors as `exception` events. |
 | `integrations` | object | `undefined` | Opt in to `expo-router`, `react-navigation`, `expo-image`, `react-native-reanimated`, or a third-party integration. For `expo-image` and `react-native-reanimated`, see [`./library-integrations.md`](./library-integrations.md). |
+| `networkTraces` | boolean or object | `false` | Record network requests as trace spans (SDK 58+). See [Optional — network traces](#optional--network-traces-sdk-58). |
 
-**Network request monitoring is automatic and has no off switch.** `expo-observe` observes `URLSession` traffic on iOS and `OkHttpClient` traffic on Android from launch, and attaches a rollup of the launch window to the TTI event — including the **host** of the slowest request (see [`./metrics.md`](./metrics.md)). Observe's own uploads are excluded. No `configure()` option disables it as of `expo-observe` 57.0.9, so treat request hosts as data that leaves the device.
+**Network request monitoring is automatic and has no off switch.** `expo-observe` observes `URLSession` traffic on iOS and `OkHttpClient` traffic on Android from launch, and attaches a rollup of the launch window to the TTI event — including the **host** of the slowest request (see [`./metrics.md`](./metrics.md)). Observe's own uploads are excluded. No `configure()` option disables it as of `expo-observe` 57.0.9, so treat request hosts as data that leaves the device. `networkTraces` controls the separate trace spans, not this rollup.
 
-**Sampling** is deterministic per installation: an installation is permanently in-sample or out-of-sample for a given rate, so the slice is stable across launches rather than a random subset of sessions. Out-of-sample installations drop pending metrics instead of accumulating them, so lowering the rate later does not retroactively send earlier sessions. Values outside `[0, 1]` are clamped. Sampling depends on `dispatchingEnabled`.
+**Sampling** is deterministic per installation: an installation is permanently in-sample or out-of-sample for a given rate, so the slice is stable across launches rather than a random subset of sessions. Out-of-sample installations drop pending metrics instead of accumulating them, so lowering the rate later does not retroactively send earlier sessions. Values outside `[0, 1]` are clamped. Sampling depends on `dispatchingEnabled`. To keep more errors than metrics (SDK 58+), set `errorSampleRate` higher, such as `sampleRate: 0.03` with `errorSampleRate: 1`.
 
 **Manual flush.** Events dispatch automatically when the app backgrounds — on Android through a background worker once connectivity returns, on iOS when the app resigns active or is about to terminate. Call `await Observe.dispatchEvents()` to flush early, which is mainly useful while testing.
 
@@ -527,4 +559,6 @@ The URL is baked into the native layer at build time, so after changing it, run 
 - [ ] (Optional, SDK 56+) User-defined events emitted via `Observe.logEvent(name, { attributes })` with stable, lowercase, dot-separated names and no PII.
 - [ ] (Optional) Library problem reports enabled via `integrations: { 'expo-image': true }` (SDK 57+) or `integrations: { 'react-native-reanimated': true }` (SDK 58+, Reanimated 4.7.0+), with no `configureReanimatedLogger` call in the app. See [`./library-integrations.md`](./library-integrations.md).
 - [ ] (Optional, SDK 57+) `<ObserveErrorBoundary>` (or `errorBoundaryFallback` on `ObserveRoot`) around risky subtrees, `Observe.reportError` in recovery paths, `"uploadSourceMaps": true` in the `eas.json` build profile, and `npx --yes eas-cli@latest update --upload-source-maps` when publishing updates.
+- [ ] (Optional, SDK 58+) `networkTraces` turned on, or filtered to the hosts and methods that matter.
+- [ ] (Optional) iOS dSYMs uploaded for each release build, for symbolicated native crashes.
 - [ ] New build produced with `npx --yes eas-cli@latest build` and metrics visible in the Observe dashboard.

@@ -12,9 +12,11 @@ EAS Observe collects app performance telemetry and custom events from Expo apps 
 | `npx --yes eas-cli@latest observe:metrics` | Individual metric samples ordered by value or timestamp (paginated) |
 | `npx --yes eas-cli@latest observe:routes` | Per-route statistical aggregates for navigation metrics (Nav Cold TTR, Nav Warm TTR, Nav TTI) |
 | `npx --yes eas-cli@latest observe:events` | Custom events emitted by the app via `logEvent` — name summary, all events, or filtered by event name (paginated) |
-| `npx --yes eas-cli@latest observe:session` | Full timeline of metric and log events for one session |
+| `npx --yes eas-cli@latest observe:session` | Full timeline of metric events, log events, and trace spans for one session |
 | `npx --yes eas-cli@latest observe:versions` | App version hierarchy with build numbers, OTA update IDs, and event counts |
 | `npx --yes eas-cli@latest observe:errors` | Error groups by fingerprint; `--fingerprint <id>` lists one group's occurrences with stack traces |
+| `npx --yes eas-cli@latest observe:traces` | Network request trace spans: a summary of span names and kinds, or individual spans with span filters or `--all-spans` (paginated) |
+| `npx --yes eas-cli@latest observe:trace` | Every span of one trace by its trace ID, with child spans indented under their parent |
 | `npx --yes eas-cli@latest observe:event` | One metric, log, or error event by its ID, taken from the `--json` output of `observe:session`, `observe:metrics`, or `observe:events`, or from the occurrences listed by `observe:errors --fingerprint` |
 
 All commands take these flags:
@@ -23,13 +25,13 @@ All commands take these flags:
 - `--json` — machine-readable output (implies `--non-interactive`)
 - `--non-interactive` — fail instead of prompting
 
-All commands **except `observe:event`** also take these flags:
+All commands **except `observe:event` and `observe:trace`** also take these flags:
 
 - `--start <ISO date>` and `--end <ISO date>` — explicit time range
 - `--days <N>` — show data from the last N days (mutually exclusive with `--start`/`--end`, minimum 1)
 - `--environment <name>` — filter by environment, for example `production` or `development`
 
-`--platform <android|ios|ipados|macos|tvos|apple>` (default: all) is on every command **except `observe:session` and `observe:event`**, which are scoped to one session or one event already. `apple` covers iOS, iPadOS, tvOS, and macOS.
+`--platform <android|ios|ipados|macos|tvos|apple>` (default: all) is on every command **except `observe:session`, `observe:event`, and `observe:trace`**, which are scoped to one session, event, or trace already. `apple` covers iOS, iPadOS, tvOS, and macOS.
 
 Default time range is the last 60 days when none of `--days`, `--start`, `--end` is given.
 
@@ -37,7 +39,7 @@ Default time range is the last 60 days when none of `--days`, `--start`, `--end`
 
 ## Expo MCP Server tools
 
-> Source: https://docs.expo.dev/eas/observe/mcp/
+> Source: https://docs.expo.dev/eas/observe/ai-agents/
 
 The Expo MCP Server has read-only tools that return the same data as the CLI. When the `observe_*` tools are available, use them instead of the CLI: they use the Expo account that the MCP client signed in with, so they need no EAS CLI install and no access token. The queries, metric names, and workflows in this file apply to both.
 
@@ -50,15 +52,22 @@ The Expo MCP Server has read-only tools that return the same data as the CLI. Wh
 | `observe_event_names` | `eas observe:events` (name summary) |
 | `observe_events` | `eas observe:events <name>`, or `--all-events` without `eventName` |
 | `observe_session` | `eas observe:session` |
+| `observe_errors` | `eas observe:errors` |
+| `observe_error_occurrences` | `eas observe:errors --fingerprint <id>` |
+| `observe_error_breakdown` | None. Splits one error group by `APP_VERSION`, `OS`, `DEVICE`, or `COUNTRY`. |
+| `observe_span_names` | `eas observe:traces` (name summary) |
+| `observe_spans` | `eas observe:traces` with span filters or `--all-spans` |
+| `observe_trace` | `eas observe:trace <trace-id>` |
 
 Differences from the CLI:
 
-- **No error-group tools.** For error groups and stack traces, use `eas observe:errors` and `eas observe:event`. `observe_session` includes the errors of one session. An empty result from the other MCP tools does not mean that the app has no errors.
+- **Errors:** `observe_errors`, `observe_error_occurrences`, and `observe_error_breakdown` take `kind` (`JS`, `NATIVE`, or `OTHER`), which the CLI does not have. `observe_errors` also takes `orderBy` (`MOST_FREQUENT`, `MOST_USERS`, `FIRST_SEEN`, or `LAST_SEEN`) and `severity` in uppercase (`FATAL` or `ERROR`), where the CLI takes `--severity fatal` or `--severity error`. `observe_error_occurrences` can filter by `sessionId` without a fingerprint, and takes `sort` (`newest` or `oldest`). `observe_error_breakdown` requires `fingerprint` and `dimension`.
+- **Spans:** `observe_spans` takes arrays (`names`, `hosts`, `httpStatusCodes`) and uppercase enum values (`kinds`, `statusCodes`) where the CLI repeats a lowercase flag. It also takes `scopes`, such as `expo-observe.network`, and `sort` (`newest` or `oldest`).
 - **Project:** pass `appId` or `appFullName` (such as `@owner/my-app`). In a project directory, read the project ID from the app config.
 - **Platform:** `platform` takes `ANDROID`, `IOS`, `IPADOS`, `MACOS`, or `TVOS`. There is no `apple` value. As in the CLI, `observe_versions`, `observe_metrics_summary`, and `observe_routes` return separate Android and iOS results without `platform`, and `observe_metrics`, `observe_event_names`, and `observe_events` return results from all platforms.
-- **Environment:** only `observe_event_names` and `observe_events` take `environment`. `observe_versions`, `observe_metrics_summary`, `observe_metrics`, and `observe_routes` have no environment input, unlike the CLI's `--environment` flag.
-- **Time range:** `days` (up to 365), or `start` and `end`. The default is the last 60 days. `start` and `end` must be ISO 8601 date-times with a timezone, such as `2026-10-01T00:00:00Z`. A date-only value fails. Unlike the CLI, `end` does not need `start`. `observe_session` takes no time range.
-- **Pagination:** pass `pageInfo.endCursor` from a response back as `nextCursor`. For `observe_metrics`, `observe_events`, and `observe_routes`, also pass the returned `startTime` and `endTime` as `start` and `end`, and keep the other inputs the same. Routes paginate per platform. Session timelines paginate metrics and logs separately.
+- **Environment:** `observe_event_names`, `observe_events`, the error tools, `observe_span_names`, and `observe_spans` take `environment`. `observe_versions`, `observe_metrics_summary`, `observe_metrics`, and `observe_routes` have no environment input, unlike the CLI's `--environment` flag.
+- **Time range:** `days` (up to 365), or `start` and `end`. The default is the last 60 days. `start` and `end` must be ISO 8601 date-times with a timezone, such as `2026-10-01T00:00:00Z`. A date-only value fails. Unlike the CLI, `end` does not need `start`. `observe_session` and `observe_trace` take no time range.
+- **Pagination:** pass `pageInfo.endCursor` from a response back as `nextCursor`. For `observe_metrics`, `observe_events`, `observe_routes`, `observe_spans`, and `observe_error_occurrences`, also pass the returned `startTime` and `endTime` as `start` and `end`, and keep the other inputs the same. Routes paginate per platform. Session timelines paginate metrics, logs, and spans separately.
 - **Plan gating and usage:** plan limits are the same as for the CLI. Each tool call counts toward the account's Expo MCP Server usage.
 - **Defaults and limits:** `observe_metrics` sorts `newest` first by default. The CLI's `--sort` defaults to `oldest`. `observe_routes` takes a `limit` of up to 100, and the CLI takes up to 200. `observe_events` takes `sort`, and the CLI's `observe:events` has no `--sort`.
 
@@ -320,7 +329,7 @@ The name-summary mode returns `{ "names": [{ "eventName": "...", "count": 123 }]
 
 ## `eas observe:session`
 
-Shows the full timeline of metric and log events for a single session — the CLI equivalent of the dashboard's session view. Use it after `observe:metrics` surfaces a slow sample: take that sample's `sessionId` (present in `--json` output) and replay everything that session recorded.
+Shows the full timeline of metric events, log events, and trace spans for a single session — the CLI equivalent of the dashboard's session view. Use it after `observe:metrics` surfaces a slow sample: take that sample's `sessionId` (present in `--json` output) and replay everything that session recorded.
 
 ```bash
 # Interactive: pick a metric, then pick a session from the candidate list
@@ -349,11 +358,12 @@ This command has no `--platform`, `--limit`, or `--after` flag. It takes the sha
   "metadata": { "...": "..." },
   "entries": [{ "...": "..." }],
   "hasMoreMetricEvents": false,
-  "hasMoreLogEvents": false
+  "hasMoreLogEvents": false,
+  "hasMoreSpans": false
 }
 ```
 
-`entries` interleaves metric and log events for the session. The two `hasMore*` flags report truncation per event kind; there is no cursor to page with.
+`entries` interleaves metric events, log events, and spans for the session. Each stream shows at most 100 entries. The three `hasMore*` flags report truncation per stream; there is no cursor to page with.
 
 ## `eas observe:errors`
 
@@ -378,6 +388,52 @@ npx --yes eas-cli@latest observe:errors --fingerprint <fingerprint>
 - `--after <cursor>` — pagination cursor. Requires `--fingerprint`.
 
 `--limit` or `--after` without `--fingerprint` fails with an error. The grouped summary has no pagination.
+
+## `eas observe:traces`
+
+Shows network request spans that the app recorded with the `networkTraces` option (setup is in [`./setup.md`](./setup.md)), newest first. With no span filter, it shows a summary of span names (HTTP methods such as `GET` or `POST`) and kinds, with counts. A span filter or `--all-spans` lists individual spans instead, with their trace IDs.
+
+```bash
+# Span names and counts, last 7 days
+npx --yes eas-cli@latest observe:traces --days 7
+
+# Failed requests
+npx --yes eas-cli@latest observe:traces --status error --days 7
+
+# Slow requests to one host
+npx --yes eas-cli@latest observe:traces --host api.example.com --min-duration 1000
+
+# Server errors, only root spans
+npx --yes eas-cli@latest observe:traces --http-status 500 --http-status 503 --root-only
+
+# The requests of one session
+npx --yes eas-cli@latest observe:traces --session-id <session-id>
+```
+
+**Traces-specific flags:**
+- `--name <name>` — span name, such as `GET` (repeatable)
+- `--kind <client|consumer|internal|producer|server|unspecified>` — span kind (repeatable)
+- `--status <error|ok|unset>` — span status (repeatable)
+- `--host <host>` — request host (repeatable)
+- `--http-status <code>` — HTTP response status code (repeatable)
+- `--min-duration <ms>` — only spans that took at least this many milliseconds
+- `--root-only` — only spans with no parent
+- `--session-id <id>` — only spans from one session
+- `--all-spans` — list individual spans even with no span filter
+- `--app-version <version>`, `--build-number <number>`, `--update-id <id>` — filter by version, build, or EAS update
+- `--limit <N>` — spans per page (default 20, max 100)
+- `--after <cursor>` — pagination cursor. It also selects the span list.
+
+## `eas observe:trace`
+
+Shows every span of one trace, oldest first, with child spans indented under their parent. The table columns are **Offset, Duration, Name, Status, HTTP, URL**. Trace IDs are in the `observe:traces` span list.
+
+```bash
+npx --yes eas-cli@latest observe:trace <trace-id>
+npx --yes eas-cli@latest observe:trace <trace-id> --json
+```
+
+`traceId` is a required positional argument. The command takes only `--project-id`, `--json`, and `--non-interactive`. In `--json` output, a span with no `parentSpanId` is a root span, and a span with no `http` object is not an HTTP request.
 
 ## `eas observe:event`
 
@@ -447,6 +503,13 @@ npx --yes eas-cli@latest observe:events --days 7
 **"Show me every error event from one user's session."**
 ```bash
 npx --yes eas-cli@latest observe:events --all-events --session-id <session-id>
+```
+
+**"Which network requests are slow or failing?"**
+```bash
+npx --yes eas-cli@latest observe:traces --status error --days 7
+npx --yes eas-cli@latest observe:traces --min-duration 2000 --days 7   # read a trace ID from a span
+npx --yes eas-cli@latest observe:trace <trace-id>
 ```
 
 **"What versions of my app are in the field?"**
