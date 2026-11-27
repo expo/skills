@@ -122,10 +122,10 @@ Where argent is weaker than agent-device Mode C — so it's **capable, not as fa
 npm install -g @swmansion/argent
 ```
 
-Then run `argent init --yes` to register the Argent MCP server. Link the session credentials with `argent link` — the recommended path:
+Then run `argent init --yes` to register the Argent MCP server. Link the session credentials with `argent link` — the recommended path. `simulator:exec` loads both values from `.env.eas-simulator`, so the token stays out of the command and your reply:
 
 ```bash
-argent link '<ARGENT_TOOLS_URL>' --token '<ARGENT_AUTH_TOKEN>' --yes
+npx --yes eas-cli@latest simulator:exec sh -c 'argent link "$ARGENT_TOOLS_URL" --token "$ARGENT_AUTH_TOKEN" --yes'
 ```
 
 Reload the agent after linking so its `argent mcp` process picks up the remote session.
