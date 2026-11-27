@@ -7,7 +7,7 @@
 #   app via `expo run:ios` (native dev-client compile, slow) instead of Expo Go.
 #
 # Boots the newest available iPhone simulator if none is booted, starts
-# Metro with `expo start --ios` (auto-installs Expo Go on the simulator and
+# Metro with `expo start --go --ios` (auto-installs Expo Go on the simulator and
 # opens the app), waits for the bundle to load, settles, screenshots, and
 # tears Metro down. The Metro log is saved next to the screenshot as
 # <name>.metro.log. On bundle failure it still captures a best-effort
@@ -45,7 +45,8 @@ if ! xcrun simctl list devices booted | grep -q '(Booted)'; then
   xcrun simctl bootstatus "$UDID"
 fi
 
-# expo-go: --ios installs Expo Go when missing; its own open is unreliable if a
+# expo-go: --go selects Expo Go even when expo-dev-client is installed.
+# --ios installs Expo Go when missing; its own open is unreliable if a
 # previous experience is foregrounded, so we relaunch deterministically below.
 # dev-build: expo run:ios prebuilds + native-compiles a dev client, installs and
 # launches it on the simulator, and starts Metro — no Expo Go involved.
@@ -53,7 +54,7 @@ if [[ "$RUNNER" == "dev-build" ]]; then
   # Pass --port so Metro binds to $PORT and the health-check curl matches.
   (cd "$PROJECT_PATH" && exec env -u CI bunx expo run:ios --port "$PORT") </dev/null >"$LOG" 2>&1 &
 else
-  (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo start --port "$PORT" --ios) </dev/null >"$LOG" 2>&1 &
+  (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo start --port "$PORT" --go --ios) </dev/null >"$LOG" 2>&1 &
 fi
 METRO_PID=$!
 cleanup() {

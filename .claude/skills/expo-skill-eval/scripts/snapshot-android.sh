@@ -8,7 +8,7 @@
 #
 # If no device is attached, boots the first available AVD and waits for it
 # (the slow path - keep one emulator running across an eval session).
-# Starts Metro with `expo start --android` (auto-installs Expo Go, sets up
+# Starts Metro with `expo start --go --android` (auto-installs Expo Go, sets up
 # adb reverse, opens the app), waits for the bundle, settles, screenshots
 # via screencap, and tears Metro down. The Metro log is saved next to the
 # screenshot as <name>.metro.log. On bundle failure it still captures a
@@ -155,7 +155,8 @@ else
   log_step "reusing running emulator pid=${EMULATOR_PID:-unknown}"
 fi
 
-# --android makes the CLI install Expo Go on the device when missing. Pin the
+# --go selects Expo Go even when expo-dev-client is installed. --android makes
+# the CLI install Expo Go on the device when missing. Pin the
 # packager hostname to 127.0.0.1 so every exp:// URL goes through the adb
 # reverse tunnel - the default LAN-IP URL is often unreachable from the
 # emulator (host firewall) and leaves a stuck experience in Expo Go's task
@@ -167,8 +168,8 @@ if [[ "$RUNNER" == "dev-build" ]]; then
   # Pass --port so Metro binds to $PORT and the health-check curl matches.
   (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo run:android --port "$PORT") </dev/null >"$LOG" 2>&1 &
 else
-  log_step "starting expo start --android port=$PORT"
-  (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo start --port "$PORT" --android) </dev/null >"$LOG" 2>&1 &
+  log_step "starting expo start --go --android port=$PORT"
+  (cd "$PROJECT_PATH" && exec env -u CI REACT_NATIVE_PACKAGER_HOSTNAME=127.0.0.1 bunx expo start --port "$PORT" --go --android) </dev/null >"$LOG" 2>&1 &
 fi
 METRO_PID=$!
 # APP_PKG is set later (dev-build only) but must be in scope for cleanup.
