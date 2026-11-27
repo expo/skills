@@ -34,7 +34,22 @@ npx --yes eas-cli@latest simulator:exec npx agent-device@latest help workflow
 
 Use `help [topic]`, not `--help`: oclif catches `--help` after `simulator:exec` and prints the EAS CLI help.
 
-EAS-specific notes:
+### Common verbs
+
+| Verb | Does |
+|---|---|
+| `apps --platform ios` | List user-installed apps (the blank sim shows none); add `--all` to include system apps |
+| `install <appId> <path> --platform ios` | Install a local `.app` (uploads it) |
+| `install-from-source <url> --platform ios` | Install from a URL — the VM downloads it (use for EAS artifacts) |
+| `open <appId\|deep-link> --platform ios` | Launch an app (bundle id) or follow an app **deep link** (`exp+slug://…`). A first-time deep link raises a system **"Open in '<app>'?"** dialog — expect it (don't burn a snapshot discovering it) and `press 'label="Open"'` to hand off; it can be slow, so bound it with agent-device's own `--timeout` (e.g. `press 'label="Open"' --timeout 120000`) — **not** a shell `timeout` wrapper (macOS has no `timeout` binary). (Mode C sidesteps this dialog for the Metro-connect link via "Enter URL manually" — see run-your-app.md.) **Not** for the `webPreviewUrl` — that's a browser preview for the user, never the device. |
+| `snapshot -i` | Interactive accessibility tree → `@e1`-style refs |
+| `press <ref\|selector>` | Tap (e.g. `press @e2` or `press 'label="Open"'`). `click <target>` also works |
+| `fill <ref> "text"` | Type into a field |
+| `screenshot <path>` | Capture the screen to a local PNG (downloaded from the daemon) — requires an app to be open (`open` first). On iOS the default is 1x logical points (402x874 on iPhone 17); add `--pixel-density 3` for full resolution |
+| `record start [path]` / `record stop` | Record the screen to a video at the `record start` path (`record stop` takes no path) — use this for **motion** (animations, gestures, transitions, timing), which a single screenshot can't capture |
+| `metro prepare` / `metro reload` | Point a dev client at Metro / reload (Mode C) |
+
+### EAS-specific notes
 
 - **Tap with `press` or `click`.** `tap` is a hidden alias of `press` (not in `help commands`), and older agent-device versions reject it.
 - **`snapshot -i` is slow on iOS** — tens of seconds is normal; wait for it.

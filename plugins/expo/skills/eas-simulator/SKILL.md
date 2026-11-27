@@ -62,20 +62,7 @@ If it's **not** available, don't call `simulator:start` (it will fail). Instead,
 
 ## Choose a device before starting
 
-Use the server's current device catalog instead of guessing names or copying a static list:
-
-```bash
-npx --yes eas-cli@latest simulator:devices                         # both platforms
-npx --yes eas-cli@latest simulator:devices --platform ios          # iPhones and iPads
-npx --yes eas-cli@latest simulator:devices --platform android      # phones and tablets
-npx --yes eas-cli@latest simulator:devices --json                  # identifiers and display names by platform
-```
-
-This read-only command requires an Expo login or `EXPO_TOKEN`, but no running session or linked project. Copy the exact `identifier` (the table's `--device value`) into `simulator:start --platform <ios|android> --device <identifier>`. Quote names containing spaces or parentheses. For example, use `--device "iPad mini (A17 Pro)"` on iOS or `--device pixel_tablet` on Android when listed.
-
-**Omit `--device` to let the server choose its current default.** Do not hardcode a default or infer it from the first catalog entry. The CLI's JSON output contains `identifier` and `displayName`; it does not currently expose the API's `isDefault` field. A listed device is not a promise that it is pre-warmed or starts faster.
-
-If `simulator:devices` is unrecognized, update the CLI and check `simulator:devices --help`. Do not create a session just to discover device names. For selecting a device at startup versus inspecting or targeting devices inside an existing session, see [references/run-your-app.md](./references/run-your-app.md#targeting-a-device--ipad-or-several-at-once).
+List devices with `npx --yes eas-cli@latest simulator:devices` and pass the exact `identifier` to `simulator:start --device`, or omit `--device` for the server default. See [references/devices.md](./references/devices.md).
 
 ## The core loop (always the same)
 
@@ -118,54 +105,11 @@ To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in 
 
 ## Always name the session
 
-Pass `--name "<description>"` on every `simulator:start`. The name appears in `simulator:list`, `simulator:get`, and on the **Simulator sessions** page on expo.dev, where it replaces the generic title on each row. Unnamed, every row reads "Simulator session" over a random id — a wall of identical entries nobody can navigate. Write the name for a **human scanning that list days later**, not for yourself during this run.
-
-Write what the session is *for*, in a few plain words:
-
-```bash
---name "Checkout flow screenshots"     # what you did
---name "Dev build — dark mode fix"     # what you were testing
---name "Login repro for issue 412"     # why it exists
-```
-
-Rules:
-- Derive it from the user's request, not from the mode or the tooling. `Mode C session`, `agent-device ios`, and `test` say nothing.
-- **Length: aim for 3–6 words, ~40 characters, and treat 50 as the practical limit.** It renders as a single-line title in a narrow table column, so a long name clips. The API accepts up to **255 characters** and rejects an empty/whitespace-only name, but 255 is a ceiling you never approach, not a target. One noun phrase, no sentences.
-- Be specific within that budget. Include a ticket or PR number when there is one.
-- **Sentence case:** capitalize the first word only, and leave identifiers in their real casing (`Dev build for expo-router v4`, `Repro for EXPO-1234`). It's a row title, so no Title Case, no all-lowercase, and no trailing period.
-- **Don't repeat what the table already shows.** Every row already displays the session id, platform, start time, duration, and who created it — so no ids, no `iOS`, no dates, no your-own-name. Spend the whole budget on what those columns can't say: the purpose.
-- If the user names it, use their name as-is.
-- Sessions are per-run, so name each new one for that run. Don't reuse an old name for different work.
-
-`--name` is newer than `simulator:start` itself, so an older installed `eas-cli` can reject it. If that happens, run via `npx --yes eas-cli@latest` or upgrade; as a last resort, retry once without `--name` (the session starts unnamed). See [references/troubleshooting.md](./references/troubleshooting.md).
+Pass `--name "<description>"` on every `simulator:start`. Write what the session is for, from the user's request, in 3–6 plain words for a person who scans the session list later (for example, `--name "Checkout flow screenshots"`). Read [references/session-names.md](./references/session-names.md) for the naming rules and for an older `eas-cli` that rejects `--name`.
 
 ## Commands at a glance
 
-Query the installed CLI for the complete current flag set before using non-default start
-flags, machine-readable/config output, list filters, or session events:
-
-```bash
-# Replace `start` with the simulator subcommand you are about to run.
-npx --yes eas-cli@latest simulator:start --help
-```
-
-The examples below cover the common workflow; they are intentionally not an exhaustive
-copy of the CLI surface. Keep non-obvious behavioral guidance from this skill—especially
-[Session lifetime](#session-lifetime)—even when constructing the command from `--help`.
-
-| Command | Purpose |
-|---|---|
-| `npx --yes eas-cli@latest simulator:availability [--json] [--non-interactive]` | Check access without creating a session. |
-| `npx --yes eas-cli@latest simulator:start --platform ios\|android --name "<description>" [flags]` | Create a session; boot the sim + selected interface; write `.env.eas-simulator` by default; print the preview + job-run URLs. **Always pass `--name`**. `--json` does not suppress the dotenv; use `--out-config-type env` when no file should be written (it prints only the controller `export` lines, without `EAS_SIMULATOR_SESSION_ID`, so pass `--id` to `get`/`stop`/`events`). |
-| `npx --yes eas-cli@latest simulator:exec <cmd> [args…]` | Load `.env.eas-simulator`, then run `<cmd>` with that env. The bridge to the controller. |
-| `npx --yes eas-cli@latest simulator:get [--id <id>] [--json] [--non-interactive]` | Session status + connection details, including the session name. **Use this to confirm readiness** (see *Operating principles*). |
-| `npx --yes eas-cli@latest simulator:list [filters] [--limit N] [--after <cursor>] [--json]` | List and paginate project sessions; filter by status, type, platform, name prefix, and tags. |
-| `npx --yes eas-cli@latest simulator:events [--id <id>] [--follow\|--json]` | Show recorded activity events; `--follow` watches until the session ends. |
-| `npx --yes eas-cli@latest simulator:logs [--id <id>] [--follow\|--json] [--scope user-apps\|all] [--limit N]` | iOS app logs. Live sessions: the newest buffered lines (100 by default, installed apps only by default), or `--follow` to stream; `--scope all` (system logs too) needs `--follow`. Stopped sessions: `--output <path>` downloads the saved `app-logs.ndjson` (first 30 minutes only). See [references/logs-and-crashes.md](./references/logs-and-crashes.md). |
-| `npx --yes eas-cli@latest simulator:control [<action> [values…]] [--id <id>] [--output <path>] [--import <file>]` | Run direct actions on an iOS session (any session type, private links are fine), such as `screenshot.capture`, `app.launch`, `app.openUrl`, `app.install`, `appearance.set`, `location.set`, or `tap`. See *Simulator actions* below. |
-| `npx --yes eas-cli@latest simulator:stop [--id <id>] [--json] [--non-interactive]` | Stop a session (idempotent). |
-
-`sim:` is a short alias for the `simulator:` topic (for example, `eas sim:start`). This skill uses the full name.
+Every `simulator:*` subcommand and its main flags: [references/commands.md](./references/commands.md).
 
 ## Running the user's app — pick a mode
 
@@ -194,20 +138,7 @@ Mode C makes your local Metro server reachable at a public URL. Before starting 
 
 If a controller fails to download a recording, retrieve it from [EAS session artifacts](./references/controllers.md#recording-download-recovery).
 
-`agent-device` is the controller. Common verbs (run each as `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`):
-
-| Verb | Does |
-|---|---|
-| `apps --platform ios` | List user-installed apps (the blank sim shows none); add `--all` to include system apps |
-| `install <appId> <path> --platform ios` | Install a local `.app` (uploads it) |
-| `install-from-source <url> --platform ios` | Install from a URL — the VM downloads it (use for EAS artifacts) |
-| `open <appId\|deep-link> --platform ios` | Launch an app (bundle id) or follow an app **deep link** (`exp+slug://…`). A first-time deep link raises a system **"Open in '<app>'?"** dialog — expect it (don't burn a snapshot discovering it) and `press 'label="Open"'` to hand off; it can be slow, so bound it with agent-device's own `--timeout` (e.g. `press 'label="Open"' --timeout 120000`) — **not** a shell `timeout` wrapper (macOS has no `timeout` binary). (Mode C sidesteps this dialog for the Metro-connect link via "Enter URL manually" — see run-your-app.md.) **Not** for the `webPreviewUrl` — that's a browser preview for the user, never the device. |
-| `snapshot -i` | Interactive accessibility tree → `@e1`-style refs |
-| `press <ref\|selector>` | Tap (e.g. `press @e2` or `press 'label="Open"'`). `click <target>` also works. Use `press` or `click`: `tap` is a hidden alias that older versions reject |
-| `fill <ref> "text"` | Type into a field |
-| `screenshot <path>` | Capture the screen to a local PNG (downloaded from the daemon) — requires an app to be open (`open` first). On iOS the default is 1x logical points (402x874 on iPhone 17); add `--pixel-density 3` for full resolution |
-| `record start [path]` / `record stop` | Record the screen to a video at the `record start` path (`record stop` takes no path) — use this for **motion** (animations, gestures, transitions, timing), which a single screenshot can't capture |
-| `metro prepare` / `metro reload` | Point a dev client at Metro / reload (Mode C) |
+`agent-device` is the controller. Run each verb (`open`, `snapshot -i`, `press`, `fill`, `screenshot`, `record`) as `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`. Read [references/controllers.md](./references/controllers.md#common-verbs) before you run one: it covers the "Open in" dialog on a first deep link and agent-device's own `--timeout`.
 
 **Screenshots vs. video.** Default to `screenshot` for static state, but for anything that *moves* — an animation, a transition, a gesture, a timing/jank question — **record a video and inspect the frames** instead; a still can't prove motion. Both controllers record (agent-device `record start`/`stop`, argent `screen-recording-start`/`stop`). Recordings sample at ~30fps — enough to see visible jank, not to prove sub-frame 60/120Hz hitches. For **timing** specifically, argent drops static frames by default (turn `trimStatic` off) — that plus other per-controller gotchas are in [references/controllers.md](./references/controllers.md).
 
@@ -215,26 +146,7 @@ For the full verb set and the `argent` controller alternative, see [references/c
 
 ## Simulator actions (iOS)
 
-`simulator:control` runs direct actions on a running iOS session through its preview server. It works with every iOS session type, including `web-preview-only`, and with private links (no `--public-link` needed). It has no accessibility tree: to find and press elements by label, use the controller. Android sessions use the controller only.
-
-```bash
-npx --yes eas-cli@latest simulator:control --id <id> --json                # action catalog: descriptions, argument order, properties
-npx --yes eas-cli@latest simulator:control app.launch --help --id <id>     # usage for one action
-npx --yes eas-cli@latest simulator:control screenshot.capture --output ./screen.png --id <id>   # no open app needed
-npx --yes eas-cli@latest simulator:control app.launch dev.example.app --id <id>                 # restart the app
-npx --yes eas-cli@latest simulator:control app.openUrl dev.example.app 'myapp://profile/42' --id <id>   # deep link, no restart
-npx --yes eas-cli@latest simulator:control appearance.set dark --id <id>
-npx --yes eas-cli@latest simulator:control location.set 37.3349 -122.0090 --id <id>
-```
-
-- **Read the catalog first.** The session's serve-sim version supplies the actions, so an older session can have a different catalog; updating eas-cli does not change a running session. Run `simulator:control --id <id> --json` before you use an action that is not in the examples above.
-- Other actions in the docs: `tap x y` and `gesture '<json>'` (coordinates from 0 to 1), `type` (ASCII only; for other text, `clipboard.write` then `clipboard.paste`), `rotate`, `button`, `media.add`, `app.stop`, `app.file.upload` / `app.file.list` / `app.file.read`, and `app.approveUrlScheme <bundleId> <scheme>` (approves a custom scheme so a `simctl openurl` link skips the "Open in" dialog).
-- `app.install` uploads an **`.ipa`** with a simulator build. For a `.app` folder, put it in a `Payload` folder and zip that folder as `<App>.ipa`, or install it with the controller.
-- Pass values that start with `--` after `--` (for example, `clipboard.write -- --text`). Quote URLs and JSON for the shell. Keep passwords and tokens out of command arguments.
-- Run actions that change the device one at a time. If one times out, inspect the device before you retry: the action may already have run.
-- `--import <file>` runs saved actions from a JSON file (`{"version": 1, "actions": [{"action": "appearance.set", "params": {"value": "dark"}}]}`). Actions run in order and stop on the first failure. `simulator:start --import <file>` reads the same file: its `start` object holds start flags by their CLI names, and its actions run after the session is ready. Android sessions accept the `start` options but not actions yet.
-- Each command opens a connection. For many actions in a row, add `--keep-alive` (macOS and Linux). The connection closes after 120 seconds idle; change that with `--idle-timeout <seconds>`.
-- Output files are overwritten. `--output` is a path on your computer, and its parent directory must exist.
+`simulator:control` runs direct actions (`screenshot.capture`, `app.launch`, `app.openUrl`, `appearance.set`, `location.set`) on a running iOS session, without a controller. Read [references/simulator-actions.md](./references/simulator-actions.md) before you run it.
 
 ## When the app crashes: device logs and crash reports (iOS)
 
@@ -276,6 +188,10 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 
 - [references/run-your-app.md](./references/run-your-app.md) — full command sequences for modes A, B, and C (read before running a mode).
 - [references/controllers.md](./references/controllers.md) — agent-device verb reference and the `argent` alternative.
+- [references/commands.md](./references/commands.md) — every `simulator:*` subcommand with its main flags.
+- [references/simulator-actions.md](./references/simulator-actions.md) — `simulator:control` actions on iOS sessions.
+- [references/session-names.md](./references/session-names.md) — naming rules for `--name`.
+- [references/devices.md](./references/devices.md) — the device catalog and `--device`.
 - [references/logs-and-crashes.md](./references/logs-and-crashes.md) — device logs and crash reports from an iOS session (read when the app crashes or misbehaves).
 - [references/troubleshooting.md](./references/troubleshooting.md) — concrete errors and fixes.
 
