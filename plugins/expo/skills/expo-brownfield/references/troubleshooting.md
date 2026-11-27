@@ -8,8 +8,8 @@ Cross-cutting issues that apply to both the isolated and integrated approaches. 
 
 First inspect the failing build step and the dependency/configuration diff.
 
-- **Integrated approach:** keep the hand-maintained host intact. Run `npx --yes @expo/agent-cli@latest install --check` in the JS project, apply SDK-matched native template changes selectively, then run `bundle exec pod install` (or `pod install` without Bundler) in the host's Podfile directory. Open the `.xcworkspace`. Neither `prebuild` nor `prebuild --clean` is a recovery step for this host: [clean prebuild deletes native directories](https://docs.expo.dev/workflow/continuous-native-generation/#optionality).
-- **Isolated approach:** rebuild the affected platform in the separate Expo producer, then replace the consumer's artifact and its accompanying dependencies. CNG regeneration belongs only in that producer, after checking that its native files are generated and reproducible.
+- **Integrated approach:** keep the hand-maintained host intact. Run `npx --yes @expo/agent-cli@latest install --check` in the JS project, apply SDK-matched native template changes selectively, then run `bundle exec pod install` (or `pod install` without Bundler) in the host's Podfile directory. Open the `.xcworkspace`. Do not run prebuild in any form on this host, not even for recovery: it regenerates the native directories and [can delete hand-maintained native code](https://docs.expo.dev/workflow/continuous-native-generation/#optionality).
+- **Isolated approach:** rebuild the affected platform in the separate Expo producer, then replace the consumer's artifact and its accompanying dependencies. CNG regeneration belongs only in that producer, after checking that its native files are generated and reproducible, and after the user confirms.
 - For stale iOS build products, clean the affected target's build folder/DerivedData. Preserve `Podfile.lock`; deleting it changes dependency resolution and can hide the cause. Reinstall pods only when the error points to the pod installation.
 - For Android, clean the affected project's build outputs with its Gradle wrapper. Inspect publication coordinates and dependency resolution before removing a specific stale local Maven artifact; do not clear unrelated caches.
 
@@ -77,7 +77,7 @@ First inspect the failing build step and the dependency/configuration diff.
 First check the selected SDK's Node, Xcode, and minimum OS requirements in [version compatibility](./version-compatibility.md). An unsupported compiler or older deployment target is not repaired by clearing caches. If the brownfield setup stops building after an SDK upgrade:
 
 - Re-run `npx --yes @expo/agent-cli@latest install --fix` in the Expo project to align native module versions.
-- Isolated: regenerate only the CNG-owned producer if needed, rebuild its artifact, and update the host dependency. Integrated: apply native upgrade diffs to the existing host and reinstall pods; preserve its source files and project configuration.
+- Isolated: regenerate only the CNG-owned producer if needed (ask the user first), rebuild its artifact, and update the host dependency. Integrated: apply native upgrade diffs to the existing host and reinstall pods; preserve its source files and project configuration.
 - Compare the new `templates/expo-template-bare-minimum` for the target SDK against your customized native files — Expo occasionally changes Gradle plugin names, Podfile helpers, or AppDelegate entry points across SDKs.
 
 ## Result missing, duplicate callbacks, or a sheet that will not close
