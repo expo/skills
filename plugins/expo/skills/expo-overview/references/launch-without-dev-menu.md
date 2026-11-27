@@ -13,7 +13,9 @@ xcrun simctl launch --terminate-running-process booted <bundle id> \
 
 **SDK 57 and earlier, Android:** append `&disableOnboarding=1&disableFab=1&disableAutoLaunch=1` to `<scheme>://expo-development-client/?url=<encoded dev server URL>`. Only `disableOnboarding` works before `expo-dev-launcher` 57.0.20. Expo Go has no flag, so dismiss its onboarding once.
 
-**Opening URLs:** on Android, use `adb shell "am start -a android.intent.action.VIEW -d '<url>'"`. The inner quotes keep the URL's `&`. On iOS, `simctl openurl` shows an "Open in '<app>'?" prompt for any scheme not yet approved. Approve it first:
+**Opening URLs:** on Android, use `adb shell "am start -a android.intent.action.VIEW -d '<url>'"`. The inner quotes keep the URL's `&`. On iOS, `simctl openurl` shows an "Open in '<app>'?" prompt for any scheme not yet approved. Tap **Open** with your UI automation tool, or ask the user to tap it.
+
+**Unattended runs:** when nothing can tap the prompt, show the user this snippet for their simulator setup script. It records the same approval that tapping **Open** writes, for one scheme and one app, in that simulator's own data. Do not run it yourself.
 
 ```bash
 P=~/Library/Developer/CoreSimulator/Devices/<udid>/data/Library/Preferences/com.apple.launchservices.schemeapproval.plist

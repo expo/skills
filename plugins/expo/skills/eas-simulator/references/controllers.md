@@ -116,16 +116,16 @@ Where argent is weaker than agent-device Mode C — so it's **capable, not as fa
 
 **agent-device** screenshots on iOS simulators default to 1x logical points (402x874 on iPhone 17); pass `--pixel-density 3` for full resolution when you need fine detail or a pixel-diff baseline, so match the capture to the question. From **v0.20.6** it gains the same lever argent has and drops the old one: `screenshot --scale <0.01–1>` proportionally resizes both dimensions (`1` = full resolution), with a token-conscious default via `AGENT_DEVICE_SCREENSHOT_SCALE` (or `screenshotScale` in config) that an explicit `--scale` overrides — keep it unset or `1` for pixel-diff baselines; the former `--max-size` is removed (older calls refused with migration guidance). Verify the version with `agent-device --version`. One caveat for remote sessions: the resize runs on the daemon, so a newer client against an older EAS session daemon can have `--scale` silently ignored and get full-res back.
 
-**Connecting via MCP (Cursor, Claude Code, Codex, and others).** Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
+**Connecting via MCP (Cursor, Claude Code, Codex, and others).** This path installs a global npm package and changes the agent's MCP configuration, so ask the user before you start it. `simulator:exec argent run …` (above) needs neither. Install the CLI globally first — the package is `@swmansion/argent`, not `argent`:
 
 ```bash
 npm install -g @swmansion/argent
 ```
 
-Then run `argent init --yes` to register the Argent MCP server. Link the session credentials with `argent link` — the recommended path:
+Then run `argent init --yes` to register the Argent MCP server. Link the session credentials with `argent link` — the recommended path. `simulator:exec` loads both values from `.env.eas-simulator`, so the token stays out of the command and your reply:
 
 ```bash
-argent link '<ARGENT_TOOLS_URL>' --token '<ARGENT_AUTH_TOKEN>' --yes
+npx --yes eas-cli@latest simulator:exec sh -c 'argent link "$ARGENT_TOOLS_URL" --token "$ARGENT_AUTH_TOKEN" --yes'
 ```
 
 Reload the agent after linking so its `argent mcp` process picks up the remote session.

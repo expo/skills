@@ -66,10 +66,10 @@ Check if New Architecture is active:
 import { Platform } from "react-native";
 
 // Returns true if Fabric is enabled
-const isNewArch = global._IS_FABRIC !== undefined;
+const isNewArch = global.nativeFabricUIManager != null;
 ```
 
-Verify from the command line if the currently running app uses the New Architecture: `bunx xcobra expo eval "_IS_FABRIC"` -> `true`
+Verify from the command line if the currently running app uses the New Architecture: `npx --yes @expo/agent-cli@latest runtime:eval "globalThis.nativeFabricUIManager != null"` -> `true`
 
 ## Troubleshooting
 

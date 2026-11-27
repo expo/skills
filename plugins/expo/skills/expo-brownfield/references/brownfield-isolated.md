@@ -162,7 +162,7 @@ The plugin's `publishing` option controls where the AAR is published. When unset
 }
 ```
 
-Supported `type` values: `localMaven`, `localDirectory`, `remotePublic`, `remotePrivate`. For private repos, credentials and URL accept either inline strings or `{ "variable": "ENV_VAR_NAME" }` to read from the environment at publish time.
+Supported `type` values: `localMaven`, `localDirectory`, `remotePublic`, `remotePrivate`. For private repos, set `username` and `password` to `{ "variable": "ENV_VAR_NAME" }`, so the plugin reads them from the environment at publish time. Never write a credential value into app config. If a variable is not set, ask the user to set it in their shell or CI secrets. `url` takes a string or the same `{ "variable": ... }` form.
 
 By default, `build:android` runs every declared publication. To pick specific publications or repositories from the command line, use the CLI flags:
 
@@ -253,7 +253,7 @@ Build Debug and Release artifacts separately when the producer requires a single
 
 ### Generate native projects for debugging
 
-To inspect the generated native code, run prebuild **from the separate Expo producer whose native directories are CNG-owned**, never from the consuming host:
+To inspect the generated native code, run prebuild **from the separate Expo producer whose native directories are CNG-owned**, never from the consuming host. Prebuild overwrites the producer's `ios/` and `android/`. Before you run it, check that these directories have no hand edits and no uncommitted changes, and get the user's confirmation:
 
 ```sh
 npx --yes @expo/agent-cli@latest prebuild
@@ -295,7 +295,7 @@ dependencyResolutionManagement {
 
 > **Note:** `mavenLocal()` must be added under `dependencyResolutionManagement`, not the deprecated top-level `allprojects { repositories { ... } }` block.
 
-If the artifact is published to a remote Maven, declare that repository in the same `dependencyResolutionManagement` block instead — credentials follow Gradle's standard `maven { url = uri(...); credentials { username = ...; password = ... } }` form.
+If the artifact is published to a remote Maven, declare that repository in the same `dependencyResolutionManagement` block instead — credentials follow Gradle's standard `maven { url = uri(...); credentials { username = ...; password = ... } }` form. Read the credential values from environment variables or Gradle properties outside the repository, never from literals in the build file.
 
 #### Host app requirements
 

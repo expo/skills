@@ -93,7 +93,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator
 
 To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in `--json`, `remoteConfig.webPreviewUrl`; for `web-preview-only` sessions, `remoteConfig.previewUrl`). All current session types include a browser preview, on iOS and Android; `agent-device`, `appium`, and `argent` also provide automation, while `web-preview-only` provides no automation interface. On Android, the expo.dev session page does not show the preview inline yet: **Open preview** opens it in a new tab. Some features are iOS-only, such as crash reports and the device log API (see [references/logs-and-crashes.md](./references/logs-and-crashes.md)); check `--help` for platform notes.
 
-**Preview links are private by default.** The `webPreviewUrl` opens only for a person who signs in to an Expo account that can view the project. `simulator:start --public-link` turns on the preview's Share button and prints a link that contains an access token: **anyone with that link can view the simulator without an Expo login, and on iOS, control it**, including the app and its logs. Pass `--public-link` only when the user asks for a link they can share with people who can't sign in, and tell them about that risk. `simulator:get` shows links that follow the session's saved choice.
+**Preview links are private by default.** The `webPreviewUrl` opens only for a person who signs in to an Expo account that can view the project. `simulator:start --public-link` turns on the preview's Share button and prints a link that contains an access token: **anyone with that link can view the simulator without an Expo login, and on iOS, control it**, including the app and its logs. Pass `--public-link` only when the user asks for a link they can share with people who can't sign in, and tell them about that risk. **Never repeat that link** in a reply, file, or commit. Give the user the session page on expo.dev instead (`deviceRunSessionUrl` in `--json`): they copy the link from the preview's **Share** button. `simulator:get` shows links that follow the session's saved choice.
 
 **This URL is for the *user's* browser — you cannot open it for them, and it must never touch the sim:**
 - **"Open it here" (Cursor/VS Code)** → print the URL on its own line and tell the user to open Simple Browser (`Cmd/Ctrl+Shift+P` → "Simple Browser: Show") and paste it. Then **stop**: do not shell out to a system browser or a Cursor/VS Code URL handler, and do not ask "did a tab appear?" — you can't confirm it, the handoff is done.
@@ -132,7 +132,7 @@ Quick decision — **default to C; A and B are explicit-only:**
 - **A:** only an explicit one-shot **static** screenshot on a Mac.
 - **B:** only when the user names an existing/EAS build or wants a static EAS artifact (CI/sharing) — see the box above for why a static build is the wrong tool for "iterate."
 
-Mode C makes your local Metro server reachable at a public URL. Before starting the tunnel, read [Tunnel data flow and exposure](./references/run-your-app.md#tunnel-data-flow-and-exposure).
+Mode C makes your local Metro server reachable at a public URL. Before starting the tunnel, read [Tunnel data flow and exposure](./references/run-your-app.md#tunnel-data-flow-and-exposure). Connect the dev client only to a Metro server you trust: one you started in this run, or one the user started.
 
 ## Driving the device (agent-device)
 
