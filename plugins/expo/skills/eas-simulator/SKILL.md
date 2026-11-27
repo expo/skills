@@ -42,7 +42,7 @@ if the user set a limit you would go past, or if the work grows beyond what they
 
 - `--max-duration-minutes N` is the hard automatic-stop deadline. You can set it up to the plan limit (115 minutes on paid plans). The timer starts when the session is ready.
 - `--max-idle-time-minutes N` stops a session after that many inactive minutes. Omitted means **no idle timeout**: the session runs until its maximum duration or an explicit stop.
-- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands, which are recorded as session events with producer `appium`). On iOS, browser input and some `simulator:control` actions (such as app launches and screenshots) also reset it. **Watching the preview does not reset it, and neither does browser input on Android.** For a user-driven browser preview, rely on the maximum duration, not idle time, to bound the session. Android `web-preview-only` sessions reject `--max-idle-time-minutes`.
+- **Controller activity resets the idle timer** (`agent-device`, `argent`, and Appium commands, which are recorded as session events with producer `appium`). Browser input in the preview also resets it on both platforms. On iOS, some `simulator:control` actions (such as app launches and screenshots) also reset it. **Watching the preview does not reset it.** For a user-driven browser preview, rely on the maximum duration, not idle time, to bound the session. Android `web-preview-only` sessions reject `--max-idle-time-minutes`.
 
 ## Check availability first
 
@@ -99,7 +99,7 @@ To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in 
 - **"Open it here" (Cursor/VS Code)** → print the URL on its own line and tell the user to open Simple Browser (`Cmd/Ctrl+Shift+P` → "Simple Browser: Show") and paste it. Then **stop**: do not shell out to a system browser or a Cursor/VS Code URL handler, and do not ask "did a tab appear?" — you can't confirm it, the handoff is done.
 - **Never `open` the `webPreviewUrl` on the sim.** It's a browser preview, not a deep link and not an `agent-device open` argument; routing it to the device renders a browser-in-a-browser (a real past failure).
 - **Headless agent** (no display) → just return the URL as the deliverable.
-- **Keeping it alive for the user to drive** → use `--max-duration-minutes N` (up to the plan limit). Watching the preview (and any browser input on Android) does not reset `--max-idle-time-minutes`, so idle timeout is not a reliable lifetime bound for this case. Tell the user when the session expires, using the CLI's reported duration or expiry. Keep it running for the requested preview; stop sessions created for one-shot tasks when the task finishes.
+- **Keeping it alive for the user to drive** → use `--max-duration-minutes N` (up to the plan limit). Watching the preview does not reset `--max-idle-time-minutes`, so idle timeout is not a reliable lifetime bound for this case. Tell the user when the session expires, using the CLI's reported duration or expiry. Keep it running for the requested preview; stop sessions created for one-shot tasks when the task finishes.
 
 `start` also prints a job-run URL.
 
