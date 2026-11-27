@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "expo": {
+      "serverUrl": "https://mcp.expo.dev/mcp"
+    }
+  }
+}

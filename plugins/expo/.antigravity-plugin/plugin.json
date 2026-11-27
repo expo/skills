@@ -1,0 +1,40 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "expo",
+  "displayName": "Expo",
+  "version": "1.17.0",
+  "description": "Develop, verify, deploy, and monitor mobile apps with Expo and React Native, from Expo docs to EAS builds, TestFlight, and app stores.",
+  "logo": "assets/expo-antigravity.png",
+  "suggestedPrompts": [
+    "Build an iOS and Android app with Expo and React Native",
+    "Run and test my app on an iOS simulator or Android emulator",
+    "Build and deploy my mobile app to TestFlight, the App Store, or Google Play"
+  ],
+  "author": {
+    "name": "Expo Team",
+    "email": "support@expo.dev",
+    "url": "https://expo.dev"
+  },
+  "homepage": "https://docs.expo.dev/skills/",
+  "repository": "https://github.com/expo/skills/tree/main/plugins/expo",
+  "license": "MIT",
+  "keywords": [
+    "expo",
+    "react-native",
+    "eas",
+    "mobile",
+    "mobile-development",
+    "app-development",
+    "ios",
+    "android",
+    "cross-platform",
+    "deployment",
+    "emulator",
+    "simulator",
+    "app-store",
+    "google-play",
+    "testflight",
+    "ci-cd",
+    "debugging"
+  ]
+}

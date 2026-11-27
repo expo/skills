@@ -1,6 +1,6 @@
 # Expo Skills Repository
 
-This repository contains official Expo AI agent skills. Codex and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Grok uses that root manifest when it is present. Claude Code and Cursor read `.claude-plugin/plugin.json`. The skills should stay useful to any agent that can consume `SKILL.md` files.
+This repository contains official Expo AI agent skills. Codex and other Agent Plugins clients load each plugin from a root `plugin.json` ([Agent Plugins](https://agent-plugins.org/) 1.0.0). Grok uses that root manifest when it is present. Claude Code and Cursor read `.claude-plugin/plugin.json`. Antigravity reads `.antigravity-plugin/plugin.json` and `mcp_config.json`. The skills should stay useful to any agent that can consume `SKILL.md` files.
 
 ## Repository Structure
 
@@ -17,6 +17,12 @@ plugins/
     .claude-plugin/
       plugin.json           # Claude Code and Cursor plugin manifest
     .mcp.json               # Claude Code, Grok, and Cursor MCP configuration
+    .antigravity-plugin/
+      plugin.json           # Antigravity plugin manifest
+    mcp_config.json         # Antigravity MCP configuration
+    assets/
+      expo.png              # Plugin logo
+      expo-antigravity.png  # Antigravity logo with transparent padding
     skills/
       README.md             # Grouped index of all skills
       skill-name/
@@ -36,12 +42,13 @@ Both marketplaces expose the active `expo` and `expo-experiments` plugins. Entry
 
 ## Plugin Manifests
 
-The `expo` plugin carries two manifests that share one `version`. CI rejects a skill or manifest change that does not bump them together. `expo-experiments` ships the same pair.
+The `expo` plugin carries three manifests that share one `version`. CI rejects a skill or manifest change that does not bump them together. To bump them, run `bun scripts/check-plugin-version-bump.ts --set-version <version>`. `expo-experiments` ships only the Claude and Agent Plugins manifests.
 
 | Manifest | Who reads it |
 | --- | --- |
 | `plugins/expo/plugin.json` | Codex, other [Agent Plugins](https://agent-plugins.org/) clients, and Grok when this file exists |
 | `plugins/expo/.claude-plugin/plugin.json` | Claude Code and Cursor |
+| `plugins/expo/.antigravity-plugin/plugin.json` | Antigravity |
 
 Claude Code reads `.claude-plugin/plugin.json` and `.mcp.json`. It does not read the root `plugin.json`. Grok prefers the root `plugin.json` when that file exists, and still loads MCP from `.mcp.json`. If the root manifest is absent, Grok uses the Claude manifest. Cursor looks for `.cursor-plugin/plugin.json` first, then the Claude manifest, then the root manifest, and stops at the first file that parses. This repo ships no Cursor manifest, so Cursor stops on the Claude one. That manifest does not list skills, so Cursor discovers `skills/`. For MCP, Cursor reads `.mcp.json` before `mcp.json` and keeps the first `expo` server.
 
@@ -106,6 +113,24 @@ Claude Code is not an Agent Plugins client. It reads its own manifest and its ow
 ```
 
 Only `name` is required. `version`, `description`, and `author` are optional.
+
+### Antigravity manifest (`.antigravity-plugin/plugin.json`)
+
+Antigravity reads `.antigravity-plugin/plugin.json` before the root `plugin.json`, and loads MCP servers only from `mcp_config.json`. Its schema is closed too. The Antigravity Marketplace requires `name`, `displayName`, `description`, `version`, `logo`, and `author`, and shows up to 3 `suggestedPrompts`. Keep `suggestedPrompts` the same as `defaultPrompt` in the Codex extension. The `logo` is `assets/expo-antigravity.png`, a square icon with about 10% transparent padding.
+
+```json
+{
+  "mcpServers": {
+    "expo": {
+      "serverUrl": "https://mcp.expo.dev/mcp"
+    }
+  }
+}
+```
+
+Antigravity signs in to the Expo MCP Server with its Client ID Metadata Document, so `mcp_config.json` needs no `oauth` block.
+
+Antigravity loads only the first 24,000 bytes of a `SKILL.md` body. Check a plugin change with `agy plugin validate ./plugins/expo`. The warnings for `.mcp.json`, `mcp.json`, and the root `plugin.json` are expected in this repo, because those files are for other agents.
 
 ## Skill Files
 

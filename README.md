@@ -61,6 +61,16 @@ codex plugin add expo@openai-curated
 
 You can also open `/plugins` in Codex and install `expo` from the OpenAI-curated marketplace.
 
+### Antigravity Plugin
+
+Install from this repository with the Antigravity CLI:
+
+```text
+agy plugin install https://github.com/expo/skills/tree/main/plugins/expo
+```
+
+To sign in to the Expo MCP Server, open `/plugin` in Antigravity, expand `expo` under **Installed**, and choose **Sign in**.
+
 ## Updating
 
 Claude Code and Codex plugin installs are updated through their official plugin marketplaces.

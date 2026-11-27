@@ -22,6 +22,7 @@ const checkScript = "scripts/check-plugin-version-bump.ts";
 const manifests = [
   "plugins/expo/.claude-plugin/plugin.json",
   "plugins/expo/plugin.json",
+  "plugins/expo/.antigravity-plugin/plugin.json",
 ];
 
 process.chdir(join(import.meta.dir, ".."));
