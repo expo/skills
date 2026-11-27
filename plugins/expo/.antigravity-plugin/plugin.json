@@ -2,7 +2,7 @@
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "expo",
   "displayName": "Expo",
-  "version": "1.17.3",
+  "version": "1.17.4",
   "description": "Develop, verify, deploy, and monitor mobile apps with Expo and React Native, from Expo docs to EAS builds, TestFlight, and app stores.",
   "logo": "assets/expo-antigravity.png",
   "suggestedPrompts": [
