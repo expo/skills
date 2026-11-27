@@ -193,6 +193,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 - [references/simulator-actions.md](./references/simulator-actions.md) — `simulator:control` actions on iOS sessions.
 - [references/session-names.md](./references/session-names.md) — naming rules for `--name`.
 - [references/devices.md](./references/devices.md) — the device catalog and `--device`.
+- [references/network-capture.md](./references/network-capture.md) — iOS HTTP(S) capture and HAR downloads.
 - [references/logs-and-crashes.md](./references/logs-and-crashes.md) — device logs and crash reports from an iOS session (read when the app crashes or misbehaves).
 - [references/troubleshooting.md](./references/troubleshooting.md) — concrete errors and fixes.
 
