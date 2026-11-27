@@ -13,6 +13,14 @@ xcrun simctl launch --terminate-running-process booted <bundle id> \
 
 **SDK 57 and earlier, Android:** append `&disableOnboarding=1&disableFab=1&disableAutoLaunch=1` to `<scheme>://expo-development-client/?url=<encoded dev server URL>`. Only `disableOnboarding` works before `expo-dev-launcher` 57.0.20. Expo Go has no flag, so dismiss its onboarding once.
 
-**Opening URLs:** on Android, use `adb shell "am start -a android.intent.action.VIEW -d '<url>'"`. The inner quotes keep the URL's `&`. On iOS, `simctl openurl` shows an "Open in '<app>'?" prompt for any scheme not yet approved. Tap **Open** with your UI automation tool, or ask the user to tap it. Don't change simulator settings to skip the prompt.
+**Opening URLs:** on Android, use `adb shell "am start -a android.intent.action.VIEW -d '<url>'"`. The inner quotes keep the URL's `&`. On iOS, `simctl openurl` shows an "Open in '<app>'?" prompt for any scheme not yet approved. Tap **Open** with your UI automation tool, or ask the user to tap it.
+
+**Optional, sandboxed simulators only.** In CI, a macOS VM, or a simulator created for this run, you can record the approval ahead of time when nothing can tap the prompt. It is the same entry that tapping **Open** writes, for one scheme and one app, in that simulator's own data. On a simulator the user works in, tap **Open** or ask the user instead.
+
+```bash
+P=~/Library/Developer/CoreSimulator/Devices/<udid>/data/Library/Preferences/com.apple.launchservices.schemeapproval.plist
+K="com.apple.CoreSimulator.CoreSimulatorBridge--><scheme>"
+/usr/libexec/PlistBuddy -c "Set :'$K' <bundle id>" "$P" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :'$K' string <bundle id>" "$P"
+```
 
 Expo Go's bundle id is `host.exp.Exponent`, and its scheme is `exp`.
