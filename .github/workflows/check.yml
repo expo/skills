@@ -28,6 +28,11 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
+      - name: Test the Firegoat PR check
+        id: firegoat-tests
+        continue-on-error: true
+        run: python3 -m unittest discover -s scripts/firegoat
+
       - name: Ensure that plugin version bump script is healthy
         id: version-check-test
         continue-on-error: true
@@ -71,6 +76,7 @@ jobs:
           SKILL_LIMITS_OUTCOME: ${{ steps.skill-limits.outcome }}
           EAS_COMMAND_CHECK_OUTCOME: ${{ steps.eas-command-check.outcome }}
           STATUS_SUMMARY_TEST_OUTCOME: ${{ steps.status-summary-test.outcome }}
+          FIREGOAT_TEST_OUTCOME: ${{ steps.firegoat-tests.outcome }}
           VERSION_CHECK_TEST_OUTCOME: ${{ steps.version-check-test.outcome }}
           VERSION_CHECK_OUTCOME: ${{ steps.version-check.outcome }}
           ROUTING_CHECK_OUTCOME: ${{ steps.routing-check.outcome }}
@@ -104,6 +110,7 @@ jobs:
           report "skill requirements" "$SKILL_LIMITS_OUTCOME" "bun test scripts/agent-cli.test.ts && bun scripts/check-skill-limits.ts"
           report "EAS CLI command examples" "$EAS_COMMAND_CHECK_OUTCOME" "bun test scripts/check-eas-cli-commands.test.ts && bun scripts/check-eas-cli-commands.ts"
           report "private release status summaries" "$STATUS_SUMMARY_TEST_OUTCOME" "bun test scripts/status-summary.test.ts"
+          report "Firegoat PR check tests" "$FIREGOAT_TEST_OUTCOME" "python3 -m unittest discover -s scripts/firegoat"
           report "plugin version bump script" "$VERSION_CHECK_TEST_OUTCOME" "bun test scripts/check-plugin-version-bump.test.ts"
           report "plugin version bump" "$VERSION_CHECK_OUTCOME" "bun scripts/check-plugin-version-bump.ts origin/main"
           report "expo-overview routing" "$ROUTING_CHECK_OUTCOME" "bun scripts/check-overview-routing.ts"
