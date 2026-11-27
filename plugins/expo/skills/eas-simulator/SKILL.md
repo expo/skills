@@ -66,7 +66,7 @@ List devices with `npx --yes eas-cli@latest simulator:devices` and pass the exac
 
 ## The core loop (always the same)
 
-A session is: **start → (install your app) → drive → stop.** `eas-cli` owns the *session*; the device *verbs* (open/tap/screenshot) come from the controller, which `npx --yes eas-cli@latest simulator:exec` runs for you with the session's connection env loaded.
+A session is: **start → (install your app) → drive → stop.** `eas-cli` owns the *session*; the interactive device verbs come from the controller, which `npx --yes eas-cli@latest simulator:exec` runs with the session's connection env loaded.
 
 ```bash
 # 1. Start a session (boots the remote sim + agent-device daemon; writes .env.eas-simulator).
@@ -91,7 +91,7 @@ npx --yes eas-cli@latest simulator:stop
 printf '# managed by eas-cli\n' > .env.eas-simulator
 ```
 
-To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in `--json`, `remoteConfig.webPreviewUrl`; for `web-preview-only` sessions, `remoteConfig.previewUrl`). All current session types include a browser preview, on iOS and Android; `agent-device`, `appium`, and `argent` also provide automation, while `web-preview-only` provides no automation interface. On Android, the expo.dev session page does not show the preview inline yet: **Open preview** opens it in a new tab. Some features are iOS-only, such as crash reports and the device log API (see [references/logs-and-crashes.md](./references/logs-and-crashes.md)); check `--help` for platform notes.
+To **watch** it live, hand the user the `webPreviewUrl` that `start` prints (in `--json`, `remoteConfig.webPreviewUrl`; for `web-preview-only` sessions, `remoteConfig.previewUrl`). All current session types include a browser preview, on iOS and Android; `agent-device`, `appium`, and `argent` also provide automation, while `web-preview-only` has no separate automation daemon but can use iOS host actions through `simulator:control`. On Android, the expo.dev session page does not show the preview inline yet: **Open preview** opens it in a new tab. Some features are iOS-only, such as crash reports and the device log API (see [references/logs-and-crashes.md](./references/logs-and-crashes.md)); check `--help` for platform notes.
 
 **Preview links are private by default.** The `webPreviewUrl` opens only for a person who signs in to an Expo account that can view the project. `simulator:start --public-link` turns on the preview's Share button and prints a link that contains an access token: **anyone with that link can view the simulator without an Expo login, and on iOS, control it**, including the app and its logs. Pass `--public-link` only when the user asks for a link they can share with people who can't sign in, and tell them about that risk. `simulator:get` shows links that follow the session's saved choice.
 
@@ -187,6 +187,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator   # clear the stale session
 ## References
 
 - [references/run-your-app.md](./references/run-your-app.md) — full command sequences for modes A, B, and C (read before running a mode).
+- [references/remote-controls.md](./references/remote-controls.md) — detailed `simulator:control` guide and app data files.
 - [references/controllers.md](./references/controllers.md) — agent-device verb reference and the `argent` alternative.
 - [references/commands.md](./references/commands.md) — every `simulator:*` subcommand with its main flags.
 - [references/simulator-actions.md](./references/simulator-actions.md) — `simulator:control` actions on iOS sessions.
