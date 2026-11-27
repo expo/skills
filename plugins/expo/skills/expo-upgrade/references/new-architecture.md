@@ -69,7 +69,7 @@ import { Platform } from "react-native";
 const isNewArch = global._IS_FABRIC !== undefined;
 ```
 
-Verify from the command line if the currently running app uses the New Architecture: `bunx xcobra expo eval "_IS_FABRIC"` -> `true`
+To check the running app, log `isNewArch` (for example, `console.log({ isNewArch })`) and read the value in the Metro terminal output. Remove the log when you are done.
 
 ## Troubleshooting
 
