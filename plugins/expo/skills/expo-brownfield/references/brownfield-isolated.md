@@ -162,9 +162,7 @@ The plugin's `publishing` option controls where the AAR is published. When unset
 }
 ```
 
-Supported `type` values: `localMaven`, `localDirectory`, `remotePublic`, `remotePrivate`. For private repos, always set `username` and `password` to `{ "variable": "ENV_VAR_NAME" }`, so the plugin reads them from the environment at publish time. `url` takes a string or the same `{ "variable": ... }` form.
-
-Never write a credential value into app config or any other file, and don't ask the user to paste one into the chat. If a variable is not set, ask the user to set it in their shell or CI secrets.
+Supported `type` values: `localMaven`, `localDirectory`, `remotePublic`, `remotePrivate`. For private repos, set `username` and `password` to `{ "variable": "ENV_VAR_NAME" }`, so the plugin reads them from the environment at publish time. Never write a credential value into app config. If a variable is not set, ask the user to set it in their shell or CI secrets. `url` takes a string or the same `{ "variable": ... }` form.
 
 By default, `build:android` runs every declared publication. To pick specific publications or repositories from the command line, use the CLI flags:
 
