@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from string import Template
 
-from hosted import SOURCE_TEMPLATE, list_cases, read_run, setup_command, skill_tag, start_run, validate_case
+from hosted import list_cases, read_run, setup_command, skill_tag, start_run, validate_case
 
 MARKER = "<!-- expo-firegoat-skill-evals -->"
 CONTEXT = "Firegoat skill evals"
@@ -134,10 +134,9 @@ def authoring_prompt(skill, pr):
     return template.substitute(
         skill=name,
         skill_tag=skill_tag(name),
-        source_template=SOURCE_TEMPLATE,
         skill_url=f"https://github.com/{head['repo']['full_name']}/blob/{head['sha']}/{directory}/SKILL.md",
         diff_url=f"https://github.com/{base['repo']['full_name']}/compare/{base['sha']}...{head['sha']}",
-        setup=setup_command(name).replace(SOURCE_TEMPLATE, f"{head['repo']['full_name']}/plugins#{head['sha']}"),
+        setup=setup_command(name),
     ).rstrip()
 
 
