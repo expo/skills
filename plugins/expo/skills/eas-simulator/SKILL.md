@@ -138,7 +138,7 @@ Mode C makes your local Metro server reachable at a public URL. Before starting 
 
 If a controller fails to download a recording, retrieve it from [EAS session artifacts](./references/controllers.md#recording-download-recovery).
 
-`agent-device` is the controller. Run each verb as `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`. Common verbs and their traps: [references/controllers.md](./references/controllers.md#common-verbs).
+`agent-device` is the controller. Run each verb (`open`, `snapshot -i`, `press`, `fill`, `screenshot`, `record`) as `npx --yes eas-cli@latest simulator:exec npx agent-device@latest <verb>`. Read [references/controllers.md](./references/controllers.md#common-verbs) before you run one: it covers the "Open in" dialog on a first deep link and agent-device's own `--timeout`.
 
 **Screenshots vs. video.** Default to `screenshot` for static state, but for anything that *moves* — an animation, a transition, a gesture, a timing/jank question — **record a video and inspect the frames** instead; a still can't prove motion. Both controllers record (agent-device `record start`/`stop`, argent `screen-recording-start`/`stop`). Recordings sample at ~30fps — enough to see visible jank, not to prove sub-frame 60/120Hz hitches. For **timing** specifically, argent drops static frames by default (turn `trimStatic` off) — that plus other per-controller gotchas are in [references/controllers.md](./references/controllers.md).
 
@@ -146,7 +146,7 @@ For the full verb set and the `argent` controller alternative, see [references/c
 
 ## Simulator actions (iOS)
 
-`simulator:control` runs direct actions (screenshot, app launch, deep link, appearance, location) on a running iOS session, without a controller. See [references/simulator-actions.md](./references/simulator-actions.md).
+`simulator:control` runs direct actions (`screenshot.capture`, `app.launch`, `app.openUrl`, `appearance.set`, `location.set`) on a running iOS session, without a controller. Read [references/simulator-actions.md](./references/simulator-actions.md) before you run it.
 
 ## When the app crashes: device logs and crash reports (iOS)
 

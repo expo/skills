@@ -18,7 +18,7 @@ printf '# managed by eas-cli\n' > .env.eas-simulator
 # Start (the default --out-config-type dotenv writes .env.eas-simulator). It boots the sim + agent-device daemon.
 # --json changes stdout but does not suppress the completed dotenv write; use --out-config-type env for no file.
 # --name is required practice: it labels the session in simulator:list/get and on expo.dev.
-# Describe what the run is for, in the user's terms — see "Always name the session" in SKILL.md.
+# Describe what the run is for, in the user's terms — see session-names.md.
 npx --yes eas-cli@latest simulator:start --platform ios --type agent-device --non-interactive \
   --name "Checkout flow screenshots"
 ```

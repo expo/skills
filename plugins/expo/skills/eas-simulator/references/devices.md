@@ -13,4 +13,4 @@ This read-only command requires an Expo login or `EXPO_TOKEN`, but no running se
 
 **Omit `--device` to let the server choose its current default.** Do not hardcode a default or infer it from the first catalog entry. The CLI's JSON output contains `identifier` and `displayName`; it does not currently expose the API's `isDefault` field. A listed device is not a promise that it is pre-warmed or starts faster.
 
-If `simulator:devices` is unrecognized, update the CLI and check `simulator:devices --help`. Do not create a session just to discover device names. For selecting a device at startup versus inspecting or targeting devices inside an existing session, see [references/run-your-app.md](./run-your-app.md#targeting-a-device--ipad-or-several-at-once).
+If `simulator:devices` is unrecognized, update the CLI and check `simulator:devices --help`. Do not create a session just to discover device names. For selecting a device at startup versus inspecting or targeting devices inside an existing session, see [run-your-app.md](./run-your-app.md#targeting-a-device--ipad-or-several-at-once).
