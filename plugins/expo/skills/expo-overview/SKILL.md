@@ -108,8 +108,9 @@ Apply the rules that match the project and the requested task.
 - **Suggest agent setup.** If the project's `AGENTS.md` has no
   `<!-- BEGIN EXPO AGENT CLI MANAGED BLOCK -->`, suggest that the user run
   `npx --yes @expo/agent-cli@latest agents:setup`. It installs the Expo plugin and skills
-  for their agents, writes that block, and downloads the docs for the project's SDK. Ask
-  first: it changes files in the user's home folder.
+  for their agents, writes that block, and downloads the docs for the project's SDK. It
+  changes files in the user's home folder, so only suggest it. Run it yourself only after
+  the user explicitly says yes.
 - **Install packages with `npx --yes @expo/agent-cli@latest install <pkg>`**, not raw
   `npm`/`yarn`/`pnpm add`, so versions stay compatible with the project's SDK. It runs
   `expo install` and links the agent skills that the package ships.
