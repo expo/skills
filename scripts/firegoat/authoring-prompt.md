@@ -11,12 +11,12 @@ Show me the draft in plain language:
 3. **Pass/fail checks** — what trace evidence would show that Claude loaded `$skill`, and what evidence would prove each task result.
 4. **Setup and login** — list the fixtures and identify any EAS CLI command that needs authentication. The Expo workspace already has a global Firegoat credential named `EXPO_TOKEN`. If a command needs it, use `list_credentials` to find its ID and set `envCredentials.EXPO_TOKEN` to that ID. Run the authenticated command during the agent's task, after `setupCommand` finishes and Firegoat supplies the token. Leave the eval environment empty when no login is needed.
 
-Start the sandbox with this setup. It installs all published skills from this PR for all agents. Append any fixture steps, including a linked test project ID if needed.
+Save this block at the start of the eval's `setupCommand`, with all three placeholders exactly as shown. For each run, CI sends the owner, repo name, and full commit SHA from the PR head as `templateArgs`. Firegoat fills them in before setup runs. This installs all skills from the commit under review for every agent, even when the PR comes from a fork. Append any fixture steps, including a linked test project ID if needed.
 
 ```sh
 $setup
 ```
 
-Wait for my approval before saving. Give the case a descriptive title and both tags above. Save the user task as `text`, the expected outcome as `endGoal`, and the checks as a flat map with `skill-activation` and one `task-*` entry per result. In the saved `setupCommand`, replace the quoted install source with `'$source_template'` so CI can supply the next PR revision.
+Wait for my approval before saving. Give the case a descriptive title and both tags above. Save the user task as `text`, the expected outcome as `endGoal`, and the checks as a flat map with `skill-activation` and one `task-*` entry per result.
 
-Create an active, top-level case with `run: false`, `frequency: none`, `runsPerEval: 1`, `scaffold: blank`, `loginHints: false`, and Claude Code on `claude-sonnet-4-6`. Read it back with `get_prompt`, verify its tags and setup, and give me the link.
+Create an active, top-level case with `run: false`, `frequency: none`, `runsPerEval: 1`, `scaffold: blank`, `loginHints: false`, and Claude Code on `claude-sonnet-4-6`. Read it back with `get_prompt`, confirm the tags and that the saved `setupCommand` still contains all three placeholders, and give me the link.

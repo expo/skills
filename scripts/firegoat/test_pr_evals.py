@@ -160,10 +160,8 @@ class PullRequestEvalsTest(unittest.TestCase):
         self.assertIn("Wait for my approval", comment)
         self.assertIn(f"https://github.com/contributor/skills/blob/{self.sha}/{missing['directory']}/SKILL.md", comment)
         self.assertIn(f"https://github.com/expo/skills/compare/{self.pr['base']['sha']}...{self.sha}", comment)
-        self.assertIn(f"npx --yes skills@1.9.0 add 'contributor/skills/plugins#{self.sha}' --all --copy", comment)
         setup = comment.split("```sh\n", 1)[1].split("\n```", 1)[0]
-        self.assertNotIn("{{", setup)
-        self.assertIn("{{skill_owner}}/{{skill_repo}}/plugins#{{skill_sha}}", comment)
+        self.assertEqual(setup, pr_evals.setup_command(missing["name"]))
 
     def test_large_comment_keeps_complete_prompts_and_links_to_the_full_summary(self):
         names = [f"expo-example-{i}" for i in range(30)]
